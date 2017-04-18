@@ -1,0 +1,112 @@
+# pfam_scan.pl,  run at Tue Mar  8 16:35:26 2016
+#
+# Copyright (c) 2009 Genome Research Ltd
+# Freely distributed under the GNU 
+# General Public License
+#
+# Authors: Jaina Mistry (jm14@sanger.ac.uk), John Tate (jt6@sanger.ac.uk), 
+#          Rob Finn (rdf@sanger.ac.uk)
+#
+# This is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>. 
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#      query sequence file: isoformSwitchAnalyzeR_isoform_AA.fasta
+#     cpu number specified: 20
+#        searching against: /aura-internal/software/PfamScan/datafiles//Pfam-A.hmm, with cut off --cut_ga
+#    resolve clan overlaps: on
+#     predict active sites: on
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#
+# <seq id> <alignment start> <alignment end> <envelope start> <envelope end> <hmm acc> <hmm name> <type> <hmm start> <hmm end> <hmm length> <bit score> <E-value> <significance> <clan> <predicted_active_site_residues>
+
+TCONS_00009564     44    343     44    347 PF01704.13  UDPGP             Family     1   288   420    321.7     5e-96   1 CL0110   
+TCONS_00009565     44    472     44    472 PF01704.13  UDPGP             Family     1   420   420    442.0  1.5e-132   1 CL0110   
+TCONS_00009566     44    471     44    471 PF01704.13  UDPGP             Family     1   420   420    443.3  6.2e-133   1 CL0110   
+TCONS_00009567     44    465     44    467 PF01704.13  UDPGP             Family     1   410   420    426.4  8.4e-128   1 CL0110   
+TCONS_00009569     44    471     44    471 PF01704.13  UDPGP             Family     1   420   420    443.3  6.2e-133   1 CL0110   
+TCONS_00009570     44    472     44    472 PF01704.13  UDPGP             Family     1   420   420    442.0  1.5e-132   1 CL0110   
+TCONS_00033800    148    251    146    252 PF03370.8   CBM_21            Family     3   112   113    123.0   5.3e-36   1 No_clan  
+TCONS_00033801    153    256    151    257 PF03370.8   CBM_21            Family     3   112   113    122.9   5.4e-36   1 No_clan  
+TCONS_00056343     56    168     52    168 PF12284.3   HoxA13_N          Family     7   117   117     61.2   9.6e-17   1 No_clan  
+TCONS_00056343    261    317    261    317 PF00046.24  Homeobox          Domain     1    57    57     63.8   7.7e-18   1 CL0123   
+TCONS_00070774     42    304     40    304 PF10192.4   GpcrRhopsn4       Family     3   257   257    275.3   3.8e-82   1 CL0192   
+TCONS_00070775    143    405    141    405 PF10192.4   GpcrRhopsn4       Family     3   257   257    274.1   8.6e-82   1 CL0192   
+TCONS_00107860    112    138    111    164 PF00288.21  GHMP_kinases_N    Family     2    28    67     22.1   0.00011   1 CL0329   
+TCONS_00107864    112    156    111    166 PF00288.21  GHMP_kinases_N    Family     2    49    67     29.3   6.5e-07   1 CL0329   
+TCONS_00107870    112    156    111    166 PF00288.21  GHMP_kinases_N    Family     2    49    67     30.6   2.5e-07   1 CL0329   
+TCONS_00108212     68    193     68    194 PF02466.14  Tim17             Family     1   125   128    128.0   2.1e-37   1 No_clan  
+TCONS_00108213     68    193     68    194 PF02466.14  Tim17             Family     1   125   128    128.0   2.1e-37   1 No_clan  
+TCONS_00108214     68    193     68    194 PF02466.14  Tim17             Family     1   125   128    128.0   2.1e-37   1 No_clan  
+TCONS_00108215     68    193     68    194 PF02466.14  Tim17             Family     1   125   128    128.0   2.1e-37   1 No_clan  
+TCONS_00145866      6    111      6    119 PF13460.1   NAD_binding_10    Domain     1    98   183     77.8   9.5e-22   1 CL0063   
+TCONS_00145867      6     80      6     92 PF13460.1   NAD_binding_10    Domain     1    73   183     59.8   3.3e-16   1 CL0063   
+TCONS_00145868      6     87      6     98 PF13460.1   NAD_binding_10    Domain     1    74   183     60.5     2e-16   1 CL0063   
+TCONS_00145869      6    190      6    191 PF13460.1   NAD_binding_10    Domain     1   182   183    112.7   1.9e-32   1 CL0063   
+TCONS_00145870      3    104      2    105 PF13460.1   NAD_binding_10    Domain    76   182   183     41.6   1.3e-10   1 CL0063   
+TCONS_00145871      6    113      6    130 PF13460.1   NAD_binding_10    Domain     1   100   183     80.1   1.9e-22   1 CL0063   
+TCONS_00173415      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.3     6e-15   1 No_clan  
+TCONS_00173415     90    188     90    188 PF00452.14  Bcl-2             Family     1   101   101    114.4   2.1e-33   1 CL0551   
+TCONS_00173417      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.3     6e-15   1 No_clan  
+TCONS_00173417     90    188     90    188 PF00452.14  Bcl-2             Family     1   101   101    114.4   2.1e-33   1 CL0551   
+TCONS_00173418      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.3     6e-15   1 No_clan  
+TCONS_00173418     90    188     90    188 PF00452.14  Bcl-2             Family     1   101   101    114.4   2.1e-33   1 CL0551   
+TCONS_00173419      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.3     6e-15   1 No_clan  
+TCONS_00173419     90    188     90    188 PF00452.14  Bcl-2             Family     1   101   101    114.4   2.1e-33   1 CL0551   
+TCONS_00173420      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.3     6e-15   1 No_clan  
+TCONS_00173420     90    188     90    188 PF00452.14  Bcl-2             Family     1   101   101    114.4   2.1e-33   1 CL0551   
+TCONS_00173421      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.3     6e-15   1 No_clan  
+TCONS_00173421     90    188     90    188 PF00452.14  Bcl-2             Family     1   101   101    114.4   2.1e-33   1 CL0551   
+TCONS_00173423      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.7   4.4e-15   1 No_clan  
+TCONS_00173423     90    187     90    187 PF00452.14  Bcl-2             Family     1   100   101    109.7   6.3e-32   1 CL0551   
+TCONS_00173424      1     27      1     27 PF02180.12  BH4               Family     1    27    27     54.7   4.4e-15   1 No_clan  
+TCONS_00173424     90    187     90    187 PF00452.14  Bcl-2             Family     1   100   101    109.7   6.3e-32   1 CL0551   
+TCONS_00174183     14     34     14     36 PF02493.15  MORN              Repeat     1    21    23     15.9    0.0076   1 CL0251   
+TCONS_00174183     38     59     38     59 PF02493.15  MORN              Repeat     1    23    23     15.3     0.011   1 CL0251   
+TCONS_00174183     60     76     60     78 PF02493.15  MORN              Repeat     1    17    23     15.8    0.0078   1 CL0251   
+TCONS_00174183     82    101     82    103 PF02493.15  MORN              Repeat     1    20    23      7.5       3.5   1 CL0251   
+TCONS_00174183    106    128    106    128 PF02493.15  MORN              Repeat     1    23    23     27.8   1.2e-06   1 CL0251   
+TCONS_00174183    129    146    129    151 PF02493.15  MORN              Repeat     1    18    23     22.5     6e-05   1 CL0251   
+TCONS_00174183    291    312    291    313 PF02493.15  MORN              Repeat     1    22    23     20.1   0.00034   1 CL0251   
+TCONS_00174183    314    336    314    336 PF02493.15  MORN              Repeat     1    23    23     28.3   8.6e-07   1 CL0251   
+TCONS_00174184     14     34     14     36 PF02493.15  MORN              Repeat     1    21    23     15.9    0.0076   1 CL0251   
+TCONS_00174184     38     59     38     59 PF02493.15  MORN              Repeat     1    23    23     15.3     0.011   1 CL0251   
+TCONS_00174184     60     76     60     78 PF02493.15  MORN              Repeat     1    17    23     15.8    0.0078   1 CL0251   
+TCONS_00174184     82    101     82    103 PF02493.15  MORN              Repeat     1    20    23      7.5       3.5   1 CL0251   
+TCONS_00174184    106    128    106    128 PF02493.15  MORN              Repeat     1    23    23     27.8   1.2e-06   1 CL0251   
+TCONS_00174184    129    146    129    151 PF02493.15  MORN              Repeat     1    18    23     22.5     6e-05   1 CL0251   
+TCONS_00174184    291    312    291    313 PF02493.15  MORN              Repeat     1    22    23     20.1   0.00034   1 CL0251   
+TCONS_00174184    314    336    314    336 PF02493.15  MORN              Repeat     1    23    23     28.3   8.6e-07   1 CL0251   
+TCONS_00174185     14     34     14     36 PF02493.15  MORN              Repeat     1    21    23     18.9   0.00083   1 CL0251   
+TCONS_00174185     38     59     38     59 PF02493.15  MORN              Repeat     1    23    23     18.3    0.0012   1 CL0251   
+TCONS_00174185     60     76     60     78 PF02493.15  MORN              Repeat     1    17    23     18.7   0.00093   1 CL0251   
+TCONS_00174185     82    101     82    103 PF02493.15  MORN              Repeat     1    20    23     10.4       0.4   1 CL0251   
+TCONS_00174185    106    128    106    128 PF02493.15  MORN              Repeat     1    23    23     30.7   1.5e-07   1 CL0251   
+TCONS_00228165    214    457    213    457 PF00566.13  RabGAP-TBC        Family     2   214   214    170.6     3e-50   1 No_clan  
+TCONS_00228167    154    397    153    397 PF00566.13  RabGAP-TBC        Family     2   214   214    171.1   2.1e-50   1 No_clan  
+TCONS_00228168      5    115      1    115 PF00566.13  RabGAP-TBC        Family   106   214   214     94.0   8.4e-27   1 No_clan  
+TCONS_00248432     12     66     12     74 PF00536.25  SAM_1             Domain     1    55    64     27.8     2e-06   1 CL0003   
+TCONS_00248433     12     66     12     74 PF00536.25  SAM_1             Domain     1    55    64     27.8     2e-06   1 CL0003   
+TCONS_00248434     12     66     12     74 PF00536.25  SAM_1             Domain     1    55    64     28.2   1.6e-06   1 CL0003   
+TCONS_00270441    241    282    241    288 PF00053.19  Laminin_EGF       Family     1    41    49     40.5   1.8e-10   1 CL0001   
+TCONS_00270441    291    335    291    335 PF00053.19  Laminin_EGF       Family     1    49    49     37.6   1.4e-09   1 CL0001   
+TCONS_00270441    338    383    338    383 PF00053.19  Laminin_EGF       Family     1    49    49     33.9   2.1e-08   1 CL0001   
+TCONS_00270441    386    431    386    436 PF00053.19  Laminin_EGF       Family     1    42    49     19.7   0.00056   1 CL0001   
+TCONS_00270441    437    481    437    486 PF00053.19  Laminin_EGF       Family     1    41    49     28.2   1.3e-06   1 CL0001   
+TCONS_00270442    204    245    204    251 PF00053.19  Laminin_EGF       Family     1    41    49     40.6   1.7e-10   1 CL0001   
+TCONS_00270442    254    298    254    298 PF00053.19  Laminin_EGF       Family     1    49    49     37.7   1.3e-09   1 CL0001   
+TCONS_00270442    301    346    301    346 PF00053.19  Laminin_EGF       Family     1    49    49     34.0     2e-08   1 CL0001   
+TCONS_00270442    349    394    349    399 PF00053.19  Laminin_EGF       Family     1    42    49     19.8   0.00052   1 CL0001   
+TCONS_00270442    400    444    400    449 PF00053.19  Laminin_EGF       Family     1    41    49     28.3   1.2e-06   1 CL0001   
+TCONS_00270443    204    245    204    251 PF00053.19  Laminin_EGF       Family     1    41    49     40.6   1.7e-10   1 CL0001   
+TCONS_00270443    254    298    254    298 PF00053.19  Laminin_EGF       Family     1    49    49     37.7   1.3e-09   1 CL0001   
+TCONS_00270443    301    346    301    346 PF00053.19  Laminin_EGF       Family     1    49    49     34.0     2e-08   1 CL0001   
+TCONS_00270443    349    394    349    399 PF00053.19  Laminin_EGF       Family     1    42    49     19.8   0.00052   1 CL0001   
+TCONS_00270443    400    444    400    449 PF00053.19  Laminin_EGF       Family     1    41    49     28.3   1.2e-06   1 CL0001   

@@ -1,0 +1,15 @@
+2017-04-18 : IsoformSwitchAnalyzeR v0.99.0
+    The following functionalities were added:
+    	- Enable filtering for significant switches in the preFilter() function.
+    	- The extractGenomeWideAnalysis() function was extended with the "annotationToAnalyze" parameter enabling specification of which annotation types to analyze.
+    	- The analyzeSwitchConsequences() function was extended to enable analysis of truncated protein (by supplying 'domain_length' to the 'consequencesToAnalyze' argument).
+    	- The analyzeSwitchConsequences() function was extended so the 'ntCutoff' also applies to TSS and TTS analysis.
+    The following bugs were corrected:
+        - A bug where importCufflinksCummeRbund() imported all genomic features of isoforms, including CDS etc, resulting in duplicated regions which caused problems for the intron retention analysis. This is only a problem for Cufflinks/Cuffdiff analysis where the refrence transcriptome contaied non-exon annotation (as defined in the type columns (column 3)) of the gtf file.
+        - A bug in the analyzePFAM() function that sometimes prevented IsoformSwitchAnalyzeR in correctly format the result file whereby the function could not run.
+        - The multi-threading option was removed since it was not supported by windows computers. We plan to bring it back in a later update.
+        - The option of manually supplying the start and stop codon sequences that the annotateORF() function should scan for in transcripts.
+    Furthermorethe vignette was extended for enhanced usability.
+
+2016-09-01 : IsoformSwitchAnalyzeR v0.98.0
+    We are proud to introduce IsoformSwitchAnalyzeR - fresh out of in-house beta version.

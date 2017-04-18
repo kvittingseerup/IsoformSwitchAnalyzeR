@@ -1,0 +1,92 @@
+### Import libraries functions
+import(methods)
+#import(plyr, except = c(desc, count))
+import(plyr)
+import(reshape2)
+import(Biostrings)
+import(IRanges)
+import(GenomicRanges)
+#import(GenomicRanges, except = c(promoters))
+import(gridExtra)
+import(BSgenome)
+import(RColorBrewer)
+import(cummeRbund)
+import(ggplot2)
+
+### Export functions from my R package
+# Creating list
+export('createSwitchAnalyzeRlist')
+
+# Import data
+export('importCufflinksCummeRbund')
+export('importCufflinksFiles')
+export('importGTF')
+export('importRdata')
+export('importBallgownData')
+export('preFilter')
+
+
+# Test isoform switches
+export('isoformSwitchTest')
+export('extractSwitchSummary')
+export('extractTopSwitches')
+export('extractCalibrationStatus')
+
+
+# Analyze functional potential
+export('CDSSet')
+export('getCDS')
+export('extractSequence')
+export('analyzeORF')
+
+export('analyzeCPAT')
+export('analyzePFAM')
+export('analyzeSignalP')
+
+export('analyzeIntronRetention')
+
+
+# Analyze switch consequences
+export('analyzeSwitchConsequences')
+export('extractConsequenceSummary')
+
+# genome wide analysis
+export('extractGenomeWideAnalysis')
+
+# Plotting
+export('switchPlotTranscript')
+
+export('switchPlotGeneExp')
+export('switchPlotIsoExp')
+export('switchPlotIsoUsage')
+
+export('switchPlot')
+export('switchPlotTopSwitches')
+
+
+
+# High level function
+export('isoformSwitchAnalysisPart1')
+export('isoformSwitchAnalysisPart2')
+export('isoformSwitchAnalysisCombined')
+
+
+# other tools
+export('extractExpressionMatrix')
+export('prepareCuffExample')
+
+
+
+### Export classes
+exportClasses("switchAnalyzeRlist")
+
+### Overload generic functions to work with my classes
+S3method(dim,switchAnalyzeRlist)
+S3method(nrow,switchAnalyzeRlist)
+S3method(ncol,switchAnalyzeRlist)
+S3method(head,switchAnalyzeRlist)
+S3method(tail,switchAnalyzeRlist)
+S3method(show,switchAnalyzeRlist)
+
+#S3method(subset,switchAnalyzeRlist)
+S3method(summary,switchAnalyzeRlist)

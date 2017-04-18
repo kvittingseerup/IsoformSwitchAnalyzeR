@@ -1,0 +1,428 @@
+# SignalP-4.1 euk predictions
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.115
+  max. Y    11       0.109
+  max. S    27       0.128
+  mean S     1-10    0.105
+       D     1-10    0.107   0.450   NO
+Name=TCONS_00009564	SP='NO' D=0.107 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.115
+  max. Y    11       0.109
+  max. S    27       0.128
+  mean S     1-10    0.105
+       D     1-10    0.107   0.450   NO
+Name=TCONS_00009565	SP='NO' D=0.107 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.115
+  max. Y    11       0.109
+  max. S    27       0.128
+  mean S     1-10    0.105
+       D     1-10    0.107   0.450   NO
+Name=TCONS_00009566	SP='NO' D=0.107 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.115
+  max. Y    11       0.109
+  max. S    27       0.128
+  mean S     1-10    0.105
+       D     1-10    0.107   0.450   NO
+Name=TCONS_00009567	SP='NO' D=0.107 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    12       0.106
+  max. Y    11       0.157
+  max. S     1       0.269
+  mean S     1-10    0.201
+       D     1-10    0.181   0.450   NO
+Name=TCONS_00009568	SP='NO' D=0.181 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.115
+  max. Y    11       0.109
+  max. S    27       0.128
+  mean S     1-10    0.105
+       D     1-10    0.107   0.450   NO
+Name=TCONS_00009569	SP='NO' D=0.107 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.115
+  max. Y    11       0.109
+  max. S    27       0.128
+  mean S     1-10    0.105
+       D     1-10    0.107   0.450   NO
+Name=TCONS_00009570	SP='NO' D=0.107 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    11       0.104
+  max. Y    11       0.118
+  max. S     7       0.183
+  mean S     1-10    0.136
+       D     1-10    0.128   0.450   NO
+Name=TCONS_00009571	SP='NO' D=0.128 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    21       0.121
+  max. Y    21       0.148
+  max. S     2       0.244
+  mean S     1-20    0.195
+       D     1-20    0.167   0.500   NO
+Name=TCONS_00009573	SP='NO' D=0.167 D-cutoff=0.500 Networks=SignalP-TM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    27       0.173
+  max. Y    27       0.149
+  max. S     6       0.205
+  mean S     1-26    0.129
+       D     1-26    0.138   0.450   NO
+Name=TCONS_00033800	SP='NO' D=0.138 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    32       0.159
+  max. Y    32       0.143
+  max. S    11       0.192
+  mean S     1-31    0.130
+       D     1-31    0.136   0.450   NO
+Name=TCONS_00033801	SP='NO' D=0.136 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    19       0.113
+  max. Y    60       0.112
+  max. S     4       0.163
+  mean S     1-59    0.108
+       D     1-59    0.110   0.450   NO
+Name=TCONS_00056342	SP='NO' D=0.110 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    17       0.114
+  max. Y    11       0.134
+  max. S     1       0.190
+  mean S     1-10    0.148
+       D     1-10    0.142   0.450   NO
+Name=TCONS_00056343	SP='NO' D=0.142 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    57       0.117
+  max. Y    57       0.110
+  max. S    25       0.120
+  mean S     1-56    0.103
+       D     1-56    0.106   0.450   NO
+Name=TCONS_00070774	SP='NO' D=0.106 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    23       0.870
+  max. Y    23       0.771
+  max. S     1       0.904
+  mean S     1-22    0.684
+       D     1-22    0.724   0.450   YES
+Name=TCONS_00070775	SP='YES' Cleavage site between pos. 22 and 23: SQG-KT D=0.724 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    16       0.161
+  max. Y    16       0.126
+  max. S    44       0.126
+  mean S     1-15    0.096
+       D     1-15    0.109   0.450   NO
+Name=TCONS_00107858	SP='NO' D=0.109 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    19       0.112
+  max. Y    12       0.135
+  max. S     1       0.202
+  mean S     1-11    0.146
+       D     1-11    0.141   0.450   NO
+Name=TCONS_00107860	SP='NO' D=0.141 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    16       0.161
+  max. Y    16       0.126
+  max. S    44       0.126
+  mean S     1-15    0.096
+       D     1-15    0.109   0.450   NO
+Name=TCONS_00107861	SP='NO' D=0.109 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    16       0.161
+  max. Y    16       0.126
+  max. S    44       0.126
+  mean S     1-15    0.096
+       D     1-15    0.109   0.450   NO
+Name=TCONS_00107862	SP='NO' D=0.109 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    16       0.161
+  max. Y    16       0.126
+  max. S    44       0.126
+  mean S     1-15    0.096
+       D     1-15    0.109   0.450   NO
+Name=TCONS_00107863	SP='NO' D=0.109 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    19       0.112
+  max. Y    12       0.135
+  max. S     1       0.202
+  mean S     1-11    0.146
+       D     1-11    0.141   0.450   NO
+Name=TCONS_00107864	SP='NO' D=0.141 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    23       0.158
+  max. Y    11       0.202
+  max. S     1       0.520
+  mean S     1-10    0.219
+       D     1-10    0.211   0.450   NO
+Name=TCONS_00107865	SP='NO' D=0.211 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    34       0.110
+  max. Y    12       0.106
+  max. S    28       0.110
+  mean S     1-11    0.098
+       D     1-11    0.102   0.450   NO
+Name=TCONS_00107866	SP='NO' D=0.102 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    19       0.112
+  max. Y    12       0.135
+  max. S     1       0.202
+  mean S     1-11    0.146
+       D     1-11    0.141   0.450   NO
+Name=TCONS_00107869	SP='NO' D=0.141 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    19       0.112
+  max. Y    12       0.135
+  max. S     1       0.202
+  mean S     1-11    0.146
+       D     1-11    0.141   0.450   NO
+Name=TCONS_00107870	SP='NO' D=0.141 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.113
+  max. Y    29       0.113
+  max. S    12       0.147
+  mean S     1-28    0.113
+       D     1-28    0.113   0.450   NO
+Name=TCONS_00107871	SP='NO' D=0.113 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    31       0.156
+  max. Y    27       0.213
+  max. S     6       0.582
+  mean S     1-26    0.347
+       D     1-26    0.285   0.450   NO
+Name=TCONS_00107872	SP='NO' D=0.285 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    45       0.118
+  max. Y    29       0.123
+  max. S    13       0.206
+  mean S     1-28    0.135
+       D     1-28    0.129   0.450   NO
+Name=TCONS_00107877	SP='NO' D=0.129 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    18       0.108
+  max. Y    12       0.132
+  max. S     1       0.201
+  mean S     1-11    0.131
+       D     1-11    0.131   0.450   NO
+Name=TCONS_00107878	SP='NO' D=0.131 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    23       0.112
+  max. Y    23       0.117
+  max. S    14       0.203
+  mean S     1-22    0.123
+       D     1-22    0.121   0.450   NO
+Name=TCONS_00108212	SP='NO' D=0.121 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    23       0.112
+  max. Y    23       0.117
+  max. S    14       0.203
+  mean S     1-22    0.123
+       D     1-22    0.121   0.450   NO
+Name=TCONS_00108213	SP='NO' D=0.121 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    23       0.112
+  max. Y    23       0.117
+  max. S    14       0.203
+  mean S     1-22    0.123
+       D     1-22    0.121   0.450   NO
+Name=TCONS_00108214	SP='NO' D=0.121 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    23       0.112
+  max. Y    23       0.117
+  max. S    14       0.203
+  mean S     1-22    0.123
+       D     1-22    0.121   0.450   NO
+Name=TCONS_00108215	SP='NO' D=0.121 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    27       0.170
+  max. Y    27       0.195
+  max. S     1       0.386
+  mean S     1-26    0.239
+       D     1-26    0.219   0.450   NO
+Name=TCONS_00145866	SP='NO' D=0.219 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    27       0.170
+  max. Y    27       0.195
+  max. S     1       0.386
+  mean S     1-26    0.239
+       D     1-26    0.219   0.450   NO
+Name=TCONS_00145867	SP='NO' D=0.219 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    27       0.170
+  max. Y    27       0.195
+  max. S     1       0.386
+  mean S     1-26    0.239
+       D     1-26    0.219   0.450   NO
+Name=TCONS_00145868	SP='NO' D=0.219 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    27       0.170
+  max. Y    27       0.195
+  max. S     1       0.386
+  mean S     1-26    0.239
+       D     1-26    0.219   0.450   NO
+Name=TCONS_00145869	SP='NO' D=0.219 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    23       0.150
+  max. Y    23       0.148
+  max. S    10       0.195
+  mean S     1-22    0.147
+       D     1-22    0.148   0.450   NO
+Name=TCONS_00145870	SP='NO' D=0.148 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    27       0.170
+  max. Y    27       0.195
+  max. S     1       0.386
+  mean S     1-26    0.239
+       D     1-26    0.219   0.450   NO
+Name=TCONS_00145871	SP='NO' D=0.219 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173415	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    29       0.171
+  max. Y    29       0.139
+  max. S     6       0.193
+  mean S     1-28    0.121
+       D     1-28    0.129   0.450   NO
+Name=TCONS_00173416	SP='NO' D=0.129 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173417	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173418	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173419	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173420	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173421	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173423	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    24       0.129
+  max. Y    24       0.116
+  max. S    18       0.139
+  mean S     1-23    0.106
+       D     1-23    0.111   0.450   NO
+Name=TCONS_00173424	SP='NO' D=0.111 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    60       0.111
+  max. Y    60       0.107
+  max. S    10       0.114
+  mean S     1-59    0.100
+       D     1-59    0.103   0.450   NO
+Name=TCONS_00174183	SP='NO' D=0.103 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    60       0.111
+  max. Y    60       0.107
+  max. S    10       0.114
+  mean S     1-59    0.100
+       D     1-59    0.103   0.450   NO
+Name=TCONS_00174184	SP='NO' D=0.103 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    60       0.111
+  max. Y    60       0.107
+  max. S    10       0.114
+  mean S     1-59    0.100
+       D     1-59    0.103   0.450   NO
+Name=TCONS_00174185	SP='NO' D=0.103 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    26       0.351
+  max. Y    26       0.195
+  max. S    25       0.274
+  mean S     1-25    0.111
+       D     1-25    0.150   0.450   NO
+Name=TCONS_00228165	SP='NO' D=0.150 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    26       0.351
+  max. Y    26       0.195
+  max. S    25       0.274
+  mean S     1-25    0.111
+       D     1-25    0.150   0.450   NO
+Name=TCONS_00228166	SP='NO' D=0.150 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    26       0.351
+  max. Y    26       0.195
+  max. S    25       0.274
+  mean S     1-25    0.111
+       D     1-25    0.150   0.450   NO
+Name=TCONS_00228167	SP='NO' D=0.150 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    28       0.201
+  max. Y    28       0.148
+  max. S     1       0.244
+  mean S     1-27    0.118
+       D     1-27    0.132   0.450   NO
+Name=TCONS_00228168	SP='NO' D=0.132 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    64       0.108
+  max. Y    37       0.106
+  max. S    23       0.113
+  mean S     1-36    0.098
+       D     1-36    0.102   0.450   NO
+Name=TCONS_00248432	SP='NO' D=0.102 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    64       0.108
+  max. Y    37       0.106
+  max. S    23       0.113
+  mean S     1-36    0.098
+       D     1-36    0.102   0.450   NO
+Name=TCONS_00248433	SP='NO' D=0.102 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    64       0.108
+  max. Y    37       0.106
+  max. S    23       0.113
+  mean S     1-36    0.098
+       D     1-36    0.102   0.450   NO
+Name=TCONS_00248434	SP='NO' D=0.102 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    22       0.341
+  max. Y    22       0.570
+  max. S    16       0.982
+  mean S     1-21    0.954
+       D     1-21    0.777   0.450   YES
+Name=TCONS_00270441	SP='YES' Cleavage site between pos. 21 and 22: AAA-AA D=0.777 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    30       0.275
+  max. Y    30       0.506
+  max. S    24       0.966
+  mean S     1-29    0.901
+       D     1-29    0.719   0.450   YES
+Name=TCONS_00270442	SP='YES' Cleavage site between pos. 29 and 30: AAA-AA D=0.719 D-cutoff=0.450 Networks=SignalP-noTM
+# Measure  Position  Value    Cutoff   signal peptide?
+  max. C    30       0.275
+  max. Y    30       0.506
+  max. S    24       0.966
+  mean S     1-29    0.901
+       D     1-29    0.719   0.450   YES
+Name=TCONS_00270443	SP='YES' Cleavage site between pos. 29 and 30: AAA-AA D=0.719 D-cutoff=0.450 Networks=SignalP-noTM
