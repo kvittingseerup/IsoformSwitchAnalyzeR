@@ -110,7 +110,9 @@ Since we know the exon structure of the full-length isoform, IsoformSwitchAnalyz
 
 Combined this means that IsoformSwitchAnalyzeR enables annotation of isoforms with intron retentions, ORF, NMD sensitivity, coding potential, protein domains as well as signal peptides, all enable identification of important functional consequences of the isoform switches, a functionality also implemented in IsoformSwitchAnalyzeR.
 
-Lastly IsoformSwitchAnalyzeR contains tools that allow the user to create article ready visualization of both individual isoform switches as well as general common consequences of the switches. These tools are easy to use and integrate all the information gathered throughout the workflow. An example of an isoform switch can be found in the [Short Example Workflow] section.
+IsoformSwitchAnalyzeR contains tools that allow the user to create article ready visualization of both individual isoform switches as well as general common consequences of the switches. These tools are easy to use and integrate all the information gathered throughout the workflow. An example of an isoform switch can be found in the [Short Example Workflow] section.
+
+Lastly IsoformSwitchAnalyzeR is based on standard Bioconductor classes such as GRanges and BSgenome whereby it is support for all species and versions supported in the Bioconductor annotation packages.
 
 Back to [Table of Content].
 
@@ -239,7 +241,8 @@ See [Short Example Workflow] for example of usage, and [Detailed Workflow] for d
 Which correspond to running _isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_ without adding the external results.
 
 
-<embed src="/Users/KVS/Dropbox/Arbejde/sandelin_group/projekter/spliceR_v3/60_build_package/IsoformSwitchAnalyzeR/inst/extdata/Overview_figure_simple.pdf" width="910" height="730" type='application/pdf'>
+
+<embed src="Overview_figure_simple.pdf" width="910" height="730" type='application/pdf'>
 
 **Figure 1: Workflow overview.** The grey transparent boxes indicate the two parts of a normal workflow for analyzing isoform switches. The individual steps in the two sub-workflows are indicated by arrows. The speech bubble summarizes how this full analysis can be done in a simple two step process using the high level functions (_isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_) in IsoformSwitchAnalyzeR. 
 
@@ -398,6 +401,7 @@ In this section we will go more into depth with each of the steps as well as tip
 
 The first section is a section about [IsoformSwitchAnalyzeR Background Information], then a detailed isoform switch analysis workflow is described and lastly an overview of other useful [Other Tools in IsoformSwitchAnalyzeR] is provided. 
 
+Back to [Table of Content]
 <br />
 
 The detailed workflow consist of the following steps (illustrated in Figure 2) which, just like before can be divided into two parts:
@@ -453,9 +457,9 @@ switchPlotTopSwitches(mySwitchList)
 extractConsequenceSummary(mySwitchList)
 ```
 
-Back to [Table of Content]
+The combined workflow is visualized here:
 
-<embed src="/Users/KVS/Dropbox/Arbejde/sandelin_group/projekter/spliceR_v3/60_build_package/IsoformSwitchAnalyzeR/inst/extdata/Overview_figure_detailed.pdf" width="910" height="870" type='application/pdf'>
+<embed src="Overview_figure_detailed.pdf" width="910" height="870" type='application/pdf'>
 
 **Figure 2: Detailed workflow overview.** The grey transparent boxes indicate the two parts of a normal workflow for analyzing isoform switches. The individual steps in the two sub-workflows are indicated by arrows along with a description and the main R function(s) for performing the step. 
 
@@ -832,7 +836,8 @@ The The Idea Behind The Statistical Test implemented in IsoformSwitchAnalyzeR is
 
 More information can be found in the documentation page of _isoformSwitchTest()_.
 
-<embed src="/Users/KVS/Dropbox/Arbejde/sandelin_group/projekter/spliceR_v3/60_build_package/IsoformSwitchAnalyzeR/inst/extdata/statistics_illustration.pdf" width="700" height="520" type='application/pdf'>
+
+<embed src="statistics_illustration.pdf" width="700" height="520" type='application/pdf'>
 
 **Figure 3: Visualization of the rational behind the statistical test implemented in IsoformSwitchAnalyzeR.** A) Visualization of how the uncertainties in gene and isoform expression is combined to calculate the uncertainty of isoform fractions. B) Shows how the uncertainties in Isoform Fractions allows for statistical comparison of the Isoform Usage of an isoform in different conditions.
 
