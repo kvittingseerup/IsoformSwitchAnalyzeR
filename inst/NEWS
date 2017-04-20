@@ -1,7 +1,5 @@
-2017-04-20 : IsoformSwitchAnalyzeR v0.99.2
-    Many small updates to the documentation to enable generation of the pdf file. Furthermore some Rd files were renamed to better reflect the functions they support.
-2017-04-19 : IsoformSwitchAnalyzeR v0.99.1
-    Made a small update to ensure the overview figures will be included in the vignette when build on all systems
+2017-04-20 : IsoformSwitchAnalyzeR v0.99.1-3
+    - Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards.
 2017-04-18 : IsoformSwitchAnalyzeR v0.99.0
     The following functionalities were added:
     	- Enable filtering for significant switches in the preFilter() function.

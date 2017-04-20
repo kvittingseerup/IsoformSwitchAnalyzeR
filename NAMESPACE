@@ -63,19 +63,22 @@ export('switchPlotIsoUsage')
 export('switchPlot')
 export('switchPlotTopSwitches')
 
-
-
 # High level function
 export('isoformSwitchAnalysisPart1')
 export('isoformSwitchAnalysisPart2')
 export('isoformSwitchAnalysisCombined')
 
-
 # other tools
 export('extractExpressionMatrix')
 export('prepareCuffExample')
 
-
+### example data
+export('exampleSwitchList')
+export('exampleSwitchListIntermediary')
+export('exampleSwitchListAnalyzed')
+export('isoformRepExpression')
+export('isoformExonAnnoation')
+export('designMatrix')
 
 ### Export classes
 exportClasses("switchAnalyzeRlist")
