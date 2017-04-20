@@ -17,13 +17,13 @@ getCDS <- function(
     repoName <- c("ensGene", "knownGene", "refGene", "wgEncodeGencodeV19")[which(c("ensemble",
                                                                                    "UCSC", "refseq", "GENCODE") %in% repoName)]
     #session <- browserSession("UCSC")
-    session <- browserSession("UCSC",url="http://genome-euro.ucsc.edu/cgi-bin/") # this solves the problem with changing geomes
-    genome(session) <- selectedGenome
-    query <- ucscTableQuery(session, repoName)
+    session <- rtracklayer::browserSession("UCSC",url="http://genome-euro.ucsc.edu/cgi-bin/") # this solves the problem with changing geomes
+    GenomeInfoDb::genome(session) <- selectedGenome
+    query <- rtracklayer::ucscTableQuery(session, repoName)
     if (repoName == "wgEncodeGencodeV19")
         repoName = "wgEncodeGencodeCompV19"
-    tableName(query) <- repoName
-    cdsTable <- getTable(query)
+    rtracklayer::tableName(query) <- repoName
+    cdsTable <- rtracklayer::getTable(query)
     if (repoName == "ensGene")
         cdsTable <- cdsTable[cdsTable$cdsStartStat != "none",
                              ]
@@ -36,7 +36,7 @@ getCDS <- function(
     cdsTable <- cdsTable[, c("chrom", "strand", "txStart", "txEnd",
                              "cdsStart", "cdsEnd", "exonCount", "name")]
     message("Retrieved ", nrow(cdsTable), " records...", sep = "")
-    flush.console()
+    utils::flush.console()
     return(new("CDSSet", cdsTable))
 }
 

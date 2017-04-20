@@ -1,7 +1,7 @@
 Package: IsoformSwitchAnalyzeR
 Type: Package
 Title: An R package to Identify, Annoatate and Visialize Isoform Switches with Functional Consequences (from RNA-seq data).
-Version: 0.99.3
+Version: 0.99.4
 Author: Kristoffer Vitting-Seerup
 Maintainer: Kristoffer Vitting-Seerup <k.vitting.seerup@gmail.com>
 Description: Since 2010 state-of-the-art bioinformatics tools have allowed researchers to reconstruct and quantify full length transcripts from RNA-seq data. Such geneome wide isoform resolution data has the potential to facilitate both genome wide analysis of alternative isoform usage and identification of isoform switching. Unfortunatly these types of analysis are still only rarely done and/or reported - in fact only 11% of articles analyzing RNA-seq data publised start 2016 performed analy isoform analysis. We hypothesis that there are 3 reasons why RNA-seq data is not used to its full potential: 1) There is still a lack of tools that can identify isoform switches with isoform resolution - thereby identifying the exact isoforms involved in a switch. 2) Although there are many very good tools to perform sequence analysis there is no common framework, which allows for integration of the analysis provided by these tools. 3) There is a lack of tools facilitating easy and article ready visual visualization of isoform switches. To all 3 problems we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy to use R package that enableswhich enables statistical identification as well as visualization of isoform switches with predicted functional consequences from RNA-seq data

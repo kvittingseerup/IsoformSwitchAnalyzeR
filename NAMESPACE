@@ -11,6 +11,7 @@ import(gridExtra)
 import(BSgenome)
 import(RColorBrewer)
 import(cummeRbund)
+#import(spliceR)
 import(ggplot2)
 
 ### Export functions from my R package
@@ -72,16 +73,10 @@ export('isoformSwitchAnalysisCombined')
 export('extractExpressionMatrix')
 export('prepareCuffExample')
 
-### example data
-export('exampleSwitchList')
-export('exampleSwitchListIntermediary')
-export('exampleSwitchListAnalyzed')
-export('isoformRepExpression')
-export('isoformExonAnnoation')
-export('designMatrix')
-
 ### Export classes
 exportClasses("switchAnalyzeRlist")
+exportClasses("CDSSet")
+exportClasses("SpliceRList")
 
 ### Overload generic functions to work with my classes
 S3method(dim,switchAnalyzeRlist)
