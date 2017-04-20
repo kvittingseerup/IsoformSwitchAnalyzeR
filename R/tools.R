@@ -117,7 +117,6 @@ extractExpressionMatrix <- function(
 }
 
 prepareCuffExample <- function(){
-    library('cummeRbund')
     dir <- tempdir()
     extdata <- system.file("extdata", package="cummeRbund")
     file.copy(file.path(extdata, dir(extdata)), dir)
