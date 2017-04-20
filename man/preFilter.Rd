@@ -22,7 +22,6 @@ preFilter(
 )
 
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{switchAnalyzeRlist}{
 A \code{switchAnalyzeRlist} object.
@@ -68,9 +67,8 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 
 
 \details{
-The filtering works by first requiring that the isoforms/genes is expressed above the cutoffs supplied in at least one condition of a comparison, then the data is filtered for isoform classes and lastly for single-isoform genes.
+The filtering works by first requiring that the isoforms/genes is expressed above the cutoffs supplied in at least one condition of a comparison, then the data is filtered for isoform classes and lastly for single-isoform genes.\cr
 
-\cr
 Especially the filter for gene expression can be important since a fundamental problem with the IF values (calculated as <isoform_exp> / <gene_exp>) is when the gene expression is low it causes the IF measure to loose precision. This can easily be illustrated with the following example: Lets consider a gene with two isoforms which are expressed so they contribute to the gene expression with 73.3\% and 26.7\%, if we have 100 RNA-seq reads to describe these the problem is easy and we recapitulate the 73\%/27\% ratio - which is decent. If we only have 10 reads the measurements get a little more inaccurate since the estimates now will be 70\% vs 30\%. If the gene is even lower expressed say 5 reads the estimates become 80\%/20\%.
 }
 

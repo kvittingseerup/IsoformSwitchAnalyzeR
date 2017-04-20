@@ -76,10 +76,10 @@ A logical indicating whether to return a data.frame with summary statistics of t
 }
 
 \details{
-Changes in isoform usage are measure as the difference in isoform fraction (dIF) values, where isoform fraction (IF) values are calculated as <isoform_exp> / <gene_exp>.
-\cr
-The significance indicated in the plot is based on FDR corrected p-values from the wilcox.test
-\cr
+Changes in isoform usage are measure as the difference in isoform fraction (dIF) values, where isoform fraction (IF) values are calculated as <isoform_exp> / <gene_exp>.\cr
+
+The significance indicated in the plot is based on FDR corrected p-values from the wilcox.test.\cr
+
 The arguments passed to \code{annotationToAnalyze} must be a combination of:
 \itemize{
     \item \code{isoform_class_code} : Devide transcripts based on differences in the transcript classification provide by cufflinks (only advailable for data imported from Cufflinks/Cuffdiff). For a updated list of class codes see \url{http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/#transfrag-class-codes}.

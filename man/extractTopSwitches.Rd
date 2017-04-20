@@ -54,9 +54,12 @@ A \code{data.frame} containing the top \code{n} switching genes or isoforms as c
 }
 
 \references{
-\itemize{Manuscript in preperation.}
-\itemize{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
+\itemize{
+    \item{Manuscript in preperation.}
+    \item{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
 }
+}
+
 \author{
 Kristoffer Vitting-Seerup
 }

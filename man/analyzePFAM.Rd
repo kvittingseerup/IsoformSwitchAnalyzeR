@@ -42,29 +42,33 @@ Use default paramters. If the webserver (\url{http://pfam.xfam.org/search#tabvie
 A colum called 'domain_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains any protein domains or not. Furthermore the data.frame 'domainAnalysis' is added to the \code{switchAnalyzeRlist} containing the details about domain names(s) and position for each transcript (where domain(s) were found).
 
 The data.frame added have one row per isoform and contains 18 columns:
-\itemize{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{orf_aa_start}: The start coordinate given as amino acid position (of the ORF).}
-\itemize{\code{orf_aa_end}: The end coordinate given as amino acid position (of the ORF).}
-\itemize{\code{hmm_acc}: A id which pfam have given to the domain}
-\itemize{\code{hmm_name}: The name of the domain}
-\itemize{\code{clan}: The can which the domain belongs to}
-\itemize{\code{type}: The type of domain. see \url{http://pfam.xfam.org/help} for details}
-\itemize{\code{predicted_active_site}: The amino acids identified as being part of the active site.}
-\itemize{\code{transcriptStart}: The transcript coordinate of the start of the domain.}
-\itemize{\code{transcriptEnd}: The transcript coordinate of the end of the domain.}
-\itemize{\code{pfamStarExon}: The exon index in which the start of the domain is located.}
-\itemize{\code{pfamEndExon}: The exon index in which the end of the domain is located.}
-\itemize{\code{pfamStartGenomic}: The genomic coordinat of the start of the domain.}
-\itemize{\code{pfamEndGenomic}:  The genomic coordinat of the end of the domain.}
-\itemize{\code{activeResTranscriptStart}: The transcript coordinat of active sites.}
-\itemize{\code{activeResTranscriptEnd}: The transcript coordinat of active sites.}
-\itemize{\code{activeResGenomicStart}: The genomic coordinat of active sites.}
-\itemize{\code{activeResGenomicEnd}: The genomic coordinat of active sites.}
+\itemize{
+    \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{orf_aa_start}: The start coordinate given as amino acid position (of the ORF).}
+    \item{\code{orf_aa_end}: The end coordinate given as amino acid position (of the ORF).}
+    \item{\code{hmm_acc}: A id which pfam have given to the domain}
+    \item{\code{hmm_name}: The name of the domain}
+    \item{\code{clan}: The can which the domain belongs to}
+    \item{\code{type}: The type of domain. see \url{http://pfam.xfam.org/help} for details}
+    \item{\code{predicted_active_site}: The amino acids identified as being part of the active site.}
+    \item{\code{transcriptStart}: The transcript coordinate of the start of the domain.}
+    \item{\code{transcriptEnd}: The transcript coordinate of the end of the domain.}
+    \item{\code{pfamStarExon}: The exon index in which the start of the domain is located.}
+    \item{\code{pfamEndExon}: The exon index in which the end of the domain is located.}
+    \item{\code{pfamStartGenomic}: The genomic coordinat of the start of the domain.}
+    \item{\code{pfamEndGenomic}:  The genomic coordinat of the end of the domain.}
+    \item{\code{activeResTranscriptStart}: The transcript coordinat of active sites.}
+    \item{\code{activeResTranscriptEnd}: The transcript coordinat of active sites.}
+    \item{\code{activeResGenomicStart}: The genomic coordinat of active sites.}
+    \item{\code{activeResGenomicEnd}: The genomic coordinat of active sites.}
+}
 }
 
 \references{
-\itemize{\code{This function} : Manuscript in preperation}
-\itemize{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
+\itemize{
+    \item{\code{This function} : Manuscript in preperation}
+    \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
+}
 }
 
 \author{

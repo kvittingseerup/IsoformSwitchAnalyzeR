@@ -75,10 +75,11 @@ Changes in isoform usage are measure as the difference in isoform fraction (dIF)
 The BSGenome object are loaded as seperate packages. Use for example \code{library(BSgenome.Hsapiens.UCSC.hg19)} to load the human genome v19 - which is then loaded as the object Hsapiens (that should be supplied to the \code{genomeObject} argument). It is essential that the chromosome names of the annoation fit with the genome object. The \code{extractSequence} function will automatically take the most common ambiguity into account: whether to use 'chr' in front of the chromosome name (UCSC style, eg. 'chr1') or not (Ensembl style, eg. '1').
 
 The two fasta files outputted by this function (if \code{writeToFile=TRUE}) can be used as input to amongst others:
-\itemize{\code{CPAT} : The Coding-Potential Assessment Tool, which can be run either locally or via their webserver \url{http://lilab.research.bcm.edu/cpat/} }
-\itemize{\code{Pfam} : Prediction of protein domains, which can be run either locally or via their webserver \url{http://pfam.xfam.org/search#tabview=tab1} }
-\itemize{\code{SignalIP} : Prediction of Signal Peptides, which can be run either locally or via their webserver \url{http://www.cbs.dtu.dk/services/SignalP/} }
-
+\itemize{
+    \item{\code{CPAT} : The Coding-Potential Assessment Tool, which can be run either locally or via their webserver \url{http://lilab.research.bcm.edu/cpat/} }
+    \item{\code{Pfam} : Prediction of protein domains, which can be run either locally or via their webserver \url{http://pfam.xfam.org/search#tabview=tab1} }
+    \item{\code{SignalIP} : Prediction of Signal Peptides, which can be run either locally or via their webserver \url{http://www.cbs.dtu.dk/services/SignalP/} }
+}
 See \code{?analyzeCPAT}, \code{?analyzePFAM} or \code{?analyzeSignalIP} (under details) for suggested ways of running these tools.
 
 }
@@ -88,10 +89,13 @@ If \code{writeToFile=TRUE} one fasta file pr sequence type (controled via \code{
 }
 
 \references{
-\itemize{\code{For this function} : Manuscript in preperation}
-\itemize{\code{CPAT} : Wang et al. CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model. Nucleic Acids Res. 2013, 41:e74.}
-\itemize{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
-\itemize{\code{SignalP} : Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. Nature Methods, 8:785-786, 2011}
+For
+\itemize{
+    \item{\code{This function} : Manuscript in preperation}
+    \item{\code{CPAT} : Wang et al. CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model. Nucleic Acids Res. 2013, 41:e74.}
+    \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
+    \item{\code{SignalP} : Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. Nature Methods, 8:785-786, 2011}
+}
 }
 
 \author{

@@ -12,9 +12,11 @@ Example data for IsoformSwitchAnalyzeR
 }
 
 \description{
-The test data included in this package is
-\itemize{\code{1}: Three switchAnalyzeRlist corresponding to a switchAnalyzeRlist in different stages of an isoform switch analyzer workflow (see format for details).}
-\itemize{\code{2}: A set of standard R object which is needed to used the \code{importRdata} function.}
+The test data included in the IsoformSwitchAnalyzeR package is:
+\itemize{
+    \item{\code{1}: Three switchAnalyzeRlist corresponding to a switchAnalyzeRlist in different stages of an isoform switch analyzer workflow (see format for details).}
+    \item{\code{2}: A set of standard R object which is needed to used the \code{importRdata} function.}
+}
 }
 
 \usage{
@@ -38,19 +40,14 @@ The 'exampleRdata' loads the following objects, which are all obtained (and mass
 \item { \code{isoformExonAnnoation} : GRange object with the isoform annotation.}
 \item { \code{designMatrix} : A design matrix for the data indicating two conditions 'WT' and 'KD'.}
 }
-More detials about the specification of each of these can be found in \code{?importRdata}.
-
-\cr
+More detials about the specification of each of these can be found in \code{?importRdata}.\cr
 
 The three example switchAnalyzeRlist are:
 \itemize{
-\item { \code{exampleSwitchList} : Which corresponds to a newly created \code{switchAnalyzeRlist} such as one would get by using either of the import* function (such as \code{importCufflinksData}) or by using \code{createSwitchAnalyzeRlist} on your own data. Not this is a small subset to allow for fast example generation.
+    \item { \code{exampleSwitchList} : Which corresponds to a newly created \code{switchAnalyzeRlist} such as one would get by using either of the import* function (such as \code{importCufflinksData}) or by using \code{createSwitchAnalyzeRlist} on your own data. Not this is a small subset to allow for fast example generation.}
+    \item { \code{exampleSwitchListIntermediary} : Which corresponds to the exampleSwitchList data (see above) which have been analyzed with the \code{isoformSwitchAnalysisPart1} function meaning that it have been filtered, tested for isoform switches, ORF have been predicted and both nucleotide and ORF amino acid sequences have been added to the \code{switchAnalyzeRlist}. Not this is a small subset to allow for fast example generation.}
+    \item { \code{exampleSwitchListAnalyzed} : Which corresponds to the a full isoform switch analysis workflow (including external sequence analysis of protein domains (via Pfam), coding potential (via CPAT) and signal peptides (via SignalP)). This is the result of with the \code{isoformSwitchAnalysisPart1} function, performing the external sequence analysis and using with the \code{isoformSwitchAnalysisPart2} to run the rest of the pipeline. Note this is a larger subset to illustrate the combined analysis and that the nucleotide and amino acid sequences normally added to the switchAnalyzeRlist have been removed from the switchAnalyzeRlist to save space (they can easily be added again with the \link{extractSequence} function).}
 }
-\item { \code{exampleSwitchListIntermediary} : Which corresponds to the exampleSwitchList data (see above) which have been analyzed with the \code{isoformSwitchAnalysisPart1} function meaning that it have been filtered, tested for isoform switches, ORF have been predicted and both nucleotide and ORF amino acid sequences have been added to the \code{switchAnalyzeRlist}. Not this is a small subset to allow for fast example generation.
-}
-\item { \code{exampleSwitchListAnalyzed} : Which corresponds to the a full isoform switch analysis workflow (including external sequence analysis of protein domains (via Pfam), coding potential (via CPAT) and signal peptides (via SignalP)). This is the result of with the \code{isoformSwitchAnalysisPart1} function, performing the external sequence analysis and using with the \code{isoformSwitchAnalysisPart2} to run the rest of the pipeline. Note this is a larger subset to illustrate the combined analysis and that the nucleotide and amino acid sequences normally added to the switchAnalyzeRlist have been removed from the switchAnalyzeRlist to save space (they can easily be added again with the \link{extractSequence} function).}
-}
-
 }
 
 \source{
@@ -72,6 +69,5 @@ extractConsequenceSummary(exampleSwitchListAnalyzed, asFractionTotal = TRUE)
 
 # Summarize as table instead
 extractConsequenceSummary(exampleSwitchListAnalyzed, plot = FALSE, returnResult = TRUE)
-
 }
 \keyword{datasets}

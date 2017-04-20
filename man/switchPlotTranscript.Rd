@@ -102,8 +102,10 @@ This function generates a plot visualizing all the annotation for the transcript
 }
 
 \value{
-\itemize{If \code{plot=TRUE} : Plots the visualization described in the \code{details} section}
-\itemize{If \code{plot=FALSE} : Returns the gg object which can then be modified or plotted in a different setting}.
+\itemize{
+    \item{If \code{plot=TRUE} : Plots the visualization described in the \code{details} section}
+    \item{If \code{plot=FALSE} : Returns the gg object which can then be modified or plotted in a different setting}.
+}
 }
 
 \references{

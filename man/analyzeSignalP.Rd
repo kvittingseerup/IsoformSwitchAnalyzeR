@@ -34,17 +34,21 @@ If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP 
 A collum called 'signal_peptide_identified' is added to \code{isoformFeatures} containing a binary indiaction (yes/no) of whether a transcript contains a signal peptide or not. Furthermore the data.frame 'signalPeptideAnalysis' is added to the \code{switchAnalyzeRlist} containing the details of the signal peptide analysis.
 
 The data.frame added have one row pr isoform and contains 6 columns:
-\itemize{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{has_signal_peptide}: A text string indicating whether there is a signal peptide or not. Can be yes or no}
-\itemize{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Refrence: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php#method}}
-\itemize{\code{aa_removed}: A integer giving the number of amino acids removed when the signal peptide is cleaved off.}
-\itemize{\code{transcriptClevageAfter}: The transcript position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
-\itemize{\code{genomicClevageAfter}: The genomic position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
+\itemize{
+    \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{has_signal_peptide}: A text string indicating whether there is a signal peptide or not. Can be yes or no}
+    \item{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Refrence: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php#method}}
+    \item{\code{aa_removed}: A integer giving the number of amino acids removed when the signal peptide is cleaved off.}
+    \item{\code{transcriptClevageAfter}: The transcript position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
+    \item{\code{genomicClevageAfter}: The genomic position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
+}
 }
 
 \references{
-\itemize{\code{This function} : Manuscript in preperation}
-\itemize{\code{SignalP} : Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. Nature Methods, 8:785-786, 2011}
+\itemize{
+    \item{\code{This function} : Manuscript in preperation}
+    \item{\code{SignalP} : Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. Nature Methods, 8:785-786, 2011}
+}
 }
 
 \author{

@@ -53,5 +53,13 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{
+### Load data
+data("exampleSwitchListIntermediary")
+
+### Perform analysis
+exampleSwitchListAnalyzed <- analyzeIntronRetention(exampleSwitchListIntermediary, quiet=TRUE)
+
+### Inspect result
+head(exampleSwitchListAnalyzed$intronRetentionAnalysis) # the first 6 does not have any intron retentions (IR)
+table(exampleSwitchListAnalyzed$intronRetentionAnalysis$IR) # there appear to be 7 transcripts that have an intron retention
 }
-\keyword{ ~kwd1 }

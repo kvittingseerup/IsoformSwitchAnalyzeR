@@ -9,7 +9,14 @@ This function extracts all isoforms with an absolute dIF change larger than \cod
 \usage{
 analyzeSwitchConsequences(
     switchAnalyzeRlist,
-    consequencesToAnalyze=c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified'),
+    consequencesToAnalyze=c(
+        'intron_retention',
+        'coding_potential',
+        'ORF_seq_similarity',
+        'NMD_status',
+        'domains_identified',
+        'signal_peptide_identified'
+    ),
     alpha=0.05,
     dIFcutoff=0.1,
     onlySigIsoforms=FALSE,
@@ -116,14 +123,16 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 The supplied \code{switchAnalyzeRlist} is returned, but now annotaed with the predicted functional consequences as follows. First a colum called 'switchConsequencesGene' is added to \code{isoformFeatures} entry of \code{switchAnalyzeRlist}. This column containing a binary indication (TRUE/FALSE (and NA)) of whether the switching gene have predicted functional consequences or not.
 
 Secondly the data.frame 'switchConsequence' is added to the \code{switchAnalyzeRlist} containing one row feature analyzed per comparison of isoforms pr comparison of condition. It contains 8 columns:
-\itemize{\code{gene_id}: The id of the gene which the isoforms compared belongs to. Mathces the 'gene_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{condition_1}: The first condition of the comparison. Should be though of as the ground state - meaning the changes occoure from condition_1 to condition_2. Matches the 'condition_1' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{condition_2}: The second condition of the comparison. Should be though of as the changed state - meaning the changes occure from condition_1 to condition_2. Matches the 'condition_2' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{isoformUpregulated}: The name of the isoform which is used more in condition_2 (when compared to condition_1, positive dIF values). Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{isoformDownregulated}: The name of the isoform which is used less in condition_2 (when compared to condition_1, negative dIF values). Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{featureCompared}: The category of the isoform features/annotation compared in this row (see details above)}
-\itemize{\code{isoformsDifferent}: A logic (TRUE/FALSE) indicating whether the two isoforms are different with respect to the featureCompared (see details above)}
-\itemize{\code{switchConsequence}: If the isoforms compared are different this columns contains a short description of the features of the upregulated isoform. E.g. domain loss means that the upregulated isoforms (isoformUpregulated) have lost domains compare to the downregulated isoform (isoformDownregulated).}
+\itemize{
+    \item{\code{gene_id}: The id of the gene which the isoforms compared belongs to. Mathces the 'gene_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{condition_1}: The first condition of the comparison. Should be though of as the ground state - meaning the changes occoure from condition_1 to condition_2. Matches the 'condition_1' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{condition_2}: The second condition of the comparison. Should be though of as the changed state - meaning the changes occure from condition_1 to condition_2. Matches the 'condition_2' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{isoformUpregulated}: The name of the isoform which is used more in condition_2 (when compared to condition_1, positive dIF values). Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{isoformDownregulated}: The name of the isoform which is used less in condition_2 (when compared to condition_1, negative dIF values). Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{featureCompared}: The category of the isoform features/annotation compared in this row (see details above)}
+    \item{\code{isoformsDifferent}: A logic (TRUE/FALSE) indicating whether the two isoforms are different with respect to the featureCompared (see details above)}
+    \item{\code{switchConsequence}: If the isoforms compared are different this columns contains a short description of the features of the upregulated isoform. E.g. domain loss means that the upregulated isoforms (isoformUpregulated) have lost domains compare to the downregulated isoform (isoformDownregulated).}
+}
 }
 
 \references{

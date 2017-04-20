@@ -40,8 +40,10 @@ A \code{data.frame} with the number of switches found in each comparison (as wel
 }
 
 \references{
-\itemize{Manuscript in preperation.}
-\itemize{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
+\itemize{
+    \item{Manuscript in preperation.}
+    \item{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
+}
 }
 \author{
 Kristoffer Vitting-Seerup

@@ -25,7 +25,6 @@ switchPlot(
 
 }
 
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{switchAnalyzeRlist}{
 A \code{switchAnalyzeRlist} object containing all the analysis to be incuded (e.g. if protein domains should be visualized they should be annotaed in the \code{switchAnalyzeRlist} object (via \link{analyzePFAM}))

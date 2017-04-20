@@ -346,7 +346,7 @@ analyzeSignalP <- function(
     ### Obtain signalP result
     if(TRUE) {
         ### Read file
-        singalPresults <- read.table(pathToSignalPresultFile, h=FALSE, stringsAsFactors = FALSE, fill= TRUE, col.names=paste('V', 1:13, sep=''))
+        singalPresults <- read.table(pathToSignalPresultFile, header = FALSE, stringsAsFactors = FALSE, fill= TRUE, col.names=paste('V', 1:13, sep=''))
         # extract summary
         singalPresults <- singalPresults[which(grepl(pattern = "SP=\'YES\'", x =  singalPresults$V2)),]
 

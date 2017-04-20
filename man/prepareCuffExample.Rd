@@ -22,8 +22,8 @@ A CuffSet object.
 Vitting-Seerup K , Porse BT, Sandelin A, Waage J. (2014) spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data. BMC Bioinformatics 15:81.
 }
 
-
 \examples{
 #Load cufflinks example data
 cuffDB <- prepareCuffExample()
 }
+

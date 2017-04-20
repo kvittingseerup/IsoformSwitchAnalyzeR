@@ -22,7 +22,6 @@ importCufflinksFiles(
 )
 
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{pathToGTF}{
 A string indicating the path to the GTF file used as input to Cuffdiff downloaded from galaxy

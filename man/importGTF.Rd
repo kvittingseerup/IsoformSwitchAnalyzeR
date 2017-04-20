@@ -39,17 +39,19 @@ A \code{switchAnalyzeRlist} containing a all the gene and transcript information
 If \code{addAnnotatedORFs=TRUE} a \code{data.frame} containing the details of the ORF analysis have been added to the switchAnalyzeRlist under the name 'orfAnalysis'.
 
 The data.frame added have one row pr isoform and contains 11 columns:
-\itemize{\code{isoform_id}: The name of the isoform analyzed. Mathces the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-\itemize{\code{orfTransciptStart}: The start position of the ORF in transcript cooridnats, here defined as the position of the 'A' in the 'AUG' start motif.}
-\itemize{\code{orfTransciptEnd}: The end position of the ORF in transcript coordinats, here defined as the last nucleotide before the STOP codon (meaning the stop codon is not included in these coordinates).}
-\itemize{\code{orfTransciptLength}: The length of the ORF}
-\itemize{\code{orfStarExon}: The exon in which the start codon is}
-\itemize{\code{orfEndExon}: The exon in which the stop codon is}
-\itemize{\code{orfStartGenomic}: The start position of the ORF in genomic cooridnats, here defined as the the position of the 'A' in the 'AUG' start motif.}
-\itemize{\code{orfEndGenomic}: The end position of the ORF in genomic coordinats, here defined as the last nucleotide before the STOP codon (meaning the stop codon is not included in these coordinates).}
-\itemize{\code{stopDistanceToLastJunction}: Distance from stop codon to the last exon-exon junction}
-\itemize{\code{stopIndex}: The index, counting from the last exon (which is 0), of which exon is the stop codon is in.}
-\itemize{\code{PTC}: A logic indicating whether the isoform is classified as having a Premature Termination Codon. This is defined as having a stop codon more than \code{PTCDistance} (default is 50) nt upstream of the last exon exon junciton.}
+\itemize{
+    \item{\code{isoform_id}: The name of the isoform analyzed. Mathces the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{orfTransciptStart}: The start position of the ORF in transcript cooridnats, here defined as the position of the 'A' in the 'AUG' start motif.}
+    \item{\code{orfTransciptEnd}: The end position of the ORF in transcript coordinats, here defined as the last nucleotide before the STOP codon (meaning the stop codon is not included in these coordinates).}
+    \item{\code{orfTransciptLength}: The length of the ORF}
+    \item{\code{orfStarExon}: The exon in which the start codon is}
+    \item{\code{orfEndExon}: The exon in which the stop codon is}
+    \item{\code{orfStartGenomic}: The start position of the ORF in genomic cooridnats, here defined as the the position of the 'A' in the 'AUG' start motif.}
+    \item{\code{orfEndGenomic}: The end position of the ORF in genomic coordinats, here defined as the last nucleotide before the STOP codon (meaning the stop codon is not included in these coordinates).}
+    \item{\code{stopDistanceToLastJunction}: Distance from stop codon to the last exon-exon junction}
+    \item{\code{stopIndex}: The index, counting from the last exon (which is 0), of which exon is the stop codon is in.}
+    \item{\code{PTC}: A logic indicating whether the isoform is classified as having a Premature Termination Codon. This is defined as having a stop codon more than \code{PTCDistance} (default is 50) nt upstream of the last exon exon junciton.}
+}
 NA means no information was advailable aka no ORF (passing the \code{minORFlength} filter) was found.
 
 }
