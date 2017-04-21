@@ -239,7 +239,7 @@ switchPlotTopSwitches <- function(
                 if( fileType == 'pdf' ) {
                     pdf(file = paste(fileName, '.pdf',sep=''), height=5, width = 8, onefile = FALSE)
                 } else {
-                    png(file = paste(fileName, '.png',sep=''), height=5, width = 8, units='in', res=300)
+                    png(filename = paste(fileName, '.png',sep=''), height=5, width = 8, units='in', res=300)
                 }
                 switchPlot(switchAnalyzeRlist = switchAnalyzeRlist, gene = aDF$gene_id, condition1 = aDF$condition_1, condition2 = aDF$condition_2, IFcutoff=IFcutoff, localTheme = theme_bw(base_size = 8), additionalArguments=additionalArguments)
                 dev.off()

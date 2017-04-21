@@ -165,7 +165,7 @@ isoformSwitchAnalysisPart2 <- function(
             extractConsequenceSummary(switchAnalyzeRlist = switchAnalyzeRlist, asFractionTotal = asFractionTotal, alpha = alpha, dIFcutoff=dIFcutoff, plot = TRUE, returnResult = FALSE)
             dev.off()
         } else {
-            png(file = paste(pathToOutput,'/common_switch_consequences.png', sep=''), width = 1000, height = 700)
+            png(filename = paste(pathToOutput,'/common_switch_consequences.png', sep=''), width = 1000, height = 700)
             extractConsequenceSummary(switchAnalyzeRlist = switchAnalyzeRlist, asFractionTotal = asFractionTotal, alpha = alpha, dIFcutoff=dIFcutoff, plot = TRUE, returnResult = FALSE)
             dev.off()
         }
