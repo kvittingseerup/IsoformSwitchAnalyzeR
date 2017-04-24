@@ -431,7 +431,7 @@ extractSequence <- function(
                 # Correct all chromosomes
                 seqlevels(myExonGranges) <- unique(paste("chr",seqnames(myExonGranges), sep=""))
                 # Correct Mitochondria
-                seqlevels(myExonGranges)<- sub('chrMT','chrM',seqlevels(myExonGranges))
+                seqlevels(myExonGranges) <- sub('chrMT','chrM',seqlevels(myExonGranges))
 
                 # check overlap again
                 grSeqs <- seqlevels(myExonGranges)

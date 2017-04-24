@@ -1,4 +1,4 @@
-2017-04-20 : IsoformSwitchAnalyzeR v0.99.1-6
+2017-04-20 : IsoformSwitchAnalyzeR v0.99.1-7
     - Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards.
 2017-04-18 : IsoformSwitchAnalyzeR v0.99.0
     The following functionalities were added:

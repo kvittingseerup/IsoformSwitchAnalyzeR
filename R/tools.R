@@ -121,6 +121,6 @@ prepareCuffExample <- function(){
     extdata <- system.file("extdata", package="cummeRbund")
     file.copy(file.path(extdata, dir(extdata)), dir)
 
-    cuffDB <- readCufflinks(dir=dir, gtfFile=system.file("extdata/chr1_snippet.gtf", package="cummeRbund"), genome="hg19", rebuild=TRUE)
+    cuffDB <- cummeRbund::readCufflinks(dir=dir, gtfFile=system.file("extdata/chr1_snippet.gtf", package="cummeRbund"), genome="hg19", rebuild=TRUE)
     return(cuffDB)
 }

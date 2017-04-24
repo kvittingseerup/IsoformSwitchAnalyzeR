@@ -89,7 +89,7 @@ analyzeIntronRetention <- function(
         }
 
         correspondingExons <- switchAnalyzeRlist$exons[which( switchAnalyzeRlist$exons$isoform_id %in% localData$isoform_id ), ]
-        colnames(mcols(correspondingExons)) <- paste('spliceR.',colnames(mcols(correspondingExons)), sep='')
+        colnames(  correspondingExons@elementMetadata) <- paste('spliceR.',colnames( correspondingExons@elementMetadata ), sep='')
     }
 
     ### Make temporary spliceRList
@@ -142,7 +142,7 @@ analyzeIntronRetention <- function(
     }
 
     message('Step 4 of 4: Preparing output...')
-    localIRresults <- unique( as.data.frame(mcols(annotationResult$transcript_features)[,c('spliceR.isoform_id','spliceR.ISI','spliceR.ISI.start','spliceR.ISI.end')]) )
+    localIRresults <- unique( as.data.frame( annotationResult$transcript_features@elementMetadata[,c('spliceR.isoform_id','spliceR.ISI','spliceR.ISI.start','spliceR.ISI.end')]) )
     colnames(localIRresults) <- gsub('\\.','_', gsub('spliceR.', '', colnames(localIRresults)))
     colnames(localIRresults) <- gsub('ISI', 'IR', colnames(localIRresults))
     colnames(localIRresults)[3:4] <- gsub('IR', 'IR_genomic', colnames(localIRresults)[3:4])

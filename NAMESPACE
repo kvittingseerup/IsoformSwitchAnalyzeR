@@ -1,18 +1,32 @@
 ### Import libraries functions
 import(methods)
-#import(plyr, except = c(desc, count))
 import(plyr)
 import(reshape2)
 import(Biostrings)
 import(IRanges)
 import(GenomicRanges)
-#import(GenomicRanges, except = c(promoters))
 import(gridExtra)
 import(BSgenome)
 import(RColorBrewer)
 import(cummeRbund)
-#import(spliceR)
 import(ggplot2)
+import(ballgown)
+import(VennDiagram)
+import(DBI)
+
+### Import specific functions
+importFrom("grDevices", "dev.off", "hcl", "pdf", "png")
+importFrom("graphics", "lines", "plot", "text", "title")
+importFrom("stats", "dnorm", "na.omit", "optim", "p.adjust", "pchisq", "pnorm", "pt", "qnorm", "qt", "setNames", "weighted.mean", "wilcox.test")
+importFrom("utils", "read.table", "setTxtProgressBar", "txtProgressBar")
+importFrom('GenomeInfoDb','seqlevels','seqlevels<-')
+importFrom('grid','grid.newpage')
+importFrom('grid','pushViewport')
+importFrom('grid','viewport')
+importFrom('grid','grid.layout')
+importFrom('DBI','dbGetQuery','dbDriver')
+
+
 
 ### Export functions from my R package
 # Creating list

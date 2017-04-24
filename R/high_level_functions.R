@@ -25,7 +25,7 @@ isoformSwitchAnalysisPart1 <- function(
         } else if (inputClass == 'CuffSet'){
             if( ! quiet) { message(paste('Step 1 of', nrAnalysis, ': Importing and massaging Cufflinks/Cuffdiff data...', sep=' ')) }
 
-            switchAnalyzeRlist <- importCufflinksData(cuffDB = input, quiet=TRUE)
+            switchAnalyzeRlist <- importCufflinksCummeRbund(cuffDB = input, quiet=TRUE)
         } else if (inputClass == 'ballgown'){
             if( ! quiet) { message(paste('Step 1 of', nrAnalysis, ': Importing and massaging data from ballgown...', sep=' ')) }
 

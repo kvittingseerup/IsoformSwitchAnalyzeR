@@ -187,7 +187,7 @@ createSwitchAnalyzeRlist <- function(
             }
 
             # exons
-            if( ! all( c("isoform_id","gene_id") %in% colnames(mcols(exons)) ) ) {
+            if( ! all( c("isoform_id","gene_id") %in% colnames( exons@elementMetadata ) ) ) {
                 stop('The \'exons\' argument must contain both \'isoform_id\' and \'gene_id\' as metadata collumns')
             }
             # conditions

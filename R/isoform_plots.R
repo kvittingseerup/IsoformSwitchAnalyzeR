@@ -560,7 +560,7 @@ switchPlotTranscript <- function(
     if(length(domainsFound) == 0) {
         domainsColor <- NULL
     } else if(length(domainsFound) < 3) {
-        domainsColor <- brewer.pal(n = 3, name = 'Dark2')[2:(length(domainsFound)+1)]
+        domainsColor <- RColorBrewer::brewer.pal(n = 3, name = 'Dark2')[2:(length(domainsFound)+1)]
     } else if(length(domainsFound) > 12) {
         gg_color_hue <- function(n) {
             hues = seq(15, 375, length=n+1)
@@ -568,7 +568,7 @@ switchPlotTranscript <- function(
         }
         domainsColor <- gg_color_hue(length(domainsFound))
     } else {
-        domainsColor <- brewer.pal(n = length(domainsFound), name = 'Paired')
+        domainsColor <- RColorBrewer::brewer.pal(n = length(domainsFound), name = 'Paired')
     }
 
     if(optimizeForCombinedPlot) {

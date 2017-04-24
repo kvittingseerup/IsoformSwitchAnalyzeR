@@ -34,34 +34,34 @@ importCufflinksCummeRbund <- function(
 ) {
     ### Test input
     if(TRUE) {
-        if( class(cuffDB)      != 'CuffSet'     ) { stop('The object supplied to \'cuffDB\' must be a \'CuffSet\'. See ?readCufflinks for more information') }
+        if( class(cuffDB)      != 'CuffSet'     ) { stop('The object supplied to \'cuffDB\' must be a \'CuffSet\'. See ?cummeRbund::readCufflinks for more information') }
         if( !is.logical(fixCufflinksAnnotationProblem)) { stop("The \'fixCufflinksAnnotationProblem\' argument must be a logic.") }
 
     }
     if( ! quiet) { message("Reading cuffDB, isoforms...") }
 
     # Make gene and isoform pointers
-    cuffGenes 			<- genes(cuffDB)
-    cuffIsoforms 		<- isoforms(cuffDB)
+    cuffGenes 			<- cummeRbund::genes(cuffDB)
+    cuffIsoforms 		<- cummeRbund::isoforms(cuffDB)
 
     ### Extract gene diff analysis
-    geneDiffanalysis     		<- data.frame(diffData(cuffGenes),stringsAsFactors= FALSE)
+    geneDiffanalysis     		<- data.frame(cummeRbund::diffData(cuffGenes),stringsAsFactors= FALSE)
     geneDiffanalysis <- geneDiffanalysis[which(colnames(geneDiffanalysis) != 'test_stat')]
     colnames(geneDiffanalysis) 	<- c('gene_id','sample_1', 'sample_2' ,unlist(lapply(colnames(geneDiffanalysis[,-1:-3]), function(x) paste("gene_",x,sep="")))) # add gene to the colnames so they can be destinquished from the isoform diff data
 
     ### Extract isoform (and thereby also gene) annotation
-    isoformAnnotation 			<- data.frame(annotation(cuffIsoforms),stringsAsFactors= FALSE)
+    isoformAnnotation 			<- data.frame( cummeRbund::annotation(cuffIsoforms),stringsAsFactors= FALSE)
     # Unique + removeal of colums is nessesary because of the new cummeRbund devel (where these colums are included and exon number thereby makes duplication of rows)
     isoformAnnotation <- unique( isoformAnnotation[,na.omit( match( c('isoform_id','gene_id','gene_short_name','nearest_ref_id','class_code','TSS_group_id','CDS_id','length','locus'), colnames(isoformAnnotation)))] )
 
     ### Extract isoform diff analysis
-    isoformDiffanalysis 			<- data.frame(diffData(cuffIsoforms),stringsAsFactors= FALSE)
+    isoformDiffanalysis 			<- data.frame( cummeRbund::diffData(cuffIsoforms),stringsAsFactors= FALSE)
     isoformDiffanalysis <- isoformDiffanalysis[,which( colnames(isoformDiffanalysis) != 'test_stat' )]
     colnames(isoformDiffanalysis) 	<- c('isoform_id','sample_1', 'sample_2' ,unlist(lapply(colnames(isoformDiffanalysis[,-1:-3]), function(x) paste("iso_",x,sep="")))) # add gene to the colnames so they can be destinquished from the gene diff data
 
     ### Extract and add isoform stderr
     # exract
-    isoStderr <- fpkm(cuffIsoforms)[,c(c('isoform_id','sample_name','stdev'))]
+    isoStderr <- cummeRbund::fpkm(cuffIsoforms)[,c(c('isoform_id','sample_name','stdev'))]
     colnames(isoStderr)[which(colnames(isoStderr) == 'stdev')] <- 'iso_stderr'
 
     # add
@@ -189,7 +189,7 @@ importCufflinksCummeRbund <- function(
 
         ### Extract cufflinks switch test
         myCuffGeneSet <- suppressMessages(cummeRbund::getGenes(cuffDB, featureNames(genes(cuffDB))) )
-        cuffSplicing <- diffData(splicing(myCuffGeneSet))
+        cuffSplicing <- cummeRbund::diffData( cummeRbund::splicing(myCuffGeneSet))
 
         isoformData$isoform_switch_q_value <- NA
 
@@ -225,7 +225,7 @@ importCufflinksCummeRbund <- function(
 
     ### Extract run info
     # cufflinks version
-    cuffVersion <- runInfo(cuffDB)$value[2]
+    cuffVersion <- cummeRbund::runInfo(cuffDB)$value[2]
 
     ### Check cufflinks version
     checkVersionFail <- function(versionVector, minVersionVector) {
@@ -255,7 +255,7 @@ importCufflinksCummeRbund <- function(
     }
 
     # replicate numbers
-    nrRep <- table(replicates(cuffDB)$sample_name)
+    nrRep <- table( cummeRbund::replicates(cuffDB)$sample_name)
     nrRep <- data.frame(condition=names(nrRep), nrReplicates=as.vector(nrRep), row.names = NULL, stringsAsFactors = FALSE)
 
     # Return SpliceRList
@@ -503,7 +503,7 @@ importCufflinksFiles <- function(
         exonFeatures <- exonFeatures[which( tolower(exonFeatures$type) == 'exon'), c('gene_id','transcript_id')]
 
         ### rename
-        colnames(mcols(exonFeatures)) <- gsub('transcript_id','isoform_id', colnames(mcols(exonFeatures)))
+        colnames( exonFeatures@elementMetadata ) <- gsub('transcript_id','isoform_id', colnames( exonFeatures@elementMetadata))
     }
 
     ### Check it is the same transcripts in transcript structure and expression info
@@ -660,8 +660,8 @@ importGTF <- function(
     mfGTF <- rtracklayer::import(pathToGTF)
 
     ### tjeck GTF
-    if( ! all( c('transcript_id','gene_id') %in% colnames(mcols(mfGTF)) ) ){
-        collumnsMissing <- paste(c('transcript_id','gene_id')[which( ! c('transcript_id','gene_id') %in% colnames(mcols(mfGTF)) )], collapse = ', ')
+    if( ! all( c('transcript_id','gene_id') %in% colnames( mfGTF@elementMetadata ) ) ){
+        collumnsMissing <- paste(c('transcript_id','gene_id')[which( ! c('transcript_id','gene_id') %in% colnames( mfGTF@elementMetadata ) )], collapse = ', ')
         stop(paste( 'The GTF file must contain the folliwing collumns \'transcript_id\', \'gene_id\' and.', collumnsMissing, 'is missing.', sep=' '))
     }
 
@@ -680,7 +680,7 @@ importGTF <- function(
     exonAnoationIndex <- which(mfGTF$type == 'exon')
 
     colsToExtract <- c('transcript_id','gene_id','gene_name')
-    myIso <- as.data.frame( unique( mcols(mfGTF[ exonAnoationIndex , na.omit(match(colsToExtract, colnames(mcols(mfGTF)) )) ])) )
+    myIso <- as.data.frame( unique( mfGTF@elementMetadata[ exonAnoationIndex , na.omit(match(colsToExtract, colnames( mfGTF@elementMetadata) )) ] ))
 
     if(is.null( myIso$gene_name )) {
         myIso$gene_name <- NA
@@ -903,7 +903,7 @@ importGTF <- function(
 
     # Create exon_features grange
     myExons <- sort( mfGTF[ exonAnoationIndex ,c('transcript_id','gene_id')] )
-    colnames(mcols(myExons)) <- c('isoform_id','gene_id')
+    colnames( myExons@elementMetadata) <- c('isoform_id','gene_id')
 
     # create replicates
     nrRep <- data.frame(condition=c('plaseholder1','plaseholder2'), nrReplicates=c(NA, NA), row.names = NULL, stringsAsFactors = FALSE)
@@ -1042,7 +1042,7 @@ importRdata <- function(
             ### Devide the data
             isoformExonStructure <- isoformExonAnnoation[,c('isoform_id','gene_id')]
 
-            isoformAnnotation <- unique(as.data.frame(mcols(isoformExonAnnoation)))
+            isoformAnnotation <- unique(as.data.frame( isoformExonAnnoation@elementMetadata ))
             if( ! 'gene_name' %in% colnames(isoformAnnotation) ) {
                 isoformAnnotation$gene_name <- NA
             }
@@ -1063,7 +1063,7 @@ importRdata <- function(
         if( any( is.na(isoformAnnotation[,c('isoform_id','gene_id')]) ) ) {
             stop('The \'isoform_id\' and \'gene_id\' columns in the data.frame passed to the \'isoformAnnotation\' argument are not allowed to contain NAs')
         }
-        if( ! 'isoform_id' %in% colnames(mcols(isoformExonStructure)) ) {
+        if( ! 'isoform_id' %in% colnames( isoformExonStructure@elementMetadata ) ) {
             stop('The GenomicRanges (GRanges) object passed to the \'isoformExonStructure\' argument must contain both a \'isoform_id\' metadata column')
         }
 
@@ -1357,7 +1357,7 @@ importBallgownData <- function(
             # combine
             isoformExonAnnoation <- sort(c(isoformExonAnnoationNonduplicated, isoformExonAnnoationDeduplicated))
 
-            colnames(mcols(isoformExonAnnoation)) <- 't_id'
+            colnames( isoformExonAnnoation@elementMetadata ) <- 't_id'
             isoformExonAnnoation$isoform_id <- isoAnnot$isoform_id[match( isoformExonAnnoation$t_id, isoAnnot$t_id)]
             isoformExonAnnoation$gene_id <- isoAnnot$gene_id[match( isoformExonAnnoation$t_id, isoAnnot$t_id)]
             isoformExonAnnoation$t_id <- NULL
