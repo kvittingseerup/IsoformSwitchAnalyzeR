@@ -102,11 +102,11 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{analyzeCPAT}}
-\code{\link{analyzePFAM}}
-\code{\link{analyzeSignalP}}
-\code{\link{extractSwitchSummary}}
-\code{\link{analyzeSwitchConsequences}}
+\code{\link{analyzeCPAT}}\cr
+\code{\link{analyzePFAM}}\cr
+\code{\link{analyzeSignalP}}\cr
+\code{\link{extractSwitchSummary}}\cr
+\code{\link{analyzeSwitchConsequences}}\cr
 \code{\link{switchPlotTopSwitches}}
 }
 

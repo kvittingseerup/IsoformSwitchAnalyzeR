@@ -115,9 +115,9 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{analyzeORF}}
-\code{\link{analyzeCPAT}}
-\code{\link{analyzePFAM}}
+\code{\link{analyzeORF}}\cr
+\code{\link{analyzeCPAT}}\cr
+\code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}
 }
 \examples{

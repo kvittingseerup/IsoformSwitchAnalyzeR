@@ -124,11 +124,15 @@ The supplied \code{switchAnalyzeRlist} is returned, but now annotaed with the pr
 
 Secondly the data.frame 'switchConsequence' is added to the \code{switchAnalyzeRlist} containing one row feature analyzed per comparison of isoforms pr comparison of condition. It contains 8 columns:
 \itemize{
+    \item{\code{gene_ref} : A unique refrence to a specific gene in a specific comaprison of conditions. Enables esay handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
     \item{\code{gene_id}: The id of the gene which the isoforms compared belongs to. Mathces the 'gene_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{gene_name} : The gene name associated with the <gene_id>, typically a more readable one (for example p53 or BRCA1) }
     \item{\code{condition_1}: The first condition of the comparison. Should be though of as the ground state - meaning the changes occoure from condition_1 to condition_2. Matches the 'condition_1' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{condition_2}: The second condition of the comparison. Should be though of as the changed state - meaning the changes occure from condition_1 to condition_2. Matches the 'condition_2' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{isoformUpregulated}: The name of the isoform which is used more in condition_2 (when compared to condition_1, positive dIF values). Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{isoformDownregulated}: The name of the isoform which is used less in condition_2 (when compared to condition_1, negative dIF values). Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
+    \item{\code{iso_ref_up} : A unique refrence to a specific isoform in a specific comaprison of conditions for the isoform switching up. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
+    \item{\code{iso_ref_down} : A unique refrence to a specific isoform in a specific comaprison of conditions for the isoform switching down. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
     \item{\code{featureCompared}: The category of the isoform features/annotation compared in this row (see details above)}
     \item{\code{isoformsDifferent}: A logic (TRUE/FALSE) indicating whether the two isoforms are different with respect to the featureCompared (see details above)}
     \item{\code{switchConsequence}: If the isoforms compared are different this columns contains a short description of the features of the upregulated isoform. E.g. domain loss means that the upregulated isoforms (isoformUpregulated) have lost domains compare to the downregulated isoform (isoformDownregulated).}
@@ -142,10 +146,10 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{analyzeORF}}
-\code{\link{analyzeCPAT}}
-\code{\link{analyzePFAM}}
-\code{\link{analyzeSignalP}}
+\code{\link{analyzeORF}}\cr
+\code{\link{analyzeCPAT}}\cr
+\code{\link{analyzePFAM}}\cr
+\code{\link{analyzeSignalP}}\cr
 \code{\link{extractConsequenceSummary}}
 }
 \examples{

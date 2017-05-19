@@ -55,8 +55,8 @@ The data.frame added have one row pr isoform and contains 6 columns:
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
-\code{\link{extractSequence}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{extractSequence}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

@@ -114,12 +114,12 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{isoformSwitchTest}}
-\code{\link{analyzeORF}}
-\code{\link{analyzeIntronRetention}}
-\code{\link{analyzeCPAT}}
-\code{\link{analyzePFAM}}
-\code{\link{analyzeSignalP}}
+\code{\link{isoformSwitchTest}}\cr
+\code{\link{analyzeORF}}\cr
+\code{\link{analyzeIntronRetention}}\cr
+\code{\link{analyzeCPAT}}\cr
+\code{\link{analyzePFAM}}\cr
+\code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

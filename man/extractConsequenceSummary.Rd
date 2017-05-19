@@ -71,7 +71,7 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{analyzeSwitchConsequences}}
+\code{\link{analyzeSwitchConsequences}}\cr
 \code{\link{extractSwitchSummary}}
 }
 \examples{

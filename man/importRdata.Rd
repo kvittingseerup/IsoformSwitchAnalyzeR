@@ -18,6 +18,7 @@ Furthermore it's possible to specify which comparisons to make using the \code{c
 
 \usage{
 importRdata(
+    isoformCountMatrix,
     isoformRepExpression,
     designMatrix,
     isoformExonAnnoation,
@@ -34,7 +35,9 @@ importRdata(
 
 
 \arguments{
-\item{isoformRepExpression}{ A data.frame with unfiltered normalized biological (not technical) replicate isoform expression. Must have a column called 'isoform_id' with the isoform_id. The name of the expression columns must match the sample names in the \code{designMatrix} argument. The expression must be normalized to both library size and isoform length (meaning they should be RPKM or FPKM) since without these normalization the isoform fractions cannot be trusted.}
+\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) counts. Must have a column called 'isoform_id' with the isoform_id that matches the isoform_id in \code{isoformExonAnnoation}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
+
+\item{isoformRepExpression}{ OPTIONAL: A data.frame with unfiltered NORMALIZED biological (not technical) replicate isoform expression. This is only nessesary if additional normalization (appart form normalizing to library size and isoform length aka RPKM or FPKM) is nessesary. Must have a column called 'isoform_id' with the isoform_id. The name of the expression columns must match the sample names in the \code{designMatrix} argument.}
 
 \item{designMatrix}{
 A data.frame with the information of which samples originate from which conditions. Must be a data.frame with two collums:
@@ -111,24 +114,38 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importIsoformExpression}}\cr
 \code{\link{preFilter}}
 }
 
 \examples{
-### Load example data
-data('exampleRdata')
+### Construct data needed from example data in cummeRbund package
+### (The recomended way of analyzing Cufflinks/Cuffdiff datat is via importCufflinksCummeRbund()
+### This is jus an easy way to get some example data ).
+cuffDB <- prepareCuffExample()
+
+isoRepCount <- repCountMatrix(isoforms(cuffDB))
+isoRepCount$isoform_id <- rownames(isoRepCount)
+
+### Design matrix
+designMatrix <- cummeRbund::replicates(cuffDB)[,c('rep_name','sample_name')]
+colnames(designMatrix) <- c('sampleID','condition')
+
+localAnnotaion <- import(system.file("extdata/chr1_snippet.gtf", package="cummeRbund"))[,c('transcript_id','gene_id')]
+colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
+
 
 ### Take a look at the data
-head(isoformRepExpression)
+head(isoRepCount)
 head(designMatrix)
-head(isoformExonAnnoation)
+head(localAnnotaion)
 
 ### Create switchAnalyzeRlist
 aSwitchList <- importRdata(
-    isoformRepExpression=isoformRepExpression,
+    isoformCountMatrix=isoRepCount,
     designMatrix=designMatrix,
-    isoformExonAnnoation=isoformExonAnnoation
+    isoformExonAnnoation=localAnnotaion
 )
 aSwitchList
 }

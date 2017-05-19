@@ -14,6 +14,7 @@ importCufflinksFiles(
     pathToIsoformDEanalysis,
     pathToGeneFPKMtracking,
     pathToIsoformFPKMtracking,
+    pathToIsoformReadGroupTracking,
     pathToSplicingAnalysis=NULL,
     pathToReadGroups,
     pathToRunInfo,
@@ -24,28 +25,33 @@ importCufflinksFiles(
 }
 \arguments{
   \item{pathToGTF}{
-A string indicating the path to the GTF file used as input to Cuffdiff downloaded from galaxy
+A string indicating the path to the GTF file used as input to Cuffdiff file (downloaded from fx galaxy).
 }
   \item{pathToGeneDEanalysis}{
-A string indicating the path to the file "gene differential expression testing" downloaded from galaxy
+A string indicating the path to the file "gene differential expression testing" file (downloaded from fx galaxy).
 }
   \item{pathToIsoformDEanalysis}{
-A string indicating the path to the file "transcript differential expression testing"  downloaded from galaxy
+A string indicating the path to the file "transcript differential expression testing" file (downloaded from fx galaxy).
 }
   \item{pathToGeneFPKMtracking}{
-A string indicating the path to the file "gene FPKM tracking" downloaded from galaxy
+A string indicating the path to the file "gene FPKM tracking" file (downloaded from fx galaxy).
 }
+
+\item{pathToIsoformReadGroupTracking}{
+A string indicating the path to the file "isoform read group tracking" file (downloaded from fx galaxy).
+}
+
   \item{pathToIsoformFPKMtracking}{
-A string indicating the path to the file "transcript FPKM tracking" downloaded from galaxy
+A string indicating the path to the file "transcript FPKM tracking" file (downloaded from fx galaxy).
 }
 \item{pathToSplicingAnalysis}{
-A string indicating the path to the file "splicing differential expression testing" downloaded from galaxy. Only needed if the splicing analysis should be added. Default is NULL (not added).
+A string indicating the path to the file "splicing differential expression testing" file (downloaded from fx galaxy).. Only needed if the splicing analysis should be added. Default is NULL (not added).
 }
   \item{pathToReadGroups}{
-A string indicating the path to the file "Read groups" downloaded from galaxy
+A string indicating the path to the file "Read groups" file (downloaded from fx galaxy).
 }
   \item{pathToRunInfo}{
-A string indicating the path to the file "Run details" downloaded from galaxy
+A string indicating the path to the file "Run details" file (downloaded from fx galaxy).
 }
   \item{fixCufflinksAnnotationProblem}{
 A logic indicating whether to fix the problem with Cufflinks gene symbol annotation. Please see the details for additional information. Default is TRUE.
@@ -67,8 +73,8 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
-\code{\link{importCufflinksCummeRbund}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importCufflinksCummeRbund}}\cr
 \code{\link{preFilter}}
 }
 \note{
@@ -78,14 +84,15 @@ Note that since there was an error in Cufflinks/Cuffdiff's estimation of standar
 \examples{
 ### Use the files from the cummeRbund example data
 testSwitchList <- importCufflinksFiles(
-    pathToGTF                 = system.file('extdata/chr1_snippet.gtf',       package = "cummeRbund"),
-    pathToGeneDEanalysis      = system.file('extdata/gene_exp.diff',          package = "cummeRbund"),
-    pathToIsoformDEanalysis   = system.file('extdata/isoform_exp.diff',       package = "cummeRbund"),
-    pathToGeneFPKMtracking    = system.file('extdata/genes.fpkm_tracking',    package = "cummeRbund"),
-    pathToIsoformFPKMtracking = system.file('extdata/isoforms.fpkm_tracking', package = "cummeRbund"),
-    pathToSplicingAnalysis    = system.file('extdata/splicing.diff',          package = "cummeRbund"),
-    pathToReadGroups          = system.file('extdata/read_groups.info',       package = "cummeRbund"),
-    pathToRunInfo             = system.file('extdata/run.info',               package = "cummeRbund"),
+    pathToGTF                      = system.file('extdata/chr1_snippet.gtf',             package = "cummeRbund"),
+    pathToGeneDEanalysis           = system.file('extdata/gene_exp.diff',                package = "cummeRbund"),
+    pathToIsoformDEanalysis        = system.file('extdata/isoform_exp.diff',             package = "cummeRbund"),
+    pathToGeneFPKMtracking         = system.file('extdata/genes.fpkm_tracking',          package = "cummeRbund"),
+    pathToIsoformFPKMtracking      = system.file('extdata/isoforms.fpkm_tracking',       package = "cummeRbund"),
+    pathToIsoformReadGroupTracking = system.file('extdata/isoforms.read_group_tracking', package = "cummeRbund"),
+    pathToSplicingAnalysis         = system.file('extdata/splicing.diff',                package = "cummeRbund"),
+    pathToReadGroups               = system.file('extdata/read_groups.info',             package = "cummeRbund"),
+    pathToRunInfo                  = system.file('extdata/run.info',                     package = "cummeRbund"),
     fixCufflinksAnnotationProblem=TRUE,
     quiet=TRUE
 )

@@ -62,7 +62,7 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{preFilter}}
 }
 \examples{

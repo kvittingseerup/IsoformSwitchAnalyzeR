@@ -11,7 +11,6 @@ Allows for easy integration of the result of Pfam (external sequence analysis of
 analyzePFAM(
     switchAnalyzeRlist,
     pathToPFAMresultFile,
-    filterRepeats=FALSE,
     showProgress=TRUE,
     quiet=FALSE
 )
@@ -24,9 +23,6 @@ A \code{switchAnalyzeRlist} object
   \item{pathToPFAMresultFile}{
 A string indicating the full path to the Pfam result file. See \code{details} for suggestion of how to run and obtain the result of the Pfam tool.
 }
-\item{filterRepeats}{
-A logic indicating whether Pfam results annotated as repeats should be removed. Repeats are defined as "a short unit which is unstable in isolation but forms a stable structure when multiple copies are present". Default is FALSE.
-}
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
 }
@@ -34,14 +30,24 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 }
 
 \details{
-Notes for how to run the external tools:
-Use default paramters. If the webserver (\url{http://pfam.xfam.org/search#tabview=tab1}) is used you need to copy paste the result part of the mail you receive into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)) and save that to a txt file. The path to that file should be supplied here. If a stand-alone version was just supply the path to the result file.
+Notes for how to run the external tools: \cr
+Use default paramters. If you want to use the webserver it is easily done as follows:.
+1) Go to \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan}
+2) Switch to the the "Upload a File" tab.
+3) Upload the amino acoid file (_AA) created with \code{extractSequence} file and add your mail adress - this is important beacue there is currently no way of downloading the web output so you need them to send the result to your email.
+4) Check Pfam is selected in the "HMM database" window.
+5) Submit your job.
+6) Wait till you recieve the email with the result (usually quite fast).
+7) Copy/paste the result part of the (ONLY what is below the "====" line) into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)).
+8) Save the document and supply the path to that document to analyzePFAM()
+
+If a stand-alone version was just supply the path to the result file to analyzePFAM().
 }
 
 \value{
 A colum called 'domain_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains any protein domains or not. Furthermore the data.frame 'domainAnalysis' is added to the \code{switchAnalyzeRlist} containing the details about domain names(s) and position for each transcript (where domain(s) were found).
 
-The data.frame added have one row per isoform and contains 18 columns:
+The data.frame added have one row per isoform and contains the columns:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{orf_aa_start}: The start coordinate given as amino acid position (of the ORF).}
@@ -49,19 +55,15 @@ The data.frame added have one row per isoform and contains 18 columns:
     \item{\code{hmm_acc}: A id which pfam have given to the domain}
     \item{\code{hmm_name}: The name of the domain}
     \item{\code{clan}: The can which the domain belongs to}
-    \item{\code{type}: The type of domain. see \url{http://pfam.xfam.org/help} for details}
-    \item{\code{predicted_active_site}: The amino acids identified as being part of the active site.}
+
     \item{\code{transcriptStart}: The transcript coordinate of the start of the domain.}
     \item{\code{transcriptEnd}: The transcript coordinate of the end of the domain.}
     \item{\code{pfamStarExon}: The exon index in which the start of the domain is located.}
     \item{\code{pfamEndExon}: The exon index in which the end of the domain is located.}
     \item{\code{pfamStartGenomic}: The genomic coordinat of the start of the domain.}
     \item{\code{pfamEndGenomic}:  The genomic coordinat of the end of the domain.}
-    \item{\code{activeResTranscriptStart}: The transcript coordinat of active sites.}
-    \item{\code{activeResTranscriptEnd}: The transcript coordinat of active sites.}
-    \item{\code{activeResGenomicStart}: The genomic coordinat of active sites.}
-    \item{\code{activeResGenomicEnd}: The genomic coordinat of active sites.}
 }
+Furthermore depending on the exact tool used (local vs web-server) additional collums are added with inforation such as E score and type.
 }
 
 \references{
@@ -75,8 +77,8 @@ The data.frame added have one row per isoform and contains 18 columns:
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
-\code{\link{extractSequence}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{extractSequence}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

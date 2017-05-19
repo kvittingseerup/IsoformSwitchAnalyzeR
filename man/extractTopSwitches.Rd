@@ -64,8 +64,8 @@ A \code{data.frame} containing the top \code{n} switching genes or isoforms as c
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{preFilter}}
-\code{\link{isoformSwitchTest}}
+\code{\link{preFilter}}\cr
+\code{\link{isoformSwitchTest}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

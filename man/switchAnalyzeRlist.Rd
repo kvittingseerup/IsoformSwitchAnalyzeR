@@ -13,7 +13,8 @@ Create a \code{switchAnalyzeRlist} containing all the information needed to do t
 createSwitchAnalyzeRlist(
     isoformFeatures,
     exons,
-    conditions,
+    designMatrix,
+    isoformCountMatrix,
     sourceId
 )
 }
@@ -21,18 +22,21 @@ createSwitchAnalyzeRlist(
 \arguments{
 	\item{isoformFeatures}{A \code{data.frame} where each row corresponds to a isoform in a specific comparison and contains all the annotation for this isoform. See \code{details} below for details.}
 	\item{exons}{A \code{GRanges} object containing isoform exon structure. See \code{details} below for details.}
-	\item{conditions}{A data.frame giving the number of biological replicates in each condition. See \code{details} below for details.}
+	\item{designMatrix}{A data.frame with the information of which samples originate from which conditions. A data.frame with two collums: \code{sampleID 1} contains the sample names which matches the column names used in \code{isoformCountMatrix}. \code{condition}: which indicates which conditions the sample originate from. If sample 1-3 originate form the same condition they should all have the same string (for example 'ctrl', in this column). By adding additional columns to this designMatrix batch effects can be taking into account with the DRIMSeq based isoform switch test.}
+	\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) counts. Must have a column called 'isoform_id' with the isoform_id that matches \code{isoformFeatures}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
 	\item{sourceId}{A character stating the origin of the data used to create the switchAnalyzeRlist.}
 }
 
 
 \details{
-For cufflinks data, use \link{importCufflinksCummeRbund} or \link{importCufflinksFiles} to prepare the switchAnalyzeRlist. For data from StringTie or RSEM use \link{importBallgownData}.
-For other RNA-seq assemblies, either uses this constructor or the general-purpose \link{importRdata} to create the switchAnalyzeRlist.
+For cufflinks data, use \link{importCufflinksCummeRbund} or \link{importCufflinksFiles} to prepare the switchAnalyzeRlist.
+For other RNA-seq assemblies, either uses this constructor or the general-purpose \link{importRdata} to create the switchAnalyzeRlist - se vignette for details.
 
 
 The \code{isoformFeatures} should be a data.frame where each row corresponds to a isoform in a specific comparison and contains all the annoation for this isoform. The data.frame can contain any colums supplied (enabling addition of user specified columns) but the following columns are nessesary and must be provided:
 \itemize{
+    \item{\code{iso_ref} : A unique refrence to a specific isoform in a specific comaprison of conditions. Mainly created to have an easy handle to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
+    \item{\code{gene_ref} : A unique refrence to a specific gene in a specific comaprison of conditions. Mainly created to have an easy handle to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
     \item{\code{isoform_id} : A unique isoform id}
     \item{\code{gene_id} : A unique gene id referring to a gene at a specific genomic loci (not the same as gene_name since gene_names can refer to multiple genomic loci)}
     \item{\code{condition_1} : Name of the first condition  in the comparison}
@@ -84,70 +88,46 @@ When fully analyzed the \code{isoformFeatures} entry of the  will furthermore co
 }
 
 \seealso{
-\code{\link{importRdata}}
-\code{\link{readCufflinks}}
-\code{\link{importCufflinksCummeRbund}}
-\code{\link{importCufflinksFiles}}
-\code{\link{importGTF}}
-\code{\link{importBallgownData}}
+\code{\link{importRdata}}\cr
+\code{\link{readCufflinks}}\cr
+\code{\link{importCufflinksCummeRbund}}\cr
+\code{\link{importCufflinksFiles}}\cr
+\code{\link{importGTF}}\cr
+\code{\link{importIsoformExpression}}
 }
 \author{Kristoffer Vitting-Seerup}
 \references{Manuscript in preperation}
 
 \examples{
-### A switchAnalyzeRlist needs 3 annotation types - let's create them one at the time.
+#### Make example data
+cuffDB <- prepareCuffExample()
 
-# 1) Make "isoformFeatures" entry
-isoAnnotation <- data.frame(
-    isoform_id = paste('iso',1:3,sep='_'),
-    gene_id='gene_1',
-    condition_1="groundState",
-    condition_2="modifiedState",
-    gene_name='favoriteGene',
-    gene_value_1=10,
-    gene_value_2=11,
-    gene_stderr_1=2,
-    gene_stderr_2=2,
-    gene_log2_fold_change=log2(11/10),
-    gene_q_value=1,
-    iso_value_1=c(1,8,1),
-    iso_value_2=c(1,2,7),
-    iso_stderr_1=rep(0.1,3),
-    iso_stderr_2=rep(0.2,3),
-    iso_log2_fold_change=log2( c(1,2,7) / c(1,8,1) ),
-    iso_p_value=1,
-    iso_q_value=1,
-    IF1=c(1,8,1) / 10,
-    IF2=c(1,2,7) / 11,
-    dIF=(c(1,2,7) / 11) - (c(1,8,1) / 10),
-    isoform_switch_q_value=NA,
-    gene_switch_q_value=NA,
-    stringsAsFactors = FALSE
-)
+### Replicate count matric
+isoRepCount <- repCountMatrix(isoforms(cuffDB))
+isoRepCount$isoform_id <- rownames(isoRepCount)
 
-# 2) make "conditions" entry
-repOverview <- data.frame(
-    condition=c('groundState','modifiedState'),
-    nrReplicates=c(3,3),
-    row.names = NULL, stringsAsFactors = FALSE
-)
+### Design matrix
+designMatrix <- cummeRbund::replicates(cuffDB)[,c('rep_name','sample_name')]
+colnames(designMatrix) <- c('sampleID','condition')
 
-# 3) make "exons" entry
-myExons <- GRanges(
-    seqnames = 'chr1',
-    ranges = IRanges(start = c(1,1,10), end = c(20,20,20)),
-    strand = '+',
-    isoform_id=paste('iso',1:3,sep='_'),
-    gene_id='gene_1'
-)
+### Genomic Annotation
+localAnnotaion <- import(system.file("extdata/chr1_snippet.gtf", package="cummeRbund"))[,c('transcript_id','gene_id')]
+colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
 
-### Combine it all to make a switchAnalyzeRlist
 
-aSwitchList <- createSwitchAnalyzeRlist(
-    isoformFeatures=isoAnnotation,
-    exons=myExons,
-    conditions=repOverview,
-    sourceId='homeMade'
+### Take a look at the data
+head(isoRepCount, 2)
+
+designMatrix
+
+head(localAnnotaion, 3)
+
+### Create switchAnalyzeRlist
+aSwitchList <- importRdata(
+    isoformCountMatrix=isoRepCount,
+    designMatrix=designMatrix,
+    isoformExonAnnoation=localAnnotaion,
+    showProgress=FALSE
 )
 aSwitchList
 }

@@ -1,5 +1,22 @@
+2017-04-20 : IsoformSwitchAnalyzeR v0.99.9
+    Major update which:
+        1) Introduces the iso_ref and gene_ref handles to all entires in the switchAnalyzeRlist which allows for easy integration of data across the different enteries.
+        2) Now offers full integration with the DRIMSeq tool which utilizises advanced linear models to identify significant changes in isoform usage at isoform level enabling robust analysis of more complex designs including batch effects. The integraiton is availabe via the isoformSwitchTestDRIMSeq() function.
+        3) Updates IsoformSwitchAnalyzeR to handle EBI's new server for running Pfam.
+        4) To enable the integration with DRIMSeq switchAnalyzeRlist object have been extended with: a) Isoform replciate count matrix. b) A design matrix.
+        5) The preFilter function have been updated with new functionalities and default cutoffs that are more suitable for use with DRIMSeq. See function documentation for details.
+        6) Implements suggested updates from Bioconductor reviewer
+    This update is so large backward compatability is unfortunatly not feasiblie so all existing switchAnalyzeRlists will have to be remade.
+
+    The extention of the switchAnalyzeRlist have also made a few changes in how to import data nessesary. Specifically:
+        - The importRdata() function now take a replicate count matrix as it's main input and the replicate FPKM matrix is optional.
+        - The importBallgownData() function and it's accompanying "exampleRdata.RData" have been decapitated since it does not contain count information.
+        - The importIsoformExpression() function have been introduced to help with importing data from Kallisto, Salmon and RSEM. This function generates a isoform count matrix from the parent directory of the Kallisto/Salmon/RSEM analysis - which can easily be used with the importRdata() function to generate a switchAnalyzeRlist.
+    Lastly the vignette have naturally been updated and improved accordingly.
+
 2017-04-20 : IsoformSwitchAnalyzeR v0.99.1-8
-    - Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards mostly consering how namespaces are organised and imported.
+    Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards mostly consering how namespaces are organised and imported.
+
 2017-04-18 : IsoformSwitchAnalyzeR v0.99.0
     The following functionalities were added:
     	- Enable filtering for significant switches in the preFilter() function.

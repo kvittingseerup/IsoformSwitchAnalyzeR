@@ -48,8 +48,8 @@ Vitting-Seerup K, et al: spliceR: an R package for classification of alternative
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{switchAnalyzeRlist}}
-\code{\link{isoformSwitchTest}}
+\code{\link{switchAnalyzeRlist}}\cr
+\code{\link{isoformSwitchTest}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

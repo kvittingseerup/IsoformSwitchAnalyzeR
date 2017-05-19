@@ -91,19 +91,23 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{isoformSwitchTest}}
-\code{\link{switchPlotTranscript}}
-\code{\link{switchPlotGeneExp}}
-\code{\link{switchPlotIsoExp}}
-\code{\link{switchPlotIsoUsage}}
+\code{\link{isoformSwitchTest}}\cr
+\code{\link{switchPlotTranscript}}\cr
+\code{\link{switchPlotGeneExp}}\cr
+\code{\link{switchPlotIsoExp}}\cr
+\code{\link{switchPlotIsoUsage}}\cr
 \code{\link{switchPlotTopSwitches}}
 }
 \examples{
 ### Prepare for plotting
 data("exampleSwitchListAnalyzed")
 
-### Make isoform Switch Analysis Plot
-switchPlot(exampleSwitchListAnalyzed, gene = 'XLOC_027974', condition1 = 'Ctrl', condition2 = 'KD2', IFcutoff = 0.26)
+mostSwitchingGene <- extractTopSwitches(
+    exampleSwitchListAnalyzed,
+    filterForConsequences = TRUE,
+    n = 1
+)
 
-# Note the swich from coding to a NMD sensitive isoform
+### Make isoform Switch Analysis Plot
+switchPlot(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
 }

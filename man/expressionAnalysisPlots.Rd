@@ -90,8 +90,8 @@ Note that the bar indicating significance levels will only be shown if the analy
 \author{Kristoffer Vitting-Seerup}
 
 \seealso{
-\code{\link{isoformSwitchTest}}
-\code{\link{switchPlotTranscript}}
+\code{\link{isoformSwitchTest}}\cr
+\code{\link{switchPlotTranscript}}\cr
 \code{\link{switchPlot}}
 }
 
@@ -106,7 +106,7 @@ mostSwitchingGene <- extractTopSwitches(
 )
 
 ### Plot expression
-switchPlotGeneExp(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'Ctrl', condition2 = 'KD1')
-switchPlotIsoExp(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'Ctrl', condition2 = 'KD1')
-switchPlotIsoUsage(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'Ctrl', condition2 = 'KD1')
+switchPlotGeneExp(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
+switchPlotIsoExp(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
+switchPlotIsoUsage(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
 }

@@ -13,7 +13,6 @@ isoformSwitchTest(
     alpha=0.05,
     dIFcutoff = 0.1,
     reduceToSwitchingGenes = TRUE,
-    assumeEqualVariance=FALSE,
     calibratePvalues=TRUE,
     showProgress=FALSE,
     quiet=FALSE
@@ -33,10 +32,6 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 
   \item{reduceToSwitchingGenes}{
 A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains significant switching (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
-}
-
-  \item{assumeEqualVariance}{
-A logical variable indicating whether to assume the variance of the IF values in the two conditions as being equal. If TRUE then the pooled variance is used to estimate the variance (students t-test) otherwise the Welch (or Satterthwaite) approximation to the degrees of freedom is used resulting in the performed test being a Welch t-test. Default is FALSE.
 }
 
   \item{calibratePvalues}{
@@ -74,8 +69,10 @@ A \code{switchAnalyzeRlist} where the following have been modified:
     \item{\code{2}: A \code{data.frame} containing the details of the analysis have been added (called 'isoformSwitchAnalysis').}
 }
 
-The data.frame added have one row per isoform per comparison of condition and contains 15 columns:
+The data.frame added have one row per isoform per comparison of condition and contains the following columns:
 \itemize{
+    \item{\code{iso_ref} : A unique refrence to a specific isoform in a specific comaprison of conditions. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
+    \item{\code{gene_ref} : A unique refrence to a specific gene in a specific comaprison of conditions. Enables esay handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{gene_id}: The id of the gene which the isoform_id belongs to. Matches the 'gene_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{condition_1}: The first condition of the comparison. Should be though of as the ground state - meaning the changes occure  from condition_1 to condition_2. Matches the 'condition_1' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
@@ -87,8 +84,11 @@ The data.frame added have one row per isoform per comparison of condition and co
     \item{\code{IF_var_1}: The variance of IF1 measured from the nrReplicates_1 biological replicates. Matches the 'IF_var_1' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{IF_var_2}: The variance of IF2 measured from the nrReplicates_2 biological replicates. Matches the 'IF_var_2' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{dIF}: The difference in the IF values measured as IF2-IF1 meaning that postive values means the isoform is used more in condition_2 and vice versa. Matches the 'dIF' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-    \item{\code{pValue}: The raw p-value from the statistical test implemented in IsoformSwitchAnalyzeR. See Vitting-Seerup et al 2017 for details.}
-    \item{\code{CalibratedPvalues}: The transformed/callibrated p-values. See Ferguson et al 2014 for more details. Will only be calculated if \code{calibratePvalues=TRUE} and the sigma^2 (sigma squared) estimated from the top 50\% expressed data is smaller than 0.9 in accordance with the guidelines suggested by the author. If NA the callibarion was not performed.}
+    \item{\code{dIF_std_err}: The standard error of the dIF value.}
+    \item{\code{t_statistics}: The test t-statistics. See Vitting-Seerup et al 2017 for details.}
+    \item{\code{deg_free}: The degrees of freedome used to calculate the p_value of the statistical test. See Vitting-Seerup et al 2017 for details.}
+    \item{\code{p_value}: The raw p-value from the statistical test implemented in IsoformSwitchAnalyzeR. See Vitting-Seerup et al 2017 for details.}
+    \item{\code{calibrated_p_values}: The transformed/callibrated p-values. See Ferguson et al 2014 for more details. Will only be calculated if \code{calibratePvalues=TRUE} and the sigma^2 (sigma squared) estimated from the top 50\% expressed data is smaller than 0.9 in accordance with the guidelines suggested by the author. If NA the callibarion was not performed.}
     \item{\code{iso_switch_q_value}: The FDR corrected p-values. If the p-value callibration was perfomed these are naturally the FDR corrected callibrated p-values.}
     \item{\code{gene_switch_q_value}: The gene-level evidence for an isoform swich occuring. Defined as the smallest iso_switch_q_value of the isoforms belonging to the gene_id.}
 }
@@ -105,8 +105,8 @@ The data.frame added have one row per isoform per comparison of condition and co
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{preFilter}}
-\code{\link{extractSwitchSummary}}
+\code{\link{preFilter}}\cr
+\code{\link{extractSwitchSummary}}\cr
 \code{\link{extractTopSwitches}}
 }
 \examples{

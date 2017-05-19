@@ -99,10 +99,10 @@ NA means no information was advailable aka no ORF (passing the \code{minORFlengt
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
-\code{\link{preFilter}}
-\code{\link{isoformSwitchTest}}
-\code{\link{extractSequence}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{preFilter}}\cr
+\code{\link{isoformSwitchTest}}\cr
+\code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}
 }
 \examples{
@@ -112,7 +112,7 @@ data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList)
 
 # Perfom test
-exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList, dIFcutoff = 0.8) # very high dIF cutoff for fast runtime
+exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList, dIFcutoff = 0.3) # high dIF cutoff for fast runtime
 
 ### analyzeORF
 library(BSgenome.Hsapiens.UCSC.hg19)

@@ -102,11 +102,11 @@ For
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{switchAnalyzeRlist}}
-\code{\link{isoformSwitchTest}}
-\code{\link{analyzeORF}}
-\code{\link{analyzeCPAT}}
-\code{\link{analyzePFAM}}
+\code{\link{switchAnalyzeRlist}}\cr
+\code{\link{isoformSwitchTest}}\cr
+\code{\link{analyzeORF}}\cr
+\code{\link{analyzeCPAT}}\cr
+\code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}
 }
 \examples{
@@ -116,7 +116,7 @@ data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList)
 
 # Perfom test
-exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList, dIFcutoff = 0.8) # very high dIF cutoff for fast runtime
+exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList, dIFcutoff = 0.3) # high dIF cutoff for fast runtime
 
 # analyzeORF
 library(BSgenome.Hsapiens.UCSC.hg19)

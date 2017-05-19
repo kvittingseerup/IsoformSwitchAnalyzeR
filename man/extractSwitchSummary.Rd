@@ -49,9 +49,9 @@ A \code{data.frame} with the number of switches found in each comparison (as wel
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{preFilter}}
-\code{\link{isoformSwitchTest}}
-\code{\link{extractTopSwitches}}
+\code{\link{preFilter}}\cr
+\code{\link{isoformSwitchTest}}\cr
+\code{\link{extractTopSwitches}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

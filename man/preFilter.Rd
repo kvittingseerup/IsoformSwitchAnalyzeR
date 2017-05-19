@@ -1,21 +1,24 @@
 \name{preFilter}
 \alias{preFilter}
 \title{
-Filter Data in SwitchAnalyzeRlist
+Filtering of a switchAnalyzeRlist
 }
+
 \description{
-This function enables filtering of isoforms and genes based on expression (for example to remove lowly expressed genes). Furthermore the function allows 1) Removal of single isoform genes (where switching per definition cannot occure). 2) Filter based on isoform class code (only available for data from Cufflinks/Cuffdiff). The aim of the filtering is to enable higher quality and faster processing times (since non-expressed isoforms are not considered).
+This function removes genes/isoforms from a switchAnalyzeRlist with the aim of allowing faster processing time as well as more trustworthy results. The filtering is applied to each isoform in each comparison analyzed (unless keepIsoformInAllConditions is set to TRUE).
 }
+
 \usage{
 preFilter(
     switchAnalyzeRlist,
     geneExpressionCutoff = 1,
     isoformExpressionCutoff = 0,
-    IFcutoff=0,
+    IFcutoff=0.01,
     geneCutoffInBothConditions=TRUE,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
     reduceToSwitchingGenes=FALSE,
+    keepIsoformInAllConditions=FALSE,
     alpha=0.05,
     dIFcutoff = 0.1,
     quiet=FALSE
@@ -53,6 +56,10 @@ A logic indicating whether to only keep genes containing more than one isoform (
 A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains significant switching (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Requires a test of isoform switches have been performed. Default is FALSE.
 }
 
+\item{keepIsoformInAllConditions}{
+A logic indicating whether the an isoform should be kept in all comparisons even if it is only passes the filters in one comparison. Defalt is FALSE.
+}
+
   \item{alpha}{
 The cutoff which the (calibrated) fdr correct p-values must be smaller than for calling significant switches. Only considered if \code{reduceToSwitchingGenes=TRUE}. Defuault is 0.05.
 }
@@ -83,8 +90,8 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
-\code{\link{importCufflinksCummeRbund}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importCufflinksCummeRbund}}\cr
 \code{\link{importCufflinksFiles}}
 }
 

@@ -10,9 +10,10 @@ import(BSgenome)
 import(RColorBrewer)
 import(cummeRbund)
 import(ggplot2)
-import(ballgown)
 import(VennDiagram)
 import(DBI)
+import(DRIMSeq)
+import(spliceR)
 
 ### Import specific functions
 importFrom("grDevices", "dev.off", "hcl", "pdf", "png")
@@ -25,6 +26,7 @@ importFrom('grid','pushViewport')
 importFrom('grid','viewport')
 importFrom('grid','grid.layout')
 importFrom('DBI','dbGetQuery','dbDriver')
+importFrom("stats", "as.formula", "model.matrix")
 
 
 
@@ -36,12 +38,14 @@ export('createSwitchAnalyzeRlist')
 export('importCufflinksCummeRbund')
 export('importCufflinksFiles')
 export('importGTF')
+export('importIsoformExpression')
 export('importRdata')
-export('importBallgownData')
 export('preFilter')
 
 
+
 # Test isoform switches
+export('isoformSwitchTestDRIMSeq')
 export('isoformSwitchTest')
 export('extractSwitchSummary')
 export('extractTopSwitches')
@@ -49,8 +53,8 @@ export('extractCalibrationStatus')
 
 
 # Analyze functional potential
-export('CDSSet')
-export('getCDS')
+#export('CDSSet')
+#export('getCDS')
 export('extractSequence')
 export('analyzeORF')
 
@@ -89,8 +93,8 @@ export('prepareCuffExample')
 
 ### Export classes
 exportClasses("switchAnalyzeRlist")
-exportClasses("CDSSet")
-exportClasses("SpliceRList")
+#exportClasses("CDSSet")
+#exportClasses("SpliceRList")
 
 ### Overload generic functions to work with my classes
 S3method(dim,switchAnalyzeRlist)

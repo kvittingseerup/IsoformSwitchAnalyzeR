@@ -94,6 +94,6 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{switchPlot}}
+\code{\link{switchPlot}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }

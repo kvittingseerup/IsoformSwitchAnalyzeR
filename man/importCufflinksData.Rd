@@ -45,9 +45,9 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{readCufflinks}}
-\code{\link{createSwitchAnalyzeRlist}}
-\code{\link{importCufflinksFiles}}
+\code{\link{readCufflinks}}\cr
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importCufflinksFiles}}\cr
 \code{\link{preFilter}}
 }
 

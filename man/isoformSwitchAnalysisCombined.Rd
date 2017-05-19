@@ -4,7 +4,7 @@
 Isoform Switch Analysis Workflow: Extract, Annoate and Visualize all Significant Isoform Swtiches
 }
 \description{
-This high-level function takes a CuffSet object, a ballgown object or a pre-existing switchAnalyzeRlist as input. If the input is a CuffSet or a ballgown object it creates the switchFindeRList else it uses the provieded switchAnalyzeRlist.
+This high-level function takes a CuffSet object or a pre-existing switchAnalyzeRlist as input. If the input is a CuffSet a switchFindeRList is created and else the function uses the provieded switchAnalyzeRlist.
 
 Then isoform switches are identified, annotated with ORF and intron retion. Then functional consequences are identified and isoform switch analysis plots are generated for the top \code{n} isoform switches. Lastly a plot summarizing the global effect of isoform switches with functional consequences is generated. If external analysis of protein domians (Pfam), coding potential (CPAT) or signal peptides (SignalP) should be incorporated please use the combination of \code{isoformSwitchAnalysisPart1} and \code{isoformSwitchAnalysisPart2} instead.
 }
@@ -13,10 +13,10 @@ isoformSwitchAnalysisCombined(
     input,
     alpha=0.05,
     dIFcutoff = 0.1,
+    switchTestMethod='DRIMSeq',
     calibratePvalues=TRUE,
     n=NA,
     pathToOutput=getwd(),
-    overwritePvalues=TRUE,
     overwriteORF=FALSE,
     outputSequences=FALSE,
     genomeObject,
@@ -40,18 +40,23 @@ The cutoff which the (callibrated) fdr correct p-values must be smaller than for
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed signicant and thereby included in the downstream analysis. This cutoff is analogours to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
 }
-  \item{calibratePvalues}{
-A logic indicating whether the p-values should be calibrated accordin to the methods in Ferguson et al (2014), this will only be done if the p-value distribution is very skewed (if the estimated sigma^2 values is < 0.9) as suggested by the authors. See details for more information. Defualt is TRUE.
-}
+\item{switchTestMethod}{ A sting indicating which statistical method should be used for testing differential isoform usage. The following options are avilable:
+        \itemize{
+            \item {\code{'DRIMSeq'} : Uses the DRIMSeq package to perform the statiscal test. See \link{isoformSwitchTestDRIMSeq}. Default}
+            \item {\code{'IsoformSwitchAnalyzeR'} : Uses the statistical test implemented in IsoformSwitchAnalyzeR. See \link{isoformSwitchTest}.}
+            \item {\code{'none'} : No statistical test is performed. Should only be used if a test have already been performed and should not be overwritten (e.g when importing cuffdiff data).}
+        }
+    }
+
+    \item{calibratePvalues}{Only applicable if \code{switchTestMethod='IsoformSwitchAnalyzeR'}.A logic indicating whether the p-values should be calibrated accordin to the methods in Ferguson et al (2014), this will only be done if the p-value distribution is very skewed (if the estimated sigma^2 values is < 0.9) as suggested by the authors. See details for more information. Defualt is TRUE.}
+
 \item{n}{
 The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each subfolder indicated by \code{splitConditions, splitFunctionalConsequences}. Use NA to create all. Default is NA (all).
 }
   \item{pathToOutput}{
 A path to the folder in which the plots should be made. Default is working directory ( getwd() ).
 }
-\item{overwritePvalues}{
-A logical indicating whether to overwrite P-values already stored in the supplied switchAnalyzeRlist. This should be set to FALSE if another tool have been used to test for differential isoform usage. Default is FALSE.
-}
+
 \item{overwriteORF}{
 A logical indicating whether to overwrite the ORF analysis already stored in the supplied switchAnalyzeRlist. Default is FALSE.
 }
@@ -119,13 +124,13 @@ Manuscript in preperation.
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{isoformSwitchAnalysisPart1}}
-\code{\link{isoformSwitchAnalysisPart2}}
-\code{\link{preFilter}}
-\code{\link{isoformSwitchTest}}
-\code{\link{analyzeORF}}
-\code{\link{extractSwitchSummary}}
-\code{\link{analyzeSwitchConsequences}}
+\code{\link{isoformSwitchAnalysisPart1}}\cr
+\code{\link{isoformSwitchAnalysisPart2}}\cr
+\code{\link{preFilter}}\cr
+\code{\link{isoformSwitchTest}}\cr
+\code{\link{analyzeORF}}\cr
+\code{\link{extractSwitchSummary}}\cr
+\code{\link{analyzeSwitchConsequences}}\cr
 \code{\link{switchPlotTopSwitches}}
 }
 \examples{

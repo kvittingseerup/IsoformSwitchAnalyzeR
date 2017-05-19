@@ -28,7 +28,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ## Abstract
 Recent breakthrough in bioinformatics now allows us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data. This development opened the possibility to start analyzing alternative isoform usage but unfortunately RNA-sequencing data is still underutilized since such analyses are both hard to obtain and only rarely done.
 
-To solve this problem we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy to use R package that enables statistical identification of isoform switching from RNA-seq derived quantification of both novel and annotated full-length isoforms. IsoformSwitchAnalyzeR furthermore facilitate integration of many sources of annotation including features such as Open Reading Frame (ORF), protein domains (via Pfam), signal peptides (via SignalP), coding potential (via CPAT) as well as sensitivity to Non-sense Mediated Decay (NMD). The combination of identified isoform switches and their annotation also enables IsoformSwitchAnalyzeR to predict potential functional consequence of the identified isoform switches - such as loss of protein domains or coding potential - thereby identifying isoform switches of particular interest. Lastly IsoformSwitchAnalyzeR provide article ready visualization of isoform switches as well as multiple layers summary statistics describing the global amount and consequences of isoform switching.
+To solve this problem we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy to use R package that facilitates statistical identification of isoform switching from RNA-seq derived quantification of both novel and annotated full-length isoforms. IsoformSwitchAnalyzeR furthermore facilitate integration of many sources of annotation including features such as Open Reading Frame (ORF), protein domains (via Pfam), signal peptides (via SignalP), coding potential (via CPAT) as well as sensitivity to Non-sense Mediated Decay (NMD). The combination of identified isoform switches and their annotation also enables IsoformSwitchAnalyzeR to predict potential functional consequence of the identified isoform switches - such as loss of protein domains or coding potential - thereby identifying isoform switches of particular interest. Lastly IsoformSwitchAnalyzeR provide article ready visualization of isoform switches as well as multiple layers summary statistics describing the global amount and consequences of isoform switching.
 
 In summary IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform resolution with a focus on isoform switching (with predicted consequences) thereby expanding the usability of RNA-seq data.
 
@@ -54,13 +54,16 @@ In summary IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform r
 
 [Detailed Workflow]
 
+- [Overview]
+    + [IsoformSwitchAnalyzeR Background Information]
 - [Importing Data Into R]
     + [Data from Cufflinks/Cuffdiff]
-    + [Data from StringTie/RSEM (via Ballgown)]
+    + [Data from Kallisto, Salmon or RSEM]
     + [Data From Other Full-length Transcript Assemblers]
 - [Prefiltering]
-- [Finding Isoform Switches]
-    + [The isoformSwitchTest Implemented in IsoformSwitchAnalyzeR]
+- [Identifying Isoform Switches]
+    + [Testing Isoform Switches with IsoformSwitchAnalyzeR]
+    + [Testing Isoform Switches via DRIMSeq]
     + [Testing Isoform Switches with other Tools]
 - [Analyzing Open Reading Frames]
 - [Extracting Nucleotide and Amino Acid Sequences]
@@ -79,7 +82,7 @@ In summary IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform r
 - [Quality control of ORF of known annotation]
 - [Analyzing the Biological Mechanisms Behind Isoform Switching]
 
-[Frequently Asked Questions]
+[Frequently Asked Questions and Problems]
 [Final Remarks]
 [Sessioninfo]
 
@@ -137,7 +140,7 @@ This will install the IsoformSwitchAnalyzeR package as well as other R packages 
 
 The IsoformSwitchAnalyzeR tool is only made possible by a string of other tools and scientific discoveries - please read this section thoroughly and cite the appropriate articles. Note that due to the references being divided into sections some references appear more than once.
 
-If you are using the **isoform switch test** implemented in the IsoformSwitchFindeR package please cite both:
+If you are using the **isoform switch test implemented in IsoformSwitchFindeR** please cite both:
 
 
 <center> _Vitting-Seerup et al. **Manuscript in preparation**_ <center>
@@ -145,6 +148,17 @@ If you are using the **isoform switch test** implemented in the IsoformSwitchFin
 <br /> 
 <center> _Ferguson et al. **P-value calibration for multiple testing problems in genomics.** Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673._ <center> <br /> 
 <br />
+
+
+If you are using the **isoform switch test implemented in DRIMSeq** package please cite both:
+
+
+<center> _Vitting-Seerup et al. **Manuscript in preparation**_ <center>
+<center> _(Please check latest update for citation)_ <center>
+<br /> 
+<center> _Nowicka et al. **DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics.** F1000Research, 5(0), 1356._ <center> <br /> 
+<br />
+
 
 <p align="left"> If you are using the **visualizations** (plots) implemented in the IsoformSwitchFindeR package please cite: <p>
 
@@ -184,13 +198,13 @@ If you are using the **isoform switch test** implemented in the IsoformSwitchFin
 
 <!-- Help -->
 ### How To Get Help
-This R package comes with a lot of documentation. Much information can be found in the R help files (which can easily be accessed by running the following command in R "?functionName", for example "?isoformSwitchTest"). Furthermore this vignette contains a lot of information so make sure to read both sources carefully as it will contain the answer to the most frequently asked questions.
+This R package comes with a lot of documentation. Much information can be found in the R help files (which can easily be accessed by running the following command in R "?functionName", for example "?isoformSwitchTest"). Furthermore this vignette contains a lot of information so make sure to read both sources carefully as it will contain the answer to the most Frequently Asked Questions and Problems.
 
-If you have unanswered questions regarding IsoformSwitchAnalyzeR please post them on https://support.bioconductor.org/ after making sure the question have not already been answered there. 
+If you have unanswered questions or comments regarding IsoformSwitchAnalyzeR please post them on the associted google group: https://groups.google.com/forum/#!forum/isoformswitchanalyzer (after making sure the question have not already been answered there). 
 
-If you want to report an error (found in the newest version of the R package) please contact the package maintainers with a small sample dataset (so we can reproduce the error) as well as your session info (obtained by running "sessionInfo()" in the R terminal. Up-to-date package maintainer contact information can be found at http://bioconductor.org/packages/release/bioc/html/IsoformSwitchAnalyzeR.html 
+If you want to report a bug (found in the newest version of the R package) please make an isssue with a reproducible example at github https://github.com/kvittingseerup/IsoformSwitchAnalyzeR - remember to add the appropriate label.
 
-If you have comments or suggestions for improvements also put them on https://support.bioconductor.org/, that will allow other people to upvote you idea showing us there is wide support of implementing you idea.
+If you have suggestions for improvements also put them on github (https://github.com/kvittingseerup/IsoformSwitchAnalyzeR) this will allow other people to upvote you idea by reactions thereby showing us there is wide support of implementing you idea.
 
 Back to [Table of Content].
 
@@ -263,6 +277,7 @@ library(IsoformSwitchAnalyzeR)
 ```
 
 <br />
+Note that newer versions of RStudio supports auto-completion of package names.
 
 #### Importing the Data
 The first step is to obtain/import all the data needed for the analysis and store them in switchAnalyzeRlist object. IsoformSwitchAnalyzeR contains different functions for importing the relevant data from a couple of known sources as well as support other data sources. Specificly the wrappes for supported data sources are called import\<description\>() and createSwitchAnalyzeRlist() allows users to use data from other sources. See [Importing Data Into R]) for details about these functions. For the purpose of illustrating the data import lets use Cufflinks/Cuffdiff results as an example: 
@@ -287,11 +302,11 @@ data("exampleSwitchList")
 exampleSwitchList
 ```
 
-This data corresponds to a small subset of the result of using \code{importCufflinksCummeRbund} to get the result of the data described in ?exampleSwitchList. This small subset is ideal for example usage due to the short runtimes. 
+This data corresponds to a small subset of the result of using \code{importCufflinksCummeRbund} to get the result of the data described in ?exampleSwitchList. Note that although a switch identification analysis was performed no genes were significant. This small data subset is ideal for examples due to the short runtimes. 
 
 <br />
 
-Note that there are a lot of other ways of importing data into R and/or creating the switchAnalyzeRList including wrappers for Cufflinks/Cuffdiff, StringTie and RSEM as well as others (see [Importing Data Into R] for more details).
+Note that there are a lot of other ways of importing data into R and/or creating the switchAnalyzeRList including wrappers for Cufflinks/Cuffdiff, Kallisto, Salmon and RSEM as well as others (see [Importing Data Into R] for more details).
 
 <br />
 
@@ -313,7 +328,7 @@ exampleSwitchList <- isoformSwitchAnalysisPart1(
     genomeObject = Hsapiens, 
     dIFcutoff = 0.4,         # Set high for short runtime in example data
     outputSequences = FALSE, # keeps the function from outputting the fasta files from this example
-    calibratePvalues=FALSE
+    calibratePvalues = FALSE
 ) 
 ```
 Note that:
@@ -350,20 +365,22 @@ The numbers of isoform switches with functional consequences are easily extracte
 extractSwitchSummary(exampleSwitchList, filterForConsequences = TRUE)
 ```
 
-And the genes with isoform switches are:
+For each of these gene a switchPlot have been created - lets here tak a closer look at the top candidate:
+
+The top genes with isoform switches are:
 ```{r, message = FALSE}
-unique( extractTopSwitches(exampleSwitchList, filterForConsequences = TRUE, n=NA)$gene_name )
+extractTopSwitches(exampleSwitchList, filterForConsequences = TRUE, n=3)$gene_name
 ```
 
 <br />
 
 #### Examples of visualization
-Lets take a look at the isoform switch in the HOXC13 gene using the build-in visualization tool in IsoformSwitchAnalyzeR:
+Lets take a look at the isoform switch in the ARHGEF19 gene (which has a function in some of the major signaling pathwways) via the switchPlot that can easily be made with IsoformSwitchAnalyzeR:
 ```{r, fig.width=12, fig.height=7}
-switchPlot(exampleSwitchList, gene='HOXC13', condition1='Ctrl', condition2='KD1')
+switchPlot(exampleSwitchList, gene='ARHGEF19')
 ```
 
-From this plot we see that the gene expression is unchanged but there is a large significant switch in isoform usage. In the Ctrl condition the two isoforms are used equally but after the knock down there is a switch towards almost exclusively using the coding transcript (top), which contains both the protein domains essential for HOXC13 function. 
+From this plot we see that the gene expression is changed but also that there is a large significant switch in isoform usage. In the hESC the long isoform is usaed a lot somthing that changes dramatically when the cells are differentiated. In Fibroblasts the long isoform is used significantly less but the topmost isoform is used a lot more. Interestingly this isoform swithc results in a domain switch where the RhoGEF domain is lost but a Ph domain is gained whereby the gene most likely gain a completely different set of functions. 
 
 Note that if you want to save this plot as a pdf file via the _pdf_ command you need to specify onefile = FALSE. Here is a code chunk that will generate a nicely sized (almost) article ready figure
 
@@ -372,7 +389,10 @@ Note that if you want to save this plot as a pdf file via the _pdf_ command you 
     dev.off()
 
 <br />
-To get an overview of the global consequences of isoform switching after the knock down lets take a look at a lager subset of the data:
+
+Furthermore note that if you are analyzing multiple conditions you will also need to specify the 'condition1' and 'condition2' arguments in the _switchPlot()_ function. \cr
+
+To get an overview of the global consequences of isoform switching in the different comparisons lets take a look at a lager dataset:
 
 ```{r}
 data("exampleSwitchListAnalyzed")
@@ -380,10 +400,46 @@ exampleSwitchListAnalyzed
 ```
 
 ```{r, fig.width=12, fig.height=8}
-extractConsequenceSummary(exampleSwitchListAnalyzed, asFractionTotal = TRUE)
+extractConsequenceSummary(exampleSwitchListAnalyzed, asFractionTotal = FALSE)
 ```
 
-From this summary plot we can see for both knockdowns there is a very large fraction of isoform switches where the upregulated isoforms more frequently have intron retentions which probably also causes the increase in NMD sensitive transcripts. Another observation is that the ORF of the upregulated isoforms generally are shorter, which also explains why there are more protein domain loss than gain. Many other interesting observations including cases of protein domain swiching can also be identified.
+From this summary plot we can see many things: First of all the most fequent changes are changes in ORF length. Secondly from iPS to both Fibroblast and hESC we see a larger humber of domain gains than domain losses. Most notably is the uneven distribution of intron retention gain/loss in the comparison of iPS to both Fibroblast and hESC.
+
+Since all the data is saved in the switchAnalyzeRlist we can also make a couple of overview plots:
+
+```{r, fig.width=8, fig.height=6}
+data("exampleSwitchListAnalyzed")
+
+### Vulcano like plot:
+ggplot(data=exampleSwitchListAnalyzed$isoformFeatures, aes(x=dIF, y=-log10(isoform_switch_q_value))) +
+    geom_point(size=1) + 
+    geom_hline(yintercept = -log10(0.05), linetype='dashed') + # default cutoff
+    geom_vline(xintercept = c(-0.1, 0.1), linetype='dashed') + # default cutoff
+    facet_grid(condition_1 ~ condition_2, scales = 'free') +
+    theme_bw()
+```
+
+From which it is clearly seen why cutoffs both on the dIF and the q-value are nesseary.
+
+Another interesting overview plot can be made as follows:
+
+```{r, fig.width=8, fig.height=6}
+### Switch vs Gene changes:
+
+ggplot(data=exampleSwitchListAnalyzed$isoformFeatures, aes(x=gene_log2_fold_change, y=dIF)) +
+    geom_point(
+        aes( color=abs(dIF) > 0.1 & isoform_switch_q_value < 0.05 ), # default cutoff
+        size=1
+    ) + 
+    facet_grid(condition_1 ~ condition_2, scales = 'free') +
+    geom_hline(yintercept = 0, linetype='dashed') +
+    geom_vline(xintercept = 0, linetype='dashed') +
+    scale_color_manual('Signficant\nIsoform Switch', values = c('black','red')) +
+    labs(x='Gene log2 fold change', y='dIF') +
+    theme_bw()
+```
+
+From which it is clearly seen that isoform switching is not somthing that occure in the absense of changes in gene expression again highlighting the nessesity of analyzing RNA-seq data with isoform resolution.
 
 Back to [Table of Content].
 <br />
@@ -393,11 +449,9 @@ Back to [Table of Content].
 <!--                    -->
 ## Detailed Workflow
 ### Overview
-We recommend  that before you start on this section you read though the [Quick Start] section as it gives a nice overview, introduces some basic concepts and give a couple of tips which for clarity are not duplicated in this section.
+We recommend  that before you start on this section you read though the [Quick Start] section as it gives the large overview, introduces some basic concepts and give a couple of tips which for clarity are not duplicated in this section.
 
-Compare to the workflow presented in [Quick Start] a full workflow for analyzing isoform switches naturally have a lot of sub-steps which each can be customized/optimized the comparison analysed.
-
-In this section we will go more into depth with each of the steps as well as tips and shortcuts for working with IsoformSwitchAnalyzeR. More specifically each of the main function(s) behind these steps will be explained, both how they work and the main parameters for customization. For a comprehensive and detailed description of each individual function please refer to the individual function documentation (via ?functionName).
+Compare to the workflow presented in [Quick Start] a full workflow for analyzing isoform switches naturally have a lot of sub-steps which each can be customized/optimized. In this section we will go more into depth with each of the steps as well as tips and shortcuts for working with IsoformSwitchAnalyzeR. More specifically each of the main function(s) behind these steps will be explained, both how they work and the main parameters for customization. For a comprehensive and detailed description of each individual function please refer to the individual function documentation (via ?functionName).
 
 The first section is a section about [IsoformSwitchAnalyzeR Background Information], then a detailed isoform switch analysis workflow is described and lastly an overview of other useful [Other Tools in IsoformSwitchAnalyzeR] is provided. 
 
@@ -410,25 +464,28 @@ The detailed workflow consist of the following steps (illustrated in Figure 2) w
 
 * [Importing Data Into R]
     + [Data from Cufflinks/Cuffdiff]
-    + [Data from StringTie/RSEM (via Ballgown)]
+    + [Data from Kallisto, Salmon or RSEM]
     + [Data From Other Full-length Transcript Assemblers]
 * [Prefiltering]
-* [Finding Isoform Switches]
+* [Identifying Isoform Switches]
 * [Analyzing Open Reading Frames]
 * [Extracting Nucleotide and Amino Acid Sequences]
 * [Advise for Running External Sequence Analysis Tools]
 
-Which corresponds to running the following functions in sequential order (just like the _isoformSwitchAnalysisPart1()_ function actually does):
+Which corresponds to running the following functions in sequential order (which incidently is just what the _isoformSwitchAnalysisPart1()_ function does):
 
 ```
 ### Import data
 mySwitchList <- importCufflinksData()
-mySwitchList <- importBallgownData()
+mySwitchList <- importIsoformExpression()
 mySwitchList <- importRdata()
 
 ### Run analysis
 mySwitchList <- preFilter(mySwitchList)
+
+mySwitchList <- isoformSwitchTestDRIMSeq(mySwitchList) # OR 
 mySwitchList <- isoformSwitchTest(mySwitchList)
+
 mySwitchList <- analyzeORF(mySwitchList)
 mySwitchList <- extractSequence(mySwitchList)
 ```
@@ -468,7 +525,7 @@ The combined workflow is visualized here:
 <!-- Background information -->
 ### IsoformSwitchAnalyzeR Background Information
 #### The switchAnalyzeRlist
-The switchAnalyzeRlist object is the created to specifically contain and summarize all relevant information about the isoforms involved in isoform switching. The switchAnalyzeRlist is a named list, meaning each entry in the list can be accessed by its name via the '$' symbol. The standard newly created switchAnalyzeRlist object contains 4 entries and as the isoforms are gradually annotated and analyzed more entries are added. A full description of the initial  switchAnalyzeRlist can be found at _?switchAnalyzeRlist_.
+The switchAnalyzeRlist object is the created to specifically contain and summarize all relevant information about the isoforms involved in isoform switching. The switchAnalyzeRlist is a named list, meaning each entry in the list can be accessed by its name via the '$' symbol. The standard newly created switchAnalyzeRlist object contains 7 entries and as the isoforms are gradually annotated and analyzed more entries are added. A full description of the initial switchAnalyzeRlist can be found at _?switchAnalyzeRlist_.
 
 ```{r}
 data("exampleSwitchList")         # A newly created switchAnalyzeRlist
@@ -478,7 +535,7 @@ data("exampleSwitchListAnalyzed") # A fully analyzed switchAnalyzeRlist
 names(exampleSwitchListAnalyzed)
 ```
 
-The first entry 'isoformFeatures' is a data.frame where all the relevant data about the each comparison of an isoform (between conditions), as well as the analysis performed and annotation added via IsoformSwitchAnalyzeR is stored. Amongst the default information is isoform and gene ids, gene and isoform expression as well as the _isoform\_switch\_q_value_ and _isoform\_switch\_q_value_ where the result of the differential isoform analysis is stored. The comparisons made sould be understod from 'condition\_1' to 'condtion\_2', meaning 'condition\_1' is considered the ground state and 'condition\_2' the changed state. This also means that a positive dIF value indicates the isoform usage is increased in 'condition\_2' compared to 'condition\_1'. Since the 'isoformFeatures' entry is the most relevant part of the switchAnalyzeRlist object, some of most used standard methods have also been implemented to works on directly on isoformFeatures.
+The first entry 'isoformFeatures' is a data.frame where all the relevant data about the each comparison of an isoform (between conditions), as well as the analysis performed and annotation added via IsoformSwitchAnalyzeR is stored. Amongst the default information is isoform and gene ids, gene and isoform expression as well as the _isoform\_switch\_q_value_ and _isoform\_switch\_q_value_ where the result of the differential isoform analysis is stored. The comparisons made can be identified from 'condition\_1' to 'condtion\_2', meaning 'condition\_1' is considered the ground state and 'condition\_2' the changed state. This also means that a positive dIF value indicates the isoform usage is increased in 'condition\_2' compared to 'condition\_1'. Since the 'isoformFeatures' entry is the most relevant part of the switchAnalyzeRlist object, some of most used standard methods have also been implemented to works on directly on isoformFeatures.
 
 ```{r}
 ### Preview
@@ -509,7 +566,7 @@ A very useful methods implemented in IsoformSwitchAnalyzeR is _subset()_ which s
 exampleSwitchListAnalyzed
 
 ### Subset
-subset(exampleSwitchListAnalyzed, exampleSwitchListAnalyzed$isoformFeatures$gene_name == 'HOXC13')
+subset(exampleSwitchListAnalyzed, exampleSwitchListAnalyzed$isoformFeatures$gene_name == 'ARHGEF19')
 ```
 
 
@@ -537,12 +594,14 @@ The exceptions to these categories are the following:
     createSwitchAnalyzeRlist()
     preFilter()
     isoformSwitchTest()
+    isoformSwitchTestDRIMSeq()
 
 Where:
 
-*  _createSwitchAnalyzeRlist()_ is the central constructor of the switchAnalyzeRlist which is both used by all the _analyze\<description\>()_ functions and for construction of switchAnalyzeRlist from user supplied data sources. Note that this function also adds the 'id' collumn in the isoformFeatures entry of a switchAnalyzeRlist.
+*  _createSwitchAnalyzeRlist()_ is the central constructor of the switchAnalyzeRlist which is both used by all the _import\<description\>()_ functions and for construction of switchAnalyzeRlist from user supplied data sources. Note that this function also adds the 'iso_ref' and 'gene_ref collumns to the isoformFeatures entry of a switchAnalyzeRlist. These refrence indexes gives a unique id to each gene and isoform in each comparison and thereby allow for integration of the different analysis performed downstream.
 * _preFilter()_ allows for removal of filtering of data in a switchAnalyzeRlist to remove non-interesting data, such as non-expressed isoforms or genes with only one annotated isoform.
-* _isoformSwitchTest()_ implements the test for differential isoform usage introduced in Vitting-Seerup 2016 (see [What To Cite]).
+* _isoformSwitchTest()_ implements the test for differential isoform usage introduced in Vitting-Seerup 2017 (see [What To Cite]).
+* isoformSwitchTestDRIMSeq()_ is a wrapper for the switch analysis performed in Nowicka et al 2016 (see [What To Cite]).
 
 Please note that we have tried to be systematic with function argument names for cutoff meaning that if the argument name contains "cutoff" the value supplied is not included whereas if it contains "min" or "max" the value given are included.
 
@@ -554,30 +613,30 @@ Back to [Table of Content]
 ### Importing Data Into R
 IsoformSwitchAnalyzeR can analyze the output from any tool that quantify (de-novo/guided deconvoluted) full-length isoforms. All it requires is that the following 3 sets of data:
 
-* The expression of genes and isoforms in multiple samples from each conditions (replicates are essential if using IsoformSwitchAnalyzeR to identify isoform switches)
+* The expression of genes and isoforms in multiple samples from each conditions (replicates are essential if differential isoform usage should be identified)
 * The genomic coordinates of the transcript exon structure.
 * Annotation of which isoform belong to which gene.
 
-From these data a minimum switchAnalyzeRlist (see [The switchAnalyzeRlist] for description) can be constructed. To facilitate the usage of IsoformSwitchAnalyzeR several dedicated wrappers for constructing the switchAnalyzeRlist from different data sources are included in switchAnalyzeRlist. Note that Ballgown import supports both Cufflinks, StringTie and RSEM. See the following sections for details about the specific import methods:
+From these data a minimum switchAnalyzeRlist (see [The switchAnalyzeRlist] for description) can be constructed. To facilitate the usage of IsoformSwitchAnalyzeR several dedicated wrappers for constructing the switchAnalyzeRlist from different data sources are included in switchAnalyzeRlist. See the following sections for details about the specific import methods:
 
 * [Data from Cufflinks/Cuffdiff]
-* [Data from StringTie/RSEM (via Ballgown)]
+* [Data from Kallisto, Salmon or RSEM]
 * [Data From Other Full-length Transcript Assemblers]
 
 <br />
 
 #### Data from Cufflinks/Cuffdiff
-The data from Cufflinks/Cuffdiff is of special interest because Cuffdiff is amongst the most advanced tools for analyzing RNA-seq data with isoform resolution. Furthermore Cuffdiff also supports identification of isoform switching by: a) Cuffdiff have a test of isoform switches amongst isoforms with shared promoter (isoforms from same pre-mRNA), b) Cuffdiff gives better estimates of the expression uncertainties (aka variance) than estimated from the raw data, which can be utilized with the isoform switch test (at isoform level) implemented here (see [Finding Isoform Switches]).
+The data from Cufflinks/Cuffdiff is of special interest because Cuffdiff is amongst the most advanced tools for analyzing RNA-seq data with isoform resolution. Furthermore Cuffdiff also supports identification of isoform switching by: a) Cuffdiff have a test of isoform switches amongst isoforms with shared promoter (isoforms from same pre-mRNA), b) Cuffdiff gives better estimates of the expression uncertainties (aka variance) than estimated from the raw data, which can be utilized with the isoform switch test (at isoform level) implemented here (see [Identifying Isoform Switches]).
 
 There are two ways of obtaining a switchAnalyzeRlist from cufflinks.
 
     importCufflinksCummeRbund()
     importCufflinksFiles()
     
-* _importCufflinksCummeRbund()_ is made to import the data from the sql backend that can be constructed from the Cuffdiff output via Cufflinks auxiliary R package "cummeRbund".
+* _importCufflinksCummeRbund()_ is made to import the data from the SQL backend that can be constructed from the Cuffdiff output via Cufflinks auxiliary R package "cummeRbund".
 * _importCufflinksFiles()_ is made to use files outputted by a Cufflinks/Cuffdiff. This also allows the user run the computational heavy RNA-seq pipeline with mapping, transcript deconvolution, transcript quantification and differential expression on a cloud based server (for example [galaxy](https://usegalaxy.org)), and then do the post-analysis on isoform switching locally by simply downloading the required files.
 
-Creating a switchAnalyzeRlist via cummeRbund is a two-step process. First used the cummeRbund function _readCufflinks()_ to create the sql backend (which in the following example is done by _prepareCuffExample()_ on the cummeRbund example data).
+Creating a switchAnalyzeRlist via cummeRbund is a two-step process. First used the cummeRbund function _readCufflinks()_ to create the SQL backend (which in the following example is done by _prepareCuffExample()_ on the cummeRbund example data).
 
 ```{r, warning=FALSE, message=FALSE}
 cuffDB <- prepareCuffExample()
@@ -600,19 +659,20 @@ aSwitchList
 Alternatively one can, as mentioned above, link directly to the files outputted by Cuffdiff. This method is slightly faster but does not allow for integration of amongst other replicate expression. Here we link use _importCufflinksFiles()_ and link to the the example files from the cummeRbund package via the system.file() function, but in real life usecases can simply supply the (full) path to the required files as a string.
 
 ```{r, warning=FALSE}
-aSwitchList <- importCufflinksFiles(
-    pathToGTF                 = system.file('extdata/chr1_snippet.gtf',       package = "cummeRbund"),
-    pathToGeneDEanalysis      = system.file('extdata/gene_exp.diff',          package = "cummeRbund"),
-    pathToIsoformDEanalysis   = system.file('extdata/isoform_exp.diff',       package = "cummeRbund"),
-    pathToGeneFPKMtracking    = system.file('extdata/genes.fpkm_tracking',    package = "cummeRbund"),
-    pathToIsoformFPKMtracking = system.file('extdata/isoforms.fpkm_tracking', package = "cummeRbund"),
-    pathToSplicingAnalysis    = system.file('extdata/splicing.diff',          package = "cummeRbund"),
-    pathToReadGroups          = system.file('extdata/read_groups.info',       package = "cummeRbund"),
-    pathToRunInfo             = system.file('extdata/run.info',               package = "cummeRbund"),
+testSwitchList <- importCufflinksFiles(
+    pathToGTF                      = system.file('extdata/chr1_snippet.gtf',             package = "cummeRbund"),
+    pathToGeneDEanalysis           = system.file('extdata/gene_exp.diff',                package = "cummeRbund"),
+    pathToIsoformDEanalysis        = system.file('extdata/isoform_exp.diff',             package = "cummeRbund"),
+    pathToGeneFPKMtracking         = system.file('extdata/genes.fpkm_tracking',          package = "cummeRbund"),
+    pathToIsoformFPKMtracking      = system.file('extdata/isoforms.fpkm_tracking',       package = "cummeRbund"),
+    pathToIsoformReadGroupTracking = system.file('extdata/isoforms.read_group_tracking', package = "cummeRbund"),
+    pathToSplicingAnalysis         = system.file('extdata/splicing.diff',                package = "cummeRbund"),
+    pathToReadGroups               = system.file('extdata/read_groups.info',             package = "cummeRbund"),
+    pathToRunInfo                  = system.file('extdata/run.info',                     package = "cummeRbund"),
     fixCufflinksAnnotationProblem=TRUE,
     quiet=TRUE
 )
-aSwitchList
+testSwitchList
 ```
 
 
@@ -626,70 +686,71 @@ The resulting switchAnalyzeRlist can then be used with the rest of the isoform s
 
 <br />
 
-#### Data from StringTie/RSEM (via Ballgown)
-Ballgown is a method that have gained populairty because it is a easy to use interface to import transcript level quantification data (from Cufflinks (via Tablemaker), StringTie and RSEM) data into R. This also allows for integration with IsoformSwitchAnalyzeR and to facilitate the usage we have created a dedicated wrapper to extract all the necessary  information from a Ballgown object and create a switchAnalyzeRlist. Furthermore we also support the incorporation of the GTF file that was quantified, which also allows integration of known CDS (aka ORF). The function is used as follows:
+#### Data from Kallisto, Salmon or RSEM
+While RSEM is a well established and robust isofom quantification tool a new generation of tools often reffered to as pseudo/quasi-alligners such as Salmon and Kallisto are on the rise due to their speed and increased accuracy. We therefore naturally support analysis of quantifications mede with all three tools by allowing for easy import of the isoform replicate count matrix via the _importIsoformExpression()_ function. The resulting data.frame can then easily be used to generate a switchAnalyzeRlist with the _importRdata()_ function that also allows annotation be be obtained from a GTF file. The _importRdata()_ is described in the next section.
 
-```{r, message=FALSE, warning=FALSE}
-### Prepare example ballgown opbject as suggested by the ballgown vignette
-library(ballgown)
-
-data_directory = system.file('extdata', package='ballgown')
-bg = ballgown(dataDir=data_directory, samplePattern='sample', meas='FPKM')
-
-```
-```{r}
-pData(bg) = data.frame(id=sampleNames(bg), group=rep(c('WT','KD'), each=10))
-bg
-
-### Create switchAnalyzeRlist
-aSwitchList <- importBallgownData(bg, showProgress=FALSE)
-aSwitchList
-```
-
-This switchAnalyzeRlist can then be used with the rest of the pipeline. The next step typically used is [Prefiltering].
+It is noteworthy that _importIsoformExpression()_ also supports import of CPM, RPKM and RPKMeffective. RPKMeffective is of paticular interest since these expression values have been normalized in a manner removing types of biases (that each of the tools support).
 
 <br />
 
 #### Data From Other Full-length Transcript Assemblers
 As descriped above all you need to create a switchAnalyzeRlist is:
 
-* The expression of genes and isoforms in multiple samples from each conditions
-* The genomic coordinates of the transcript exon structure.
+* The isoform count expression in multiple samples from multiple conditions
+* The genomic coordinates of the isoform exon structure.
 * Annotation of which isoform belong to which gene.
 
 Note that:
 
 1) IsoformSwichtAnalyzeR also supports the analysis of isoform switches found via other tools/test - see [Testing Isoform Switches with other Tools].
-2) that the overall unit of isoforms analyzed together is defined by the gene annotation provided. In principle this overall unit does not have to be genes but could be for example a TSS shared by multiple isoforms - to utilize this simply provide TSS\_ids instead of gene\_ids to the gene annotation.
+2) that the overall unit of isoforms analyzed together is defined by the gene annotation provided. In principle this overall unit does not have to be genes but could be for example a TSS shared by multiple isoforms - to utilize this simply provide TSS\_ids instead of gene\_ids in the isoform annotation.
 
-If you have obtained the isoform expression estimates from a tool not (yet) supported with a dedicated wrapper or which have already been converted to a expression matrix you can import the necessary data into R and then use the general purpose wrapper:
+If you have obtained the isoform expression estimates from a tool not (yet) supported with a dedicated wrapper or which have already been converted to a isoform count matrix you can import the necessary data into R and then afterwards use the general purpose wrapper:
 
     importRdata()
 
-All you need to supply to the _importRdata()_ is the replicate isoform expression, the isoform annotation and a design matrix indicating which samples are from the same condition. The _importRdata()_ function will then: 
+All you need to supply to the _importRdata()_ is the replicate isoform count expression, the isoform annotation and a design matrix indicating which samples are from the same condition. The _importRdata()_ function will then: 
 
-* Sum up all isoforms belonging to a gene to get the gene expression. 
+* If nesseary calculate isoform RPKM values.
+* Sum up RPKM values from all isoforms belonging to a gene to get the gene expression. 
 * For each gene/isoform in each condition (as indicate by designMatrix) the mean expression and standard error (of mean (measurement), s.e.m) expression are calculated.
-* For each pairwise comparison of condition (or as controlled by the _comparisonsToMake_ argument) the mean gene and isoform expression values are then used to calculate log2 fold changes and Isoform Fraction (IF) values. The whole analysis is then concatenated in a SwitchAnalyzeRlist
+* For each pairwise comparison of condition (or as controlled by the _comparisonsToMake_ argument) the mean gene and isoform expression values are then used to calculate log2 fold changes and Isoform Fraction (IF) values. The whole analysis is then along with the genomic annotation concatenated in a SwitchAnalyzeRlist.
 
+Note that _importRdata()_ allows the user to supply a FPKM expression matrix (via the _isoformRepExpression_ argument) that can be used (instead of them beeing calculated directly from the count matrix). This should only be done if additional normalization is wanted (inter-library normalization such as calculated by edgeRs _calcNormFactor_ or different types of bias correction that Kallisto, Salmon and RSEM offers. We therefore recommednd that for Kallisto, Salmon and RSEM data the _importIsoformExpression()_ function is used twice to both import 'counts' and 'rpkmEffective' and that both these data.frames are supplied to _importRdata()_.
+
+Furthermore note that if the _importGTF()_ function is used the user can choose to import the CDS stored in the GTF region as the Open Reading Fram (ORF) IsoformSwitchAnalyzeR uses for downstream analysis. This can be advantageous if the data provided is a quantification of known annotated transcripts (aka isoforms are not the result of any de-novo or guided assembly) since the untertainties of prediction the ORF is then avoided.
+
+
+```{r, warning=FALSE, message=FALSE}
+### Construct data needed from example data in cummeRbund package
+### (The recomended way of analyzing Cufflinks/Cuffdiff datat is via importCufflinksCummeRbund()
+### This is jus an easy way to get some example data ).
+cuffDB <- prepareCuffExample()
+```
 ```{r}
-### Load example data
-data('exampleRdata')
+isoRepCount <- repCountMatrix(isoforms(cuffDB))
+isoRepCount$isoform_id <- rownames(isoRepCount)
+
+### Design matrix
+designMatrix <- cummeRbund::replicates(cuffDB)[,c('rep_name','sample_name')]
+colnames(designMatrix) <- c('sampleID','condition')
+
+localAnnotaion <- import(system.file("extdata/chr1_snippet.gtf", package="cummeRbund"))[,c('transcript_id','gene_id')]
+colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
+
 
 ### Take a look at the data
-head(isoformRepExpression, 2)
+head(isoRepCount, 2)
 
-head(designMatrix, 2)
+designMatrix
 
-tail(designMatrix, 2)
-
-head(isoformExonAnnoation, 3)
+head(localAnnotaion, 3)
 
 ### Create switchAnalyzeRlist
 aSwitchList <- importRdata(
-    isoformRepExpression=isoformRepExpression,
+    isoformCountMatrix=isoRepCount,
     designMatrix=designMatrix,
-    isoformExonAnnoation=isoformExonAnnoation,
+    isoformExonAnnoation=localAnnotaion,
     showProgress=FALSE
 )
 aSwitchList
@@ -703,8 +764,11 @@ Alternatives to using _importRdata()_ are either _importGTF()_ or _createSwitchA
     
 If the data uses a GTF file as reference _importGTF()_ which will generate a switchAnalyzeRlist with dummy variables:
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 aSwitchList <- importGTF(pathToGTF = system.file("extdata/chr1_snippet.gtf", package = "cummeRbund"))
+```
+
+```{r}
 aSwitchList
 
 head(aSwitchList,2)
@@ -712,67 +776,6 @@ head(aSwitchList$conditions,2)
 ```
 
 From above it's observed that dummy variables have been inserted in both the _isoformFeatures_ and _conditions_ entries of the switchAnalyzeRlist. This approach is well suited if you just want to annotate a transcriptome and are not interested in expression. If you are interested in expression estimates its probably easier to use _importRdata_ else you will have to overwrite all the dummy variables with user specified values before the switchAnalyzeRlist can be used in the IsoformSwitchAnalyzeR pipeline. 
-
-Note that if the _importGTF()_ function is used the user can choose to import the CDS stored in the GTF region as the Open Reading Fram (ORF) IsoformSwitchAnalyzeR uses for downstream analysis. This can be advantageous if the data provided is a quantification of known annotated transcripts (aka isoforms are not the result of any de-novo or guided assembly) since the untertainties of prediction the ORF is then avoided.
-
-<br />
-
-The alternative is to manually create the data objects and supply it to _createSwitchAnalyzeRlist()_ to create a switchAnalyzeRlist as illustrated by this example:
-
-```{r}
-### Make "isoformFeatures" entry
-isoAnnotation <- data.frame(
-    isoform_id = paste('iso',1:3,sep='_'),
-    gene_id='gene_1',
-    condition_1="groundState",
-    condition_2="modifiedState",
-    gene_name='favoriteGene',
-    gene_value_1=10,
-    gene_value_2=11,
-    gene_stderr_1=2,
-    gene_stderr_2=2,
-    gene_log2_fold_change=log2(11/10),
-    gene_q_value=1,
-    iso_value_1=c(1,8,1),
-    iso_value_2=c(1,2,7),
-    iso_stderr_1=rep(0.1,3),
-    iso_stderr_2=rep(0.2,3),
-    iso_log2_fold_change=log2( c(1,2,7) / c(1,8,1) ),
-    iso_p_value=1,
-    iso_q_value=1,
-    IF1=c(1,8,1) / 10,
-    IF2=c(1,2,7) / 11,
-    dIF=(c(1,2,7) / 11) - (c(1,8,1) / 10),
-    isoform_switch_q_value=NA,
-    gene_switch_q_value=NA,
-    stringsAsFactors = FALSE
-)
-
-### make "conditions" entry
-repOverview <- data.frame(
-    condition=c('groundState','modifiedState'), 
-    nrReplicates=c(3,3), 
-    row.names = NULL, stringsAsFactors = FALSE
-)
-
-### make "exons" entry
-myExons <- GRanges(
-    seqnames = 'chr1', 
-    ranges = IRanges(start = c(1,1,10), end = c(20,20,20)), 
-    strand = '+',
-    isoform_id=paste('iso',1:3,sep='_'),
-    gene_id='gene_1'
-)
-
-### Combine it all to make a switchAnalyzeRlist
-aSwitchList <- createSwitchAnalyzeRlist(
-    isoformFeatures=isoAnnotation,
-    exons=myExons,
-    conditions=repOverview,
-    sourceId='homeMade'
-)
-aSwitchList
-```
 
 Back to [Table of Content]
 
@@ -788,8 +791,9 @@ To alleviate this problem the _preFilter()_ function was created. By using _preF
 * Isoform expression
 * Isoform Fraction (isoform usage)
 * Unwanted isoform classes
+* Genes without differential isoform usage
 
-Removing single isoform genes makes sense since they per definition cannot have changes in isoform usage. 
+Removal of single isoform genes are done by defailt since they per definition cannot have changes in isoform usage. 
 
 Filtering on gene expression allows removal of non-used isoforms that only appear in the switchAnalyzeRlist because they were in the isoform/gene annotation used. Furthermore the expression filtering allows removal of 1) lowly expressed isoforms where the expression levels might be untrustworthy 2) lowly expressed genes which causes the calculations of the Isoform Fractions (IF) to become untrustworthy. 
 
@@ -812,18 +816,25 @@ Back to [Table of Content]
 
 <br />
 
-### Finding Isoform Switches
-IsoformSwitchAnalyzeR contains an implementation of the test for differential isoform usage (in the function _isoformSwitchTest()_) describe in Vitting-Seerup et al (2016) (see [What To Cite]). The rest of the workflow described here (figure 2) is however not depending on this specific implementation of a isoform switch test. The results of any tool which can test for differential isoform usage at gene and/or isoform level can be used as explained in [Testing Isoform Switches with other Tools].
+### Identifying Isoform Switches
+As identification of isoform switches are essential for IsoformSwitchAnalyzeR naturally multipe ways of identifying isoform switches are supported. Currently IsoformSwitchAnalyzeR specifcally spports four different approachs:
 
-In all the functions in IsoformSwitchAnalyzeR workflow (e.g. not only the test) a significant isoform switch significant require:
+* Cufflinks/Cuffdiff : automatically imported when importing Cufflinks/Cuffdiff data. See [Data from Cufflinks/Cuffdiff].
+* IsoformSwitchAnalyzeR : The isoform level test implemented in this package. See [Testing Isoform Switches with IsoformSwitchAnalyzeR].
+* DRIMSeq : Using the function. See [Testing Isoform Switches via DRIMSeq].
+* Actuallt the results of any tool which can test for differential isoform usage at gene and/or isoform level can be used. See [Testing Isoform Switches with other Tools].
 
-1. The FDR corrected p-value (q-value) of the test used is smaller than the _alpha_ argument.
-2. The (absolute) change in isoform usage (dIF) must be larger than the _dIFcutoff_ argument.
+No matter which method is used all the downstream functionality in IsoformSwitchAnalyzeR (e.g. not only the test) defines a significant isoform switch through the combination of seting two paramters:
 
-Since a q-value (aka FDR corrected p-value) is only a measure of the statistical certainty of the difference between two groups and thereby not reflects the effect size (measued as dIF values).
+1. The _alpha_ argument indicating the cutoff which the FDR corrected p-value (q-value) of the test used must be smaller than.
+2. The _dIFcutoff_ argument indicating the (absolute) change in isoform usage (dIF) a change must be larger than.
 
-#### The isoformSwitchTest Implemented in IsoformSwitchAnalyzeR
-Here we will present two sections about the test for differential isoform usage implemented in _isoformSwitchTest()_. First the idea behind the test will be introduced and afterwards we will show how to use it (jump to [Usage of The Statistical Test]).
+This combination is used since a q-value is only a measure of the statistical certainty of the difference between two groups and thereby not reflects the effect size (which can be measued as dIF values).
+
+IsoformSwitchAnalyzeR supports tests for differential isoform usage performed both at isoform and gene resolution. Note however that for gene level analysis you reliy on cutoffs on dIF values for identifying the isoforms involved in a switch - somthing that when compared to the isoform level analysis sometimes gives false results. We therefore reccomed the use of isoform level analysis whenever possible.
+
+#### Testing Isoform Switches with IsoformSwitchAnalyzeR
+IsoformSwitchAnalyzeR contains an implementation of the test for differential isoform usage (in the function _isoformSwitchTest()_) describe in Vitting-Seerup et al (2017) (see [What To Cite]). Here we will introduce two sections about the test for differential isoform usage implemented in _isoformSwitchTest()_. First the idea behind the test will be introduced and afterwards we will show how to use it (jump to [Usage of The Statistical Test]).
 
 ##### The Idea Behind The Statistical Test
 One of the most used ways of descripting isoform usage is as Isoform Fractions (IF). These are simply values describing how large a fraction of the expression of a given gene originate from a given isoform. So the Isoform Fraction of isoform _x_ ($IF_x$) is given by as: $IF_x = i_x / g$ where $i_x$ is the expression of isoform _x_ and _g_ is the parent gene expression. Note that the parent gene expression is the sum of the expression of all the associated isoforms. The difference between two conditions, condition 1 and 2, is then given by $dIF= IF_2 - IF_1$.
@@ -859,9 +870,12 @@ args(isoformSwitchTest)
 
 If a single isoform from a given gene is termed significant we define this gene as having an isoform switch since if there is a change in isoform usage in one isoform there must be changes in another (or multiple) isoforms compensating for change identified. To extrapolate this to gene level we define the q-value of at the gene level (in the 'gene\_switch\_q\_value' column) as equivilent to the smallest q-value of the associated isoforms (in the 'isoform\_switch\_q\_value column).
 
-The last argument _reduceToSwitchingGenes_ is simply an option to reduce the switchAnalyzeRlist to only genes that contains at least one isoform passing the given _alpha_ and _dIFcutoff_ cutoffs. This option ensures the rest of the workflow goes significantly faster since isoforms from genes without isoform switching is not analyzed.
+Another important argument in _isoformSwitchTestDRIMSeq()_ is the 'reduceToSwitchingGenes'. This is simply an option to reduce the switchAnalyzeRlist to only genes that contains at least one isoform passing the given _alpha_ and _dIFcutoff_ cutoffs. This option ensures the rest of the workflow goes significantly faster since isoforms from genes without isoform switching is not analyzed. 
 
-Note that _isoformSwitchTest()_ overwrites the isoform switch test results stored in the isoformSwitchList (if any), such as the one added by _importCufflinksCummeRbund()_.
+Note that if an switchAnalyzeRlist already contains the result of a switch test this will be completely overwritten by _isoformSwitchTestDRIMSeq()_.
+
+As the DRIMSeq approach (amongst others) utilize bayesian information sharing we reccomend most users to use the DRIMSeq approach as it is much more sensitive when having a smal number of samples. The exception to this recomendation is the user suspect sequencing bias effects or if a large number of samples are analyzed. In both these cases we recomend the use of the statistical test implemented in IsoformSwitchAnalyzeR (see below) since that build on the FPKM values that typically are (Cufflinks/Cuffdiff) or can be (Kallisto, Salmon and RSEM) corrected for such sequence biases. The FPKM values supplied by Cufflinks/Cuffdiff are automatically corrected whereas these needs to be specificallyt imported if the original quantification was done with Kallisto, Salmon or RSEM (as described in [Data from Kallisto, Salmon or RSEM]). For cases where many samples are analyzed we recomed the statistical test implemented in IsoformSwitchAnalyzeR as it fast and the gain of the information sharing in DRIMSeq decreases as the number of samples increases.
+
 
 ```{r}
 # Load example data and prefilter
@@ -902,10 +916,42 @@ Back to [Table of Content]
 <br />
 
 
+
+#### Testing Isoform Switches via DRIMSeq
+A recent breakthough in the analysis of isoform usage happened when the DRIMSeq package (By Nowicka et al, see [What To Cite] - please remember to cite the tool) was updated to not only analyze genes for differential isoform usage but provide a statistical test at the isoform level as this allows for identification of the excat isoforms involved in a switch.
+
+Naturally IsoformSwitchAnalyzeR supports identification of isoform switches with DRIMSeq via the wrapper _isoformSwitchTestDRIMSeq()_ which performs the full analysis of all isoforms and comparisons switchAnalyzeRlist. Afterwards the result is integratated back into the switchAnalyzeRlist which is returned to the user as usual. Note that we support both the use of the gene-level and isoform-level analysys as controled by the 'testIntegration' argument. Using this argument it is also possible to be even more stringent by requiring both the gene- and isoform-level analysis must be significant.
+
+The _isoformSwitchTestDRIMSeq()_ function is used as follows:
+
+```{r}
+# Load example data and prefilter
+data("exampleSwitchList")
+exampleSwitchList <- preFilter(exampleSwitchList) # preFilter for fast runtime
+
+# Perfom test (takes ~10 sec)
+exampleSwitchListAnalyzed <- isoformSwitchTestDRIMSeq(
+    switchAnalyzeRlist = exampleSwitchList,
+    testIntegration='isoform_only',
+    reduceToSwitchingGenes=TRUE
+)
+
+# Summarize swiching geatures
+extractSwitchSummary(exampleSwitchListAnalyzed)
+```
+
+Please note that currently the DRIMSeq approach can be a bit slow and might require some patience if a large number of isoforms are analyzed (aka not somthing you want to sit idel and wait for). We have experienced runtimes of up to 30 minuts per comparison made for a full size datasets.
+
+An important argument in _isoformSwitchTestDRIMSeq()_ is the 'reduceToSwitchingGenes'. This is simply an option to reduce the switchAnalyzeRlist to only genes that contains at least one isoform passing the given _alpha_ and _dIFcutoff_ cutoffs. This option ensures the rest of the workflow goes significantly faster since isoforms from genes without isoform switching is not analyzed. 
+
+Please note that if an switchAnalyzeRlist already contains the result of a switch test this will be completely overwritten by _isoformSwitchTestDRIMSeq()_.
+
+As the DRIMSeq approach (amongst others) utilize bayesian information sharing we reccomend most users to use the DRIMSeq approach as it is much more sensitive when having a smal number of samples. The exception to this recomendation is the user suspect sequencing bias effects or if a large number of samples are analyzed. In both these cases we recomend the use of the statistical test implemented in IsoformSwitchAnalyzeR (see below) since that build on the FPKM values that typically are (Cufflinks/Cuffdiff) or can be (Kallisto, Salmon and RSEM) corrected for such sequence biases. The FPKM values supplied by Cufflinks/Cuffdiff are automatically corrected whereas these needs to be specificallyt imported if the original quantification was done with Kallisto, Salmon or RSEM (as described in [Data from Kallisto, Salmon or RSEM]). For cases where many samples are analyzed we recomed the statistical test implemented in IsoformSwitchAnalyzeR as it fast and the gain of the information sharing in DRIMSeq decreases as the number of samples increases.
+
 #### Testing Isoform Switches with other Tools
 IsoformSwichtAnalyzeR also supports the analysis of isoform switches found via other tools/test. All you need to do is import the data via one of the import options (see [Importing Data Into R]) and then simply fill in either the _isoform\_switch\_q\_value_ or _gene\_switch\_q\_value_ columns in the _isoformFeatures_ entry of the switchAnalyzeRlist with the multiple testing corrected p-values (q-values) from the external tool. 
 
-If the external tool used has isoform resolution (one test per isoform) the q-values should be added to the _isoform\_switch\_q\_value_ column and the smallest q-value of a given gene (in a specific comparison) should be added to all the isoforms for that gene in the _gene\_switch\_q\_value_ column. If the external tool have lower resolution (pre-mRNA or gene level resolution) the q-values should only be added to the _gene\_switch\_q\_value_ column (and the _isoform\_switch\_q\_value_ should be left alone (aka be just NAs)). 
+If the external tool used has isoform resolution (one test per isoform) the q-values should be added to the _isoform\_switch\_q\_value_ column and the smallest q-value of a given gene (in a specific comparison) should be added to all the isoforms for that gene in the _gene\_switch\_q\_value_ column. If the external tool have lower resolution (pre-mRNA or gene level resolution) the q-values should only be added to the _gene\_switch\_q\_value_ column (and the _isoform\_switch\_q\_value_ should be set to NA). 
 
 In this way IsoformSwitchAnalyzeR can also support non-isoform resolution testing - note however that:
 
@@ -989,7 +1035,7 @@ Back to [Table of Content]
 ### Advise for Running External Sequence Analysis Tools
 The two fasta files outputted by _extractSequence()_ (if writeToFile=TRUE) can be used as input to amongst others:
 
-* CPAT : The Coding-Potential Assessment Tool, which can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
+* CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
 * Pfam : Prediction of protein domains, which can be run either locally or via their [webserver](http://pfam.xfam.org/search#tabview=tab1).
 * SignalP : Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
 
@@ -997,9 +1043,9 @@ These three tools are the once currently supported but if you have additional id
 
 We suggest the external sequence analysis tools are run as follows:
 
-* CPAT : Use default parameters. If the webser (http://lilab.research.bcm.edu/cpat/) was used download the tab-delimited result file (from the bottom of the result page). If a stand-alone version was used just supply the path to the result file.
-* Pfam : Use default parameters. If the webserver (http://pfam.xfam.org/search#tabview=tab1) is used you need to copy paste the result part of the mail you receive into a empty plain text document (notepat, sublimetext TextEdit or similar (not word)) and save that to a plain text (txt) file. The path to that file should be supplied here. If a stand-alone version was just just supply the path to the result file.
-* SignalP : If using the web-server (http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "standard" under "Output format" and "No graphics" under "Graphics output". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results should be copy pasted (from the web-page) into a empty plain text document (notepat, sublimetext TextEdit or similar (not word)) and save that to plain text (txt) file. This file is then used as input to the function. If a stand-alone version was just just supply the path to the summary result file.
+* CPAT : Use default parameters and the nucleotide fasta file (_nt). If the webser (http://lilab.research.bcm.edu/cpat/) was used download the tab-delimited result file (from the bottom of the result page). If a stand-alone version was used just supply the path to the result file. 
+* Pfam : Use default parameters and the amino acid fasta file (_AA). If the webserver (https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan) is used you need to copy paste the result part of the mail you receive into a empty plain text document (notepat, sublimetext TextEdit or similar (not word)) and save that to a plain text (txt) file. The path to that file should be supplied here. If a stand-alone version was just just supply the path to the result file. A more detailed walkthrough is found under details in the documentation of the \code{analyzePFAM()} function (?analyzePFAM).
+* SignalP : Use the amino acid fasta file (_AA). When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server (http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "standard" under "Output format" and "No graphics" under "Graphics output". When using the web-server the results (everything between the two hoizontal lines) should be copy pasted into a empty plain text document (notepat, sublimetext TextEdit or similar (not word)) and save that to plain text (txt) file. This file is then used as input to the function. If a stand-alone version was just just supply the path to the summary result file.
 
 Back to [Table of Content]
 
@@ -1023,7 +1069,6 @@ exampleSwitchListIntermediary
 exampleSwitchListAnalyzed <- analyzePFAM(
     switchAnalyzeRlist   = exampleSwitchListIntermediary,
     pathToPFAMresultFile = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
-    filterRepeats=TRUE,
     showProgress=FALSE
     )
 
@@ -1044,7 +1089,7 @@ exampleSwitchListAnalyzed <- analyzeCPAT(
 exampleSwitchListAnalyzed
 ```
 
-Where the _pathTo\<tool\_name>resultFile_ points to the results files constructed as suggested in [Advise for Running External Sequence Analysis Tools]. 
+Where the _pathTo\<tool\_name>resultFile_ points to the results files constructed as suggested in [Advise for Running External Sequence Analysis Tools] and in the detailed documentation of each of the function.. 
 
 Of particular interest is the _removeNoncodinORFs_ argument in _analyzeCPAT()_ since it allows to integrate the CPAT and ORF analysis by removing ORFs from isoforms not predicted to be coding by CPAT. This is can be particular useful if isoforms and ORFs have been predicted de novo. Note that if enabled (by setting to TRUE) it will affect all downstream analysis and plots as both analysis of domains and signal peptides requires that ORFs are annotated (e.g. _analyzeSwitchConsequences_ will for example not consider the domains (potentially) found by Pfam if the ORF have been removed).
 
@@ -1054,7 +1099,7 @@ Back to [Table of Content]
 <br />
 
 ### Predicting Intron Retentions
-Another annotation  we can obtain since we know the exon structure of all isoforms in a given gene (with isoform switching) is intron retentions. This can be done via the *spliceR* R package via the wrapper implemented in _analyzeIntronRetention()_.
+Another annotation we easily can obtain since we know the exon structure of all isoforms in a given gene (with isoform switching) is intron retentions. This can be done via the *spliceR* R package via the wrapper implemented in _analyzeIntronRetention()_.
 
 ```{r}
 ### This example relies on the example data from the 'Importing External Sequences Analysis' section above 
@@ -1065,20 +1110,20 @@ exampleSwitchListAnalyzed <- analyzeIntronRetention(exampleSwitchListAnalyzed, q
 table(exampleSwitchListAnalyzed$isoformFeatures$IR)
 ```
 
-Meaning 7 isoforms each with one intron retention was identified. If you utilize this function please remember to cite Vitting-Seerup et al (2015) (see [What To Cite]).
+Meaning 25 isoforms each with one intron retention (IR) and 2 isoforms with 2 IRs was identified. If you utilize this function please remember to cite Vitting-Seerup et al (2015) (see [What To Cite]).
 
 Back to [Table of Content]
 
 <br />
 
 ### Predicting Switch Consequences
-If a isoform have a significant change in its contribution to the gene expression there must per definition be a reciprocal changes in one (or more) isoforms in the opposite direction compensating for the initial change. Here we utilize this by extracting the isoforms that are significantly changing  their contribution to the gene expression and compare them to the isoforms that are compensating. By utilizing all the information gathered during the workflow described above we can identify differences in the functional annotation which indicates a potential function consequence of the isoform switch.
+If a isoform have a significant change in its contribution to the gene expression there must per definition be a reciprocal changes in one (or more) isoforms in the opposite direction compensating for the initial change. We utilize this by extracting the isoforms that are significantly differentially used and compare them to the isoforms that are compensating. By utilizing all the information gathered during the workflow described above we can identify differences in the functional annotation of the isoforms and thereby identify potential function consequence(s) of the isoform switch.
 
-Specificly IsoformSwitchAnalyzeR contains a function _analyzeSwitchConsequences()_ which extract the isoforms with significant changes in their isoform usage (defined by the _alpha_ and _dIFcutoff_ parameters, see [Finding Isoform Switches] for details) as well as the isoforms, with a lage change in isoform usage (controled via the _dIFcutoff_ parameters), that compensate for the changes. 
+Specificly IsoformSwitchAnalyzeR contains a function _analyzeSwitchConsequences()_ which extract the isoforms with significant changes in their isoform usage (defined by the _alpha_ and _dIFcutoff_ parameters, see [Identifying Isoform Switches] for details) as well as the isoforms, with a lage opposite change in isoform usage (also controled via the _dIFcutoff_ parameters), that compensate for the changes. 
 
-These isoforms are then divided into the isoforms that increases their contribution to gene expression (positive dIF values) and the isoforms that decrease their contribution (negative dIF values). The isoforms with increased contribution are then (in a pairwise manner) compared to the isoform with decreasing contribution. In each of these comparisons the isoforms compared are analyzed for differences in their  annotation (controlled  by the _consequencesToAnalyze_ parameter). Currently 21 different features of the isoforms can be compared, which include features such as intron retention, coding potential, NMD status, protein domains and the sequence similarity of the amino acid sequence of the annotated ORFs. For a full list see under details at the manual page for _analyzeSwitchConsequences()_ (?analyzeSwitchConsequences). 
+These isoforms are then divided into the isoforms that increases their contribution to gene expression (positive dIF values) and the isoforms that decrease their contribution (negative dIF values). The isoforms with increased contribution are then (in a pairwise manner) compared to the isoform with decreasing contribution. In each of these comparisons the isoforms compared are analyzed for differences in their  annotation (controlled  by the _consequencesToAnalyze_ parameter). Currently 22 different features of the isoforms can be compared, which include features such as intron retention, coding potential, NMD status, protein domains and the sequence similarity of the amino acid sequence of the annotated ORFs. For a full list see under details at the manual page for _analyzeSwitchConsequences()_ (?analyzeSwitchConsequences). 
 
-A more strict analysis can be performed by enabling the _onlySigIsoforms_ argument, which causes _analyzeSwitchConsequences()_ to only consider significant isoforms (defined by the _alpha_ and _dIFcutoff_ parameters) meaing the compensatory changes in isoform usage are ignore unless they themselves  are significant.
+A more strict analysis can be performed by enabling the _onlySigIsoforms_ argument, which causes _analyzeSwitchConsequences()_ to only consider significant isoforms (defined by the _alpha_ and _dIFcutoff_ parameters) meaing the compensatory changes in isoform usage are ignored unless they themselves are significant.
 
 The analysis of consequences can be performed as follows:
 
@@ -1089,26 +1134,39 @@ The analysis of consequences can be performed as follows:
 consequencesOfInterest <- c('intron_retention','coding_potential','NMD_status','domains_identified','ORF_seq_similarity')
 
 exampleSwitchListAnalyzed <- analyzeSwitchConsequences(
-    exampleSwitchListAnalyzed, 
+    exampleSwitchListAnalyzed,
     consequencesToAnalyze = consequencesOfInterest, 
+    dIFcutoff = 0.4, # very high cutoff for fast runtimes
     showProgress=FALSE
 )
+
+extractSwitchSummary(exampleSwitchListAnalyzed, dIFcutoff = 0.4, filterForConsequences = FALSE)
+extractSwitchSummary(exampleSwitchListAnalyzed, dIFcutoff = 0.4, filterForConsequences = TRUE)
+```
+
+Meaning that ~5/7 genes with switches (with dIF > 0.4) have isoform switches with functional consequences. For a larger dataset it looks more like:
+
+```{r}
+### Load already analyzed data
+data("exampleSwitchListAnalyzed")
 
 extractSwitchSummary(exampleSwitchListAnalyzed, filterForConsequences = FALSE)
 extractSwitchSummary(exampleSwitchListAnalyzed, filterForConsequences = TRUE)
 ```
 
-Meaning that ~55% and ~66% of genes with switches, in the two conditions respectively, have isoform switches with functional consequences. 
+Where the combined row indicate the number of unique features across all comparisons.
+
+Please note that the _analyzeSwitchConsequences()_ function contain a lot paramters and cutoff for desiding when a difference in the annoation is sufficently different (e.g. supplying 'ntCutoff=50' ensures that differences in nucleotide lengths of two ORF are larger than 50 nucleotides (aka not just 1 nucleotide)).
 
 Back to [Table of Content]
 
 <br />
 
 ### Post Analysis of Isoform Switches with Consequences
-Now that we have obtained a genome-wide overview of isoform switches with potential consequences there are two types of post-analysis we can perform:
+Now that we have performed a genome-wide analysis of isoform switches with potential consequences there are two types of post-analysis we can perform:
 
 1) [Analysis of Individual Isoform Switching].
-2) [Genome Wide Analysis] of the effect of isoform switches with functional consequences
+2) [Genome Wide Analysis] of the general effects of isoform switches with functional consequences
 
 IsoformSwitchAnalyzeR contains tools for both as illustrated by the following sections - starting with the analysis of individual genes.
 
@@ -1116,12 +1174,14 @@ IsoformSwitchAnalyzeR contains tools for both as illustrated by the following se
 When analyzing the individual genes with isoform switches the the genes/isoforms with the largest changes in isoform usage (aka "most" switching genes/isoforms) are of particular interest. IsoformSwitchAnalyzeR can help you obtain theseeither by sorting for the smallest q-values (getting the most significant genes) or the largest  absolute dIF values (getting the largest effect sizes (aka switches) that are still significant). Both methods are implemented for both genes and isoforms in the _extractTopSwitches()_ function and are controlled via the _sortByQvals_ argument.
 
 ```{r}
-### This example relies on the example data from the 'Predicting Switch Consequences' section above 
+### Load already analyzed data
+data("exampleSwitchListAnalyzed")
 
 ### Lets reduce the switchAnalyzeRlist to only one condition
 exampleSwitchListAnalyzedSubset <- subset(
     exampleSwitchListAnalyzed, 
-    exampleSwitchListAnalyzed$isoformFeatures$condition_2 == 'KD2'
+    exampleSwitchListAnalyzed$isoformFeatures$condition_1 == 'iPS' &
+    exampleSwitchListAnalyzed$isoformFeatures$condition_2 == 'hESC'
 )
 exampleSwitchListAnalyzedSubset
 
@@ -1142,7 +1202,7 @@ extractTopSwitches(
 )
 ```
 
-Lets take a look at the switching isoforms in the TBC1D22B gene:
+Lets take a look at the switching isoforms in the TBC1D22B gene witch plays a role in protecting from apoptosis:
 
 
 ```{r}
@@ -1150,23 +1210,21 @@ Lets take a look at the switching isoforms in the TBC1D22B gene:
 switchingIso <- extractTopSwitches( 
     exampleSwitchListAnalyzedSubset, 
     filterForConsequences = TRUE, 
-    n = NA,                # n=NA: all features are returned
+    n = NA,                  # n=NA: all features are returned
     extractGenes = FALSE,    # when FALSE isoforms are returned
     sortByQvals = TRUE
 )
 
-subset(switchingIso, gene_name == 'TBC1D22B')
+subset(switchingIso, gene_name == 'TNFRSF1B')
 ```
 
 The isoform switch can also be vissualy analyzed the Isoform Switch Analysis Plot. Note that since there is only one comparison in the switchAnalyzeRlist (after the subset) it is not nessesary to specify the conditions.
 
 ```{r, fig.width=12, fig.height=7}
-switchPlot(exampleSwitchListAnalyzedSubset, gene = 'TBC1D22B', IFcutoff = 0.1)
+switchPlot(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B')
 ```
 
-From this plot is clear to see that normally (in the ctrl condition) all three isoforms are used and that the two protein coding accounts for ~50% of the gene output with the rest being contributed by the NMD sensitive isoform (which is NMD sensitive due to the inclusion of a premature termination codon (PTC) in exon 5). The isoform switch identified does however result in a switch away from the NMD sensitive isoform whereby only the protein coding isoforms are used.
-
-Since the switch is from a NMD sensitive to a NMD non-sensitive isoform we would expect the change at protein level to be more extreme than the gene expression analysis indicates (also shown in the plot). 
+From this plot is clear to see that in the iPS cells it is mainly the isoform 'TCONS_00000307' that is used. Isoform is predicted to be NMD sensitive (due to the inclusion of a premature termination codon (PTC) in exon 7). The isoform switch identified does however result in a switch away from the NMD sensitive isoform whereby only the protein coding isoforms are used in normal human Embryonic Stemm Cells (hESC) and not in iPS cells. Note that no differential expression was identified by Cufflinks/Cuffdiff whereby a gene-level analysis might have missed this change.
 
 
 <br />
@@ -1200,12 +1258,12 @@ consequenceSummary <- extractConsequenceSummary(
     plotGenes = TRUE
 )
 
-subset(consequenceSummary, featureCompared=='Domains identified')
+subset(consequenceSummary, featureCompared=='Intron retention')
 ```
 
 Illustrating that both a tabular and a visual summary can be obtained thereby providing a general overview of the isoform switches. 
 
-From this summary plot we can see for both knockdowns there is a very large fraction of isoform switches where the upregulated isoforms more frequently have intron retentions which probably also causes the increase in NMD sensitive transcripts. Another observation is that the ORF of the upregulated isoforms generally are shorter, which also explains why there are more protein domain loss than gain.
+From this summary plot we can see for large fraction of isoform switches where the upregulated isoforms more frequently have intron retentions.
 
 Note furthermore that here the focus of the plot generated is on the _number of genes_ with isoform switches with functional consequences (controlled by plotGenes = TRUE and asFractionTotal=FALSE) whereas in [Short Example Workflow] the focus was the _fraction of isoforms_ involved in isoform switching with functional consequences.
 
@@ -1218,16 +1276,12 @@ symmaryStatistics <- extractGenomeWideAnalysis(
     plot=TRUE,
     returnResult = TRUE
 )
-
-### Extract the summary statistics of the highly significant cases
-subset(symmaryStatistics, symmaryStatistics$wilcoxQval < 0.001)
 ```
 (Note that the 3 dots in each violin plot correspond to the 25th, 50th (median) and 75th percentiles).
 
-Which clearly shos that there is 
+Which shows that athough many isoform switches no global changes are identified (in this toy data).
 
-<br />
-
+Back to [Table of Content]
 
 <br />
 
@@ -1244,19 +1298,20 @@ The central visualization is the Isoform Switch Analysis Plot, created with _swi
 As illustrated here:
 
 ```{r, fig.width=12, fig.height=3}
-switchPlotTranscript(exampleSwitchListAnalyzedSubset, gene = 'TBC1D22B')
+### Load already analyzed data
+data("exampleSwitchListAnalyzed")
+
+switchPlotTranscript(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B')
 ```
 ```{r, fig.width=3, fig.height=3}
-switchPlotGeneExp (exampleSwitchListAnalyzedSubset, gene = 'TBC1D22B', condition1='Ctrl', condition2='KD2')
+switchPlotGeneExp (exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B', condition1='iPS', condition2='hESC')
 ```
 ```{r, fig.width=4, fig.height=3}
-switchPlotIsoExp  (exampleSwitchListAnalyzedSubset, gene = 'TBC1D22B', condition1='Ctrl', condition2='KD2')
+switchPlotIsoExp(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B', condition1='iPS', condition2='hESC')
 ```
 
-Note (again) that if there is only one comparison in the switchAnalyzeRlist it is not necessary to specify which conditions to plot.
-
 ```{r, fig.width=4, fig.height=3}
-switchPlotIsoUsage(exampleSwitchListAnalyzedSubset, gene = 'TBC1D22B')
+switchPlotIsoUsage(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B', condition1='iPS', condition2='hESC')
 ```
 
 <br />
@@ -1266,9 +1321,12 @@ The last tool currently build into IsoformSwitchAnalyzeR is the extractExpressio
 
 ```{r}
 data("exampleSwitchListIntermediary")
-ifMatrix <- extractExpressionMatrix(exampleSwitchListIntermediary)
+ifMatrix <- extractExpressionMatrix(exampleSwitchListAnalyzed)
 
 head(ifMatrix)
+
+dim(ifMatrix)
+
 ```
 
 <br />
@@ -1288,14 +1346,13 @@ Or expression (via a heatmap):
 
 ```{r, fig.width=8, fig.height=4}
 library(pheatmap)
-pheatmap(t(ifMatrix))
+pheatmap(t(ifMatrix), show_colnames=FALSE)
 ```
 
 
 Back to [Table of Content]
 
 <br />
-
 
 ## Other workflows
 ### Augmenting ORF Predictions with Pfam Results
@@ -1411,7 +1468,7 @@ Back to [Table of Content]
 ### Quality control of ORF of known annotation
 As we have shown there are quit a lot of problems with known CDS annotation (see Vitting-Seerup et al 2016) we have implemented two ways to ensure a high quality of the CDS imported from a GTF annotation file:
 
-1) When you import the GTF file (via _importRdata()_, _importBallgownData()_ or _importGTF()_) you can enable the 'onlyConsiderFullORF' argument which makes sure you only add the ORF stored in the GTF file if it is annotated with both a start and stop codon.
+1) When you import the GTF file (via _importRdata()_ or _importGTF()_) you can enable the 'onlyConsiderFullORF' argument which makes sure you only add the ORF stored in the GTF file if it is annotated with both a start and stop codon.
 2) When you extract the biological sequences (nucleotide and amino acid) with _extractSequence()_ you can enable the argument 'removeORFwithStop' which will remove ORFs which contains un-annotated stop codons, defined as * when the ORF nucleotide sequences is translated to the amino acid seqeunce. If enabled the ORFs will both be removed from the switchAnalyzeRList and from the sequences outputted by _extractSequence()_.
 
 <br />
@@ -1490,8 +1547,8 @@ Back to [Table of Content]
 
 <br />
 
-## Frequently Asked Questions
-None yet
+## Frequently Asked Questions and Problems
+None yet but we will continously add the most common problems and questions raised on github or in the google group (see [How To Get Help]).
 
 Back to [Table of Content]
 
@@ -1500,7 +1557,7 @@ Back to [Table of Content]
 ## Final Remarks
 With this vignette we hope to provide a thorough introduction to IsoformSwitchAnalyzeR as well as give some examples of what IsoformSwitchAnalyzeR can be used for.
 
-We aim to continuously keep IsoformSwitchAnalyzeR up to date and update it. The update aspect includes the integration of new tools as they are developed (both for isoform quantification, isoform switch identification or for sequence analysis) so please feel free to suggest new tools to us (see the [How To Get Help] section for info of how to get in contact).
+We aim to continuously keep IsoformSwitchAnalyzeR up to date and update it. The update aspect includes the integration of new tools as they are developed (isoform quantification, statistical ORF detection, isoform switch identification, external sequence analysis etc) so please feel free to suggest new tools to us (see the [How To Get Help] section for info of how to get in contact). Tools should prefrerably either be light weight (runnable on a old labtop) or avaialbe via web-services as that will allow a larger audience to use it.
 
 Back to [Table of Content]
 

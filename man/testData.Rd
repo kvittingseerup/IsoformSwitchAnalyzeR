@@ -2,9 +2,6 @@
 \alias{exampleSwitchList}
 \alias{exampleSwitchListIntermediary}
 \alias{exampleSwitchListAnalyzed}
-\alias{isoformRepExpression}
-\alias{isoformExonAnnoation}
-\alias{designMatrix}
 \docType{data}
 
 \title{
@@ -12,11 +9,7 @@ Example data for IsoformSwitchAnalyzeR
 }
 
 \description{
-The test data included in the IsoformSwitchAnalyzeR package is:
-\itemize{
-    \item{\code{1}: Three switchAnalyzeRlist corresponding to a switchAnalyzeRlist in different stages of an isoform switch analyzer workflow (see format for details).}
-    \item{\code{2}: A set of standard R object which is needed to used the \code{importRdata} function.}
-}
+Three switchAnalyzeRlist corresponding to a switchAnalyzeRlist in different stages of an isoform switch analyzer workflow.
 }
 
 \usage{
@@ -26,7 +19,6 @@ data("exampleSwitchListIntermediary")
 
 data("exampleSwitchListAnalyzed")
 
-data('exampleRdata')
 }
 
 \format{
@@ -34,14 +26,6 @@ see \code{?createSwitchAnalyzeRlist} for detailed format of an \code{switchAnaly
 }
 
 \details{
-The 'exampleRdata' loads the following objects, which are all obtained (and massaged) from the ballgown example data (see vignette('ballgown')).
-\itemize{
-\item { \code{isoformRepExpression} : Data.frame with replicate isoform expression.}
-\item { \code{isoformExonAnnoation} : GRange object with the isoform annotation.}
-\item { \code{designMatrix} : A design matrix for the data indicating two conditions 'WT' and 'KD'.}
-}
-More detials about the specification of each of these can be found in \code{?importRdata}.\cr
-
 The three example switchAnalyzeRlist are:
 \itemize{
     \item { \code{exampleSwitchList} : Which corresponds to a newly created \code{switchAnalyzeRlist} such as one would get by using either of the import* function (such as \code{importCufflinksData}) or by using \code{createSwitchAnalyzeRlist} on your own data. Not this is a small subset to allow for fast example generation.}
@@ -51,23 +35,12 @@ The three example switchAnalyzeRlist are:
 }
 
 \source{
-This data is a modified subset of a dataset where two splice factors were knocked down. This data is only included to provide examples for usage of function. As it is modified it should not be considered real.
+This data is a modified subset of a dataset comparing human Embryonic Stemm Cells (hESC) vs induced Pluripotent Cells (iPS) and mature cells (Fibroblast) originally released with the cummeRbund package. This data is only included to provide examples for usage of function. As it is modified to illustrate the package it should not be considered real and no conclusions should be made from it.
 }
 
 \examples{
 ### Summarize newly created switchAnalyzeRList
 data("exampleSwitchList")
 summary(exampleSwitchList)
-
-### Visualize isoform switch in HOXC13 gene
-data("exampleSwitchListAnalyzed")
-switchPlot(exampleSwitchListAnalyzed, gene='HOXC13', condition1='Ctrl', condition2='KD1')
-
-### Analyze general functional consequences pattern from fully analyzed switchAnalyzeRList
-# visually
-extractConsequenceSummary(exampleSwitchListAnalyzed, asFractionTotal = TRUE)
-
-# Summarize as table instead
-extractConsequenceSummary(exampleSwitchListAnalyzed, plot = FALSE, returnResult = TRUE)
 }
 \keyword{datasets}

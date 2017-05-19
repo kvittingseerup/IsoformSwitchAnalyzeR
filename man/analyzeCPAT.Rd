@@ -45,8 +45,8 @@ Two colums are added to \code{isoformFeatures}: 'codingPotentialValue' and 'codi
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}
-\code{\link{extractSequence}}
+\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{extractSequence}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 
