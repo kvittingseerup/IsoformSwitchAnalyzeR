@@ -2006,7 +2006,7 @@ importIsoformExpression <- function(
         countCol       = c('est_counts'     , 'NumReads'       , 'expected_count'),
         rpkm           = c('length'         , 'Length'         , 'length'),
         rpkmEffective  = c('eff_length'     , 'EffectiveLength', 'effective_length'),
-        stringsAsFactors = F
+        stringsAsFactors = FALSE
     )
 
     ### Identify directories of interest

@@ -272,7 +272,7 @@ Back to [Table of Content].
 A full, but less customizable, analysis of isoform switches can be done using by using the two high level functions _isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_ as described above. This section aims to show how these high-level functions are used as well as serve as a showcase for what IsoformSwitchAnalyzeR can be used for.
 
 Lets start by loading the R package
-```{r}
+```{r, results = "hide", message = FALSE}
 library(IsoformSwitchAnalyzeR)
 ```
 
@@ -334,11 +334,12 @@ exampleSwitchList <- isoformSwitchAnalysisPart1(
 Note that:
 1. it is possible to supply the CuffSet (the object which links to the cufflinks/cuffdiff sql database, created with _readCufflinks{cummeRbund}_) directly to the _input_ argument instead of creating the switchAnalyzeRlist first.
 2. The _isoformSwitchAnalysisPart1()_ function have a argument, _overwritePvalues_, which overwrite the result of user supplied p-values (such as those imported by cufflinks) with the result of running _isoformSwitchTest()_.
+3. The switchAnalyzeRlist produced by _isoformSwitchAnalysisPart1()_ have been subsettet to only contain genes where an isoform switch (as defined by the _alpha_ and _dIFcutoff_ arguments) where identified. This enables much faster runtimes for the rest of the pipeline as only isoform from a gene with a switch are analyzed.
 
 The number of switching features is easily summarized via:
 
 ```{r}
-extractSwitchSummary(exampleSwitchList)
+extractSwitchSummary(exampleSwitchList, dIFcutoff = 0.4) # supply the same cutoff to the summary function
 ```
 
 <br />
@@ -709,16 +710,17 @@ If you have obtained the isoform expression estimates from a tool not (yet) supp
 
     importRdata()
 
-All you need to supply to the _importRdata()_ is the replicate isoform count expression, the isoform annotation and a design matrix indicating which samples are from the same condition. The _importRdata()_ function will then: 
+All you need to supply to the _importRdata()_ is the replicate isoform (estimated) count expression, the isoform annotation and a design matrix indicating which samples are from the same condition. The _importRdata()_ function will then: 
 
-* If nesseary calculate isoform RPKM values.
+* If nesseary calculate isoform FPKM/RPKM values.
 * Sum up RPKM values from all isoforms belonging to a gene to get the gene expression. 
 * For each gene/isoform in each condition (as indicate by designMatrix) the mean expression and standard error (of mean (measurement), s.e.m) expression are calculated.
 * For each pairwise comparison of condition (or as controlled by the _comparisonsToMake_ argument) the mean gene and isoform expression values are then used to calculate log2 fold changes and Isoform Fraction (IF) values. The whole analysis is then along with the genomic annotation concatenated in a SwitchAnalyzeRlist.
 
-Note that _importRdata()_ allows the user to supply a FPKM expression matrix (via the _isoformRepExpression_ argument) that can be used (instead of them beeing calculated directly from the count matrix). This should only be done if additional normalization is wanted (inter-library normalization such as calculated by edgeRs _calcNormFactor_ or different types of bias correction that Kallisto, Salmon and RSEM offers. We therefore recommednd that for Kallisto, Salmon and RSEM data the _importIsoformExpression()_ function is used twice to both import 'counts' and 'rpkmEffective' and that both these data.frames are supplied to _importRdata()_.
-
-Furthermore note that if the _importGTF()_ function is used the user can choose to import the CDS stored in the GTF region as the Open Reading Fram (ORF) IsoformSwitchAnalyzeR uses for downstream analysis. This can be advantageous if the data provided is a quantification of known annotated transcripts (aka isoforms are not the result of any de-novo or guided assembly) since the untertainties of prediction the ORF is then avoided.
+Note that:
+1) _importRdata()_ allows the user to supply a FPKM/RPKM expression matrix (via the _isoformRepExpression_ argument) that can be used (instead of them beeing calculated directly from the count matrix). This should only be done if additional normalization is wanted (inter-library normalization such as calculated by edgeRs _calcNormFactor_ or different types of bias correction that tools such as Kallisto, Salmon and RSEM offers. We therefore recommednd that for Kallisto, Salmon and RSEM data the _importIsoformExpression()_ function is used twice to both import 'counts' and 'rpkmEffective' and that both these data.frames are supplied to _importRdata()_.
+2) CPM/TPM values should NOT under any circumstances be supplied to _importRdata()_ since they do not take the length into account meaning that isoform switches where there is a differences in the length of the involved isoforms will be biased by TPM/CPM values. To illustrate this a simple thought example can be made: Consider two isoforms where isoform 1 exist in 5 copies and isoform 2 exist in 10 copies (a 1:2 relation). If isoform 1 is twice as long as isoform 2 an RNA-seq experiment will generate twice as many reads from it - meaning if TPM/CPM values are used a false 1:1 realtion will be estimated. This is naturally not the case for RPKM/FPKM since the isoform lenghts are taken into account.
+2) if the _importGTF()_ function is used the user can choose to import the CDS stored in the GTF region as the Open Reading Fram (ORF) IsoformSwitchAnalyzeR uses for downstream analysis. This can be advantageous if the data provided is a quantification of known annotated transcripts (aka isoforms are not the result of any de-novo or guided assembly) since the untertainties of prediction the ORF is then avoided.
 
 
 ```{r, warning=FALSE, message=FALSE}

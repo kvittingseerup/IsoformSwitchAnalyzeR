@@ -1,7 +1,7 @@
 ##############################
 ### Import and add external analysis
 
-# convert transcript coordinats to genomic coordinats
+# Helper function
 convertCoordinatsTranscriptToGenomic <- function(
     transcriptCoordinats,   # A data.frame containing the transcript coordinats
     exonStructure           # A data.frame with the genomic coordinats of the transcript exons
@@ -57,7 +57,9 @@ convertCoordinatsTranscriptToGenomic <- function(
 
 }
 
+
 ### Actural functions
+
 analyzeCPAT <- function(
     switchAnalyzeRlist,
     pathToCPATresultFile,
@@ -254,10 +256,13 @@ analyzeCPAT <- function(
     return(switchAnalyzeRlist)
 }
 
-analyzePFAM <- function(switchAnalyzeRlist,
-                        pathToPFAMresultFile,
-                        showProgress = TRUE,
-                        quiet = FALSE) {
+
+analyzePFAM <- function(
+    switchAnalyzeRlist,
+    pathToPFAMresultFile,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
     if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
         stop(
             'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
@@ -458,13 +463,13 @@ analyzePFAM <- function(switchAnalyzeRlist,
                 ]
             ))
         myPfamResult$transcriptStart <-
-            (myPfamResult$orf_aa_start  * 3 - 2)
-        + orfStartDF[
-            match(
-                x = myPfamResult$seq_id,
-                table = orfStartDF$isoform_id
-            ),
-            2] - 1
+            (myPfamResult$orf_aa_start  * 3 - 2) +
+            orfStartDF[
+                match(
+                    x = myPfamResult$seq_id,
+                    table = orfStartDF$isoform_id
+                ),
+                2] - 1
         myPfamResult$transcriptEnd <-
             (myPfamResult$orf_aa_end * 3) +
             orfStartDF[
@@ -642,6 +647,7 @@ analyzePFAM <- function(switchAnalyzeRlist,
     }
     return(switchAnalyzeRlist)
 }
+
 
 analyzeSignalP <- function(
     switchAnalyzeRlist,

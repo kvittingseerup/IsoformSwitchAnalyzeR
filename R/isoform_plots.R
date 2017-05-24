@@ -1,8 +1,3 @@
-########################################################
-###################### spliceR v3 ######################
-### Functions for plotting single gene isoform usage ###
-########################################################
-
 ### Helper functions
 # Helper function to devide GRanges exons
 cutGRanges <- function(
@@ -1094,6 +1089,7 @@ switchPlotTranscript <- function(
         return(myPlot)
     }
 }
+
 
 expressionAnalysisPlot <- function(
     switchAnalyzeRlist = NULL,

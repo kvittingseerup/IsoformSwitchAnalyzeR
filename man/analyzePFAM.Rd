@@ -42,6 +42,8 @@ Use default paramters. If you want to use the webserver it is easily done as fol
 8) Save the document and supply the path to that document to analyzePFAM()
 
 If a stand-alone version was just supply the path to the result file to analyzePFAM().
+
+Protein domains are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run pfam once on all isoforms and then supply the entire file to \code{analyzePFAM()}.
 }
 
 \value{

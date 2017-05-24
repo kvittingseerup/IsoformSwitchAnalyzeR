@@ -1,5 +1,9 @@
-2017-04-20 : IsoformSwitchAnalyzeR v0.99.9
-    Major update which:
+2017-05-24 : IsoformSwitchAnalyzeR v0.99.10
+    - Fixes some issue raised in the Bioconductor review
+    - Fixes a but introdued during the recent update in how pfam results were integrated.
+
+2017-05-19 : IsoformSwitchAnalyzeR v0.99.9
+    MAJOR update which:
         1) Introduces the iso_ref and gene_ref handles to all entires in the switchAnalyzeRlist which allows for easy integration of data across the different enteries.
         2) Now offers full integration with the DRIMSeq tool which utilizises advanced linear models to identify significant changes in isoform usage at isoform level enabling robust analysis of more complex designs including batch effects. The integraiton is availabe via the isoformSwitchTestDRIMSeq() function.
         3) Updates IsoformSwitchAnalyzeR to handle EBI's new server for running Pfam.
@@ -14,7 +18,7 @@
         - The importIsoformExpression() function have been introduced to help with importing data from Kallisto, Salmon and RSEM. This function generates a isoform count matrix from the parent directory of the Kallisto/Salmon/RSEM analysis - which can easily be used with the importRdata() function to generate a switchAnalyzeRlist.
     Lastly the vignette have naturally been updated and improved accordingly.
 
-2017-04-20 : IsoformSwitchAnalyzeR v0.99.1-8
+2017-04-XX : IsoformSwitchAnalyzeR v0.99.1-8
     Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards mostly consering how namespaces are organised and imported.
 
 2017-04-18 : IsoformSwitchAnalyzeR v0.99.0
