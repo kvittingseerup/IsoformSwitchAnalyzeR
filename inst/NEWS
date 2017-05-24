@@ -1,6 +1,7 @@
 2017-05-24 : IsoformSwitchAnalyzeR v0.99.10
     - Fixes some issue raised in the Bioconductor review
     - Fixes a but introdued during the recent update in how pfam results were integrated.
+    - Updates of the vignette for inproved readability.
 
 2017-05-19 : IsoformSwitchAnalyzeR v0.99.9
     MAJOR update which:
