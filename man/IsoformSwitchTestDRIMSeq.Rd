@@ -39,7 +39,6 @@ A string indicating how to interpret the DRIMSeq test for differential isoform u
             \item {\code{'isoform_only'} : Only considers the test at isoform level resolution (and ignores the gene level test). This analysis have isoform resolution (meaning exactly which isoforms are switching is known). Default}
             \item {\code{'gene_only'} : Only considers the test at gene level resolution (and ignores the isoform level test). This analysis have gene resolution (meaning exactly which isoforms are switching is NOT known - but the power is higher compared to isoform level analysis (probablt more genes identified)).}
             \item {\code{'intersect'} : Only considers the cases where BOTH the gene and the isoforms are significant. This analysis have isoform resolution (meaning exactly which isoforms are switching is known) and is the conservative version of 'isoform_only' since it is also required that the gene level test for the parent gene is significant. See details.}
-    %\item {\code{'union'} : Considers the cases where EITHER the gene and the isoforms are significant. This analysis have gene resolution (meaning exactly which isoforms are switching is NOT known - but the power is higher compared to isoform level analysis (more genes identified)) This is the most permissive method.} % option excluded due to non-propper FDR control
         }
     }
 
@@ -57,10 +56,11 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 }
 
 \details{
-Please note that the DRIMSeq approach depends heavily on the filtering on the data since if to many lowly expressed transcripts are included the gene precition cannot be calculcated. Therefore if you think to few genes have been tested you can try to make a more strict filtering with the \code{preFilter()} function.
+Please note that the DRIMSeq approach depends on the filtering on the data since if to many lowly expressed transcripts are included the gene precition cannot be calculcated. Therefore if you think to few genes have been tested you can try to make a more strict filtering with the \code{preFilter()} function.
 
+This wrapper for DRIMSeq utilizes all data to construct one linear model (one fit) on all the data (including the potential extra covariates/batch effects indicated in the \code{designMatrix} entry of the supplied \code{switchAnalyzeRlist}). From this unified model all the pairwise test analyzed (as indicated by the condition_1 and condition_2 columns of the \code{isoformFeatures} entry of the supplied \code{switchAnalyzeRlist} are tested individually.)
 
-The testIntegration is only applied to the \code{isoformFeatures} entry of the \code{switchAnalyzeRlist}. The full DRIMSeq analysis is unmodified and added to the \code{isoformSwitchAnalysis} entry of the \code{switchAnalyzeRlist}.
+The result of the testIntegration (see arugments and below) is only applied to the \code{isoformFeatures} entry of the \code{switchAnalyzeRlist}. The full DRIMSeq analysis is unmodified and added to the \code{isoformSwitchAnalysis} entry of the \code{switchAnalyzeRlist}.
 
 The testIntegration integration works as follows:
 \itemize{
@@ -71,9 +71,9 @@ The testIntegration integration works as follows:
 
 A 'union' option is not supported due to the loss of False Discovery Rate that would lead to.
 
-Note that currently a DRIMSeq only spportes pairwise comparisons (with potential batch effects) meaning one Fit is created per comparison. \cr
-
 To use the \code{dmPrecisionArgs}, \code{dmFitArgs}, \code{dmTestArgs} arguments a named list should simply be supplied - so if you want to modify the 'prec_subset' argument in the dmPrecision() function you should supply \code{dmPrecisionArgs=list(prec_subset=x)} where \code{x} is the value you want to pass to the 'prec_subset' argument.
+
+Note that DRIMSeq can be rather slow for large comparisons and 0.5-1 hour per comparison is not unnormal.
 }
 
 
@@ -148,7 +148,7 @@ switchAnalyzeRlistAnalyzed <- preFilter(
     IFcutoff = 0.3,
     geneExpressionCutoff = 50
 )
-switchAnalyzeRlistAnalyzed <- subset(
+switchAnalyzeRlistAnalyzed <- subsetSwitchAnalyzeRlist(
     switchAnalyzeRlistAnalyzed,
     switchAnalyzeRlistAnalyzed$isoformFeatures$condition_1 == 'hESC'
 )

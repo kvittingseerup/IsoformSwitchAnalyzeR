@@ -4,8 +4,10 @@ makeMinimumSwitchList <- function(
 ) {
     ### Subset to wanted isoforms
     orgSwitchList <-
-        subset(orgSwitchList,
-               orgSwitchList$isoformFeatures$isoform_id %in% isoformsToKeep)
+        subsetSwitchAnalyzeRlist(
+            orgSwitchList,
+            orgSwitchList$isoformFeatures$isoform_id %in% isoformsToKeep
+        )
 
     ### remove non-needed entries
     orgSwitchList$isoformSwitchAnalysis <- NULL

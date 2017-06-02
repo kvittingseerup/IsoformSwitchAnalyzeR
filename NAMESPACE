@@ -33,6 +33,7 @@ importFrom("stats", "as.formula", "model.matrix")
 ### Export functions from my R package
 # Creating list
 export('createSwitchAnalyzeRlist')
+export('subsetSwitchAnalyzeRlist')
 
 # Import data
 export('importCufflinksCummeRbund')

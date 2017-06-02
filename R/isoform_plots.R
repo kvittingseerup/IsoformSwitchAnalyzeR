@@ -1593,6 +1593,7 @@ expressionAnalysisPlot <- function(
                 } else {
                     geneExpressionCombined$CI <- geneExpressionCombined$stderr
                 }
+
                 geneExpressionCombined$CI_up <-
                     geneExpressionCombined$gene_expression +
                     geneExpressionCombined$CI
@@ -1609,7 +1610,8 @@ expressionAnalysisPlot <- function(
                             geneExpressionCombined$gene_expression,
                             geneExpressionCombined$CI_up,
                             geneExpressionCombined$CI_down
-                        )
+                        ),
+                        na.rm = TRUE
                     ) * (extendFactor),
                     stringsAsFactors = FALSE
                 )
@@ -1699,8 +1701,7 @@ expressionAnalysisPlot <- function(
                         ),
                         vjust = -0.2,
                         size = localTheme$text$size * 0.3
-                    ) +
-                    coord_cartesian(ylim = c(ymin, yMax))
+                    )
             }
 
             # add the rest
@@ -1708,11 +1709,16 @@ expressionAnalysisPlot <- function(
                 facet_wrap( ~ Analyis, ncol = 1) +
                 labs(x = 'Condition', y = 'Gene Expression') +
                 localTheme + # modify to rotate labels
-                theme(strip.background = element_rect(fill = "white", size =
-                                                          0.5))
+                theme(strip.background = element_rect(
+                    fill = "white",
+                    size = 0.5)
+                )
 
             if (logYaxis) {
-                g1 <- g1 + scale_y_log10()
+                g1 <- g1 + scale_y_log10() +
+                    coord_cartesian(ylim = c(ymin+1, yMax))
+            } else {
+                g1 <- g1 + coord_cartesian(ylim = c(ymin, yMax))
             }
 
             ### add to list
@@ -1867,17 +1873,18 @@ expressionAnalysisPlot <- function(
                 } else {
                     isoExpressionCombined$CI <- isoExpressionCombined$stderr
                 }
+
+                isoExpressionCombined$CI_hi <-
+                    isoExpressionCombined$expression + isoExpressionCombined$CI
+                isoExpressionCombined$CI_low <-
+                    sapply(
+                        isoExpressionCombined$expression -
+                            isoExpressionCombined$CI,
+                        function(x) {
+                            max(c(0, x))
+                        }
+                    )
             }
-            isoExpressionCombined$CI_hi <-
-                isoExpressionCombined$expression + isoExpressionCombined$CI
-            isoExpressionCombined$CI_low <-
-                sapply(
-                    isoExpressionCombined$expression -
-                        isoExpressionCombined$CI,
-                    function(x) {
-                        max(c(0, x))
-                    }
-                )
 
             isoExpressionCombined$Analyis <- 'Isoform Expression'
 
@@ -1903,7 +1910,8 @@ expressionAnalysisPlot <- function(
                                         correspondingExpData$expression,
                                         correspondingExpData$expression +
                                             correspondingExpData$CI
-                                    )
+                                    ),
+                                    na.rm = TRUE
                                 )
                         } else {
                             aDF$ymax <- max(correspondingExpData$expression)
@@ -1988,8 +1996,14 @@ expressionAnalysisPlot <- function(
                             y = ymax + additionFactor,
                             yend = ymax + additionFactor
                         )
-                    ) +
-                    coord_cartesian(ylim = c(ymin, yMax))
+                    )
+            }
+
+            if (logYaxis) {
+                g1 <- g1 + scale_y_log10() +
+                    coord_cartesian(ylim = c(ymin+1, yMax))
+            } else {
+                g1 <- g1 + coord_cartesian(ylim = c(ymin, yMax))
             }
 
             g2 <- g2 +
@@ -1997,12 +2011,18 @@ expressionAnalysisPlot <- function(
                 labs(x = 'Isoform', y = 'Isoform Expression') +
                 facet_wrap( ~ Analyis, ncol = 1) +
                 localTheme + # modify to tilt conditions
-                theme(strip.background = element_rect(fill = "white", size =
-                                                          0.5))
+                theme(strip.background = element_rect(
+                    fill = "white",
+                    size = 0.5
+                ))
 
             if (logYaxis) {
-                g2 <- g2 + scale_y_log10()
+                g2 <- g2 + scale_y_log10() +
+                    coord_cartesian(ylim = c(ymin+1, yMax))
+            } else {
+                g2 <- g2 + coord_cartesian(ylim = c(ymin, yMax))
             }
+
 
             ### add to list
             plotList[['isoform_expression']] <- g2
@@ -2054,7 +2074,7 @@ expressionAnalysisPlot <- function(
                             isoformUsage2[which(
                                 isoformUsage2$isoform_id == aDF$isoform_id
                             ), ]
-                        aDF$ymax <- max(correspondingExpData$IF)
+                        aDF$ymax <- max(correspondingExpData$IF, na.rm = TRUE)
                         return(aDF)
                     }
                 )
@@ -2116,8 +2136,10 @@ expressionAnalysisPlot <- function(
                 labs(x = 'Isoform', y = 'Isoform Usage (IF)') +
                 facet_wrap( ~ Analyis, ncol = 1) +
                 localTheme + # modify to tilt conditions
-                theme(strip.background = element_rect(fill = "white", size =
-                                                          0.5))
+                theme(strip.background = element_rect(
+                    fill = "white",
+                    size = 0.5)
+                )
 
 
             plotList[['isoform_usage']] <- g3
@@ -2131,18 +2153,20 @@ expressionAnalysisPlot <- function(
     return(plotList)
 }
 
-switchPlot <- function(switchAnalyzeRlist = NULL,
-                       gene = NULL,
-                       isoform_id = NULL,
-                       condition1,
-                       condition2,
-                       IFcutoff = 0,
-                       rescaleTranscripts = TRUE,
-                       reverseMinus = TRUE,
-                       addErrorbars = TRUE,
-                       logYaxis = FALSE,
-                       localTheme = theme_bw(base_size = 8),
-                       additionalArguments = list()) {
+switchPlot <- function(
+    switchAnalyzeRlist = NULL,
+    gene = NULL,
+    isoform_id = NULL,
+    condition1,
+    condition2,
+    IFcutoff = 0,
+    rescaleTranscripts = TRUE,
+    reverseMinus = TRUE,
+    addErrorbars = TRUE,
+    logYaxis = FALSE,
+    localTheme = theme_bw(base_size = 8),
+    additionalArguments = list()
+) {
     ### Test Input
     if (TRUE) {
         if (all(is.na(

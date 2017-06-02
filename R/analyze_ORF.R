@@ -3,16 +3,18 @@
 ######### Analyze coding potential and identify protein domains ########
 ########################################################################
 
-analyzeORF <- function(switchAnalyzeRlist,
-                       genomeObject,
-                       minORFlength = 100,
-                       orfMethod = 'longest',
-                       cds = NULL,
-                       PTCDistance = 50,
-                       startCodons = "ATG",
-                       stopCodons = c("TAA", "TAG", "TGA"),
-                       showProgress = TRUE,
-                       quiet = FALSE) {
+analyzeORF <- function(
+    switchAnalyzeRlist,
+    genomeObject,
+    minORFlength = 100,
+    orfMethod = 'longest',
+    cds = NULL,
+    PTCDistance = 50,
+    startCodons = "ATG",
+    stopCodons = c("TAA", "TAG", "TGA"),
+    showProgress = TRUE,
+    quiet = FALSE
+) {
     ### check input
     if (TRUE) {
         # Input data

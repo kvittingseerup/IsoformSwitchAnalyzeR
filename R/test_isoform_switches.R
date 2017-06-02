@@ -628,7 +628,6 @@ isoformSwitchTestDRIMSeq <- function(
     dIFcutoff = 0.1,
     testIntegration = 'isoform_only',
     reduceToSwitchingGenes = TRUE,
-    #nCores=1,
     dmPrecisionArgs = list(),
     dmFitArgs = list(),
     dmTestArgs = list(),
@@ -698,166 +697,205 @@ isoformSwitchTestDRIMSeq <- function(
         progressBar <- 'none'
     }
 
-    ### For each comparison do the test
-    # Note : when contrasts are implemented the dmFit() can be moved out and only calculated once
-    if (!quiet) {
-        message('Step 1 of 3: Analyzing comparisons (this may take a while)...')
+    nConditions <- length(unique(switchAnalyzeRlist$designMatrix$condition))
+    oneWayData <- nConditions <= 2
+
+    ### Make model matrix
+    if(TRUE) {
+        localDesign <- switchAnalyzeRlist$designMatrix
+
+        localFormula <- '~ 0 + condition'
+        if (ncol(localDesign) > 2) {
+            localFormula <- paste(
+                localFormula,
+                '+',
+                paste(
+                    colnames(localDesign)[3:ncol(localDesign)],
+                    collapse = '+'
+                )
+            )
+        }
+        localFormula <- as.formula(localFormula)
+
+        # model
+        localModel <- model.matrix(localFormula, data = localDesign)
+        indexToModify <- 1:nConditions
+        colnames(localModel)[indexToModify] <- gsub(
+            pattern =  '^condition',
+            replacement =  '',
+            x =  colnames(localModel)[indexToModify]
+        )
     }
-    resultOfPairwiseTest <- myListToDf(
-        dlply(
+
+    ### Make dmData object
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 1 of 5: Creating DM data object...')
+        }
+        ### Modify dfs for DRIMseq
+        # modelmatrix
+        localSamples <- localDesign
+        colnames(localSamples)[1:2] <- c('sample_id','group')
+
+        # count matrix
+        localCount <- switchAnalyzeRlist$isoformCountMatrix
+        localCount$gene_id <- switchAnalyzeRlist$isoformFeatures$gene_id[match(
+            localCount$isoform_id, switchAnalyzeRlist$isoformFeatures$isoform_id
+        )]
+        colnames(localCount)[1] <- 'feature_id'
+
+        localCount <- localCount[,c(
+            'feature_id', 'gene_id',
+            setdiff(colnames(localCount), c('feature_id', 'gene_id'))
+        )]
+
+        ### Make DSdata
+        suppressMessages(localDm <- dmDSdata(
+            counts = localCount,
+            samples = localSamples
+        ))
+    }
+
+    ### Calculate precition
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 2 of 5: Estimating precision paramter (this may take a while)...')
+        }
+
+        ### Calculate precision
+        # add data arguments to argument list
+        dmPrecisionArgs$x      <- localDm
+        dmPrecisionArgs$design <- localModel
+        dmPrecisionArgs$one_way <- oneWayData
+
+        # use argument list to run function
+        suppressMessages(localDmPrec <- do.call(
+            what = dmPrecision, args = dmPrecisionArgs
+        ))
+    }
+
+    ### Fit model
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 3 of 5: Fitting linear models (this may take a while)...')
+        }
+
+        # add data arguments to argument list
+        dmFitArgs$x        <- localDmPrec
+        dmFitArgs$design   <- localModel
+        dmFitArgs$bb_model <- TRUE
+        dmFitArgs$one_way <- oneWayData
+
+        # use argument list to run function
+        suppressMessages(localDmFit <- do.call(
+            what = dmFit, args = dmFitArgs
+        ))
+    }
+
+    ### For each comparison do the test
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 4 of 5: Testing pairwise comparison(s)...')
+        }
+
+        resultOfPairwiseTest <- myListToDf(dlply(
             .data = comaprisonsToMake,
             .variables = c('condition_1', 'condition_2'),
             .progress = progressBar,
-            .fun = function(aDF) {
-                # aDF <- comaprisonsToMake[1,]
+            .fun = function(
+                aDF
+            ) { # aDF <- comaprisonsToMake[1,]
+                ### Construct local contrast
+                localContrast <- rep(0, ncol(localModel))
+                localContrast[which(
+                    colnames(localModel) == aDF$condition_1
+                )] <- -1
+                localContrast[which(
+                    colnames(localModel) == aDF$condition_2
+                )] <- 1
 
-                ### Makde design matrix
-                if (TRUE) {
-                    ### Extract local data
-                    localDesign <-
-                        switchAnalyzeRlist$designMatrix[which(
-                            switchAnalyzeRlist$designMatrix$condition %in%
-                                c(aDF$condition_1, aDF$condition_2)
-                        ), ]
-                    rownames(localDesign) <- localDesign$sampleID
+                ### Add arguments to list
+                dmTestArgs$x <- localDmFit
+                dmTestArgs$coef <- NULL
+                dmTestArgs$contrast <- localContrast
+                dmTestArgs$one_way <- oneWayData
 
-                    ### Ensure correct intercept
-                    localDesign$condition <- factor(as.character(
-                        localDesign$condition),
-                        levels = c(c(
-                            aDF$condition_1, aDF$condition_2
-                        )))
+                # use argument list to run function
+                suppressMessages(localDmTest <- do.call(
+                    what = dmTest,
+                    args = dmTestArgs
+                ))
 
-                    ### Make model matrix
-                    # formula
-                    localFormula <- paste('~ ', colnames(localDesign)[2])
-                    if (ncol(localDesign) > 2) {
-                        localFormula <- paste(
-                            localFormula,
-                            '+',
-                            paste(
-                                colnames(localDesign)[3:ncol(localDesign)],
-                                collapse = '+'
-                            )
-                        )
-                    }
-                    localFormula <- as.formula(localFormula)
+                ### Extract result
+                localRes <- merge(
+                    x = results(localDmTest, level = "feature")[, c(
+                        'feature_id',
+                        'gene_id',
+                        'lr',
+                        'df',
+                        'pvalue',
+                        'adj_pvalue'
+                    )],
+                    y = results(localDmTest)[, c(
+                        'gene_id', 'lr', 'df', 'pvalue', 'adj_pvalue'
+                    )],
+                    by = 'gene_id',
+                    suffixes = c(".iso", ".gene")
+                )
 
-                    # model
-                    localModel <-
-                        model.matrix(localFormula, data = localDesign)
-                    colnames(localModel)[2] <- 'coefOfInterest'
-
-                    ### Massage design
-                    localDesign2 <- localDesign[, 1:2]
-                    colnames(localDesign2) <- c('sample_id', 'group')
-                }
-
-                ### Extract corresponding count matrix
-                if (TRUE) {
-                    localCM <- switchAnalyzeRlist$isoformCountMatrix[, c(
-                        'isoform_id', rownames(localModel))]
-
-                    ### Add gene_ref for easy backward tracking
-                    localCM$gene_id <-
-                        switchAnalyzeRlist$isoformFeatures$gene_ref[match(
-                            paste0(
-                                localCM$isoform_id,
-                                aDF$condition_1,
-                                aDF$condition_2
-                            ),
-                            paste0(
-                                switchAnalyzeRlist$isoformFeatures$isoform_id,
-                                switchAnalyzeRlist$isoformFeatures$condition_1,
-                                switchAnalyzeRlist$isoformFeatures$condition_2
-                            )
-                        )]
-                    colnames(localCM)[1] <- 'feature_id'
-
-                    ### Subset to genes expressed
-                    localCM <- localCM[which(!is.na(localCM$gene_id)), ]
-
-                    ### Massage CM
-                    localCM <- localCM[,c(
-                        'feature_id', 'gene_id',
-                        setdiff(colnames(localCM), c('feature_id', 'gene_id'))
-                    )]
-                }
-
-                ### Do test
-                if (TRUE) {
-                    ### Construct DM object
-                    suppressMessages(localDm <-dmDSdata(
-                        counts = localCM, samples = localDesign2
-                    ))
-
-                    ### Calculate precision
-                    # add data arguments to argument list
-                    dmPrecisionArgs$x      <- localDm
-                    dmPrecisionArgs$design <- localModel
-
-                    # use argument list to run function
-                    suppressMessages(localDmPrec <- do.call(
-                        what = dmPrecision, args = dmPrecisionArgs
-                    ))
-
-                    ### Calculate fit
-                    # add data arguments to argument list
-                    dmFitArgs$x        <- localDmPrec
-                    dmFitArgs$design   <- localModel
-                    dmFitArgs$bb_model <- TRUE
-
-                    # use argument list to run function
-                    suppressMessages(localDmFit <- do.call(
-                        what = dmFit, args = dmFitArgs
-                    ))
-
-
-                    ### Make test
-                    # add data arguments to argument list
-                    dmTestArgs$x    <- localDmFit
-                    dmTestArgs$coef <- 'coefOfInterest'
-
-                    # use argument list to run function
-                    suppressMessages(localDmTest <- do.call(
-                        what = dmTest,
-                        args = dmTestArgs
-                    ))
-
-                    ### Extract result
-                    localRes <- merge(
-                        x = results(localDmTest, level = "feature")[, c(
-                            'feature_id',
-                            'gene_id',
-                            'lr',
-                            'df',
-                            'pvalue',
-                            'adj_pvalue'
-                        )],
-                        y = results(localDmTest)[, c(
-                            'gene_id', 'lr', 'df', 'pvalue', 'adj_pvalue'
-                            )],
-                        by = 'gene_id',
-                        suffixes = c(".iso", ".gene")
-                    )
-                }
+                localRes$condition_1 <- aDF$condition_1
+                localRes$condition_2 <- aDF$condition_2
 
                 return(localRes)
             }
-        )
-    )
+        ))
+
+    }
 
     ### Massage result
-    if (!quiet) {
-        message('Step 2 of 3: Preparing output...')
-    }
     if (TRUE) {
+        if (!quiet) {
+            message('Step 5 of 5: Preparing output...')
+        }
         ### Remove NAs
         resultOfPairwiseTest <-
             resultOfPairwiseTest[which(
                 !is.na(resultOfPairwiseTest$adj_pvalue.iso)
-                ), ]
+            ), ]
 
+        ### Replace with refrence ids
+        resultOfPairwiseTest$iso_ref <-
+            switchAnalyzeRlist$isoformFeatures$iso_ref[match(
+                paste0(
+                    resultOfPairwiseTest$feature_id,
+                    resultOfPairwiseTest$condition_1,
+                    resultOfPairwiseTest$condition_2
+                ),
+                paste0(
+                    switchAnalyzeRlist$isoformFeatures$isoform_id,
+                    switchAnalyzeRlist$isoformFeatures$condition_1,
+                    switchAnalyzeRlist$isoformFeatures$condition_2
+                )
+            )]
+
+        ### Remove those without ID (below filtering treshold)
+        resultOfPairwiseTest <- resultOfPairwiseTest[which(
+            !is.na(resultOfPairwiseTest$iso_ref)
+        ),]
+        resultOfPairwiseTest$gene_ref <-
+            switchAnalyzeRlist$isoformFeatures$gene_ref[match(
+                resultOfPairwiseTest$iso_ref,
+                switchAnalyzeRlist$isoformFeatures$iso_ref
+            )]
+
+        ### Remove unwanted columns
+        resultOfPairwiseTest$gene_id <- NULL
+        resultOfPairwiseTest$feature_id <- NULL
+        resultOfPairwiseTest$condition_1 <- NULL
+        resultOfPairwiseTest$condition_2 <- NULL
+
+
+        ### Massage names
         isoInd <-
             which(grepl('iso$', colnames(resultOfPairwiseTest)))
         geneInd <-
@@ -876,45 +914,28 @@ isoformSwitchTestDRIMSeq <- function(
         colnames(resultOfPairwiseTest) <-
             gsub('pvalue', 'p_value', colnames(resultOfPairwiseTest))
 
-        colnames(resultOfPairwiseTest) <-
-            gsub('feature_id',
-                 'isoform_id',
-                 colnames(resultOfPairwiseTest))
 
-
-        myDiff <-
-            setdiff(colnames(resultOfPairwiseTest),
-                    c('isoform_id', 'gene_id'))
+        ### Reorder
+        myDiff <- setdiff(
+            colnames(resultOfPairwiseTest),
+            c('iso_ref', 'gene_ref')
+        )
         resultOfPairwiseTest <- resultOfPairwiseTest[, c(
-            'isoform_id', 'gene_id',
+            'iso_ref', 'gene_ref',
             myDiff[which(grepl('^gene', myDiff))],
             myDiff[which(grepl('^iso', myDiff))]
         )]
-        colnames(resultOfPairwiseTest)[2] <- 'gene_ref'
 
-        resultOfPairwiseTest$isoform_id <-
-            switchAnalyzeRlist$isoformFeatures$iso_ref[match(
-                paste0(
-                    resultOfPairwiseTest$isoform_id,
-                    resultOfPairwiseTest$gene_ref
-                ),
-                paste0(
-                    switchAnalyzeRlist$isoformFeatures$isoform_id,
-                    switchAnalyzeRlist$isoformFeatures$gene_ref
-                )
-            )]
-        colnames(resultOfPairwiseTest)[1] <- 'iso_ref'
     }
 
     ### Add result to switchAnalyzeRlist
-    if (!quiet) {
-        message('Step 3 of 3: Adding result to switchAnalyzeRlist...')
-    }
     if (TRUE) {
+        if (!quiet) {
+            message('Result added switchAnalyzeRlist')
+        }
         ### Overwrite previous results
         switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <- NA
-        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <-
-            NA
+        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <- NA
 
         ## Interpret the p-values via the testIntegration argument
         if (testIntegration == 'isoform_only') {
@@ -981,8 +1002,7 @@ isoformSwitchTestDRIMSeq <- function(
         }
 
         ### Add the full analysis
-        switchAnalyzeRlist$isoformSwitchAnalysis <-
-            resultOfPairwiseTest
+        switchAnalyzeRlist$isoformSwitchAnalysis <- resultOfPairwiseTest
 
     }
 
@@ -993,12 +1013,12 @@ isoformSwitchTestDRIMSeq <- function(
         myFrac <-
             myN / length(unique(
                 switchAnalyzeRlist$isoformFeatures$gene_ref
-                )) * 100
+            )) * 100
         message(
             paste(
                 'An isoform switch analysis was performed for ',
                 myN,
-                ' genes (',
+                ' gene comparisons (',
                 round(myFrac, digits = 1),
                 '%).',
                 sep = ''
@@ -1274,6 +1294,7 @@ extractTopSwitches <- function(
     if (extractGenes) {
         columnsToExtract <-
             c(
+                'gene_ref',
                 'gene_id',
                 'gene_name',
                 'condition_1',
@@ -1355,6 +1376,7 @@ extractTopSwitches <- function(
         ### reduce to collumns wanted
         columnsToExtract <-
             c(
+                'gene_ref',
                 'gene_id',
                 'gene_name',
                 'condition_1',
@@ -1418,6 +1440,8 @@ extractTopSwitches <- function(
     if (!extractGenes) {
         columnsToExtract <-
             c(
+                'iso_ref',
+                'gene_ref',
                 'isoform_id',
                 'gene_id',
                 'gene_name',

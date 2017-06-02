@@ -35,9 +35,9 @@ importRdata(
 
 
 \arguments{
-\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) counts. Must have a column called 'isoform_id' with the isoform_id that matches the isoform_id in \code{isoformExonAnnoation}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
+\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) fragment counts. Must have a column called 'isoform_id' with the isoform_id that matches the isoform_id in \code{isoformExonAnnoation}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
 
-\item{isoformRepExpression}{ OPTIONAL: A data.frame with unfiltered NORMALIZED biological (not technical) replicate isoform expression. This is only nessesary if additional normalization (appart form normalizing to library size and isoform length aka RPKM or FPKM) is nessesary. Must have a column called 'isoform_id' with the isoform_id. The name of the expression columns must match the sample names in the \code{designMatrix} argument.}
+\item{isoformRepExpression}{ Optional but recommended: A data.frame with unfiltered normalized biological (not technical) replicate isoform expression. Ideal for supplying quantification measured in Transcripts Per Million (TxPM) or RPKM/FPKM. Must have a column called 'isoform_id' with the isoform_id. The name of the expression columns must match the sample names in the \code{designMatrix} argument. If not supplied RPKM values are calcualted from the count matrix and used instead.}
 
 \item{designMatrix}{
 A data.frame with the information of which samples originate from which conditions. Must be a data.frame with two collums:

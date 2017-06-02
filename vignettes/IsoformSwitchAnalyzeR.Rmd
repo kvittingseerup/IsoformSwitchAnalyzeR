@@ -256,7 +256,7 @@ Which correspond to running _isoformSwitchAnalysisPart1()_ and _isoformSwitchAna
 
 
 
-<embed src="Overview_figure_simple.pdf" width="910" height="730" type='application/pdf'>
+<embed src="Overview_figure_simple.jpg" width="910" height="730">
 
 **Figure 1: Workflow overview.** The grey transparent boxes indicate the two parts of a normal workflow for analyzing isoform switches. The individual steps in the two sub-workflows are indicated by arrows. The speech bubble summarizes how this full analysis can be done in a simple two step process using the high level functions (_isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_) in IsoformSwitchAnalyzeR. 
 
@@ -313,7 +313,7 @@ Note that there are a lot of other ways of importing data into R and/or creating
 #### Part 1
 We can now run the first part of the isoform switch analysis workflow which filter for non-expressed genes/isoforms, identifying isoform switches, annotating those switches with open reading frames (ORF) and extract both the nucleotide and peptide (amino acid) sequence.
 
-```{r, results = "hide", message = FALSE}
+```{r, results = "hide", message = FALSE, warning=FALSE}
 ### isoformSwitchAnalysisPart1 needs the genomic sequence to predict ORFs. 
 # These are readily available from Biocindoctor as BSgenome objects: 
 # http://bioconductor.org/packages/release/BiocViews.html#___BSgenome
@@ -363,30 +363,30 @@ exampleSwitchList <- isoformSwitchAnalysisPart2(
 
 The numbers of isoform switches with functional consequences are easily extracted:
 ```{r}
-extractSwitchSummary(exampleSwitchList, filterForConsequences = TRUE)
+extractSwitchSummary(exampleSwitchList, filterForConsequences = TRUE, dIFcutoff = 0.4) # supply the same cutoff to the summary function
 ```
 
 For each of these gene a switchPlot have been created - lets here tak a closer look at the top candidate:
 
 The top genes with isoform switches are:
 ```{r, message = FALSE}
-extractTopSwitches(exampleSwitchList, filterForConsequences = TRUE, n=3)$gene_name
+extractTopSwitches(exampleSwitchList, filterForConsequences = TRUE, n=4)$gene_name
 ```
 
 <br />
 
 #### Examples of visualization
-Lets take a look at the isoform switch in the ARHGEF19 gene (which has a function in some of the major signaling pathwways) via the switchPlot that can easily be made with IsoformSwitchAnalyzeR:
+Lets take a look at the isoform switch in the MSTP9 gene via the switchPlot that can easily be made with IsoformSwitchAnalyzeR:
 ```{r, fig.width=12, fig.height=7}
-switchPlot(exampleSwitchList, gene='ARHGEF19')
+switchPlot(exampleSwitchList, gene='MSTP9')
 ```
 
-From this plot we see that the gene expression is changed but also that there is a large significant switch in isoform usage. In the hESC the long isoform is usaed a lot somthing that changes dramatically when the cells are differentiated. In Fibroblasts the long isoform is used significantly less but the topmost isoform is used a lot more. Interestingly this isoform swithc results in a domain switch where the RhoGEF domain is lost but a Ph domain is gained whereby the gene most likely gain a completely different set of functions. 
+From this plot we see that the gene expression is changed but also that there is a large significant switch in isoform usage. In the hESC the short isoform is used but as the cells are differentiated to Fibroblasts the long isoform is upregulated. Interestingly this isoform switch results in the inclusion of several domains (a PAN_1 domain and 5 Kringle domains). Furthermore it is noteworthy that the length of the trypsin domains are very different which could indicate the trypsin domain in the long isoform is trunkated - but that is a hypothesis that would need to be furthere exprored by other means.
 
 Note that if you want to save this plot as a pdf file via the _pdf_ command you need to specify onefile = FALSE. Here is a code chunk that will generate a nicely sized (almost) article ready figure
 
     pdf(file = '<outoutDirAndFileName>.pdf', onefile = FALSE, height=5, width = 8)
-    switchPlot(exampleSwitchList, gene='HOXC13', condition1='Ctrl', condition2='KD1')
+    switchPlot(exampleSwitchList, gene='MSTP9')
     dev.off()
 
 <br />
@@ -413,10 +413,14 @@ data("exampleSwitchListAnalyzed")
 
 ### Vulcano like plot:
 ggplot(data=exampleSwitchListAnalyzed$isoformFeatures, aes(x=dIF, y=-log10(isoform_switch_q_value))) +
-    geom_point(size=1) + 
+     geom_point(
+        aes( color=abs(dIF) > 0.1 & isoform_switch_q_value < 0.05 ), # default cutoff
+        size=1
+    ) +
     geom_hline(yintercept = -log10(0.05), linetype='dashed') + # default cutoff
     geom_vline(xintercept = c(-0.1, 0.1), linetype='dashed') + # default cutoff
     facet_grid(condition_1 ~ condition_2, scales = 'free') +
+    scale_color_manual('Signficant\nIsoform Switch', values = c('black','red')) +
     theme_bw()
 ```
 
@@ -517,7 +521,7 @@ extractConsequenceSummary(mySwitchList)
 
 The combined workflow is visualized here:
 
-<embed src="Overview_figure_detailed.pdf" width="910" height="870" type='application/pdf'>
+<embed src="Overview_figure_detailed.jpg" width="910" height="870">
 
 **Figure 2: Detailed workflow overview.** The grey transparent boxes indicate the two parts of a normal workflow for analyzing isoform switches. The individual steps in the two sub-workflows are indicated by arrows along with a description and the main R function(s) for performing the step. 
 
@@ -560,14 +564,17 @@ dim(exampleSwitchList)
 
 <br />
 
-A very useful methods implemented in IsoformSwitchAnalyzeR is _subset()_ which subset the switchAnalyzeRlist based on a vector of logicals matching the isoformFeatures entry of the list
+A very useful functionality implemented in IsoformSwitchAnalyzeR is _subsetSwitchAnalyzeRlist()_ function which allows for removal of isoforms and all their associated information across all entries in a switchAnalyzeRlist. The function subsets the switchAnalyzeRlist. based on a vector of logicals matching the isoformFeatures entry of the list.
 
 
 ```{r}
 exampleSwitchListAnalyzed
 
 ### Subset
-subset(exampleSwitchListAnalyzed, exampleSwitchListAnalyzed$isoformFeatures$gene_name == 'ARHGEF19')
+subsetSwitchAnalyzeRlist(
+    exampleSwitchListAnalyzed,
+    exampleSwitchListAnalyzed$isoformFeatures$gene_name == 'ARHGEF19'
+)
 ```
 
 
@@ -850,7 +857,7 @@ The The Idea Behind The Statistical Test implemented in IsoformSwitchAnalyzeR is
 More information can be found in the documentation page of _isoformSwitchTest()_.
 
 
-<embed src="statistics_illustration.pdf" width="700" height="520" type='application/pdf'>
+<embed src="statistics_illustration.jpg" width="700" height="520">
 
 **Figure 3: Visualization of the rational behind the statistical test implemented in IsoformSwitchAnalyzeR.** A) Visualization of how the uncertainties in gene and isoform expression is combined to calculate the uncertainty of isoform fractions. B) Shows how the uncertainties in Isoform Fractions allows for statistical comparison of the Isoform Usage of an isoform in different conditions.
 
@@ -926,7 +933,7 @@ Naturally IsoformSwitchAnalyzeR supports identification of isoform switches with
 
 The _isoformSwitchTestDRIMSeq()_ function is used as follows:
 
-```{r}
+```{r, warning=FALSE}
 # Load example data and prefilter
 data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList) # preFilter for fast runtime
@@ -942,7 +949,7 @@ exampleSwitchListAnalyzed <- isoformSwitchTestDRIMSeq(
 extractSwitchSummary(exampleSwitchListAnalyzed)
 ```
 
-Please note that currently the DRIMSeq approach can be a bit slow and might require some patience if a large number of isoforms are analyzed (aka not somthing you want to sit idel and wait for). We have experienced runtimes of up to 30 minuts per comparison made for a full size datasets.
+Please note that currently the DRIMSeq approach can be a bit slow and might require some patience if a large number of isoforms are analyzed (aka not somthing you want to sit idel and wait for). We have experienced runtimes of up to 60 minuts per comparison made for a full size datasets.
 
 An important argument in _isoformSwitchTestDRIMSeq()_ is the 'reduceToSwitchingGenes'. This is simply an option to reduce the switchAnalyzeRlist to only genes that contains at least one isoform passing the given _alpha_ and _dIFcutoff_ cutoffs. This option ensures the rest of the workflow goes significantly faster since isoforms from genes without isoform switching is not analyzed. 
 
@@ -1180,7 +1187,7 @@ When analyzing the individual genes with isoform switches the the genes/isoforms
 data("exampleSwitchListAnalyzed")
 
 ### Lets reduce the switchAnalyzeRlist to only one condition
-exampleSwitchListAnalyzedSubset <- subset(
+exampleSwitchListAnalyzedSubset <- subsetSwitchAnalyzeRlist(
     exampleSwitchListAnalyzed, 
     exampleSwitchListAnalyzed$isoformFeatures$condition_1 == 'iPS' &
     exampleSwitchListAnalyzed$isoformFeatures$condition_2 == 'hESC'
@@ -1498,7 +1505,10 @@ data("exampleSwitchListAnalyzed")
 
 ### Reduce datasize for fast runtime
 randomGenes <- sample(unique(exampleSwitchListAnalyzed$isoformFeatures$gene_id), size = 40)
-exampleSwitchListAnalyzedSubset <- subset(exampleSwitchListAnalyzed, exampleSwitchListAnalyzed$isoformFeatures$gene_id %in% randomGenes)
+exampleSwitchListAnalyzedSubset <- subsetSwitchAnalyzeRlist(
+    exampleSwitchListAnalyzed,
+    exampleSwitchListAnalyzed$isoformFeatures$gene_id %in% randomGenes
+)
 
 ### analyze the biological mechanismes
 bioMechanismeAnalysis <- analyzeSwitchConsequences(

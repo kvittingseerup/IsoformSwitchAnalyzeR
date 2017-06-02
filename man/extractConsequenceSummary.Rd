@@ -79,7 +79,7 @@ Kristoffer Vitting-Seerup
 data("exampleSwitchListAnalyzed")
 
 # subset for fast runtime
-exampleSwitchListAnalyzed <- subset(
+exampleSwitchListAnalyzed <- subsetSwitchAnalyzeRlist(
     exampleSwitchListAnalyzed,
     exampleSwitchListAnalyzed$isoformFeatures$gene_id \%in\% sample(exampleSwitchListAnalyzed$isoformFeatures$gene_id, 10)
 )

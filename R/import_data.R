@@ -1946,7 +1946,7 @@ importGTF <- function(
                     localSwichList$isoformFeatures$isoform_id %in%
                         isoformsToRemove)]
             localSwichList <-
-                subset(
+                subsetSwitchAnalyzeRlist(
                     localSwichList,
                     !localSwichList$isoformFeatures$gene_id %in% genesToRemove
                 )
@@ -1972,7 +1972,6 @@ importGTF <- function(
     return(localSwichList)
 }
 
-
 importIsoformExpression <- function(
     parentDir,
     featureToImport = 'counts',
@@ -1980,9 +1979,9 @@ importIsoformExpression <- function(
     quiet = FALSE
 ) {
     ### Test input
-    if (!featureToImport %in% c('counts', 'cpm', 'rpkm', 'rpkmEffective')) {
+    if (!featureToImport %in% c('counts', 'TxPM')) {
         stop(
-            'The featureToImport paramter must be one of: \'counts\',\'cpm\',\'rpkm\',\'rpkmEffective\''
+            'The featureToImport paramter must be one of: \'counts\' or \'TxPM\''
         )
     }
     if (length(featureToImport) > 1) {
@@ -2004,16 +2003,15 @@ importIsoformExpression <- function(
         fileName       = c('abundance.tsv'  , 'quant.sf'       , 'isoforms.results'),
         id             = c('target_id'      , 'Name'           , 'transcript_id'),
         countCol       = c('est_counts'     , 'NumReads'       , 'expected_count'),
-        rpkm           = c('length'         , 'Length'         , 'length'),
-        rpkmEffective  = c('eff_length'     , 'EffectiveLength', 'effective_length'),
+        tpmCol         = c('tpm'            , 'TPM'            , 'TPM'),
         stringsAsFactors = FALSE
     )
 
     ### Identify directories of interest
-    if (!quiet) {
-        message('Step 1 of 3 : Identifying which algorithm was used...')
-    }
     if (TRUE) {
+        if (!quiet) {
+            message('Step 1 of 3 : Identifying which algorithm was used...')
+        }
         dirList <- split(
             list.dirs(
                 path = parentDir,
@@ -2067,93 +2065,82 @@ importIsoformExpression <- function(
     ), ]
 
 
-
     if (nrow(dataAnalyed) > 1) {
         stop('Could not uniquely identify file type - please contact developer')
     }
     if (!quiet) {
-        message(paste('The algorithm used was:', dataAnalyed$orign, sep = ' '))
+        message(paste('    The algorithm used was:', dataAnalyed$orign, sep = ' '))
     }
 
     ### Read file
-    if (!quiet) {
-        message('Step 2 of 3 : Reading data...')
-    }
-    if (TRUE) {
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 2 of 3 : Reading data...')
+        }
         ### Read in data
-        repExp <- myListToDf(llply(
-                .data = dirList,
-                .progress = progressBar,
-                .inform = TRUE,
-                .fun = function(
-                    aDir
-                ) {
-                    # aDir <- dirList[[1]]
-                    fileToRead <- list.files(paste0(parentDir, '/', aDir))
-                    fileToRead <-
-                        fileToRead[which(grepl(
-                            pattern = paste(dataAnalyed$fileName, '$', sep = '') ,
-                            fileToRead
-                        ))]
+        repExp <-  ldply(
+            .data = dirList,
+            .progress = progressBar,
+            .inform = TRUE,
+            .fun = function(
+                aDir
+            ) {
+                # aDir <- dirList[[1]]
+                fileToRead <- list.files(paste0(parentDir, '/', aDir))
+                fileToRead <-
+                    fileToRead[which(grepl(
+                        pattern = paste(dataAnalyed$fileName, '$', sep = '') ,
+                        fileToRead
+                    ))]
 
-                    read.table(
-                        file = paste(parentDir, aDir, fileToRead, sep = '/'),
-                        header = TRUE,
-                        sep = '\t',
-                        stringsAsFactors = FALSE
-                    )
-                }
-        ))
+                read.table(
+                    file = paste(parentDir, aDir, fileToRead, sep = '/'),
+                    header = TRUE,
+                    sep = '\t',
+                    stringsAsFactors = FALSE
+                )
+            }
+        )
 
         ### Recast to matrix
         localFormula <- as.formula(paste0(dataAnalyed$id , ' ~ .id'))
-        repExpMatrix <-
-            reshape2::dcast(
-                data = repExp,
-                formula =  localFormula,
-                value.var = dataAnalyed$countCol
-            )
-        colnames(repExpMatrix)[1] <- 'isoform_id'
-        repExpMatrix$isoform_id <-
-            as.character(repExpMatrix$isoform_id)
+
+        if( featureToImport == 'counts') {
+            repExpMatrix <-
+                reshape2::dcast(
+                    data = repExp,
+                    formula =  localFormula,
+                    value.var = dataAnalyed$countCol
+                )
+            colnames(repExpMatrix)[1] <- 'isoform_id'
+            repExpMatrix$isoform_id <-
+                as.character(repExpMatrix$isoform_id)
+
+
+        } else if( featureToImport == 'TxPM') {
+            repExpMatrix <-
+                reshape2::dcast(
+                    data = repExp,
+                    formula =  localFormula,
+                    value.var = dataAnalyed$tpmCol
+                )
+            colnames(repExpMatrix)[1] <- 'isoform_id'
+            repExpMatrix$isoform_id <-
+                as.character(repExpMatrix$isoform_id)
+
+        } else {
+            stop('We ran into an error please contact developer with reproducible example')
+        }
+
     }
 
-    ### Normalize
+    ### Extract feature of interest
     if (!quiet) {
         message('Step 3 of 3 : Massaging data...')
     }
     if (!quiet &
         featureToImport != 'counts') {
         message(paste('Calculating', featureToImport))
-    }
-    if (featureToImport != 'counts') {
-        ### Calulate cpm
-        # convert to matrix
-        localCM <- repExpMatrix
-        rownames(localCM) <- localCM$isoform_id
-        localCM$isoform_id <- NULL
-        localCM <- as.matrix(localCM)
-
-        repExpMatrix <- t(t(localCM) / colSums(localCM)) * 1e6
-
-        ### Calculate RPKM
-        if (featureToImport %in% c('rpkm', 'rpkmEffective')) {
-            isoformLengths <- repExp[
-                match( rownames(repExpMatrix) , repExp[, dataAnalyed$id]),
-                dataAnalyed[, featureToImport] # automaticly takes the correct collumn
-            ]
-
-            repExpMatrix <- as.data.frame(repExpMatrix / (isoformLengths / 1e3))
-        } else {
-            repExpMatrix <- as.data.frame(repExpMatrix)
-        }
-
-        ### Do final massage
-        repExpMatrix$isoform_id <- rownames(repExpMatrix)
-        repExpMatrix <-
-            repExpMatrix[, c(which(colnames(repExpMatrix) == 'isoform_id'),
-                             which(colnames(repExpMatrix) != 'isoform_id'))]
-        rownames(repExpMatrix) <- NULL
     }
 
     if (!quiet) {

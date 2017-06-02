@@ -20,25 +20,48 @@ tail.switchAnalyzeRlist <- function(x, ...) {
 }
 
 ### subset
-subsetSwitchAnalyzeRlist <- function(x, subset) {
+subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
     ### Subset isoform features
-    x$isoformFeatures <- subset(x$isoformFeatures, subset)
+    switchAnalyzeRlist$isoformFeatures <- subset(
+        switchAnalyzeRlist$isoformFeatures,
+        subset
+    )
 
     ### Based on which isoforms are left subset other features
-    isoformsToKeep <- unique(x$isoformFeatures$isoform_id)
+    isoformsToKeep <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
 
     # exons
-    x$exons <- x$exons[which(x$exons$isoform_id %in% isoformsToKeep),]
+    switchAnalyzeRlist$exons <- switchAnalyzeRlist$exons[which(
+        switchAnalyzeRlist$exons$isoform_id %in% isoformsToKeep
+    ),]
 
     # conditions
-    x$conditions <- x$conditions[which(
-        x$conditions$condition %in%
-            c(x$isoformFeatures$condition_1, x$isoformFeatures$condition_2))
-        ,]
+    switchAnalyzeRlist$conditions <- switchAnalyzeRlist$conditions[which(
+        switchAnalyzeRlist$conditions$condition %in%
+            c(
+                switchAnalyzeRlist$isoformFeatures$condition_1,
+                switchAnalyzeRlist$isoformFeatures$condition_2
+            )
+    ),]
+
+    # design matrix
+    switchAnalyzeRlist$designMatrix <- switchAnalyzeRlist$designMatrix[which(
+        switchAnalyzeRlist$designMatrix$condition %in% c(
+            unique(switchAnalyzeRlist$isoformFeatures$condition_1),
+            unique(switchAnalyzeRlist$isoformFeatures$condition_2)
+        )
+    ),]
+
+    # rep count columns (rows are done below)
+    switchAnalyzeRlist$isoformCountMatrix <-
+        switchAnalyzeRlist$isoformCountMatrix[,which(
+            colnames(switchAnalyzeRlist$isoformCountMatrix) %in%
+                c('isoform_id', switchAnalyzeRlist$designMatrix$sampleID)
+        )]
 
     ### For standard analysis
     otherAnalysisPerformed <- setdiff(
-        names(x),
+        names(switchAnalyzeRlist),
         c(
             'isoformFeatures','exons','conditions','sourceId','designMatrix',
             'isoformSwitchAnalysis','ntSequence','aaSequence',
@@ -46,47 +69,45 @@ subsetSwitchAnalyzeRlist <- function(x, subset) {
         )
     )
     for(localAnalysis in otherAnalysisPerformed) {
-        x[[ localAnalysis ]] <- x[[ localAnalysis ]][
-            which( x[[ localAnalysis ]]$isoform_id %in% isoformsToKeep)
-        ,]
+        switchAnalyzeRlist[[ localAnalysis ]] <-
+            switchAnalyzeRlist[[ localAnalysis ]][
+                which(
+                    switchAnalyzeRlist[[ localAnalysis ]]$isoform_id %in%
+                        isoformsToKeep
+                ),]
     }
 
     ### For the specialized analysis
-    if( !is.null(x$ntSequence) ) {
-        x$ntSequence <- x$ntSequence[which(
-            names(x$ntSequence) %in% isoformsToKeep
+    if( !is.null(switchAnalyzeRlist$ntSequence) ) {
+        switchAnalyzeRlist$ntSequence <- switchAnalyzeRlist$ntSequence[which(
+            names(switchAnalyzeRlist$ntSequence) %in% isoformsToKeep
         )]
     }
 
-    if( !is.null(x$aaSequence) ) {
-        x$aaSequence <- x$aaSequence[which(
-            names(x$aaSequence) %in% isoformsToKeep
+    if( !is.null(switchAnalyzeRlist$aaSequence) ) {
+        switchAnalyzeRlist$aaSequence <- switchAnalyzeRlist$aaSequence[which(
+            names(switchAnalyzeRlist$aaSequence) %in% isoformsToKeep
         )]
     }
 
-    if( !is.null(x$isoformSwitchAnalysis)) {
-        x$isoformSwitchAnalysis <- x$isoformSwitchAnalysis[which(
-            x$isoformSwitchAnalysis$iso_ref %in% x$isoformFeatures$iso_ref
-        ),]
+    if( !is.null(switchAnalyzeRlist$isoformSwitchAnalysis)) {
+        switchAnalyzeRlist$isoformSwitchAnalysis <-
+            switchAnalyzeRlist$isoformSwitchAnalysis[which(
+                switchAnalyzeRlist$isoformSwitchAnalysis$iso_ref %in%
+                    switchAnalyzeRlist$isoformFeatures$iso_ref
+            ),]
     }
 
-    if( !is.null(x$switchConsequence)) {
-        x$switchConsequence <- x$switchConsequence[which(
-            x$switchConsequence$gene_ref %in% x$isoformFeatures$gene_ref
-        ),]
+    if( !is.null(switchAnalyzeRlist$switchConsequence)) {
+        switchAnalyzeRlist$switchConsequence <-
+            switchAnalyzeRlist$switchConsequence[which(
+                switchAnalyzeRlist$switchConsequence$gene_ref %in%
+                    switchAnalyzeRlist$isoformFeatures$gene_ref
+            ),]
     }
 
-    return(x)
+    return(switchAnalyzeRlist)
 }
-
-subset.switchAnalyzeRlist <- function(x, ...) {
-    subsetSwitchAnalyzeRlist(x, ...)
-}
-
-setMethod("subset", "switchAnalyzeRlist", function(x, ...) {
-    subsetSwitchAnalyzeRlist(x, ...)
-})
-
 
 ### summary
 summary.switchAnalyzeRlist <- function(object, ...) {
@@ -415,7 +436,7 @@ createSwitchAnalyzeRlist <- function(
 
     ### Subset if nessesary
     if(length(genesToRemove)) {
-        localSwitchList <- subset(
+        localSwitchList <- subsetSwitchAnalyzeRlist(
             localSwitchList,
             ! localSwitchList$isoformFeatures$gene_id %in% genesToRemove
         )
@@ -428,7 +449,7 @@ createSwitchAnalyzeRlist <- function(
         ))
     }
     if(length(isoformsToRemove)) {
-        localSwitchList <- subset(
+        localSwitchList <- subsetSwitchAnalyzeRlist(
             localSwitchList,
             ! localSwitchList$isoformFeatures$isoform_id %in% isoformsToRemove
         )
