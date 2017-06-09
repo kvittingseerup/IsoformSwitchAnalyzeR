@@ -1,0 +1,109 @@
+### Import libraries functions
+import(methods)
+import(plyr)
+import(reshape2)
+import(Biostrings)
+import(IRanges)
+import(GenomicRanges)
+import(gridExtra)
+import(BSgenome)
+import(RColorBrewer)
+import(cummeRbund)
+import(ggplot2)
+import(VennDiagram)
+import(DBI)
+import(DRIMSeq)
+import(spliceR)
+
+### Import specific functions
+importFrom("grDevices", "dev.off", "hcl", "pdf", "png")
+importFrom("graphics", "lines", "plot", "text", "title")
+importFrom("stats", "dnorm", "na.omit", "optim", "p.adjust", "pchisq", "pnorm", "pt", "qnorm", "qt", "setNames", "weighted.mean", "wilcox.test")
+importFrom("utils", "read.table", "setTxtProgressBar", "txtProgressBar")
+importFrom('GenomeInfoDb','seqlevels','seqlevels<-')
+importFrom('grid','grid.newpage')
+importFrom('grid','pushViewport')
+importFrom('grid','viewport')
+importFrom('grid','grid.layout')
+importFrom('DBI','dbGetQuery','dbDriver')
+importFrom("stats", "as.formula", "model.matrix")
+
+
+
+### Export functions from my R package
+# Creating list
+export('createSwitchAnalyzeRlist')
+export('subsetSwitchAnalyzeRlist')
+
+# Import data
+export('importCufflinksCummeRbund')
+export('importCufflinksFiles')
+export('importGTF')
+export('importIsoformExpression')
+export('importRdata')
+export('preFilter')
+
+
+
+# Test isoform switches
+export('isoformSwitchTestDRIMSeq')
+export('isoformSwitchTest')
+export('extractSwitchSummary')
+export('extractTopSwitches')
+export('extractCalibrationStatus')
+
+
+# Analyze functional potential
+#export('CDSSet')
+#export('getCDS')
+export('extractSequence')
+export('analyzeORF')
+
+export('analyzeCPAT')
+export('analyzePFAM')
+export('analyzeSignalP')
+
+export('analyzeIntronRetention')
+
+
+# Analyze switch consequences
+export('analyzeSwitchConsequences')
+export('extractConsequenceSummary')
+
+# genome wide analysis
+export('extractGenomeWideAnalysis')
+
+# Plotting
+export('switchPlotTranscript')
+
+export('switchPlotGeneExp')
+export('switchPlotIsoExp')
+export('switchPlotIsoUsage')
+
+export('switchPlot')
+export('switchPlotTopSwitches')
+
+# High level function
+export('isoformSwitchAnalysisPart1')
+export('isoformSwitchAnalysisPart2')
+export('isoformSwitchAnalysisCombined')
+
+# other tools
+export('extractExpressionMatrix')
+export('prepareCuffExample')
+
+### Export classes
+exportClasses("switchAnalyzeRlist")
+#exportClasses("CDSSet")
+#exportClasses("SpliceRList")
+
+### Overload generic functions to work with my classes
+S3method(dim,switchAnalyzeRlist)
+S3method(nrow,switchAnalyzeRlist)
+S3method(ncol,switchAnalyzeRlist)
+S3method(head,switchAnalyzeRlist)
+S3method(tail,switchAnalyzeRlist)
+S3method(show,switchAnalyzeRlist)
+
+#S3method(subset,switchAnalyzeRlist)
+S3method(summary,switchAnalyzeRlist)
