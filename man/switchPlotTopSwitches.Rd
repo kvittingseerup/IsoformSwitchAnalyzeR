@@ -88,7 +88,7 @@ For a list of the top swiching genes see ?extractTopSwitches.
 An Isoform Switch Analysis Plot (as produce by \code{switchPlot}) for each of the top n switches in each comparison where a gene have a signicant isoform switch is generated in the folder supplied by \code{pathToOutput}
 }
 \references{
-Manuscript in preperation.
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
 \author{
 Kristoffer Vitting-Seerup

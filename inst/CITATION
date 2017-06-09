@@ -1,0 +1,12 @@
+citHeader("To cite package 'IsoformSwitchAnalyzeR' in publications, use:")
+
+citEntry(
+   entry="Article",
+   title = "The Landscape of Isoform Switches in Human Cancers",
+   author = "Kristoffer Vitting-Seerup, Albin Sandelin",
+   journal = " Mol. Cancer Res",
+   year = 2017,
+   doi = "10.1158/1541-7786.MCR-16-0459",
+   url = "http://mcr.aacrjournals.org/content/early/2017/06/02/1541-7786.MCR-16-0459",
+   textVersion = "Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017)."
+)

@@ -83,7 +83,7 @@ Especially the filter for gene expression can be important since a fundamental p
 A \code{switchAnalyzeRlist} object where the genes and isoforms not passing the filters have been removed (from all annotated entries)
 }
 \references{
-Manuscript in preperation.
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
 \author{
 Kristoffer Vitting-Seerup

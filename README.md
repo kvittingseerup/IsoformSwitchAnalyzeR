@@ -10,7 +10,7 @@ To solve these problems we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyze
 To install the latest development version, use the `devtools` package (available [here](https://github.com/hadley/devtools)):
 
 ```
-devtools::install_github("kvittingseerup/IsoformSwitchAnalyzeR")
+devtools::install_github("kvittingseerup/IsoformSwitchAnalyzeR", build_vignettes=TRUE)
 ```
 
 # Vignette

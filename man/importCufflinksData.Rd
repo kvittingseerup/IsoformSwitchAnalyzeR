@@ -38,7 +38,7 @@ A \code{switchAnalyzeRlist} containing all the gene and transcript information a
 
 }
 \references{
-Manuscript in preperation.
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
 \author{
 Kristoffer Vitting-Seerup

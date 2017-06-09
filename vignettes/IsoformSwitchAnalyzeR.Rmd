@@ -140,11 +140,16 @@ This will install the IsoformSwitchAnalyzeR package as well as other R packages 
 
 The IsoformSwitchAnalyzeR tool is only made possible by a string of other tools and scientific discoveries - please read this section thoroughly and cite the appropriate articles. Note that due to the references being divided into sections some references appear more than once.
 
-If you are using the **isoform switch test implemented in IsoformSwitchFindeR** please cite both:
+If you are using the **Prediction of consequences** please cite:
 
 
-<center> _Vitting-Seerup et al. **Manuscript in preparation**_ <center>
-<center> _(Please check latest update for citation)_ <center>
+<center> _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_ <center>
+<br />
+
+If you are using the **isoform switch test implemented in IsoformSwitchAnalyzeR** please cite both:
+
+
+<center> _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_ <center>
 <br /> 
 <center> _Ferguson et al. **P-value calibration for multiple testing problems in genomics.** Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673._ <center> <br /> 
 <br />
@@ -153,17 +158,15 @@ If you are using the **isoform switch test implemented in IsoformSwitchFindeR** 
 If you are using the **isoform switch test implemented in DRIMSeq** package please cite both:
 
 
-<center> _Vitting-Seerup et al. **Manuscript in preparation**_ <center>
-<center> _(Please check latest update for citation)_ <center>
+<center> _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_ <center>
 <br /> 
 <center> _Nowicka et al. **DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics.** F1000Research, 5(0), 1356._ <center> <br /> 
 <br />
 
 
-<p align="left"> If you are using the **visualizations** (plots) implemented in the IsoformSwitchFindeR package please cite: <p>
+<p align="left"> If you are using the **visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package please cite: <p>
 
-<center> _Vitting-Seerup et al. **Manuscript in preparation**_ <center>
-<center> _(Please check latest update for citation)_ <center>
+<center> _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_ <center>
 <br />
 
 <p align="left"> If you are using the **Intron Retention** analysis please cite: <p>
@@ -173,7 +176,7 @@ If you are using the **isoform switch test implemented in DRIMSeq** package plea
 
 <p align="left">  If you are using the prediction of open reading frames (ORF) please cite all of: <p> 
 
-<center> _Vitting-Seerup et al. **Manuscript in preparation**_ <center>
+<center> _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_ <center>
 <br />
 <center> _Vitting-Seerup et al. **spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data**. BMC Bioinformatics 2014, 15:81._ <center> 
 <br />
@@ -697,7 +700,7 @@ The resulting switchAnalyzeRlist can then be used with the rest of the isoform s
 #### Data from Kallisto, Salmon or RSEM
 While RSEM is a well established and robust isofom quantification tool a new generation of tools often reffered to as pseudo/quasi-alligners such as Salmon and Kallisto are on the rise due to their speed and increased accuracy. We therefore naturally support analysis of quantifications mede with all three tools by allowing for easy import of the isoform replicate count matrix via the _importIsoformExpression()_ function. The resulting data.frame can then easily be used to generate a switchAnalyzeRlist with the _importRdata()_ function that also allows annotation be be obtained from a GTF file. The _importRdata()_ is described in the next section.
 
-It is noteworthy that _importIsoformExpression()_ also supports import of CPM, RPKM and RPKMeffective. RPKMeffective is of paticular interest since these expression values have been normalized in a manner removing types of biases (that each of the tools support).
+It is noteworthy that _importIsoformExpression()_ also supports import of transcript per million (TxPM). TxPM is of paticular interest since these expression values have been normalized in a manner removing types of biases (that each of the tools support).
 
 <br />
 
@@ -863,7 +866,7 @@ More information can be found in the documentation page of _isoformSwitchTest()_
 
 <br />
 
-For the mathematical details of how this test is derived please refer to the supplementary materials of Vitting-Seerup et al (2016) (see [What To Cite]).
+For the mathematical details of how this test is derived please refer to the supplementary data of Vitting-Seerup et al (2017) (see [What To Cite]).
 
 <br />
 
@@ -972,13 +975,13 @@ In this way IsoformSwitchAnalyzeR can also support non-isoform resolution testin
 ### Analyzing Open Reading Frames
 Once the isoform switches have been found the next step is to annotate the isoforms involved in the isoform switches. 
 
-If you have performed (guided) de-novo isoform reconstruction (isoform deconvolution) the first step of such annotation is to predict Open Reading Frames (ORF). If you did not perform a (guided) de novo isoform reconstruction you should instead use the annotated CDS (Coding Sequence), obtained though one of the implemented methods, see [Importing Data Into R]. If you did perform a (guided) de novo isoform reconstruction prediction of ORF can, with high accuracy, be done from the transcript sequence alone (see Vitting-Seerup et al 2016). To predict ORFs we have implemented:
+If you have performed (guided) de-novo isoform reconstruction (isoform deconvolution) the first step of such annotation is to predict Open Reading Frames (ORF). If you did not perform a (guided) de novo isoform reconstruction you should instead use the annotated CDS (Coding Sequence), obtained though one of the implemented methods, see [Importing Data Into R]. If you did perform a (guided) de novo isoform reconstruction prediction of ORF can, with high accuracy, be done from the transcript sequence alone (see supplementary data in Vitting-Seerup et al 2017). To predict ORFs we have implemented:
 
     analyzeORF()
     
 This function utilize that we know the genomic coordinates of each transcript to extract the transcript nucleotide sequence from a reference  genome (supplied via the _genomeObject_ argument). In _analyzeORF_ four different methods for predicting the ORF, suitable for different purposes and circumstances are implemented. The four methods are:
 
-1. The 'longest' method. This method identifies the longest ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence. This approach is what the CPAT tool uses in its analysis of coding potential. This is the default as it is the most common use case and have the highest accuracy in benchmark against known annotated ORFs (>90% accuracy against GENCODE data, Vitting-Seerup et al 2016).
+1. The 'longest' method. This method identifies the longest ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence. This approach is what the CPAT tool uses in its analysis of coding potential. This is the default as it is the most common use case and have the highest accuracy in benchmark against known annotated ORFs (>90% accuracy against GENCODE data, Vitting-Seerup et al 2017).
 2. The 'mostUpstream' method. This method identifies the most upstream ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence.
 3. The 'longestAnnotated' method. This method identifies the longest ORF downstream of an annoated translation start site. It requires known translational start sites are supplied to the _cds_ argument.
 4. The 'mostUpstreamAnnoated' method. This method identifies ORF downstream of the most upstream overlapping annoated translation start site. It requires known translational start sites are supplied to the _cds_ argument.
@@ -1119,7 +1122,7 @@ exampleSwitchListAnalyzed <- analyzeIntronRetention(exampleSwitchListAnalyzed, q
 table(exampleSwitchListAnalyzed$isoformFeatures$IR)
 ```
 
-Meaning 25 isoforms each with one intron retention (IR) and 2 isoforms with 2 IRs was identified. If you utilize this function please remember to cite Vitting-Seerup et al (2015) (see [What To Cite]).
+Meaning 25 isoforms each with one intron retention (IR) and 2 isoforms with 2 IRs was identified.
 
 Back to [Table of Content]
 
@@ -1475,7 +1478,7 @@ Back to [Table of Content]
 <br />
 
 ### Quality control of ORF of known annotation
-As we have shown there are quit a lot of problems with known CDS annotation (see Vitting-Seerup et al 2016) we have implemented two ways to ensure a high quality of the CDS imported from a GTF annotation file:
+As we have shown there are quit a lot of problems with known CDS annotation (see supplementary data in Vitting-Seerup et al 2017) we have implemented two ways to ensure a high quality of the CDS imported from a GTF annotation file:
 
 1) When you import the GTF file (via _importRdata()_ or _importGTF()_) you can enable the 'onlyConsiderFullORF' argument which makes sure you only add the ORF stored in the GTF file if it is annotated with both a start and stop codon.
 2) When you extract the biological sequences (nucleotide and amino acid) with _extractSequence()_ you can enable the argument 'removeORFwithStop' which will remove ORFs which contains un-annotated stop codons, defined as * when the ORF nucleotide sequences is translated to the amino acid seqeunce. If enabled the ORFs will both be removed from the switchAnalyzeRList and from the sequences outputted by _extractSequence()_.

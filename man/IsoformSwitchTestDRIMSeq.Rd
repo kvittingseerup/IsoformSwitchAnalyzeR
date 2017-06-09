@@ -56,9 +56,7 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 }
 
 \details{
-Please note that the DRIMSeq approach depends on the filtering on the data since if to many lowly expressed transcripts are included the gene precition cannot be calculcated. Therefore if you think to few genes have been tested you can try to make a more strict filtering with the \code{preFilter()} function.
-
-This wrapper for DRIMSeq utilizes all data to construct one linear model (one fit) on all the data (including the potential extra covariates/batch effects indicated in the \code{designMatrix} entry of the supplied \code{switchAnalyzeRlist}). From this unified model all the pairwise test analyzed (as indicated by the condition_1 and condition_2 columns of the \code{isoformFeatures} entry of the supplied \code{switchAnalyzeRlist} are tested individually.)
+This wrapper for DRIMSeq utilizes all data to construct one linear model (one fit) on all the data (including the potential extra covariates/batch effects indicated in the \code{designMatrix} entry of the supplied \code{switchAnalyzeRlist}). From this unified model all the pairwise test are performed (aka each unique combiantion of condition_1 and condition_2 columns of the \code{isoformFeatures} entry of the supplied \code{switchAnalyzeRlist} are tested individually). This is only suitable if a certain overlap between conditions are expected which means if you are analyzing very different condtions it is probably better to remove particular comparisons or make two seperate analysis (eg. Brain vs Brain cancer vs liver vs liver cancer should probably be analyzed as two seperate switchAnalyzeRlists whereas WT vs KD1 vs KD2 should be one switchAnalyzeRlists). Note that this is not a problem if the test is performed with \code{isoformSwitchTest()}.
 
 The result of the testIntegration (see arugments and below) is only applied to the \code{isoformFeatures} entry of the \code{switchAnalyzeRlist}. The full DRIMSeq analysis is unmodified and added to the \code{isoformSwitchAnalysis} entry of the \code{switchAnalyzeRlist}.
 
@@ -73,7 +71,9 @@ A 'union' option is not supported due to the loss of False Discovery Rate that w
 
 To use the \code{dmPrecisionArgs}, \code{dmFitArgs}, \code{dmTestArgs} arguments a named list should simply be supplied - so if you want to modify the 'prec_subset' argument in the dmPrecision() function you should supply \code{dmPrecisionArgs=list(prec_subset=x)} where \code{x} is the value you want to pass to the 'prec_subset' argument.
 
-Note that DRIMSeq can be rather slow for large comparisons and 0.5-1 hour per comparison is not unnormal.
+Please note that:
+1) DRIMSeq approach depends on the filtering on the data since if to many lowly expressed transcripts are included the gene precition cannot be calculcated. Therefore if you think to few genes have been tested you can try to make a more strict filtering with the \code{preFilter()} function.
+2) DRIMSeq can be a bit slow for large comparisons (testing of many isoforms) and 0.5-1 hour per comparison is not unnormal.
 }
 
 
@@ -103,7 +103,7 @@ The data.frame added have one row per isoform per comparison of condition and co
 
 \references{
 \itemize{
-    \item{Manuscript in preperation.}
+    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{Nowicka, M., & Robinson, M. D. (2016). DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics. F1000Research, 5(0), 1356. https://doi.org/10.12688/f1000research.8900.2}
 }
 }

@@ -91,10 +91,11 @@ NA means no information was advailable aka no ORF (passing the \code{minORFlengt
 
 \references{
 \itemize{
-\item{\code{This function} : Manuscript in preperation}
+\item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
 \item{\code{Information about NMD} : Weischenfeldt J, et al: Mammalian tissues defective in nonsense-mediated mRNA decay display highly aberrant splicing patterns. Genome Biol. 2012, 13:R35.}
 }
 }
+
 \author{
 Kristoffer Vitting-Seerup
 }

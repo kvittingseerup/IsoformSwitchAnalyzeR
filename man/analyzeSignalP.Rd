@@ -46,7 +46,7 @@ The data.frame added have one row pr isoform and contains 6 columns:
 
 \references{
 \itemize{
-    \item{\code{This function} : Manuscript in preperation}
+    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{\code{SignalP} : Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. Nature Methods, 8:785-786, 2011}
 }
 }

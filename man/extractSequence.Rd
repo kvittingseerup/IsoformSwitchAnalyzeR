@@ -91,7 +91,7 @@ If \code{writeToFile=TRUE} one fasta file pr sequence type (controled via \code{
 \references{
 For
 \itemize{
-    \item{\code{This function} : Manuscript in preperation}
+    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{\code{CPAT} : Wang et al. CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model. Nucleic Acids Res. 2013, 41:e74.}
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
     \item{\code{SignalP} : Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. Nature Methods, 8:785-786, 2011}
@@ -101,6 +101,7 @@ For
 \author{
 Kristoffer Vitting-Seerup
 }
+
 \seealso{
 \code{\link{switchAnalyzeRlist}}\cr
 \code{\link{isoformSwitchTest}}\cr

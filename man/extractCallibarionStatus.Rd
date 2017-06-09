@@ -25,7 +25,7 @@ A data.frame where it for each comparison was indicated (via a logical) whether 
 
 \references{
 \itemize{
-    \item{Manuscript in preperation.}
+    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
 }
 }

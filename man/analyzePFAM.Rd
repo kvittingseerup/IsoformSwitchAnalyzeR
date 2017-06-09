@@ -70,7 +70,7 @@ Furthermore depending on the exact tool used (local vs web-server) additional co
 
 \references{
 \itemize{
-    \item{\code{This function} : Manuscript in preperation}
+    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
 }
 }

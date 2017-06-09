@@ -36,7 +36,7 @@ Two colums are added to \code{isoformFeatures}: 'codingPotentialValue' and 'codi
 
 \references{
     \itemize{
-        \item{\code{This function} : Manuscript in preperation}
+        \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
         \item{\code{CPAT} : Wang et al. CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model. Nucleic Acids Res. 2013, 41:e74.}
     }
 }

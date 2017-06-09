@@ -67,7 +67,7 @@ Cuffdiff performs a statistical test for changes in alternative splicing between
 A \code{switchAnalyzeRlist} containing all the gene and transcript information as well as the isoform structure. See ?switchAnalyzeRlist for more details. If \code{addCufflinksSwichTest=TRUE} a data.frame with the result of cuffdiff's test for alternative splicing is also added to the switchAnalyzeRlist under the entry 'isoformSwitchAnalysis' (only if analysis was performed).
 }
 \references{
-Manuscript in preperation.
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
 \author{
 Kristoffer Vitting-Seerup

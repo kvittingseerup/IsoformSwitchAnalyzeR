@@ -96,7 +96,9 @@ When fully analyzed the \code{isoformFeatures} entry of the  will furthermore co
 \code{\link{importIsoformExpression}}
 }
 \author{Kristoffer Vitting-Seerup}
-\references{Manuscript in preperation}
+\references{
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+}
 
 \examples{
 #### Make example data

@@ -88,7 +88,7 @@ This function have two outputs. It returns a \code{switchAnalyzeRlist} object wh
 }
 
 \references{
-Manuscript in preperation.
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
 \author{
 Kristoffer Vitting-Seerup

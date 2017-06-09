@@ -42,8 +42,12 @@ A \code{switchAnalyzeRlist} where the collumn \code{IR} indicating the number of
 }
 
 \references{
-Vitting-Seerup K, et al: spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data. BMC Bioinformatics 2014, 15:81.
+\itemize{
+        \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+        \item{Vitting-Seerup K, et al: spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data. BMC Bioinformatics 2014, 15:81.}
 }
+}
+
 \author{
 Kristoffer Vitting-Seerup
 }

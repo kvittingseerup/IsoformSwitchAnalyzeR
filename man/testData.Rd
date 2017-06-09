@@ -38,6 +38,10 @@ The three example switchAnalyzeRlist are:
 This data is a modified subset of a dataset comparing human Embryonic Stemm Cells (hESC) vs induced Pluripotent Cells (iPS) and mature cells (Fibroblast) originally released with the cummeRbund package. This data is only included to provide examples for usage of function. As it is modified to illustrate the package it should not be considered real and no conclusions should be made from it.
 }
 
+\references{
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+}
+
 \examples{
 ### Summarize newly created switchAnalyzeRList
 data("exampleSwitchList")

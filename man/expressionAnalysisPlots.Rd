@@ -85,7 +85,9 @@ Note that the bar indicating significance levels will only be shown if the analy
 }
 }
 
-\references{Manuscript in preperation}
+\references{
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+}
 
 \author{Kristoffer Vitting-Seerup}
 
