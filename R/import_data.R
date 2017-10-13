@@ -1974,43 +1974,48 @@ importGTF <- function(
 
 importIsoformExpression <- function(
     parentDir,
-    featureToImport = 'counts',
+    calculateCountsFromAbundance=TRUE,
+    interLibNormTxPM=TRUE,
+    normalizationMethod='TMM',
     showProgress = TRUE,
     quiet = FALSE
 ) {
-    ### Test input
-    if (!featureToImport %in% c('counts', 'TxPM')) {
-        stop(
-            'The featureToImport paramter must be one of: \'counts\' or \'TxPM\''
+    ### To do
+    # Could get a "summarize to gene level" option
+
+    ### Initialize
+    if(TRUE) {
+        if( !normalizationMethod %in% c("TMM", "RLE", "upperquartile") ){
+            stop('Metod supplied to "normalizationMethod" must be one of "TMM", "RLE" or "upperquartile". See documentation of edgeR::calcNormFactors for more info')
+        }
+
+        analysisCount <- 2 +
+            as.integer(interLibNormTxPM)
+
+        if (showProgress &  !quiet) {
+            progressBar <- 'text'
+            progressBarLogic <- TRUE
+        } else {
+            progressBar <- 'none'
+            progressBarLogic <- FALSE
+        }
+
+        ### data.frame with nesseary info
+        supportedTypes <- data.frame(
+            orign          = c('Kallisto'       , 'Salmon'         , 'RSEM'),
+            fileName       = c('abundance.tsv'  , 'quant.sf'       , 'isoforms.results'),
+            id             = c('target_id'      , 'Name'           , 'transcript_id'),
+            countCol       = c('est_counts'     , 'NumReads'       , 'expected_count'),
+            tpmCol         = c('tpm'            , 'TPM'            , 'TPM'),
+            eLengthCol     = c('eff_length'     , 'EffectiveLength', 'effective_length'),
+            stringsAsFactors = FALSE
         )
     }
-    if (length(featureToImport) > 1) {
-        stop('The featureToImport paramter must have lenght 1')
-    }
-
-    ### Set up progress
-    if (showProgress &  !quiet) {
-        progressBar <- 'text'
-        progressBarLogic <- TRUE
-    } else {
-        progressBar <- 'none'
-        progressBarLogic <- FALSE
-    }
-
-    ### data.frame with nesseary info
-    supportedTypes <- data.frame(
-        orign          = c('Kallisto'       , 'Salmon'         , 'RSEM'),
-        fileName       = c('abundance.tsv'  , 'quant.sf'       , 'isoforms.results'),
-        id             = c('target_id'      , 'Name'           , 'transcript_id'),
-        countCol       = c('est_counts'     , 'NumReads'       , 'expected_count'),
-        tpmCol         = c('tpm'            , 'TPM'            , 'TPM'),
-        stringsAsFactors = FALSE
-    )
 
     ### Identify directories of interest
     if (TRUE) {
         if (!quiet) {
-            message('Step 1 of 3 : Identifying which algorithm was used...')
+            message('Step 1 of ', analysisCount, ': Identifying which algorithm was used...')
         }
         dirList <- split(
             list.dirs(
@@ -2052,104 +2057,127 @@ importIsoformExpression <- function(
 
     }
 
-    ### Identify file type
-    dataAnalyed <- supportedTypes[which(
-        sapply(
-            paste0(supportedTypes$fileName,'$'),
-            function(aFileName) {
-                any(grepl(
-                    pattern = aFileName,
-                    x = list.files(paste0( parentDir, '/', dirList[[1]] ))
-                ))
-            })
-    ), ]
+    ### Identify input type
+    if(TRUE) {
+        dataAnalyed <- supportedTypes[which(
+            sapply(
+                paste0(supportedTypes$fileName,'$'),
+                function(aFileName) {
+                    any(grepl(
+                        pattern = aFileName,
+                        x = list.files(paste0( parentDir, '/', dirList[[1]] ))
+                    ))
+                })
+        ), ]
 
+        if (nrow(dataAnalyed) > 1) {
+            stop('Could not uniquely identify file type - please contact developer')
+        }
+        if (!quiet) {
+            message(paste('    The quantification algorithm used was:', dataAnalyed$orign, sep = ' '))
+        }
 
-    if (nrow(dataAnalyed) > 1) {
-        stop('Could not uniquely identify file type - please contact developer')
     }
-    if (!quiet) {
-        message(paste('    The algorithm used was:', dataAnalyed$orign, sep = ' '))
-    }
 
-    ### Read file
+    ### Import files with txtimport
     if(TRUE) {
         if (!quiet) {
-            message('Step 2 of 3 : Reading data...')
+            message('Step 2 of ', analysisCount, ': Reading data...')
         }
-        ### Read in data
-        repExp <-  ldply(
-            .data = dirList,
-            .progress = progressBar,
-            .inform = TRUE,
-            .fun = function(
-                aDir
-            ) {
-                # aDir <- dirList[[1]]
-                fileToRead <- list.files(paste0(parentDir, '/', aDir))
-                fileToRead <-
-                    fileToRead[which(grepl(
-                        pattern = paste(dataAnalyed$fileName, '$', sep = '') ,
-                        fileToRead
-                    ))]
 
-                read.table(
-                    file = paste(parentDir, aDir, fileToRead, sep = '/'),
-                    header = TRUE,
-                    sep = '\t',
-                    stringsAsFactors = FALSE
+        # make vector with paths
+        localFiles <- paste0(
+            parentDir,
+            '/',
+            unlist(dirList),
+            '/',
+            dataAnalyed$fileName
+        )
+        names(localFiles) <- names(dirList)
+
+        ### Use Txtimporter to import data
+        if (!quiet) {
+            localDataList <- tximport(
+                files = localFiles,
+                type = tolower(dataAnalyed$orign),
+                txOut = TRUE, # to get isoform expression
+                countsFromAbundance = ifelse(
+                    test = calculateCountsFromAbundance,
+                    yes= 'lengthScaledTPM',
+                    no='no'
                 )
-            }
+            )
+        } else {
+            suppressMessages(
+                localDataList <- tximport(
+                    files = localFiles,
+                    type = tolower(dataAnalyed$orign),
+                    txOut = TRUE, # to get isoform expression
+                    countsFromAbundance = ifelse(
+                        test = calculateCountsFromAbundance,
+                        yes= 'lengthScaledTPM',
+                        no='no'
+                    )
+                )
+            )
+        }
+
+    }
+
+    analysisDone <- 2
+
+    ### Noralize TxPM values based on effective counts
+    if(interLibNormTxPM) {
+        if (!quiet) {
+            message('Step ', analysisDone, ' of ', analysisCount, ': Normalizing TxPM values via edgeR...')
+        }
+
+        ### calclate new coints
+        newCounts <- localDataList$abundance * localDataList$length
+
+        ### Scale new to same total counts as org matrix
+        countsSum <- colSums(localDataList$counts)
+        newSum <- colSums(newCounts)
+        countsMat <- t(t(newCounts) * (countsSum/newSum))
+
+        ### Calculate normalization factors
+        localDGE <- DGEList(countsMat, remove.zeros = TRUE)
+        localDGE <- calcNormFactors(localDGE, method = normalizationMethod)
+
+        ### Apply normalization factors
+        localDataList$abundance <- t(t(localDataList$abundance) / localDGE$samples$norm.factors)
+    }
+
+    ### Final masssageing
+    if(TRUE) {
+        ### massage
+        localDataList$abundance <- as.data.frame(localDataList$abundance)
+        localDataList$counts <- as.data.frame(localDataList$counts)
+        localDataList$length <- as.data.frame(localDataList$length)
+
+        localDataList$countsFromAbundance <- NULL
+
+        reorderCols <- function(x) {
+            x[,c( ncol(x), 1:(ncol(x)-1) )]
+        }
+
+        localDataList$abundance <- reorderCols( localDataList$abundance)
+        localDataList$counts    <- reorderCols( localDataList$counts   )
+        localDataList$length    <- reorderCols( localDataList$length   )
+
+        ### Add options
+        localDataList$importOptions <- list(
+            'calculateCountsFromAbundance'= calculateCountsFromAbundance,
+            'interLibNormTxPM'= interLibNormTxPM,
+            'normalizationMethod'= normalizationMethod
         )
 
-        ### Recast to matrix
-        localFormula <- as.formula(paste0(dataAnalyed$id , ' ~ .id'))
-
-        if( featureToImport == 'counts') {
-            repExpMatrix <-
-                reshape2::dcast(
-                    data = repExp,
-                    formula =  localFormula,
-                    value.var = dataAnalyed$countCol
-                )
-            colnames(repExpMatrix)[1] <- 'isoform_id'
-            repExpMatrix$isoform_id <-
-                as.character(repExpMatrix$isoform_id)
-
-
-        } else if( featureToImport == 'TxPM') {
-            repExpMatrix <-
-                reshape2::dcast(
-                    data = repExp,
-                    formula =  localFormula,
-                    value.var = dataAnalyed$tpmCol
-                )
-            colnames(repExpMatrix)[1] <- 'isoform_id'
-            repExpMatrix$isoform_id <-
-                as.character(repExpMatrix$isoform_id)
-
-        } else {
-            stop('We ran into an error please contact developer with reproducible example')
+        if (!quiet) {
+            message('Done\n')
         }
-
     }
 
-    ### Extract feature of interest
-    if (!quiet) {
-        message('Step 3 of 3 : Massaging data...')
-    }
-    if (!quiet &
-        featureToImport != 'counts') {
-        message(paste('Calculating', featureToImport))
-    }
-
-    if (!quiet) {
-        message(paste('The output is expression measured in:', featureToImport))
-    }
-    if (!quiet) {
-        message('Done\n')
-    }
-    return(repExpMatrix)
+    return(localDataList)
 }
 
 importRdata <- function(
@@ -2340,9 +2368,6 @@ importRdata <- function(
 
             if (addAnnotatedORFs & gtfImported) {
                 isoORF <- gtfSwichList$orfAnalysis
-                isoORF <-
-                    isoORF[which(isoORF$isoform_id %in%
-                                     isoformRepExpression$isoform_id), ]
             }
         } else {
             gtfImported <- FALSE
@@ -2478,99 +2503,6 @@ importRdata <- function(
         }
     }
 
-    ### Sum isoform RPKM to gene RPKM
-    if (TRUE) {
-        ### add gene_id
-        isoformRepExpression2 <- isoformRepExpression
-        isoformRepExpression2$gene_id <-
-            isoformAnnotation$gene_id[match(isoformRepExpression2$isoform_id,
-                                            isoformAnnotation$isoform_id)]
-        isoformRepExpression2$isoform_id <- NULL
-        isoformRepExpression2 <-
-            isoformRepExpression2[, c(
-                which(colnames(isoformRepExpression2) == 'gene_id'),
-                which(colnames(isoformRepExpression2) != 'gene_id')
-            )]
-
-        ### Devide based on nr isoforms
-        multiIsoGenes <- table(isoformAnnotation$gene_id)
-        multiIsoGenes <-
-            names(multiIsoGenes)[which(multiIsoGenes > 1)]
-
-        geneRepExpressionSingle   <-
-            isoformRepExpression2[which(
-                !isoformRepExpression2$gene_id %in% multiIsoGenes), ]
-        geneRepExpressionMultiple <-
-            isoformRepExpression2[which(
-                isoformRepExpression2$gene_id %in% multiIsoGenes), ]
-
-        ### Sum multi-iso expression to get gene expression
-        # via sapply - 10x faster than ddply
-        expCols <-
-            which(colnames(geneRepExpressionMultiple) != 'gene_id')
-        sampleNames <- colnames(geneRepExpressionMultiple)
-
-        # list to store result
-        geneRepExpressionList <- list()
-
-        # loop over each collumn
-        if (progressBarLogic) {
-            pb <-
-                txtProgressBar(
-                    min = min(expCols),
-                    max = max(expCols),
-                    style = 3
-                )
-        }
-
-        for (i in expCols) {
-            # i <- 2
-            localName <- sampleNames[i]
-
-            # sum up exp
-            expList <- split(geneRepExpressionMultiple[, i],
-                      f = geneRepExpressionMultiple$gene_id
-                )
-            expDF <- data.frame(
-                    geneExp = sapply(expList, sum),
-                    row.names = names(expList),
-                    stringsAsFactors = FALSE
-                )
-            colnames(expDF) <- localName
-
-            # add to list
-            geneRepExpressionList[[localName]] <- expDF
-
-            # update progress bar
-            if (progressBarLogic) {
-                setTxtProgressBar(pb = pb, value = i)
-            }
-        }
-        if (progressBarLogic) {
-            close(pb)
-        }
-
-        # convert to matrix
-        geneRepExpressionMultiple <-
-            do.call(cbind, geneRepExpressionList)
-
-        # massage
-        geneRepExpressionMultiple$gene_id <-
-            rownames(geneRepExpressionMultiple)
-        rownames(geneRepExpressionMultiple) <- NULL
-        geneRepExpressionMultiple <-
-            geneRepExpressionMultiple[, c(
-                which(colnames(geneRepExpressionMultiple) == 'gene_id'),
-                which(colnames(geneRepExpressionMultiple) != 'gene_id')
-            )]
-
-        ### Combin single and multople
-        geneRepExpression <-
-            rbind(geneRepExpressionSingle, geneRepExpressionMultiple)
-        geneRepExpression <-
-            geneRepExpression[sort.list(geneRepExpression$gene_id), ]
-    }
-
     ### Remove isoforms not annoated
     if (TRUE) {
         diffAnnot <-
@@ -2593,6 +2525,22 @@ importRdata <- function(
                     isoformRepExpression$isoform_id %in%
                         isoformAnnotation$isoform_id), ]
         }
+    }
+
+    ### Sum to gene level gene expression - updated
+    if(TRUE) {
+        ### add gene_id
+        isoformRepExpression2 <- isoformRepExpression
+        isoformRepExpression2$gene_id <-
+            isoformAnnotation$gene_id[match(isoformRepExpression2$isoform_id,
+                                            isoformAnnotation$isoform_id)]
+
+        ### Sum to gene level
+        geneRepExpression <- isoformToGeneExp(
+            isoformRepExpression2,
+            showProgress = showProgress,
+            quiet = quiet
+        )
     }
 
     ### in each condition analyzed get mean and standard error of gene and isoforms
@@ -2783,6 +2731,11 @@ importRdata <- function(
             dfSwichList$isoformFeatures$PTC <-
                 isoORF$PTC[match(dfSwichList$isoformFeatures$isoform_id,
                                  isoORF$isoform_id)]
+
+            isoORF <-
+                isoORF[which(isoORF$isoform_id %in%
+                                 isoformRepExpression$isoform_id), ]
+
             dfSwichList$orfAnalysis <- isoORF
         }
     }

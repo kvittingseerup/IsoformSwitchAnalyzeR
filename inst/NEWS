@@ -1,5 +1,10 @@
-2017-06-01 : IsoformSwitchAnalyzeR v0.99.12
-    - Added citation information since the article describing the R package was published: Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+2017-10-12 : IsoformSwitchAnalyzeR v0.99.12
+    - importIsoformExpression() have been completely redesigned to utilize the tximport package as well as implementing the option for inter-library normalization of abundance (TxPM) values.
+    - The vignette got a thorough workover - huge shoutout to Maria Dalby for the help!
+    - isoformSwitchTestDRIMSeq() was extended to also include the dmFilter() functionality as part of the workflow.
+    - The internal process calculating gene expression from isoform expression was cast as its own function isoformToGeneExp.
+    - Fixed an error that could cause problems when importing CDSs from a GTF file
+    - Updated descriptions and other minor style issues.
 
 2017-06-01 : IsoformSwitchAnalyzeR v0.99.11
     - Fixes some issue raised in the Bioconductor review
@@ -7,6 +12,7 @@
     - The importIsoformExpression() function was updated to support import of Transcript Per Million (TxPM) as the relative abundance measure (Instead of TPM and RPKM/FPKM, which are discontinued) when importing data from Kallisto, Salmon and RSEM.
     - The isoformSwitchTestDRIMSeq() function was updated to make one linear model (one dmFit) instead of one model per pairwise comparison.
     - Small update to the switchPlot() functions to make it robust to NA annotation in non-essential data.
+    - Added citation information since the article describing the R package was published: Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 
 2017-05-24 : IsoformSwitchAnalyzeR v0.99.10
     - Fixes some issue raised in the Bioconductor review

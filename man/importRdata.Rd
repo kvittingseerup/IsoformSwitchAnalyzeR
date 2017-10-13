@@ -40,11 +40,12 @@ importRdata(
 \item{isoformRepExpression}{ Optional but recommended: A data.frame with unfiltered normalized biological (not technical) replicate isoform expression. Ideal for supplying quantification measured in Transcripts Per Million (TxPM) or RPKM/FPKM. Must have a column called 'isoform_id' with the isoform_id. The name of the expression columns must match the sample names in the \code{designMatrix} argument. If not supplied RPKM values are calcualted from the count matrix and used instead.}
 
 \item{designMatrix}{
-A data.frame with the information of which samples originate from which conditions. Must be a data.frame with two collums:
+A data.frame with the information of which samples originate from which conditions. Must be a data.frame containing these two collums:
 \itemize{
     \item{\code{Column 1}: called 'sampleID'. This column contains the sample names and must match the column names used in \code{isoformRepExpression}.}
     \item{\code{Column 2}: called 'condition'. This column indicates with a string which conditions the sample originate from. If sample 1-3 originate form the same condition they should all have the same string (for example 'ctrl', in this column).}
 }
+Additional columns can be used to describe other co-factors such as batch effects or patient ids (for paired sample analysis). Additional co-factors can only be analyzed with \code{isoformSwitchTestDRIMSeq}.
 }
 
 \item{isoformExonAnnoation}{

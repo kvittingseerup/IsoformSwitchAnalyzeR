@@ -913,7 +913,7 @@ switchPlotTranscript <- function(
             )[2:(length(domainsFound) + 1)]
     } else if (length(domainsFound) > 12) {
         gg_color_hue <- function(n) {
-            hues = seq(15, 375, length = n + 1)
+            hues <- seq(15, 375, length = n + 1)
             hcl(h = hues,
                 l = 65,
                 c = 100)[1:n]
@@ -2578,7 +2578,7 @@ switchPlot <- function(
 
 
     # Title
-    myTitle = qplot(1:3, 1, geom = "blank") + theme(
+    myTitle <- qplot(1:3, 1, geom = "blank") + theme(
         panel.background = element_blank(),
         line = element_blank(),
         text = element_blank(),

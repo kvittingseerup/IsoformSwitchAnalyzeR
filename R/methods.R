@@ -372,10 +372,9 @@ createSwitchAnalyzeRlist <- function(
     ### Add id to isoformFeatures
     addZeroes <- function(aVec, n=8) {
         sapply(aVec, function(aNumber) {
-            paste(
+            paste0(
                 paste( rep(x = 0, times= n - nchar(aNumber) ), collapse=''),
-                aNumber,
-                sep = ''
+                aNumber
             )
         })
     }
@@ -388,20 +387,18 @@ createSwitchAnalyzeRlist <- function(
         )
     )
 
-    isoformFeatures$gene_ref <- paste(
+    isoformFeatures$gene_ref <- paste0(
         'geneComp',
         '_',
         addZeroes(rep(
             x = 1:length(tmp@lengths),
             times = tmp@lengths
-        )),
-        sep=''
+        ))
     )
-    isoformFeatures$iso_ref <- paste(
+    isoformFeatures$iso_ref <- paste0(
         'isoComp',
         '_',
-        addZeroes( 1:nrow(isoformFeatures) ),
-        sep=''
+        addZeroes( 1:nrow(isoformFeatures) )
     )
 
     ### Reorder

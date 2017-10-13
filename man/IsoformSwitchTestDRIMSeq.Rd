@@ -14,10 +14,10 @@ isoformSwitchTestDRIMSeq(
     dIFcutoff = 0.1,
     testIntegration='isoform_only',
     reduceToSwitchingGenes=TRUE,
+    dmFilterArgs=list(),
     dmPrecisionArgs=list(),
     dmFitArgs=list(),
     dmTestArgs=list(),
-    %nCores=1,
     showProgress=TRUE,
     quiet=FALSE
 )
@@ -46,8 +46,12 @@ A string indicating how to interpret the DRIMSeq test for differential isoform u
 A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains significant switching (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.}
 
     %\item{nCores}{ An inter indicating the number of cores to be used in parallel processing. Defaults is FALSE.}
-    \item{dmPrecisionArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmPrecision()} function underlying the test. Must be supplied as a named list. Please remember some parameters are shared between multipe of the dm*() functions so if you cange a paramter for one function you migth also need to change it for the other functions.}
+    \item{dmFilterArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmFilter()} function enabling filtering based on replicate data. Must be supplied as a named list.}
+
+    \item{dmPrecisionArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmPrecision()} function. Must be supplied as a named list. Please remember some parameters are shared between multipe of the dm*() functions so if you cange a paramter for one function you migth also need to change it for the other functions.}
+
     \item{dmFitArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmFit()} function underlying the test. Must be supplied as a named list. Please remember some parameters are shared between multipe of the dm*() functions so if you cange a paramter for one function you migth also need to change it for the other functions.}
+
     \item{dmTestArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmTest()} function underlying the test. Must be supplied as a named list. Please remember some parameters are shared between multipe of the dm*() functions so if you cange a paramter for one function you migth also need to change it for the other functions.}
 
     \item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Defaults is FALSE.}

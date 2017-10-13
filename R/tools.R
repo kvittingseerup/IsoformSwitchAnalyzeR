@@ -317,3 +317,108 @@ myListToDf <- function(
 
     return(df)
 }
+
+### Sum isoform RPKM to gene RPKM
+isoformToGeneExp <- function(
+    isoRepExpWithGeneId,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Set up progress
+    if (showProgress &  !quiet) {
+        progressBar <- 'text'
+        progressBarLogic <- TRUE
+    } else {
+        progressBar <- 'none'
+        progressBarLogic <- FALSE
+    }
+
+    ### Devide based on nr isoforms
+    multiIsoGenes <- table(isoRepExpWithGeneId$gene_id)
+    multiIsoGenes <-
+        names(multiIsoGenes)[which(multiIsoGenes > 1)]
+
+    geneRepExpressionSingle   <-
+        isoRepExpWithGeneId[which(
+            !isoRepExpWithGeneId$gene_id %in% multiIsoGenes), ]
+    geneRepExpressionMultiple <-
+        isoRepExpWithGeneId[which(
+            isoRepExpWithGeneId$gene_id %in% multiIsoGenes), ]
+
+    ### Sum multi-iso expression to get gene expression
+    # via sapply - 10x faster than ddply
+    expCols <- which(
+        ! colnames(geneRepExpressionMultiple) %in% c('isoform_id','gene_id')
+    )
+    sampleNames <- colnames(geneRepExpressionMultiple)
+
+    # list to store result
+    geneRepExpressionList <- list()
+
+    # loop over each collumn
+    if (progressBarLogic) {
+        pb <-
+            txtProgressBar(
+                min = min(expCols),
+                max = max(expCols),
+                style = 3
+            )
+    }
+
+    for (i in expCols) {
+        # i <- 2
+        localName <- sampleNames[i]
+
+        # sum up exp
+        expList <- split(geneRepExpressionMultiple[, i],
+                         f = geneRepExpressionMultiple$gene_id
+        )
+        expDF <- data.frame(
+            geneExp = sapply(expList, sum),
+            row.names = names(expList),
+            stringsAsFactors = FALSE
+        )
+        colnames(expDF) <- localName
+
+        # add to list
+        geneRepExpressionList[[localName]] <- expDF
+
+        # update progress bar
+        if (progressBarLogic) {
+            setTxtProgressBar(pb = pb, value = i)
+        }
+    }
+    if (progressBarLogic) {
+        close(pb)
+    }
+
+    # convert to matrix
+    geneRepExpressionMultiple <-
+        do.call(cbind, geneRepExpressionList)
+
+    # massage
+    geneRepExpressionMultiple$gene_id <-
+        rownames(geneRepExpressionMultiple)
+    rownames(geneRepExpressionMultiple) <- NULL
+    geneRepExpressionMultiple <-
+        geneRepExpressionMultiple[, c(
+            which(colnames(geneRepExpressionMultiple) == 'gene_id'),
+            which(colnames(geneRepExpressionMultiple) != 'gene_id')
+        )]
+
+    ### Combin single and multople
+    geneRepExpressionSingle$isoform_id <- NULL
+    geneRepExpression <-
+        rbind(geneRepExpressionSingle, geneRepExpressionMultiple)
+    geneRepExpression <-
+        geneRepExpression[sort.list(geneRepExpression$gene_id), ]
+
+    ### Massage
+    geneRepExpression <- geneRepExpression[,c(
+        which( colnames(geneRepExpression) == 'gene_id'),
+        which( colnames(geneRepExpression) != 'gene_id')
+    )]
+    rownames(geneRepExpression) <- NULL
+
+    return(geneRepExpression)
+}

@@ -14,6 +14,7 @@ import(VennDiagram)
 import(DBI)
 import(DRIMSeq)
 import(spliceR)
+import(tximport)
 
 ### Import specific functions
 importFrom("grDevices", "dev.off", "hcl", "pdf", "png")
@@ -27,8 +28,7 @@ importFrom('grid','viewport')
 importFrom('grid','grid.layout')
 importFrom('DBI','dbGetQuery','dbDriver')
 importFrom("stats", "as.formula", "model.matrix")
-
-
+importFrom("edgeR", "calcNormFactors")
 
 ### Export functions from my R package
 # Creating list
@@ -91,6 +91,7 @@ export('isoformSwitchAnalysisCombined')
 # other tools
 export('extractExpressionMatrix')
 export('prepareCuffExample')
+export('isoformToGeneExp')
 
 ### Export classes
 exportClasses("switchAnalyzeRlist")

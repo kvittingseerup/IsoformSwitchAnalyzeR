@@ -628,6 +628,7 @@ isoformSwitchTestDRIMSeq <- function(
     dIFcutoff = 0.1,
     testIntegration = 'isoform_only',
     reduceToSwitchingGenes = TRUE,
+    dmFilterArgs=list(),
     dmPrecisionArgs = list(),
     dmFitArgs = list(),
     dmTestArgs = list(),
@@ -730,7 +731,7 @@ isoformSwitchTestDRIMSeq <- function(
     ### Make dmData object
     if(TRUE) {
         if (!quiet) {
-            message('Step 1 of 5: Creating DM data object...')
+            message('Step 1 of 6: Creating DM data object...')
         }
         ### Modify dfs for DRIMseq
         # modelmatrix
@@ -756,10 +757,21 @@ isoformSwitchTestDRIMSeq <- function(
         ))
     }
 
-    ### Calculate precition
+    ### Filter
+    if(TRUE) {
+        message('Step 2 of 6: Filtering DM data object...')
+
+        dmFilterArgs$x <- localDm
+
+        suppressMessages(localDm <- do.call(
+            what = dmFilter, args = dmFilterArgs
+        ))
+    }
+
+    ### Calculate precision
     if(TRUE) {
         if (!quiet) {
-            message('Step 2 of 5: Estimating precision paramter (this may take a while)...')
+            message('Step 3 of 6: Estimating precision paramter (this may take a while)...')
         }
 
         ### Calculate precision
@@ -777,7 +789,7 @@ isoformSwitchTestDRIMSeq <- function(
     ### Fit model
     if(TRUE) {
         if (!quiet) {
-            message('Step 3 of 5: Fitting linear models (this may take a while)...')
+            message('Step 4 of 6: Fitting linear models (this may take a while)...')
         }
 
         # add data arguments to argument list
@@ -795,7 +807,7 @@ isoformSwitchTestDRIMSeq <- function(
     ### For each comparison do the test
     if(TRUE) {
         if (!quiet) {
-            message('Step 4 of 5: Testing pairwise comparison(s)...')
+            message('Step 5 of 6: Testing pairwise comparison(s)...')
         }
 
         resultOfPairwiseTest <- myListToDf(dlply(
@@ -855,7 +867,7 @@ isoformSwitchTestDRIMSeq <- function(
     ### Massage result
     if (TRUE) {
         if (!quiet) {
-            message('Step 5 of 5: Preparing output...')
+            message('Step 6 of 6: Preparing output...')
         }
         ### Remove NAs
         resultOfPairwiseTest <-
