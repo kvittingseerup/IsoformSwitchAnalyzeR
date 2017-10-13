@@ -324,6 +324,13 @@ isoformToGeneExp <- function(
     showProgress = TRUE,
     quiet = FALSE
 ) {
+    if( !any( colnames(isoRepExpWithGeneId) %in% 'gene_id') ){
+        stop('The isoRepExpWithGeneId must have a gene_id columns')
+    }
+    if( any(is.na(isoRepExpWithGeneId$gene_id)) ){
+        stop('The gene_id column of isoRepExpWithGeneId cannot have any NAs')
+    }
+
     ### Set up progress
     if (showProgress &  !quiet) {
         progressBar <- 'text'
