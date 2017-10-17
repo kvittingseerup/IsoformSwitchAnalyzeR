@@ -9,7 +9,7 @@ URL: http://bioconductor.org/packages/IsoformSwitchAnalyzeR/
 BugReports: https://github.com/kvittingseerup/IsoformSwitchAnalyzeR/issues
 License: GPL (>= 2)
 Depends: R (>= 3.4), cummeRbund, spliceR
-Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings, IRanges, GenomicRanges, DRIMSeq, RColorBrewer, rtracklayer, ggplot2, VennDiagram, DBI, grDevices, graphics, stats, utils, GenomeInfoDb, grid, tximport, edgeR 
+Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings, IRanges, GenomicRanges, DRIMSeq, RColorBrewer, rtracklayer, ggplot2, VennDiagram, DBI, grDevices, graphics, stats, utils, GenomeInfoDb, grid, tximport, edgeR
 Suggests: knitr, BSgenome.Hsapiens.UCSC.hg19
 VignetteBuilder: knitr
 Collate: classes.R methods.R import_data.R test_isoform_switches.R analyze_ORF.R analyze_external_sequence_analysis.R intron_retention.R analyze_switch_consequences.R isoform_plots.R plot_all_iso_switch.R high_level_functions.R tools.R extractGenomeWideAnalysis.R

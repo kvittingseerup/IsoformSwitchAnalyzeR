@@ -1977,6 +1977,9 @@ importIsoformExpression <- function(
     calculateCountsFromAbundance=TRUE,
     interLibNormTxPM=TRUE,
     normalizationMethod='TMM',
+    pattern='',
+    invertPattern=FALSE,
+    ignore.case=FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -2095,6 +2098,25 @@ importIsoformExpression <- function(
         )
         names(localFiles) <- names(dirList)
 
+        ### Subset to those of interest
+        if( invertPattern ) {
+            localFiles <- localFiles[which(
+                ! grepl(
+                    pattern = pattern,
+                    x = localFiles,
+                    ignore.case=ignore.case
+                )
+            )]
+        } else {
+            localFiles <- localFiles[which(
+                grepl(
+                    pattern = pattern,
+                    x = localFiles,
+                    ignore.case=ignore.case
+                )
+            )]
+        }
+
         ### Use Txtimporter to import data
         if (!quiet) {
             localDataList <- tximport(
@@ -2141,8 +2163,8 @@ importIsoformExpression <- function(
         countsMat <- t(t(newCounts) * (countsSum/newSum))
 
         ### Calculate normalization factors
-        localDGE <- DGEList(countsMat, remove.zeros = TRUE)
-        localDGE <- calcNormFactors(localDGE, method = normalizationMethod)
+        localDGE <- edgeR::DGEList(countsMat, remove.zeros = TRUE)
+        localDGE <- edgeR::calcNormFactors(localDGE, method = normalizationMethod)
 
         ### Apply normalization factors
         localDataList$abundance <- t(t(localDataList$abundance) / localDGE$samples$norm.factors)
