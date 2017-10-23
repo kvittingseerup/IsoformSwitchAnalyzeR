@@ -6,7 +6,7 @@ Import expression data from Kallisto, Salmon or RSEM into R.
 }
 
 \description{
-A general-purpose import function which imports isoform expression data from Kallisto, Salmon or RSEM into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Most notably this import function also enables inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files.
+A general-purpose import function which imports isoform expression data from Kallisto, Salmon or RSEM into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Importantly this import function also enables inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files.
 }
 
 \usage{
@@ -48,6 +48,10 @@ importIsoformExpression(
 This function requires all data that should be imported is in a directory (as indicated by \code{parentDir}) where each quantified sample is in a seperate sub-directory.
 
 For Kallisto the bias estimation is enabled by adding '--bias' to the function call. For Salmon the bias estimation is enabled by adding '--seqBias' and '--gcBias' to the function call. For RSEM the bias estimation is enabled by adding '--estimate-rspd' to the function call.
+
+Inter library normalization is (almost always) nessesary due to small changes in the RNA composition between cells and is highly recommended for all analysis of RNAseq data. For more information please refere to the edgeR user guide.
+
+The inter-library normalization of TxPM values is performed as a three step process: First the effective counts are calculated from the abundances using the library specific effective isoform lengths. The effective counts are then suppled to edgeR which calculates the normalization factors nesseary. Lastly the calculated normalization factors are applied to the imported TxPM values.
 }
 
 \value{

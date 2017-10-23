@@ -44,6 +44,7 @@ In summary IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform r
 - [Installation]
 - [How To Get Help]
 
+[What To Cite] (please remember)
 
 [Quick Start]
 
@@ -82,8 +83,6 @@ In summary IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform r
 - [Analyzing the Biological Mechanisms Behind Isoform Switching]
 
 [Frequently Asked Questions and Problems]
-
-[What To Cite] (please remember)
 
 [Final Remarks]
 
@@ -155,6 +154,40 @@ Back to [Table of Content].
 <br />
 
 <!-- Quick start -->
+## What To Cite
+
+The IsoformSwitchAnalyzeR tool is only made possible by a string of other tools and scientific discoveries - please read this section thoroughly and cite the appropriate articles. Note that due to the references being divided into sections some references appear more than once.
+
+If you are using the 
+
+- **Import of data from Salmon/Kallisto/RSEM** : Please cite refrence _10_
+- **Inter-library normalization of abundance values** : Please cite refrence _10_ and _11_
+- **Prediction of consequences** please cite refrence _1_
+- **isoform switch test implemented in IsoformSwitchAnalyzeR** : Please cite both refrence _1_ and _2_
+- **isoform switch test implemented in the DRIMSeq package (default)** : Please cite both refrence _1_ and _3_
+- **visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package : Please cite refrence _1_
+- **Intron Retention analysis** : Please cite both refrence _1_ and _4_
+- **prediction of open reading frames (ORF) analysis** : Please cite refrence _1_ and _4_
+- **prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity** : Please cite refrence _1_, _4_, _5_ and _6_
+- **CPAT** : Please cite refrence _7_
+- **Pfam** : Please cite refrence _8_
+- **SignalP** : Please cite refrence _9_
+
+<br />
+
+Refrences:
+
+1. _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_
+2. _Ferguson et al. **P-value calibration for multiple testing problems in genomics.** Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673._
+3. _Nowicka et al. **DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics.** F1000Research, 5(0), 1356._
+4. _Vitting-Seerup et al. **spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data**. BMC Bioinformatics 2014, 15:81._
+5. _Weischenfeldt et al. **Mammalian tissues defective in nonsense-mediated mRNA decay display highly aberrant splicing patterns**. Genome Biol 2012, 13:R35_
+6. _Huber et al. **Orchestrating high-throughput genomic analysis with Bioconductor**. Nat. Methods, 2015, 12:115-121._ 
+7. _Wang et al. **CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model**. Nucleic Acids Res. 2013, 41:e74._
+8. _Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2014)  Database Issue 42:D222-D230_ 
+9. _Petersen et al. **SignalP 4.0: discriminating signal peptides from transmembrane regions**. Nature Methods, 8:785-786, 2011_
+10. _Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015)._
+11. _Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)_
 ## Quick Start
 ### Workflow Overview
 
@@ -1285,7 +1318,7 @@ switchPlotIsoUsage(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B', condition
 
 <br />
 
-Another usefull tool implemented is the _isoformToGeneExp()_ function which takes a data.frame of isoform expression and summarizes it up to gene level expression values. This function is quite usefull in conjunction with the _importIsoformExpression()_ function since the _importIsoformExpression()_ function imports isoform-level data - which can then be summarized to gene level data with _isoformToGeneExp()_. This is quite analogous to what tximport can do - except it allows for incooperation of the additional features implemented in _importIsoformExpression()_.
+Another usefull tool implemented is the _isoformToGeneExp()_ function which takes a data.frame of isoform expression and summarizes it up to gene level expression values. This function is quite usefull in conjunction with the _importIsoformExpression()_ function since the _importIsoformExpression()_ function imports isoform-level data - which can then be summarized to gene level data with _isoformToGeneExp()_. This is quite analogous to what tximport can do - except it allows for incooperation of the additional features, such as inter-library normalization, implemented in _importIsoformExpression()_.
 
 <br />
 
@@ -1530,42 +1563,6 @@ None yet but we will continously add the most common problems and questions rais
 
 Back to [Table of Content]
 
-<br />
-
-## What To Cite
-
-The IsoformSwitchAnalyzeR tool is only made possible by a string of other tools and scientific discoveries - please read this section thoroughly and cite the appropriate articles. Note that due to the references being divided into sections some references appear more than once.
-
-If you are using the 
-
-- **Import of data from Salmon/Kallisto/RSEM** : Please cite refrence _10_
-- **Inter-library normalization of abundance values** : Please cite refrence _10_ and _11_
-- **Prediction of consequences** please cite refrence _1_
-- **isoform switch test implemented in IsoformSwitchAnalyzeR** : Please cite both refrence _1_ and _2_
-- **isoform switch test implemented in the DRIMSeq package (default)** : Please cite both refrence _1_ and _3_
-- **visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package : Please cite refrence _1_
-- **Intron Retention analysis** : Please cite both refrence _1_ and _4_
-- **prediction of open reading frames (ORF) analysis** : Please cite refrence _1_ and _4_
-- **prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity** : Please cite refrence _1_, _4_, _5_ and _6_
-- **CPAT** : Please cite refrence _7_
-- **Pfam** : Please cite refrence _8_
-- **SignalP** : Please cite refrence _9_
-
-<br />
-
-Refrences:
-
-1. _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_
-2. _Ferguson et al. **P-value calibration for multiple testing problems in genomics.** Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673._
-3. _Nowicka et al. **DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics.** F1000Research, 5(0), 1356._
-4. _Vitting-Seerup et al. **spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data**. BMC Bioinformatics 2014, 15:81._
-5. _Weischenfeldt et al. **Mammalian tissues defective in nonsense-mediated mRNA decay display highly aberrant splicing patterns**. Genome Biol 2012, 13:R35_
-6. _Huber et al. **Orchestrating high-throughput genomic analysis with Bioconductor**. Nat. Methods, 2015, 12:115-121._ 
-7. _Wang et al. **CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model**. Nucleic Acids Res. 2013, 41:e74._
-8. _Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2014)  Database Issue 42:D222-D230_ 
-9. _Petersen et al. **SignalP 4.0: discriminating signal peptides from transmembrane regions**. Nature Methods, 8:785-786, 2011_
-10. _Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015)._
-11. _Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)_
 
 <br />
 

@@ -14,7 +14,12 @@ isoformSwitchTestDRIMSeq(
     dIFcutoff = 0.1,
     testIntegration='isoform_only',
     reduceToSwitchingGenes=TRUE,
-    dmFilterArgs=list(),
+    dmFilterArgs=list(
+        min_feature_expr = 4,
+        min_samps_feature_expr = min(
+            gbmSubSwitchListAnalyzed$conditions$nrReplicates
+        )
+    ),
     dmPrecisionArgs=list(),
     dmFitArgs=list(),
     dmTestArgs=list(),
@@ -46,7 +51,7 @@ A string indicating how to interpret the DRIMSeq test for differential isoform u
 A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains significant switching (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.}
 
     %\item{nCores}{ An inter indicating the number of cores to be used in parallel processing. Defaults is FALSE.}
-    \item{dmFilterArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmFilter()} function enabling filtering based on replicate data. Must be supplied as a named list.}
+    \item{dmFilterArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmFilter()} function enabling filtering based on replicate data. Must be supplied as a named list. Default is 4 counts in at least as many libraries as there are replicates in the smalles condition}
 
     \item{dmPrecisionArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmPrecision()} function. Must be supplied as a named list. Please remember some parameters are shared between multipe of the dm*() functions so if you cange a paramter for one function you migth also need to change it for the other functions.}
 

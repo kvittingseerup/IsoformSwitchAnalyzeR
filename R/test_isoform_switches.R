@@ -628,7 +628,12 @@ isoformSwitchTestDRIMSeq <- function(
     dIFcutoff = 0.1,
     testIntegration = 'isoform_only',
     reduceToSwitchingGenes = TRUE,
-    dmFilterArgs=list(),
+    dmFilterArgs=list(
+        min_feature_expr = 4,
+        min_samps_feature_expr = min(
+            switchAnalyzeRlist$conditions$nrReplicates
+        )
+    ),
     dmPrecisionArgs = list(),
     dmFitArgs = list(),
     dmTestArgs = list(),
