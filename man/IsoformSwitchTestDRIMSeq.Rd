@@ -10,21 +10,21 @@ This function is an interface to an analysis with the DRIMSeq package analyzing 
 \usage{
 isoformSwitchTestDRIMSeq(
     switchAnalyzeRlist,
-    alpha=0.05,
+    alpha = 0.05,
     dIFcutoff = 0.1,
-    testIntegration='isoform_only',
-    reduceToSwitchingGenes=TRUE,
+    testIntegration = 'isoform_only',
+    reduceToSwitchingGenes = TRUE,
     dmFilterArgs=list(
         min_feature_expr = 4,
         min_samps_feature_expr = min(
-            gbmSubSwitchListAnalyzed$conditions$nrReplicates
+            switchAnalyzeRlist$conditions$nrReplicates
         )
     ),
-    dmPrecisionArgs=list(),
-    dmFitArgs=list(),
-    dmTestArgs=list(),
-    showProgress=TRUE,
-    quiet=FALSE
+    dmPrecisionArgs = list(),
+    dmFitArgs = list(),
+    dmTestArgs = list(),
+    showProgress = TRUE,
+    quiet = FALSE
 )
 }
 

@@ -1,3 +1,6 @@
+2017-10-25 : IsoformSwitchAnalyzeR v0.99.15
+    - Fixed a small mistake in the documentation causing build warnings
+
 2017-10-22 : IsoformSwitchAnalyzeR v0.99.14
     - isoformSwitchTestDRIMSeq() was updated to per default use dmFilter()
     - Small updates to documentation better explaining the functionalities from udate 0.99.12
