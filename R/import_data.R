@@ -688,11 +688,7 @@ importCufflinksFiles <- function(
                     "significant"
                 )
             )
-        q2 <-
-            sum(grepl(
-                'XLOC', geneDiffanalysis$test_id
-            )) != nrow(geneDiffanalysis)
-        if (q1 | q2) {
+        if (q1) {
             stop(paste(
                 'The file supplied to pathToGeneDEanalysis does not appear',
                 'to be the result of the CuffDiff gene expression analysis.'
@@ -1185,6 +1181,17 @@ importCufflinksFiles <- function(
         )
 
         # If there are descripencies
+        if(length(myIntersect) == 0) {
+            stop(
+                paste(
+                    'No overlap between isoform annotation',
+                    'and isoform expression data was found',
+                    sep=' '
+                )
+            )
+        }
+
+
         if (length(myUnion) != length(myIntersect)) {
             isoformData <- isoformData[which(
                 isoformData$isoform_id     %in% myIntersect), ]
@@ -2393,6 +2400,11 @@ importRdata <- function(
             }
         } else {
             gtfImported <- FALSE
+
+            ###
+            if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
+                stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
+            }
 
             ### Devide the data
             isoformExonStructure <-

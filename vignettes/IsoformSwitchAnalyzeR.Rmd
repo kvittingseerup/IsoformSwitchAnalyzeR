@@ -67,8 +67,8 @@ In summary IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform r
     + [Testing Isoform Switches with other Tools]
 - [Analyzing Open Reading Frames]
 - [Extracting Nucleotide and Amino Acid Sequences]
-- [Advise for Running External Sequence Analysis Tools]
-- [Importing External Sequences Analysis]
+- [Advice for Running External Sequence Analysis Tools]
+- [Importing External Sequence Analysis]
 - [Predicting Intron Retentions]
 - [Predicting Switch Consequences]
 - [Post Analysis of Isoform Switches with Consequences]
@@ -163,12 +163,12 @@ If you are using the
 - **Import of data from Salmon/Kallisto/RSEM** : Please cite refrence _10_
 - **Inter-library normalization of abundance values** : Please cite refrence _10_ and _11_
 - **Prediction of consequences** please cite refrence _1_
-- **isoform switch test implemented in IsoformSwitchAnalyzeR** : Please cite both refrence _1_ and _2_
-- **isoform switch test implemented in the DRIMSeq package (default)** : Please cite both refrence _1_ and _3_
-- **visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package : Please cite refrence _1_
+- **Isoform switch test implemented in IsoformSwitchAnalyzeR** : Please cite both refrence _1_ and _2_
+- **Isoform switch test implemented in the DRIMSeq package (default)** : Please cite both refrence _1_ and _3_
+- **Visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package : Please cite refrence _1_
 - **Intron Retention analysis** : Please cite both refrence _1_ and _4_
-- **prediction of open reading frames (ORF) analysis** : Please cite refrence _1_ and _4_
-- **prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity** : Please cite refrence _1_, _4_, _5_ and _6_
+- **Prediction of open reading frames (ORF) analysis** : Please cite refrence _1_ and _4_
+- **Prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity** : Please cite refrence _1_, _4_, _5_ and _6_
 - **CPAT** : Please cite refrence _7_
 - **Pfam** : Please cite refrence _8_
 - **SignalP** : Please cite refrence _9_
@@ -188,6 +188,7 @@ Refrences:
 9. _Petersen et al. **SignalP 4.0: discriminating signal peptides from transmembrane regions**. Nature Methods, 8:785-786, 2011_
 10. _Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015)._
 11. _Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)_
+
 ## Quick Start
 ### Workflow Overview
 
@@ -1089,7 +1090,7 @@ exampleSwitchListAnalyzed <- analyzeCPAT(
 exampleSwitchListAnalyzed
 ```
 
-Where the _pathTo\<tool\_name>resultFile_ points to the result files constructed as suggested in [Advise for Running External Sequence Analysis Tools] and in the detailed documentation of each of the individual functions. 
+Where the _pathTo\<tool\_name>resultFile_ points to the result files constructed as suggested in [Advice for Running External Sequence Analysis Tools] and in the detailed documentation of each of the individual functions. 
 
 Of particular interest is the _removeNoncodinORFs_ argument in _analyzeCPAT()_ since it allows integration of the CPAT and ORF analyses by removing ORFs from isoforms not predicted to be coding by CPAT. This can be particularly useful if isoforms and ORFs have been predicted de novo (both guided or non-guided). Note that if enabled (by setting to TRUE), it will effect all downstream analyses and plots as both analysis of domains and signal peptides require that ORFs are annotated (e.g. _analyzeSwitchConsequences_ will not consider the domains (potentially) found by Pfam if the ORFs have been removed).
 
@@ -1102,7 +1103,7 @@ Back to [Table of Content]
 Another annotation we easily can obtain, since we know the exon structure of all isoforms in a given gene (with isoform switching), is intron retentions. This can be done via the *spliceR* R package via the wrapper implemented in _analyzeIntronRetention()_.
 
 ```{r}
-### This example relies on the example data from the 'Importing External Sequences Analysis' section above 
+### This example relies on the example data from the 'Importing External Sequence Analysis' section above 
 
 exampleSwitchListAnalyzed <- analyzeIntronRetention(exampleSwitchListAnalyzed, quiet=TRUE)
 
