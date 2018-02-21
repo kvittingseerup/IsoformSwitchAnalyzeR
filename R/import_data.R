@@ -1920,13 +1920,15 @@ importGTF <- function(
     repExp <- data.frame(
         isoform_id = myIsoAnot$isoform_id,
         plaseholder1 = NA,
-        plaseholder2 = NA
+        plaseholder2 = NA,
+        stringsAsFactors = FALSE
     )
 
     designMatrix <-
         data.frame(
             sampleID = c('plaseholder1', 'plaseholder2'),
-            condition = c('plaseholder1', 'plaseholder2')
+            condition = c('plaseholder1', 'plaseholder2'),
+            stringsAsFactors = FALSE
         )
 
     ### Create switchList
@@ -2596,7 +2598,7 @@ importRdata <- function(
 
                     isoSummary <- data.frame(
                         isoform_id = isoformRepExpression$isoform_id,
-                        iso_value = rowMeans(isoformRepExpression[, isoIndex]),
+                        iso_value = rowMeans(isoformRepExpression[, isoIndex, drop=F]),
                         iso_std = apply(isoformRepExpression[, isoIndex], 1, sd),
                         stringsAsFactors = FALSE
                     )
@@ -2610,7 +2612,7 @@ importRdata <- function(
 
                     geneSummary <- data.frame(
                         gene_id = geneRepExpression$gene_id,
-                        gene_value = rowMeans(geneRepExpression[, geneIndex]),
+                        gene_value = rowMeans(geneRepExpression[, geneIndex, drop=F]),
                         gene_std = apply(geneRepExpression[, geneIndex], 1, sd),
                         stringsAsFactors = FALSE
                     )

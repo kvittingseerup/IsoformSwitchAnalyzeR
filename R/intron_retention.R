@@ -77,7 +77,7 @@ analyzeIntronRetention <- function(
         }
         if (alpha < 0 |
             alpha > 1) {
-            stop('The alpha parameter must be between 0 and 1 ([0,1]).')
+            warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
         }
         if (alpha > 0.05) {
             warning(

@@ -1562,7 +1562,7 @@ Back to [Table of Content]
 
 ### Analysing experiments without replicates
 
-Generally we would not recommend analysis of experiments without replicates as they will always be descriptive of that particular experiment (aka have no power to tell if one would get the same result next time the experiment is run). On the other hand pilot studies can be very elucidating for planning larger experiments hence this small guide. The primary thing nessesary to run IsoformSwitchAnalyzeR without replicates is to solely rely on the dIF values to call isoform switches. This can be done by following the steps outlined in [Detailed Workflow] with a few modifications:
+Generally we would not recommend analysis of experiments without replicates as they will always be descriptive of that particular experiment (aka have no power to tell if it would be the same next time the experiment was run). But since pilot studies can be very elucidating IsoformSwitchAnalyzeR can be used. The main thing you to do is to solely rely on the dIF values to call isoform switches. This can be done by following the steps outlined in [Detailed Workflow] with a few modifications:
 
 - Omit the isoform switch test step
 - Manuallyt set the switch q-value to 1, which can be done as follows:
@@ -1594,7 +1594,6 @@ We aim to continuously keep IsoformSwitchAnalyzeR up to date and update it. The 
 Back to [Table of Content]
 
 ## Sessioninfo
-
 ```{r}
 sessionInfo()
 ```
