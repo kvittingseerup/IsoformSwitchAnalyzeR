@@ -1370,20 +1370,14 @@ extractTopSwitches <- function(
                 ), ]
             rownames(dataDF2) <- NULL
         } else {
-            dataDF$combinedID <- paste(dataDF$gene_id,
-                                       dataDF$condition_1,
-                                       dataDF$condition_2,
-                                       sep = '_')
-
-            ### Calculate combined dIF value
             combinedDif <-
-                split(abs(dataDF$dIF), f = dataDF$combinedID)
+                split(abs(dataDF$dIF), f = dataDF$gene_ref)
             combinedDif <- sapply(combinedDif, sum)
 
             ### Add to df
             dataDF$combinedDIF <-
-                combinedDif[match(dataDF$combinedID , names(combinedDif))]
-            dataDF$combinedID <- NULL
+                combinedDif[match(dataDF$gene_ref , names(combinedDif))]
+            dataDF$gene_ref <- NULL
 
             dataDF2 <-
                 dataDF[sort.list(dataDF$combinedDIF, decreasing = TRUE), ]

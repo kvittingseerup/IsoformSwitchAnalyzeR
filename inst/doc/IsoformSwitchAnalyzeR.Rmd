@@ -1038,7 +1038,7 @@ Back to [Table of Content]
 The two fasta files outputted by _extractSequence()_ (if writeToFile=TRUE) can be used as input to amongst others:
 
 * CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
-* Pfam : Prediction of protein domains, which can be run either locally or via their [webserver](http://pfam.xfam.org/search#tabview=tab1).
+* Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme [here])(ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](http://pfam.xfam.org/search#tabview=tab1).
 * SignalP : Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
 
 These three tools are the ones currently supported but if you have additional ideas please do not hesitate to contact us as described in [How To Get Help].
@@ -1562,7 +1562,7 @@ Back to [Table of Content]
 
 ### Analysing experiments without replicates
 
-Generally we would not recommend analysis of experiments without replicates as they will always be descriptive of that particular experiment (aka have no power to tell if it would be the same next time the experiment was run). But since pilot studies can be very elucidating IsoformSwitchAnalyzeR can be used. The main thing you to do is to solely rely on the dIF values to call isoform switches. This can be done by following the steps outlined in [Detailed Workflow] with a few modifications:
+Generally we would not recommend analysis of experiments without replicates as they will always be descriptive of that particular experiment (aka have no power to tell if one would get the same result next time the experiment is run). On the other hand pilot studies can be very elucidating for planning larger experiments hence this small guide. The primary thing nessesary to run IsoformSwitchAnalyzeR without replicates is to solely rely on the dIF values to call isoform switches. This can be done by following the steps outlined in [Detailed Workflow] with a few modifications:
 
 - Omit the isoform switch test step
 - Manuallyt set the switch q-value to 1, which can be done as follows:
@@ -1594,6 +1594,7 @@ We aim to continuously keep IsoformSwitchAnalyzeR up to date and update it. The 
 Back to [Table of Content]
 
 ## Sessioninfo
+
 ```{r}
 sessionInfo()
 ```

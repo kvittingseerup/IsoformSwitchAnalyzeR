@@ -481,8 +481,8 @@ analyzeORF <- function(
 
         ### Add NAs
         myResultDf <- merge(
+            unique(switchAnalyzeRlist$isoformFeatures[, 'isoform_id', drop = FALSE]),
             myResultDf,
-            switchAnalyzeRlist$isoformFeatures[, 'isoform_id', drop = FALSE],
             all.x = TRUE
         )
 

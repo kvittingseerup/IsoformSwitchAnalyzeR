@@ -38,10 +38,10 @@ Use default paramters. If you want to use the webserver it is easily done as fol
 4) Check Pfam is selected in the "HMM database" window.
 5) Submit your job.
 6) Wait till you recieve the email with the result (usually quite fast).
-7) Copy/paste the result part of the (ONLY what is below the "====" line) into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)).
+7) Copy/paste the result part of the (ONLY what is below the line starting with "seq id") into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)).
 8) Save the document and supply the path to that document to analyzePFAM()
 
-If a stand-alone version was just supply the path to the result file to analyzePFAM().
+To run PFAM locally you should use the pfam_scan.pl script as described in the readme at \url{ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/} and supply the path to the result file to analyzePFAM().
 
 Protein domains are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run pfam once on all isoforms and then supply the entire file to \code{analyzePFAM()}.
 }

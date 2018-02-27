@@ -281,7 +281,7 @@ analyzePFAM <- function(
             header = FALSE,
             nrows = 1
         )
-    if (grepl('^<seq', temp[1, 1])) {
+    if (grepl('^<seq|^seq', temp[1, 1])) {
         skipLine <- 1
     } else {
         skipLine <- 0

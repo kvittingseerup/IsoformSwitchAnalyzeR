@@ -86,23 +86,21 @@ switchPlotTopSwitches <- function(
 
 
     ### Extract genes with switches (passing all filters) and prepare the data
-    if (!quiet) {
-        message('Extracting data...')
-    }
+    if (!quiet) { message('Extracting data...') }
     if (TRUE) {
         ### Extract signifcant isoforms (and then use the associated gene_id to make the plots) (and the feature to sort after)
         if (!sortByQvals) {
             ### Extract data
             collumnsToExtract <-
                 c(
+                    'gene_ref',
                     'gene_id',
                     'gene_name',
                     'condition_1',
                     'condition_2',
                     'dIF',
                     'gene_switch_q_value',
-                    'switchConsequencesGene',
-                    'combinedID'
+                    'switchConsequencesGene'
                 )
             collumnsToExtract <-
                 na.omit(match(
@@ -145,15 +143,15 @@ switchPlotTopSwitches <- function(
 
             ### Calculate combined dIF-value
             combinedDif <-
-                split(abs(localData$dIF), f = localData$combinedID)
+                split(abs(localData$dIF), f = localData$gene_ref)
             combinedDif <- sapply(combinedDif, sum)
 
             ### Add to df
             localData$combinedDIF <-
-                combinedDif[match(localData$combinedID , names(combinedDif))]
+                combinedDif[match(localData$gene_ref , names(combinedDif))]
 
             # reduce to gene level information
-            localData$combinedID <- NULL
+            localData$gene_ref <- NULL
             localData$dIF <- NULL
             localData <- unique(localData)
 
@@ -371,9 +369,9 @@ switchPlotTopSwitches <- function(
             .drop = TRUE,
             .parallel = FALSE,
             .progress = 'text',
-            #.inform = TRUE,
+            .inform = TRUE,
             .fun = function(aDF) {
-                # aDF <- localDataRanked[1,]
+                # aDF <- localDataRanked[12,]
                 ### Build file name
                 fileName <-
                     paste(aDF$outputName,
@@ -387,8 +385,7 @@ switchPlotTopSwitches <- function(
                         fileName, '_aka_', aDF$gene_name, sep = ''
                     )
                 }
-
-                ### Do the plot
+                ### add plot type
                 if (fileType == 'pdf') {
                     pdf(
                         file = paste(fileName, '.pdf', sep = ''),
@@ -405,6 +402,7 @@ switchPlotTopSwitches <- function(
                         res = 300
                     )
                 }
+                ### Do the plot
                 switchPlot(
                     switchAnalyzeRlist = switchAnalyzeRlist,
                     gene = aDF$gene_id,

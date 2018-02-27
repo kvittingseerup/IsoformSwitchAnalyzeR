@@ -376,11 +376,30 @@ switchPlotTranscript <- function(
 
         orfInfo <-
             switchAnalyzeRlist$orfAnalysis[rowsToExtract, columnsToExtract]
+        if(nrow(orfInfo) == 0) {
+            warning(
+                 paste(
+                     'There might somthing wrong with the switchAnalyzeRlist',
+                     '- there are no ORF annoation matching the isoforms of interest:',
+                     paste(isoform_id, collapse = ', '),
+                     '. These isoforoms will be plotted as non-coding.',
+                     sep=' '
+                 )
+            )
 
-        ### Combine
-        isoInfo <- merge(isoInfo, orfInfo, by = 'isoform_id')
+            ### Add NAs manually
+            isoInfo$orfStartGenomic <- NA
+            isoInfo$orfEndGenomic <- NA
 
-        if (length(unique(isoInfo$gene_id)) != 1) {
+        } else {
+            ### Combine
+            isoInfo <- merge(isoInfo, orfInfo, by = 'isoform_id')
+
+        }
+
+
+
+        if (length(unique(isoInfo$gene_id)) > 1) {
             stop(
                 'The isoforms supplied originates from more than one gene - a feature currently not supported. Please revise accordingly'
             )
@@ -2552,6 +2571,16 @@ switchPlot <- function(
         geneName <- 'unannotated gene'
     }
 
+    ### Extract Index with ORF
+    isoform_id2 <- isoform_id[which(
+        ! is.na( switchAnalyzeRlist$orfAnalysis$orfTransciptStart[match( isoform_id, switchAnalyzeRlist$orfAnalysis$isoform_id)] )
+    )]
+    indexToAnalyze2 <-
+        which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoform_id2
+        )
+
+
     ### are domains analysed
     if (any(
         c('domain_identified', 'signal_peptide_identified') %in%
@@ -2560,12 +2589,12 @@ switchPlot <- function(
         anyDomains <-
             any(
                 switchAnalyzeRlist$isoformFeatures$domain_identified[
-                    indexToAnalyze
+                    indexToAnalyze2
                 ] == 'yes'
             ) |
             any(
                 switchAnalyzeRlist$isoformFeatures$signal_peptide_identified[
-                    indexToAnalyze
+                    indexToAnalyze2
                 ] == 'yes'
             )
 

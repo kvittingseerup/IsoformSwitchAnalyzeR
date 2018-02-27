@@ -1038,7 +1038,7 @@ Back to [Table of Content]
 The two fasta files outputted by _extractSequence()_ (if writeToFile=TRUE) can be used as input to amongst others:
 
 * CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
-* Pfam : Prediction of protein domains, which can be run either locally or via their [webserver](http://pfam.xfam.org/search#tabview=tab1).
+* Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme [here])(ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](http://pfam.xfam.org/search#tabview=tab1).
 * SignalP : Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
 
 These three tools are the ones currently supported but if you have additional ideas please do not hesitate to contact us as described in [How To Get Help].

@@ -1,3 +1,8 @@
+2017-02-27 : IsoformSwitchAnalyzeR 1.1.03
+    - Small updates to the switchPlot* functions making them more robust to edge cases
+    - Fixed a problem in the assignment of NAs to isoforms without ORFs. The example datasets were updated accordingly.
+    - Various small imporvements for robustness.
+
 2017-02-21 : IsoformSwitchAnalyzeR 1.1.02
     - Update to accommodate analysis of no-replicate pilot experiments (see guide in vignette)
     - Various small bug-fixes

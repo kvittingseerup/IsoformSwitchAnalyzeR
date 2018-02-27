@@ -1,3 +1,53 @@
+makeMinimumSwitchList <- function(
+    orgSwitchList,
+    isoformsToKeep
+) {
+    ### Subset to wanted isoforms
+    orgSwitchList <-
+        subsetSwitchAnalyzeRlist(
+            orgSwitchList,
+            orgSwitchList$isoformFeatures$isoform_id %in% isoformsToKeep
+        )
+
+    ### remove non-needed entries
+    orgSwitchList$isoformSwitchAnalysis <- NULL
+    orgSwitchList$switchConsequence <- NULL
+
+    ### Reduce size of isoformFeatures
+    colsToAnnulate <- c(
+        'gene_name',
+        'gene_value_1',
+        'gene_value_2',
+        'gene_stderr_1',
+        'gene_stderr_2',
+        'gene_log2_fold_change',
+        'gene_q_value',
+        'iso_value_1',
+        'iso_value_2',
+        'iso_stderr_1',
+        'iso_stderr_2',
+        'iso_log2_fold_change',
+        'iso_q_value',
+        'IF1',
+        'IF2',
+        'dIF',
+        'isoform_switch_q_value'
+    )
+    orgSwitchList$isoformFeatures <-
+        orgSwitchList$isoformFeatures[, which(
+            ! colnames(orgSwitchList$isoformFeatures) %in% colsToAnnulate
+        )]
+    orgSwitchList$isoformFeatures$condition_1 <- 1
+    orgSwitchList$isoformFeatures$condition_2 <- 2
+    orgSwitchList$isoformFeatures$gene_switch_q_value <- 1
+    orgSwitchList$isoformFeatures$isoform_switch_q_value <- 1
+
+    orgSwitchList$isoformFeatures <-
+        unique(orgSwitchList$isoformFeatures)
+
+    return(orgSwitchList)
+}
+
 extractExpressionMatrix <- function(
     switchAnalyzeRlist,
     feature = 'isoformUsage',

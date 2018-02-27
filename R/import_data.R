@@ -2598,7 +2598,7 @@ importRdata <- function(
 
                     isoSummary <- data.frame(
                         isoform_id = isoformRepExpression$isoform_id,
-                        iso_value = rowMeans(isoformRepExpression[, isoIndex, drop=F]),
+                        iso_value = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
                         iso_std = apply(isoformRepExpression[, isoIndex], 1, sd),
                         stringsAsFactors = FALSE
                     )
@@ -2612,7 +2612,7 @@ importRdata <- function(
 
                     geneSummary <- data.frame(
                         gene_id = geneRepExpression$gene_id,
-                        gene_value = rowMeans(geneRepExpression[, geneIndex, drop=F]),
+                        gene_value = rowMeans(geneRepExpression[, geneIndex, drop=FALSE]),
                         gene_std = apply(geneRepExpression[, geneIndex], 1, sd),
                         stringsAsFactors = FALSE
                     )
