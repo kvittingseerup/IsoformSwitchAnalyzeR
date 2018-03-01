@@ -150,7 +150,8 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
-\code{\link{extractConsequenceSummary}}
+\code{\link{extractConsequenceSummary}}\cr
+\code{\link{extractConsequenceEnrichment}}
 }
 \examples{
 ### Prepare example data

@@ -52,6 +52,8 @@ For Kallisto the bias estimation is enabled by adding '--bias' to the function c
 Inter library normalization is (almost always) nessesary due to small changes in the RNA composition between cells and is highly recommended for all analysis of RNAseq data. For more information please refere to the edgeR user guide.
 
 The inter-library normalization of TxPM values is performed as a three step process: First the effective counts are calculated from the abundances using the library specific effective isoform lengths. The effective counts are then suppled to edgeR which calculates the normalization factors nesseary. Lastly the calculated normalization factors are applied to the imported TxPM values.
+
+This function expexts the files produced by Kallisto/Salmon/RSEM to be called their default names: Kallisto files are called 'abundance.tsv', Salmon files are called 'quant.sf' and RSEM files are called 'isoforms.results'.
 }
 
 \value{

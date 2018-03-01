@@ -377,14 +377,18 @@ switchPlotTopSwitches <- function(
                     paste(aDF$outputName,
                           aDF$rank,
                           '_switch_plot_',
-                          aDF$gene_id,
+                          gsub('/|:','-',aDF$gene_id),
                           sep = '')
 
                 if (!is.na(aDF$gene_name)) {
                     fileName <- paste(
-                        fileName, '_aka_', aDF$gene_name, sep = ''
+                        fileName,
+                        '_aka_',
+                        gsub('/|:','-',aDF$gene_name),
+                        sep = ''
                     )
                 }
+
                 ### add plot type
                 if (fileType == 'pdf') {
                     pdf(

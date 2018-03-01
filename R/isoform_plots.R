@@ -132,11 +132,11 @@ switchPlotTranscript <- function(
         # check isoform and gene name input
         idInfoCheck <- sum(c(is.null(gene), is.null(isoform_id)))
         if (idInfoCheck != 1) {
-            if (idInfoCheck == 0) {
-                stop('One of \'gene_id\' or \'isoform_id\' must be given as input')
-            }
             if (idInfoCheck == 2) {
-                stop('Only one of \'gene_id\' or \'isoform_id\' can be supplied')
+                stop('One of \'gene\' or \'isoform_id\' must be given as input')
+            }
+            if (idInfoCheck == 0) {
+                stop('Only one of \'gene\' or \'isoform_id\' can be supplied')
             }
         }
 
@@ -525,24 +525,24 @@ switchPlotTranscript <- function(
         if (inclSignalPAnalysis) {
             if (any(
                 isoInfo$isoform_id %in%
-                switchAnalyzeRlist$signalPeptideAnalysis$transcript_id
+                switchAnalyzeRlist$signalPeptideAnalysis$isoform_id
             )) {
                 signalPanalysis <-
                     switchAnalyzeRlist$signalPeptideAnalysis[which(
-                        switchAnalyzeRlist$signalPeptideAnalysis$transcript_id %in%
+                        switchAnalyzeRlist$signalPeptideAnalysis$isoform_id %in%
                             isoInfo$isoform_id
                     ), ]
                 signalPanalysis$genomicClevageAfter <-
                     unlist(signalPanalysis$genomicClevageAfter)
 
-                signalPanalysis$transcript_id <-
-                    factor(signalPanalysis$transcript_id,
+                signalPanalysis$isoform_id <-
+                    factor(signalPanalysis$isoform_id,
                            levels = unique(isoInfo$isoform_id))
 
                 cleaveageAfter <-
                     split(
                         signalPanalysis$genomicClevageAfter,
-                        signalPanalysis$transcript_id,
+                        signalPanalysis$isoform_id,
                         drop = FALSE
                     )
             } else {
@@ -587,7 +587,7 @@ switchPlotTranscript <- function(
             ) # NULLs are just removed
 
         # cut the exons into smaller part based on the ORF and domain coordinats (if needed)
-        if (!is.na(myCutValues[1])) {
+        if (length(myCutValues) & !is.na(myCutValues[1])) {
             localExonsDevided <-
                 cutGRanges(aGRange = localExons, cutValues = myCutValues)
         } else {
@@ -615,6 +615,7 @@ switchPlotTranscript <- function(
         if (length(localDomainStart)) {
             for (j in 1:length(localDomainStart)) {
                 coordinatPair <- c(localDomainStart[j], localDomainEnd[j])
+                if( all( !is.na(coordinatPair)) ) {
                 domainRange <-
                     IRanges(min(coordinatPair), max(coordinatPair))
                 localExonsDevided$Domain[queryHits(findOverlaps(
@@ -622,19 +623,21 @@ switchPlotTranscript <- function(
                     query = ranges(localExonsDevided),
                     type = 'within'
                 ))] <- domainName[[transcriptName]][j]
+                }
             }
         }
         # signal peptide
         if (length(localPepticeCleaveage)) {
             coordinatPair <- c(localOrfStart, localPepticeCleaveage)
-            peptideRange <-
-                IRanges(min(coordinatPair), max(coordinatPair))
-            localExonsDevided$Domain[queryHits(findOverlaps(
-                subject = peptideRange,
-                query = ranges(localExonsDevided),
-                type = 'within'
-            ))] <- 'Signal Peptide'
-
+            if( all( !is.na(coordinatPair)) ) {
+                peptideRange <-
+                    IRanges(min(coordinatPair), max(coordinatPair))
+                localExonsDevided$Domain[queryHits(findOverlaps(
+                    subject = peptideRange,
+                    query = ranges(localExonsDevided),
+                    type = 'within'
+                ))] <- 'Signal Peptide'
+            }
         }
 
         # convert to df
@@ -918,29 +921,31 @@ switchPlotTranscript <- function(
         unique(myTranscriptPlotData[, c('seqnames', 'transcript', 'idNr')])
 
     ### create color code for domains
-    domainsFound <-
-        unique(myTranscriptPlotData$Domain [which(
-            myTranscriptPlotData$Domain != ' transcript'
-        )])
-    if (length(domainsFound) == 0) {
-        domainsColor <- NULL
-    } else if (length(domainsFound) < 3) {
-        domainsColor <-
-            RColorBrewer::brewer.pal(
-                n = 3,
-                name = 'Dark2'
-            )[2:(length(domainsFound) + 1)]
-    } else if (length(domainsFound) > 12) {
-        gg_color_hue <- function(n) {
-            hues <- seq(15, 375, length = n + 1)
-            hcl(h = hues,
-                l = 65,
-                c = 100)[1:n]
+    if(TRUE) {
+        domainsFound <-
+            unique(myTranscriptPlotData$Domain [which(
+                myTranscriptPlotData$Domain != ' transcript'
+            )])
+        if (length(domainsFound) == 0) {
+            domainsColor <- NULL
+        } else if (length(domainsFound) < 3) {
+            domainsColor <-
+                RColorBrewer::brewer.pal(
+                    n = 3,
+                    name = 'Dark2'
+                )[2:(length(domainsFound) + 1)]
+        } else if (length(domainsFound) > 12) {
+            gg_color_hue <- function(n) {
+                hues <- seq(15, 375, length = n + 1)
+                hcl(h = hues,
+                    l = 65,
+                    c = 100)[1:n]
+            }
+            domainsColor <- gg_color_hue(length(domainsFound))
+        } else {
+            domainsColor <-
+                RColorBrewer::brewer.pal(n = length(domainsFound), name = 'Paired')
         }
-        domainsColor <- gg_color_hue(length(domainsFound))
-    } else {
-        domainsColor <-
-            RColorBrewer::brewer.pal(n = length(domainsFound), name = 'Paired')
     }
 
     if (optimizeForCombinedPlot) {
@@ -1816,7 +1821,7 @@ expressionAnalysisPlot <- function(
                 if ('signalPeptideAnalysis' %in% names(switchAnalyzeRlist)) {
                     if (any(
                         isoform_id %in%
-                        switchAnalyzeRlist$signalPeptideAnalysis$transcript_id
+                        switchAnalyzeRlist$signalPeptideAnalysis$isoform_id
                     )) {
                         allLabels <- c(allLabels, 'Signal Peptide')
                     }
@@ -2395,7 +2400,7 @@ switchPlot <- function(
             isoform_id                   = eArgList$isoform_id,
             condition1                   = eArgList$condition1,
             condition2                   = eArgList$condition2,
-            IFcutoff                   = eArgList$IFcutoff,
+            IFcutoff                     = eArgList$IFcutoff,
             addErrorbars                 = eArgList$addErrorbars,
             confidenceIntervalErrorbars  = eArgList$confidenceIntervalErrorbars,
             confidenceInterval           = eArgList$confidenceInterval,

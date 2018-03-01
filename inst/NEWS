@@ -1,28 +1,32 @@
-2017-02-27 : IsoformSwitchAnalyzeR 1.1.03
+2017-03-01 : IsoformSwitchAnalyzeR 1.1.04 (major)
+    - Fixed a problem which could cause signal peptides not to be plotted - we highly remend redoing switchPlots (only the visualizations were affected - not the underlying analysis). Thanks to Maxim Ivanov for discovring the problem.
+    - Added indication of update importance (minor/major) retrospectively to the NEWS
+
+2017-02-27 : IsoformSwitchAnalyzeR 1.1.03 (minor)
     - Small updates to the switchPlot* functions making them more robust to edge cases
     - Fixed a problem in the assignment of NAs to isoforms without ORFs. The example datasets were updated accordingly.
     - Various small imporvements for robustness.
 
-2017-02-21 : IsoformSwitchAnalyzeR 1.1.02
+2017-02-21 : IsoformSwitchAnalyzeR 1.1.02 (minor)
     - Update to accommodate analysis of no-replicate pilot experiments (see guide in vignette)
     - Various small bug-fixes
 
-2017-12-19 : IsoformSwitchAnalyzeR 1.1.01
+2017-12-19 : IsoformSwitchAnalyzeR 1.1.01 (minor)
     - (The large version-bump is due to the release of the next itteration of Bioconductor)
     - Corrections for a lot of spelling mistakes in the package - huge shoutout to @khoegenauer for the suggestions
     - A few small updates to import functions making the progress even smoother
 
-2017-10-25 : IsoformSwitchAnalyzeR v0.99.15
+2017-10-25 : IsoformSwitchAnalyzeR v0.99.15 (minor)
     - Fixed a small mistake in the documentation causing build warnings
 
-2017-10-22 : IsoformSwitchAnalyzeR v0.99.14
+2017-10-22 : IsoformSwitchAnalyzeR v0.99.14 (minor)
     - isoformSwitchTestDRIMSeq() was updated to per default use dmFilter()
     - Small updates to documentation better explaining the functionalities from udate 0.99.12
 
-2017-10-19 : IsoformSwitchAnalyzeR v0.99.13
+2017-10-19 : IsoformSwitchAnalyzeR v0.99.13 (minor)
     - Version bump for Bioconductor to keep up
 
-2017-10-12 : IsoformSwitchAnalyzeR v0.99.12
+2017-10-12 : IsoformSwitchAnalyzeR v0.99.12 (major)
     - importIsoformExpression() have been completely redesigned to utilize the tximport package as well as implementing the option for inter-library normalization of abundance (TxPM) values.
     - The vignette got a thorough workover - huge shoutout to Maria Dalby for the help!
     - isoformSwitchTestDRIMSeq() was extended to also include the dmFilter() functionality as part of the workflow.
@@ -30,7 +34,7 @@
     - Fixed an error that could cause problems when importing CDSs from a GTF file
     - Updated descriptions and other minor style issues.
 
-2017-06-01 : IsoformSwitchAnalyzeR v0.99.11
+2017-06-01 : IsoformSwitchAnalyzeR v0.99.11 (major)
     - Fixes some issue raised in the Bioconductor review
         To adhere to Bioconductor conventions the subset() method was removed and replaced by the subsetSwitchAnalyzeRlist() function.
     - The importIsoformExpression() function was updated to support import of Transcript Per Million (TxPM) as the relative abundance measure (Instead of TPM and RPKM/FPKM, which are discontinued) when importing data from Kallisto, Salmon and RSEM.
@@ -38,12 +42,12 @@
     - Small update to the switchPlot() functions to make it robust to NA annotation in non-essential data.
     - Added citation information since the article describing the R package was published: Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 
-2017-05-24 : IsoformSwitchAnalyzeR v0.99.10
+2017-05-24 : IsoformSwitchAnalyzeR v0.99.10 (minor)
     - Fixes some issue raised in the Bioconductor review
     - Fixes a but introdued during the recent update in how pfam results were integrated.
     - Updates of the vignette for inproved readability.
 
-2017-05-19 : IsoformSwitchAnalyzeR v0.99.9
+2017-05-19 : IsoformSwitchAnalyzeR v0.99.9 (major)
     MAJOR update which:
         1) Introduces the iso_ref and gene_ref handles to all entires in the switchAnalyzeRlist which allows for easy integration of data across the different enteries.
         2) Now offers full integration with the DRIMSeq tool which utilizises advanced linear models to identify significant changes in isoform usage at isoform level enabling robust analysis of more complex designs including batch effects. The integraiton is availabe via the isoformSwitchTestDRIMSeq() function.
@@ -59,10 +63,10 @@
         - The importIsoformExpression() function have been introduced to help with importing data from Kallisto, Salmon and RSEM. This function generates a isoform count matrix from the parent directory of the Kallisto/Salmon/RSEM analysis - which can easily be used with the importRdata() function to generate a switchAnalyzeRlist.
     Lastly the vignette have naturally been updated and improved accordingly.
 
-2017-04-XX : IsoformSwitchAnalyzeR v0.99.1-8
+2017-04-XX : IsoformSwitchAnalyzeR v0.99.1-8 (minor)
     Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards mostly consering how namespaces are organised and imported.
 
-2017-04-18 : IsoformSwitchAnalyzeR v0.99.0
+2017-04-18 : IsoformSwitchAnalyzeR v0.99.0 (minor)
     The following functionalities were added:
     	- Enable filtering for significant switches in the preFilter() function.
     	- The extractGenomeWideAnalysis() function was extended with the "annotationToAnalyze" parameter enabling specification of which annotation types to analyze.

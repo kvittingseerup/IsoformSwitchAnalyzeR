@@ -72,7 +72,7 @@ Kristoffer Vitting-Seerup
 }
 \seealso{
 \code{\link{analyzeSwitchConsequences}}\cr
-\code{\link{extractSwitchSummary}}
+\code{\link{extractConsequenceEnrichment}}
 }
 \examples{
 ### Prepare example data
