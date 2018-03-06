@@ -1,6 +1,10 @@
+2017-03-06 : IsoformSwitchAnalyzeR 1.1.05 (minor)
+    - The importIsoformExpression() function was improved to handle file names with costom pre-fixes and now adds the 'isoform_id' column itself making the matrixes directly compatible with importRdata().
+    - Various small imporvements in documentation.
+
 2017-03-01 : IsoformSwitchAnalyzeR 1.1.04 (major)
     - Fixed a problem which could cause signal peptides not to be plotted - we highly remend redoing switchPlots (only the visualizations were affected - not the underlying analysis). Thanks to Maxim Ivanov for discovring the problem.
-    - Added indication of update importance (minor/major) retrospectively to the NEWS
+    - Added indication of update importance (minor/major) retrospectively to the NEWS.
 
 2017-02-27 : IsoformSwitchAnalyzeR 1.1.03 (minor)
     - Small updates to the switchPlot* functions making them more robust to edge cases

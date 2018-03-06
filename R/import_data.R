@@ -2098,12 +2098,16 @@ importIsoformExpression <- function(
         }
 
         # make vector with paths
-        localFiles <- paste0(
-            parentDir,
-            '/',
-            unlist(dirList),
-            '/',
-            dataAnalyed$fileName
+        localFiles <- sapply(
+            dirList,
+            function(aDir) {
+                list.files(
+                    path = paste0( parentDir, '/', aDir, '/' ),
+                    pattern = paste0(dataAnalyed$fileName, '$'),
+                    full.names = T
+                )
+
+            }
         )
         names(localFiles) <- names(dirList)
 
@@ -2188,6 +2192,13 @@ importIsoformExpression <- function(
 
         localDataList$countsFromAbundance <- NULL
 
+        ### Add isoform id
+        localDataList <- lapply(localDataList, function(x) {
+            x$isoform_id <- rownames(x)
+            return(x)
+        })
+
+        ### Reorder
         reorderCols <- function(x) {
             x[,c( ncol(x), 1:(ncol(x)-1) )]
         }
@@ -2195,6 +2206,7 @@ importIsoformExpression <- function(
         localDataList$abundance <- reorderCols( localDataList$abundance)
         localDataList$counts    <- reorderCols( localDataList$counts   )
         localDataList$length    <- reorderCols( localDataList$length   )
+
 
         ### Add options
         localDataList$importOptions <- list(

@@ -53,7 +53,7 @@ Inter library normalization is (almost always) nessesary due to small changes in
 
 The inter-library normalization of TxPM values is performed as a three step process: First the effective counts are calculated from the abundances using the library specific effective isoform lengths. The effective counts are then suppled to edgeR which calculates the normalization factors nesseary. Lastly the calculated normalization factors are applied to the imported TxPM values.
 
-This function expexts the files produced by Kallisto/Salmon/RSEM to be called their default names: Kallisto files are called 'abundance.tsv', Salmon files are called 'quant.sf' and RSEM files are called 'isoforms.results'.
+This function expexts the files produced by Kallisto/Salmon/RSEM to be called their default names (with possible costum prefix): Kallisto files are called 'abundance.tsv', Salmon files are called 'quant.sf' and RSEM files are called 'isoforms.results'.
 }
 
 \value{

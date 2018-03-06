@@ -714,7 +714,7 @@ All you need to supply to the _importRdata()_ is the estimated replicate isoform
 Note that:
 
 1) _importRdata()_ allows the user to supply an abundance matrix (via the _isoformRepExpression_ argument) that can be used (instead of them being calculated directly from the count matrix). This is highly recomended and also necessary if additional normalization is wanted.
-2) CPM/TPM (Tags Per Million) values should NOT under any circumstances be supplied to _importRdata()_ since they do not take the length into account, meaning that isoform switches where there are a difference in the length of the involved isoforms, will be biased by TPM/CPM values (Please note that Transcripts Per Million (here called TxPM but sometimes denoted TPM) are not problematic). To illustrate the problem with TPM/CPM, a simple thought example can be made: Consider two isoforms where isoform 1 exist in 5 copies and isoform 2 exist in 10 copies (a 1:2 relation). If isoform 1 is twice as long as isoform 2, an RNA-seq experiment will generate (approximately) twice as many reads from it --- meaning if CPM/TPM values are used, a false 1:1 relation will be estimated. This is naturally not the case for TxPM/RPKM/FPKM, since the isoform lengths are taken into account.
+2) CPM/TPM (Tags Per Million) values should NOT under any circumstances be supplied to _importRdata()_ since they do not take the isoform length into account, meaning that isoform switches where there are a difference in the length of the involved isoforms, will be biased by TPM/CPM values (Please note that Transcripts Per Million (here called TxPM but sometimes denoted TPM) are not problematic). To illustrate the problem with TPM/CPM, a simple thought example can be made: Consider two isoforms where isoform 1 exist in 5 copies and isoform 2 exist in 10 copies (a 1:2 relation). If isoform 1 is twice as long as isoform 2, an RNA-seq experiment will generate (approximately) twice as many reads from it --- meaning if CPM/TPM values are used, a false 1:1 relation will be estimated. This is naturally not the case for TxPM/RPKM/FPKM, since the isoform lengths are taken into account.
 3) If a GTF file is supplied to the "isoformExonAnnoation" argument it is possible also to import the CDS stored in the GTF file (by setting "addAnnotatedORFs=TRUE") as the Open Reading Frame (ORF) IsoformSwitchAnalyzeR uses for downstream analysis. This can be advantageous if the data provided is a quantification of known annotated transcripts (i.e. isoforms are not the result of any de-novo or guided assembly) since the uncertainties of predicting the ORF is then avoided.
 
 
@@ -735,6 +735,14 @@ colnames(designMatrix) <- c('sampleID','condition')
 localAnnotaion <- import(system.file("extdata/chr1_snippet.gtf", package="cummeRbund"))[,c('transcript_id','gene_id')]
 colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
 
+### Please note
+# 1) The way of importing the GTF file in this example with
+#       "system.file('pathToFile', package="cummeRbund") is
+#       specialiced to access the example data in the cummeRbund package
+#       and not somhting you need to do - just supply the string e.g.
+#       "/myAnnotation/myGenome/gersionQuantified.gtf" to the import function
+# 2) importRdata also supports direct import of a GTF file - just supply the
+#       string to the "isoformExonAnnoation"" argument
 
 ### Take a look at the data
 head(isoRepCount, 2)
@@ -747,7 +755,7 @@ head(localAnnotaion, 3)
 aSwitchList <- importRdata(
     isoformCountMatrix=isoRepCount,
     designMatrix=designMatrix,
-    isoformExonAnnoation=localAnnotaion,
+    isoformExonAnnoation=localAnnotaion, # alternatively supply a string that points directly to the GTF file
     showProgress=FALSE
 )
 aSwitchList
@@ -1579,7 +1587,10 @@ Back to [Table of Content]
 <br />
 
 ## Frequently Asked Questions and Problems
-None yet, but we will continuously add the most common problems and questions raised on github or in the google group (see [How To Get Help]).
+### I get the error "The annotation does not fit the expression data"
+To fix this problem you need to update the underlying package tximport. This can be done by copy/pasting this command into R:
+
+    devtools::install_github("mikelove/tximport")
 
 Back to [Table of Content]
 
