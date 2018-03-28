@@ -26,7 +26,7 @@ extractConsequenceSummary(
 A \code{switchAnalyzeRlist} object where \code{analyzeSwitchConsequences()} have been run to identify consequences of isoform switches
 }
 \item{consequencesToAnalyze}{
-A string indicating which consequnces should be considered. See details for describtion (note it is idencital to the strings used with \code{analyzeSwitchConsequences}). Default is all consequences analyzed with \code{analyzeSwitchConsequences}.
+A string indicating which consequnces should be considered. See detail section of \code{\link{analyzeSwitchConsequences}} for describtion . Default is all consequences analyzed with \code{analyzeSwitchConsequences}.
 }
 \item{includeCombined}{
 A logic indicating whether an analysis of how many (how large a fraction) of genes have any type of functional consequence.
@@ -72,7 +72,9 @@ Kristoffer Vitting-Seerup
 }
 \seealso{
 \code{\link{analyzeSwitchConsequences}}\cr
-\code{\link{extractConsequenceEnrichment}}
+\code{\link{extractConsequenceEnrichment}}\cr
+\code{\link{extractConsequenceEnrichmentComparison}} \cr
+\code{\link{extractConsequenceGenomeWide}}
 }
 \examples{
 ### Prepare example data

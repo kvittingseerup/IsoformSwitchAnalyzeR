@@ -109,5 +109,10 @@ mostSwitchingGene <- extractTopSwitches(
 )
 
 ### Make isoform Switch Analysis Plot
-switchPlot(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
+switchPlot(
+    switchAnalyzeRlist = exampleSwitchListAnalyzed,
+    gene = mostSwitchingGene$gene_id,
+    condition1 = mostSwitchingGene$condition_1,
+    condition2 = mostSwitchingGene$condition_2
+)
 }

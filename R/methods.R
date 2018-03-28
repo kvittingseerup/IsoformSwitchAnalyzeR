@@ -173,15 +173,17 @@ summary.switchAnalyzeRlist <- function(object, ...) {
         cat('\nFeature analyzed:\n')
 
         analysisAdded <- gsub(
-            'signalPeptideAnalysis'  ,'Signal Peptides'    , analysisAdded)
+            'signalPeptideAnalysis'      ,'Signal Peptides'       , analysisAdded)
         analysisAdded <- gsub(
-            'domainAnalysis'         ,'Protein Domains'    , analysisAdded)
+            'domainAnalysis'             ,'Protein Domains'       , analysisAdded)
         analysisAdded <- gsub(
-            'intronRetentionAnalysis','Intron Retentions'  , analysisAdded)
+            'intronRetentionAnalysis'    ,'Intron Retentions'     , analysisAdded)
         analysisAdded <- gsub(
-            'orfAnalysis'            ,'ORFs'               , analysisAdded)
+            'AlternativeSplicingAnalysis','Alternative splicing'  , analysisAdded)
         analysisAdded <- gsub(
-            'switchConsequence'      ,'Switch Consequences', analysisAdded)
+            'orfAnalysis'                ,'ORFs'                  , analysisAdded)
+        analysisAdded <- gsub(
+            'switchConsequence'          ,'Switch Consequences'   , analysisAdded)
 
         print(paste(analysisAdded, collapse = ', '))
     }

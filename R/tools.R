@@ -48,6 +48,66 @@ makeMinimumSwitchList <- function(
     return(orgSwitchList)
 }
 
+### A faster but less dymanic version of do.call(rbind, x)
+myListToDf <- function(
+    aList, # List with data.frames to concatenate
+    ignoreColNames = FALSE, # A Logical indicating whether to check the colnames of each data.frame in aList
+    addOrignAsRowNames = FALSE, # A Logical indicating whether to add the name of the list intry as rownames in the final data.frame
+    addOrignAsColumn = FALSE, # A logical indicating whether a column conatining the name of the list entry should be added in the final data.frame
+    addOrgRownames = FALSE # A logical indicating whther the original rownames should be used in the final data.frame
+) {
+    ### Test whether input match standards for being bound together
+    if (class(aList) != 'list') {
+        stop("Input is not a list")
+    }
+
+    # remove empty ones
+    aList <- aList[which(!sapply(aList, is.null))]
+
+    # Make sure the list entries are data.frames
+    if (class(aList[[1]]) != "data.frame") {
+        aList <- lapply(aList, function(x)
+            as.data.frame(t(x)))
+    }
+
+    nCol <- unique(sapply(aList, ncol))
+    if (length(nCol)  != 1) {
+        stop("Interies in the list does not have the same number of collums/")
+    }
+    if (!ignoreColNames) {
+        if (length(unique(as.vector(sapply(
+            aList, names
+        )))) !=  nCol) {
+            stop("Interies in the list does not have the collum names")
+        }
+    }
+
+    ### data.frame to store results
+    df <-
+        data.frame(matrix(NA, ncol = nCol, nrow = sum(sapply(aList, nrow))))
+
+    ### use sapply to loop over the list and extract the entries one at the time
+    for (i in 1:nCol) {
+        df[, i] <-
+            as.vector(unlist(sapply(aList, function(x)
+                x[, i]))) # the combination of as.vector and unlist makes it posible to have any number of entries in each of the lists
+    }
+
+    # add names
+    colnames(df) <- colnames(aList[[1]])
+    if (addOrignAsColumn)    {
+        df$orign     <- rep(names(aList)            , sapply(aList, nrow))
+    }
+    if (addOrignAsRowNames)  {
+        rownames(df) <- rep(names(aList)            , sapply(aList, nrow))
+    }
+    if (addOrgRownames)      {
+        rownames(df) <- rep(sapply(aList, rownames) , sapply(aList, nrow))
+    }
+
+    return(df)
+}
+
 extractExpressionMatrix <- function(
     switchAnalyzeRlist,
     feature = 'isoformUsage',
@@ -308,65 +368,6 @@ prepareCuffExample <- function() {
     return(cuffDB)
 }
 
-### A faster but less dymanic version of do.call( x, rbind)
-myListToDf <- function(
-    aList, # List with data.frames to concatenate
-    ignoreColNames = FALSE, # A Logical indicating whether to check the colnames of each data.frame in aList
-    addOrignAsRowNames = FALSE, # A Logical indicating whether to add the name of the list intry as rownames in the final data.frame
-    addOrignAsColumn = FALSE, # A logical indicating whether a column conatining the name of the list entry should be added in the final data.frame
-    addOrgRownames = FALSE # A logical indicating whther the original rownames should be used in the final data.frame
-) {
-    ### Test whether input match standards for being bound together
-    if (class(aList) != 'list') {
-        stop("Input is not a list")
-    }
-
-    # remove empty ones
-    aList <- aList[which(!sapply(aList, is.null))]
-
-    # Make sure the list entries are data.frames
-    if (class(aList[[1]]) != "data.frame") {
-        aList <- lapply(aList, function(x)
-            as.data.frame(t(x)))
-    }
-
-    nCol <- unique(sapply(aList, ncol))
-    if (length(nCol)  != 1) {
-        stop("Interies in the list does not have the same number of collums/")
-    }
-    if (!ignoreColNames) {
-        if (length(unique(as.vector(sapply(
-            aList, names
-        )))) !=  nCol) {
-            stop("Interies in the list does not have the collum names")
-        }
-    }
-
-    ### data.frame to store results
-    df <-
-        data.frame(matrix(NA, ncol = nCol, nrow = sum(sapply(aList, nrow))))
-
-    ### use sapply to loop over the list and extract the entries one at the time
-    for (i in 1:nCol) {
-        df[, i] <-
-            as.vector(unlist(sapply(aList, function(x)
-                x[, i]))) # the combination of as.vector and unlist makes it posible to have any number of entries in each of the lists
-    }
-
-    # add names
-    colnames(df) <- colnames(aList[[1]])
-    if (addOrignAsColumn)    {
-        df$orign     <- rep(names(aList)            , sapply(aList, nrow))
-    }
-    if (addOrignAsRowNames)  {
-        rownames(df) <- rep(names(aList)            , sapply(aList, nrow))
-    }
-    if (addOrgRownames)      {
-        rownames(df) <- rep(sapply(aList, rownames) , sapply(aList, nrow))
-    }
-
-    return(df)
-}
 
 ### Sum isoform RPKM to gene RPKM
 isoformToGeneExp <- function(
@@ -478,4 +479,116 @@ isoformToGeneExp <- function(
     rownames(geneRepExpression) <- NULL
 
     return(geneRepExpression)
+}
+
+
+evalSig <- function(pValue, alphas) {
+    sapply(pValue, function(x) {
+        if( is.na(x) ) {
+            return('NA')
+        } else if( x < min( alphas) ) {
+            sigLevel <- '***'
+        } else if ( x < max( alphas) ) {
+            sigLevel <- '*'
+        } else {
+            sigLevel <- 'ns'
+        }
+        return(sigLevel)
+    })
+}
+
+medianQuartile <- function(x){
+    out <- quantile(x, probs = c(0.25,0.5,0.75))
+    names(out) <- c("ymin","y","ymax")
+    return(out)
+}
+
+extractSigData <- function(
+    switchAnalyzeRlist,
+    alpha=0.05,
+    dIFcutoff = 0.1,
+    log2FCcutoff = 1,
+    featureToExtract = 'isoformUsage'
+) {
+    ### Test input
+    # done by the parrent functions
+    if (featureToExtract == 'all') {
+        return(switchAnalyzeRlist$isoformFeatures$iso_ref)
+    }
+
+    ### Extract sig iso usage
+    if (featureToExtract == 'isoformUsage') {
+        idsToExtract <-
+            switchAnalyzeRlist$isoformFeatures$iso_ref[which(
+                switchAnalyzeRlist$isoformFeatures$gene_switch_q_value < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            )]
+
+        return(idsToExtract)
+    }
+    if (featureToExtract == 'isoformExp') {
+        idsToExtract <- switchAnalyzeRlist$isoformFeatures$iso_ref[which(
+            switchAnalyzeRlist$isoformFeatures$iso_q_value < alpha &
+                abs(
+                    switchAnalyzeRlist$isoformFeatures$iso_log2_fold_change
+                ) > log2FCcutoff
+        )]
+        return(idsToExtract)
+    }
+    if (featureToExtract == 'geneExp') {
+        idsToExtract <- switchAnalyzeRlist$isoformFeatures$iso_ref[which(
+            switchAnalyzeRlist$isoformFeatures$gene_q_value < alpha &
+                abs(
+                    switchAnalyzeRlist$isoformFeatures$gene_log2_fold_change
+                ) > log2FCcutoff
+        )]
+        return(idsToExtract)
+    }
+}
+
+
+CDSSet <- function(cds) {
+    x <- new(
+        "CDSSet",
+        as.data.frame(cds)
+    )
+    return(x)
+}
+
+mfAllPairwiseFeatures <- function(aNameVec1) {
+    # convert to character
+    localNameVec1 <- as.character(aNameVec1)
+
+    selfcontained <- TRUE
+    between <- FALSE
+
+    if(length(localNameVec1) < 2 ) {
+        stop('Cannot make pairwise feautres with less than two elements')
+    }
+
+    # vectors to store result
+    tarLength <- (length(localNameVec1)* (length(localNameVec1)-1)) / 2
+    var1 <- character(length = tarLength)
+    var2 <- character(length = tarLength)
+
+    ### self contained
+    itteration <- 1
+    count <- 2
+    n <- length(localNameVec1)
+    for(i in 1:(n-1)) {
+        for(j in count:n) {
+            var1[itteration] <- localNameVec1[i]
+            var2[itteration] <- localNameVec1[j]
+
+            itteration <- itteration +1
+        }
+        count <- count +1
+    }
+
+    myCombinations <- data.frame(var1=var1, var2=var2, stringsAsFactors = F)
+
+    ### Correct back to numerif if they were that originally
+    if(is.numeric(aNameVec1)) {myCombinations$var1 <- as.numeric(myCombinations$var1)}
+
+    return(myCombinations)
 }

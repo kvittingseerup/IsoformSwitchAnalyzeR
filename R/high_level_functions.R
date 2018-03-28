@@ -290,7 +290,7 @@ isoformSwitchAnalysisPart2 <- function(
         }
 
         switchAnalyzeRlist <-
-            analyzeIntronRetention(
+            analyzeAlternativeSplicing(
                 switchAnalyzeRlist = switchAnalyzeRlist,
                 onlySwitchingGenes = TRUE,
                 alpha = alpha,

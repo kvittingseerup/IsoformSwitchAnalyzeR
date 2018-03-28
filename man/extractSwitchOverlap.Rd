@@ -1,19 +1,19 @@
-\name{extractSwitchSummary}
-\alias{extractSwitchSummary}
+\name{extractSwitchOverlap}
+\alias{extractSwitchOverlap}
 
 \title{
-Summarize Isoform Switches test Result.
+Visualize Switch Overlap
 }
 \description{
-Summarize the number of switching isoforms/genes identifieds.
+This function produces two Venn diagrams respectively showing the overlap in switching isoforms and genes.
 }
 \usage{
-extractSwitchSummary(
+extractSwitchOverlap(
     switchAnalyzeRlist,
-    filterForConsequences=FALSE,
-    alpha=0.05,
+    filterForConsequences = FALSE,
+    alpha = 0.05,
     dIFcutoff = 0.1,
-    includeCombined=nrow(unique(switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_1')])) > 1
+    scaleVennIfPossible=TRUE
 )
 }
 
@@ -30,19 +30,18 @@ The cutoff which the (calibrated) fdr correct p-values must be smaller than for 
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
 }
-\item{includeCombined}{
-A logic indicating whether a combined summary accorss all comparisons should also be made. Default is TRUE if more than 1 comparison is analyzed and FALSE if only 1 comparison is analyzed.
+\item{scaleVennIfPossible}{
+A logic indicating whether the Venn diagram should be scaled (so the circle area and overlap size reflect the number of features) if possible. Only available for 2- and 3-way Venn Diagrams. Default is TRUE.
 }
 }
 
 \value{
-A \code{data.frame} with the number of switches found in each comparison (as well as when all data is considered if \code{includeCombined=TRUE})
+A venn diagram which shows the number of isoforms and genes with a isoform switch.
 }
 
 \references{
 \itemize{
     \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
 }
 }
 
@@ -52,20 +51,15 @@ Kristoffer Vitting-Seerup
 \seealso{
 \code{\link{preFilter}}\cr
 \code{\link{isoformSwitchTest}}\cr
-\code{\link{extractSwitchOverlap}}\cr
 \code{\link{extractTopSwitches}}\cr
+\code{\link{extractSwitchSummary}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 
 \examples{
 # Load example data and prefilter
-data("exampleSwitchList")
-exampleSwitchList <- preFilter(exampleSwitchList)
+data("exampleSwitchListAnalyzed")
 
-# Perfom test
-exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList)
-
-# extract summary of number of switching features
-extractSwitchSummary(exampleSwitchListAnalyzed)
+extractSwitchOverlap(exampleSwitchListAnalyzed)
 
 }

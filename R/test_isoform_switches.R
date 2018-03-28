@@ -385,7 +385,7 @@ isoformSwitchTest <- function(
             round(
                 nrow(myDiffData2) /
                     nrow(switchAnalyzeRlist$isoformFeatures) * 100,
-                  digits = 2)
+                digits = 2)
         if (!quiet) {
             message(
                 paste(
@@ -413,50 +413,84 @@ isoformSwitchTest <- function(
                 'condition_1', 'condition_2')
                 ], drop = TRUE)
 
-        ### Apply over each condition, do test, callibrate and correct p-values
-        myDiffData3 <-
-            do.call(
-                rbind,
-                llply(
-                    .data = myDiffData2List,
-                    .progress = progressBar,
-                    .fun = function(aDF) {
-                        # aDF <- myDiffData2List[[1]]
-                        ### Calculate standard error of dIF
-                        aDF$dIF_std_err <-
-                            sqrt(
-                                (aDF$IF_var_1 / aDF$nrReplicates_1) +
-                                    (aDF$IF_var_2 / aDF$nrReplicates_2)
-                            )
+        ### For each condition, do test,
+        myDiffData3list <- plyr::llply(
+            .data = myDiffData2List,
+            .progress = progressBar,
+            .fun = function(
+                aDF
+            ) {
+                # aDF <- myDiffData2List[[1]]
+                ### Calculate standard error of dIF
+                aDF$dIF_std_err <-
+                    sqrt(
+                        (aDF$IF_var_1 / aDF$nrReplicates_1) +
+                            (aDF$IF_var_2 / aDF$nrReplicates_2)
+                    )
 
-                        ### Calculate test statistics
-                        aDF$t_statistics <- aDF$dIF / aDF$dIF_std_err
+                ### Calculate test statistics
+                aDF$t_statistics <- aDF$dIF / aDF$dIF_std_err
 
-                        ### Calulate degrees of freedome
-                        aDF$deg_free <-
-                            (
-                                (aDF$IF_var_1 / aDF$nrReplicates_1) +
-                                    (aDF$IF_var_2 / aDF$nrReplicates_2)
-                            ) ^ 2    /    (((aDF$IF_var_1 ^ 2) / (
-                                aDF$nrReplicates_1 ^ 2 *
-                                    (aDF$nrReplicates_1 - 1)
-                            ))  +  ((aDF$IF_var_2 ^ 2) / (
-                                aDF$nrReplicates_2 ^ 2 *
-                                    (aDF$nrReplicates_2 - 1)
-                            )))
+                ### Calulate degrees of freedome
+                aDF$deg_free <-
+                    (
+                        (aDF$IF_var_1 / aDF$nrReplicates_1) +
+                            (aDF$IF_var_2 / aDF$nrReplicates_2)
+                    ) ^ 2    /    (((aDF$IF_var_1 ^ 2) / (
+                        aDF$nrReplicates_1 ^ 2 *
+                            (aDF$nrReplicates_1 - 1)
+                    ))  +  ((aDF$IF_var_2 ^ 2) / (
+                        aDF$nrReplicates_2 ^ 2 *
+                            (aDF$nrReplicates_2 - 1)
+                    )))
 
-                        ### Calculate p value
-                        aDF$p_value <-
-                            2 * pt(abs(aDF$t_statistics),
-                                   df = aDF$deg_free,
-                                   lower.tail = FALSE) # The 2* to make it two tailed
+                ### Calculate p value
+                aDF$p_value <-
+                    2 * pt(abs(aDF$t_statistics),
+                           df = aDF$deg_free,
+                           lower.tail = FALSE) # The 2* to make it two tailed
 
-                        aDF <- aDF[which(!is.na(aDF$p_value)),]
-                        if (nrow(aDF) == 0) {
-                            return(NULL)
-                        }
+                aDF <- aDF[which(!is.na(aDF$p_value)),]
+                if (nrow(aDF) == 0) {
+                    return(NULL)
+                }
+                return(aDF)
+            }
+        )
 
-                        ### Perform p-value callibration
+        ### Remove empty entries
+        myDiffData3list <- myDiffData3list[which(
+            sapply( myDiffData3list, nrow ) > 0
+        )]
+
+        ### Perform p-value callibration
+        stdQvals <- ! calibratePvalues
+        if( calibratePvalues ) {
+            ### Extract sigmas
+            mySigmaVals <- sapply(myDiffData3list, function(aDF) {
+                # Create subset of highly expressed isoforms
+                isoExpCutoff <-
+                    max(c(1, quantile(
+                        c(aDF$iso_value_1, aDF$iso_value_2) ,
+                        probs = 0.50
+                    )))
+
+                highlyExpressedIsoforms <- aDF[which(
+                    aDF$iso_value_1  > isoExpCutoff  &
+                        aDF$iso_value_2  > isoExpCutoff
+                ),]
+
+                # estimate sigma squared from highly expressed data
+                estimatedSigma2 <-
+                    pvcEstimateSigma2(highlyExpressedIsoforms$p_value)
+                return(estimatedSigma2)
+            })
+
+            allEligable <- all(mySigmaVals < 0.9 )
+            if( allEligable ) {
+                myDiffData3 <- do.call(
+                    rbind,
+                    lapply(myDiffData3list, function(aDF) {
                         # Create subset of highly expressed isoforms
                         isoExpCutoff <-
                             max(c(1, quantile(
@@ -466,32 +500,39 @@ isoformSwitchTest <- function(
 
                         highlyExpressedIsoforms <- aDF[which(
                             aDF$iso_value_1  > isoExpCutoff  &
-                            aDF$iso_value_2  > isoExpCutoff
-                            ),]
+                                aDF$iso_value_2  > isoExpCutoff
+                        ),]
 
                         # estimate sigma squared from highly expressed data
                         estimatedSigma2 <-
                             pvcEstimateSigma2(highlyExpressedIsoforms$p_value)
 
-                        # perform p-value callibration and adjusment
-                        if (calibratePvalues &
-                            estimatedSigma2 < 0.9) {
-                            # in accordance with article advice
-                            aDF$calibrated_p_values <-
-                                pvcApplySigma(pvalues = aDF$p_value,
-                                              sigma2new = estimatedSigma2)
-                            aDF$isoform_switch_q_value <-
-                                p.adjust(aDF$calibrated_p_values, method = 'BH')
-                        } else {
-                            aDF$calibrated_p_values <- NA
-                            aDF$isoform_switch_q_value <-
-                                p.adjust(aDF$p_value , method = 'BH')
-                        }
-
+                        # in accordance with article advice
+                        aDF$calibrated_p_values <-
+                            pvcApplySigma(pvalues = aDF$p_value,
+                                          sigma2new = estimatedSigma2)
+                        aDF$isoform_switch_q_value <-
+                            p.adjust(aDF$calibrated_p_values, method = 'BH')
                         return(aDF)
-                    }
+                    })
                 )
+            } else {
+                warning('Not all comparisons were eligible for p-value callibration. No comparisons were callibration')
+                stdQvals <- TRUE
+            }
+        }
+        if( stdQvals ) {
+            myDiffData3 <- do.call(
+                rbind,
+                plyr::llply(myDiffData3list, function(aDF) {
+                    aDF$calibrated_p_values <- NA
+                    aDF$isoform_switch_q_value <-
+                        p.adjust(aDF$p_value , method = 'BH')
+                    return(aDF)
+                })
             )
+        }
+
 
         ### Extrapolate to gene level
         geneQlevel <- sapply(
@@ -1245,6 +1286,191 @@ extractSwitchSummary <- function(
     return(myNumbers)
 }
 
+extractSwitchOverlap <- function(
+    switchAnalyzeRlist,
+    filterForConsequences = FALSE,
+    alpha = 0.05,
+    dIFcutoff = 0.1,
+    scaleVennIfPossible=TRUE
+) {
+    ### Test input
+    if (TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(paste(
+                'The object supplied to \'switchAnalyzeRlist\' must',
+                'be a \'switchAnalyzeRlist\''
+            ))
+        }
+        if (!any(!is.na(
+            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
+        ))) {
+            stop(paste(
+                'The analsis of isoform switching must be performed before',
+                'functional consequences can be analyzed. Please run ?isoformSwitchTest and try again.'
+            ))
+        }
+        if (filterForConsequences) {
+            if (!'switchConsequencesGene' %in%
+                colnames(switchAnalyzeRlist$isoformFeatures)) {
+                stop(paste(
+                    'The switchAnalyzeRlist does not contain isoform',
+                    'switching analysis. Please run the',
+                    '\'isoformSwitchTest\' function first.'
+                ))
+            }
+        }
+        if (alpha < 0 |
+            alpha > 1) {
+            warning('The alpha parameter must be between 0 and 1 ([0,1]).')
+        }
+        if (alpha > 0.05) {
+            warning(paste(
+                'Most journals and scientists consider an alpha larger',
+                'than 0.05 untrustworthy. We therefore recommend using',
+                'alpha values smaller than or queal to 0.05'
+            ))
+        }
+        if (dIFcutoff < 0 | dIFcutoff > 1) {
+            stop('The dIFcutoff must be in the interval [0,1].')
+        }
+
+        nCon <- nrow(unique( switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_2')]))
+        if( nCon > 5 ) {
+            stop('Venn Diagrams unfortunatly only support up to 5 comparisons')
+        }
+        if( nCon < 2 ) {
+            stop('One cannot make a Venn Diagram with only one condition')
+        }
+
+    }
+
+    ### Helper function
+    mfGGplotColors <- function(n) {
+        hues = seq(15, 375, length=n+1)
+        hcl(h=hues, l=65, c=100)[1:n]
+    }
+
+    backUpDf <-
+        unique(switchAnalyzeRlist$isoformFeatures[, c(
+            'condition_1', 'condition_2'
+        )])
+    backUpDf <-
+        data.frame(
+            Comparison = paste(
+                backUpDf$condition_1,
+                backUpDf$condition_2, sep = ' vs '),
+            nrIsoforms = 0,
+            nrGenes = 0,
+            stringsAsFactors = FALSE
+        )
+
+    ### Extract data needed
+    if(TRUE) {
+        columnsToExtract <-
+            c(
+                'isoform_id',
+                'gene_id',
+                'condition_1',
+                'condition_2',
+                'dIF',
+                'isoform_switch_q_value',
+                'gene_switch_q_value',
+                'switchConsequencesGene'
+            )
+
+        isoResTest <-
+            any(!is.na(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+            ))
+        if (isoResTest) {
+            dataDF <- switchAnalyzeRlist$isoformFeatures[which(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            ),
+            na.omit(match(
+                columnsToExtract,
+                colnames(switchAnalyzeRlist$isoformFeatures)
+            ))]
+        } else {
+            dataDF <- switchAnalyzeRlist$isoformFeatures[which(
+                switchAnalyzeRlist$isoformFeatures$gene_switch_q_value    < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            ),
+            na.omit(match(
+                columnsToExtract,
+                colnames(switchAnalyzeRlist$isoformFeatures)
+            ))]
+        }
+        if (nrow(dataDF) == 0) {
+            return(backUpDf)
+        }
+
+        if (filterForConsequences) {
+            dataDF <- dataDF[which(dataDF$switchConsequencesGene), ]
+            if (nrow(dataDF) == 0) {
+                return(backUpDf)
+            }
+        }
+    }
+
+    ### Make venn diagrams
+    dataDF$comparison <- paste0(
+        dataDF$condition_1,
+        '\nvs\n',
+        dataDF$condition_2
+    )
+
+    geneList <- split(dataDF$gene_id   , dataDF$comparison)
+    isoList  <- split(
+        paste0(dataDF$isoform_id, sign(dataDF$dIF)),
+        dataDF$comparison
+    )
+
+    geneList <- lapply(geneList, unique)
+    isoList <- lapply(isoList, unique)
+
+    ### Assign colors and alpha
+    n <- length(isoList)
+    vennColors <- mfGGplotColors(n)
+    localAlpha <- ifelse(n==2, 0.6, 0.4)
+
+    ### Suppress venn log files
+    futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+
+    isoVenn <- VennDiagram::venn.diagram(
+        x = isoList,
+        euler.d=scaleVennIfPossible,
+        scale=scaleVennIfPossible,
+        col='transparent',
+        alpha=localAlpha,
+        fill=vennColors,
+        filename=NULL,
+        main='Overlap in Switching Isoforms'
+    )
+    geneVenn <- VennDiagram::venn.diagram(
+        x = geneList,
+        euler.d=scaleVennIfPossible,
+        scale=scaleVennIfPossible,
+        col='transparent',
+        alpha=localAlpha,
+        fill=vennColors,
+        filename=NULL,
+        main='Overlap in Switching Genes'
+    )
+
+    ### Plot them together.
+    grid.newpage()
+    pushViewport(plotViewport(layout=grid.layout(1, 7)))
+    pushViewport(plotViewport(layout.pos.col=1:3))
+    grid.draw(isoVenn)
+    popViewport()
+    pushViewport(plotViewport(layout.pos.col=5:7))
+    grid.draw(geneVenn)
+    popViewport()
+
+
+}
+
 ### Extract
 extractTopSwitches <- function(
     switchAnalyzeRlist,
@@ -1442,8 +1668,10 @@ extractTopSwitches <- function(
                 )
 
             dataDF2$comparison <- NULL
+
         }
 
+        dataDF2$Rank <- 1:nrow(dataDF2)
         return(dataDF2)
     }
 
@@ -1566,6 +1794,8 @@ extractTopSwitches <- function(
         dataDF2$IF1 <- round(dataDF2$IF1, digits = 3)
         dataDF2$IF2 <- round(dataDF2$IF2, digits = 3)
         dataDF2$dIF <- round(dataDF2$dIF, digits = 3)
+
+        dataDF2$Rank <- 1:nrow(dataDF2)
 
         return(dataDF2)
     }

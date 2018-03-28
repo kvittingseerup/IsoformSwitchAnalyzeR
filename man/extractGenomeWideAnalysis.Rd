@@ -1,8 +1,9 @@
-\name{extractGenomeWideAnalysis}
+\name{extractConsequenceGenomeWide}
+\alias{extractConsequenceGenomeWide}
 \alias{extractGenomeWideAnalysis}
 
 \title{
-Genome wide Analysis of Changes in Isoform Features
+Genome wide Analysis of Consequences due to isoform switching
 }
 
 \description{
@@ -16,6 +17,20 @@ This function offers both vizualization of the result as well as analysis via su
 }
 
 \usage{
+extractConsequenceGenomeWide(
+    switchAnalyzeRlist,
+    featureToExtract = 'isoformUsage',
+    annotationToAnalyze = 'all',
+    alpha=0.05,
+    dIFcutoff = 0.1,
+    log2FCcutoff = 1,
+    violinPlot=TRUE,
+    alphas=c(0.05, 0.001),
+    localTheme=theme_bw(),
+    plot=TRUE,
+    returnResult=TRUE
+)
+
 extractGenomeWideAnalysis(
     switchAnalyzeRlist,
     featureToExtract = 'isoformUsage',
@@ -29,6 +44,7 @@ extractGenomeWideAnalysis(
     plot=TRUE,
     returnResult=TRUE
 )
+
 }
 
 \arguments{
@@ -36,20 +52,18 @@ extractGenomeWideAnalysis(
 
 \item{featureToExtract}{
 This argument, given as a string, defines the set isoforms which should be analyzed. The advailable options are:
-\itemize{
-    \item {\code{'isoformUsage'} (Default): Analyze a subset of isoforms defined by change in isoform usage (controlled by \code{dIFcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
-    \item {\code{'isoformExp'} :Analyze a subset of isoforms defined by change in isoform expression (controlled by \code{log2FCcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
-    \item {\code{'geneExp'} :Analyze all isoforms from a subset of genes defined by by change in gene expression (controlled by \code{log2FCcutoff}) and the significance of the change in gene expression (controlled by \code{alpha})}
-    \item {\code{'all'} : Analyze all isoforms stored in the switchAnalyzeRlist (note that this is highly depending on the parameter \code{reduceToSwitchingGenes} in \link{isoformSwitchTest} - which should be set to FALSE (default is TRUE) if the 'all' option should be used here).}
-}
+    \itemize{
+        \item {\code{'isoformUsage'} (Default): Analyze a subset of isoforms defined by change in isoform usage (controlled by \code{dIFcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
+        \item {\code{'isoformExp'} :Analyze a subset of isoforms defined by change in isoform expression (controlled by \code{log2FCcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
+        \item {\code{'geneExp'} :Analyze all isoforms from a subset of genes defined by by change in gene expression (controlled by \code{log2FCcutoff}) and the significance of the change in gene expression (controlled by \code{alpha})}
+        \item {\code{'all'} : Analyze all isoforms stored in the switchAnalyzeRlist (note that this is highly depending on the parameter \code{reduceToSwitchingGenes} in \link{isoformSwitchTest} - which should be set to FALSE (default is TRUE) if the 'all' option should be used here).}
+    }
 }
 
-\item{annotationToAnalyze}{
-A vector of strings indicating what categories of annotation to analyze. Annotation types given here but not (yet) analyzed in the \code{switchAnalyzeRlist} will not be plotted. See details for full list of usable strings, their meaning and dependencies. Default is 'All'.
+\item{annotationToAnalyze}{ A vector of strings indicating what categories of annotation to analyze. Annotation types given here but not (yet) analyzed in the \code{switchAnalyzeRlist} will not be plotted. See details for full list of usable strings, their meaning and dependencies. Default is 'All'.
 }
 
 \item{alpha}{The cutoff which the FDR correct p-values (q-values) must be smaller than for calling significant switches. Defualit is 0.05.}
-
 \item{dIFcutoff}{The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed signicant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).}
 
 \item{log2FCcutoff}{The cutoff which the changes in (absolute) isoform or gene expression must be larger than before an isoform is considered for inclusion.}
@@ -57,7 +71,6 @@ A vector of strings indicating what categories of annotation to analyze. Annotat
 \item{violinPlot}{
 A logical indicating whether to make a violin plots (if TRUE) or boxplots (if FALSE). Violin plots will always have added 3 black dots, one of each of the 25th, 50th (median) and 75th percentile of the data. Default is TRUE.
 }
-
 \item{alphas}{
 A numeric vector of length two giving the significance levels represented in plots. The numbers indicate the q-value cutoff for significant (*) and highly significant (***) respecitively. Default 0.05 and 0.001 which should be interpret as q<0.05 and q<0.001 respectively). If q-values are higher than this they will be annotated as 'ns' (not significant).
 }
@@ -76,9 +89,12 @@ A logical indicating whether to return a data.frame with summary statistics of t
 }
 
 \details{
+\code{extractGenomeWideAnalysis} is just a wrapper for \code{extractGenomeWideConsequenceAnalysis} included for backward compatability.
+
+
 Changes in isoform usage are measure as the difference in isoform fraction (dIF) values, where isoform fraction (IF) values are calculated as <isoform_exp> / <gene_exp>.\cr
 
-The significance indicated in the plot is based on FDR corrected p-values from the wilcox.test.\cr
+The significance test is performed with R's build in \code{wilcox.test()} (aka 'Mann-Whitney-U') with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg). \cr
 
 The arguments passed to \code{annotationToAnalyze} must be a combination of:
 \itemize{
@@ -116,11 +132,13 @@ Kristoffer Vitting-Seerup
 \seealso{
 \code{\link{isoformSwitchTest}}\cr
 \code{\link{analyzeORF}}\cr
-\code{\link{analyzeIntronRetention}}\cr
+\code{\link{analyzeAlternativeSplicing}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
-\code{\link{analyzeSwitchConsequences}}
+\code{\link{analyzeSwitchConsequences}}\cr
+\code{\link{extractConsequenceEnrichment}}\cr
+\code{\link{extractConsequenceEnrichmentComparison}}
 }
 
 \examples{
@@ -128,13 +146,10 @@ Kristoffer Vitting-Seerup
 data("exampleSwitchListAnalyzed")
 
 ### make the genome wide analysis
-symmaryStatistics <- extractGenomeWideAnalysis(
+symmaryStatistics <- extractConsequenceGenomeWide(
     switchAnalyzeRlist = exampleSwitchListAnalyzed,
     featureToExtract = 'isoformUsage', # alternatives are 'isoformExp' and 'geneExp'
     plot=TRUE,
     returnResult = TRUE
 )
-
-### Extract the summary statistics of the highly significant cases
-subset(symmaryStatistics, symmaryStatistics$wilcoxQval < 0.001)
 }

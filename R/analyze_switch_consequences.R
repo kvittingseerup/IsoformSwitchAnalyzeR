@@ -1,3 +1,4 @@
+### For analyzing consequences
 analyzeSwitchConsequences <- function(
     switchAnalyzeRlist,
     consequencesToAnalyze = c(
@@ -102,7 +103,7 @@ analyzeSwitchConsequences <- function(
 
         ## Test whether annotation is advailable
         if ('intron_retention'  %in% consequencesToAnalyze) {
-            if (is.null(switchAnalyzeRlist$intronRetentionAnalysis)) {
+            if (is.null(switchAnalyzeRlist$intronRetentionAnalysis) & is.null( switchAnalyzeRlist$AlternativeSplicingAnalysis)) {
                 stop(
                     'To test for intron retention alternative splicing must first be classified. Please run analyzeIntronRetention() and try again.'
                 )
@@ -617,7 +618,7 @@ compareAnnotationOfTwoIsoforms <- function(
 
         ## Test whether annotation is advailable
         if ('intron_retention'  %in% consequencesToAnalyze) {
-            if (is.null(switchAnalyzeRlist$intronRetentionAnalysis)) {
+            if (is.null(switchAnalyzeRlist$intronRetentionAnalysis) & is.null( switchAnalyzeRlist$AlternativeSplicingAnalysis)) {
                 stop(
                     'To test for intron retention alternative splicing must first be classified. Please run analyzeIntronRetention() and try again.'
                 )
@@ -810,11 +811,20 @@ compareAnnotationOfTwoIsoforms <- function(
 
         ### intron retention data
         if ('intron_retention' %in% consequencesToAnalyze) {
-            localIRdata <-
-                switchAnalyzeRlist$intronRetentionAnalysis[which(
-                    switchAnalyzeRlist$intronRetentionAnalysis$isoform_id %in%
-                        isoformsToAnalyze
-                ), ]
+            if( is.null( switchAnalyzeRlist$AlternativeSplicingAnalysis) ) {
+                localIRdata <-
+                    switchAnalyzeRlist$intronRetentionAnalysis[which(
+                        switchAnalyzeRlist$intronRetentionAnalysis$isoform_id %in%
+                            isoformsToAnalyze
+                    ), ]
+            } else {
+                localIRdata <-
+                    switchAnalyzeRlist$AlternativeSplicingAnalysis[which(
+                        switchAnalyzeRlist$AlternativeSplicingAnalysis$isoform_id %in%
+                            isoformsToAnalyze
+                    ), ]
+            }
+
             if (nrow(localIRdata) != 2) {
                 warning(
                     paste(
@@ -1231,7 +1241,6 @@ compareAnnotationOfTwoIsoforms <- function(
                 differentintron_structure
         }
 
-        ### Intron retention by analyzing spliceR annotation
         if ('intron_retention'          %in% consequencesToAnalyze) {
             if (all(!is.na(transcriptData$IR))) {
                 differentNrIR <-
@@ -1950,7 +1959,7 @@ compareAnnotationOfTwoIsoforms <- function(
 }
 
 
-
+### Summarizing consequences
 extractConsequenceSummary <- function(
     switchAnalyzeRlist,
     consequencesToAnalyze = 'all',
@@ -1990,16 +1999,14 @@ extractConsequenceSummary <- function(
         if (dIFcutoff < 0 | dIFcutoff > 1) {
             stop('The dIFcutoff must be in the interval [0,1].')
         }
-        if (asFractionTotal) {
-            if (alpha < 0 |
-                alpha > 1) {
-                warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
-            }
-            if (alpha > 0.05) {
-                warning(
-                    'Most journals and scientists consider an alpha larger than 0.05 untrustworthy. We therefore recommend using alpha values smaller than or queal to 0.05'
-                )
-            }
+        if (alpha < 0 |
+            alpha > 1) {
+            warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
+        }
+        if (alpha > 0.05) {
+            warning(
+                'Most journals and scientists consider an alpha larger than 0.05 untrustworthy. We therefore recommend using alpha values smaller than or queal to 0.05'
+            )
         }
 
         ### Consequences to analyze
@@ -2246,4 +2253,887 @@ extractConsequenceSummary <- function(
         return(myNumbers)
     }
 
+}
+
+extractConsequenceEnrichment <- function(
+    switchAnalyzeRlist,
+    consequencesToAnalyze = 'all',
+    alpha=0.05,
+    dIFcutoff = 0.1,
+    analysisOppositeConsequence=FALSE,
+    plot=TRUE,
+    localTheme = theme_bw(base_size = 12),
+    returnResult=FALSE,
+    returnSummary=TRUE
+) {
+    ### Test input
+    if (TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+
+        # test wether switching have been analyzed
+        if (!any(!is.na(
+            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
+        ))) {
+            stop(
+                'The analsis of isoform switching must be performed before functional consequences can be analyzed. Please run detectIsoformSwitching() and try again.'
+            )
+        }
+        # test whether switches have been predicted
+        if (is.null(switchAnalyzeRlist$switchConsequence)) {
+            stop(
+                'The analsis of isoform switch consequences must be performed before it can be summarized. Please use analyzeSwitchConsequences() and try again.'
+            )
+        }
+
+        # input format
+        if (dIFcutoff < 0 | dIFcutoff > 1) {
+            stop('The dIFcutoff must be in the interval [0,1].')
+        }
+        if (alpha < 0 |
+            alpha > 1) {
+            warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
+        }
+        if (alpha > 0.05) {
+            warning(
+                'Most journals and scientists consider an alpha larger than 0.05 untrustworthy. We therefore recommend using alpha values smaller than or queal to 0.05'
+            )
+        }
+
+        ### Consequences to analyze
+        acceptedTypes <- c(
+            # Transcript
+            'tss',
+            'tts',
+            'last_exon',
+            'isoform_length',
+            'isoform_seq_similarity',
+            'exon_number',
+            'intron_structure',
+            'intron_retention',
+            'isoform_class_code',
+            # cpat
+            'coding_potential',
+            # ORF
+            'ORF_genomic',
+            'ORF_length',
+            '5_utr_length',
+            '3_utr_length',
+            'ORF_seq_similarity',
+            '5_utr_seq_similarity',
+            '3_utr_seq_similarity',
+            # ORF
+            'NMD_status',
+            # pfam
+            'domains_identified',
+            'genomic_domain_position',
+            'domain_length',
+            # SignalIP
+            'signal_peptide_identified'
+        )
+
+        if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
+            stop(
+                'The argument(s) supplied to \'typeOfconsequence\' are not accepted. Please see ?summarizeSwitchConsequences under details for description of which strings are allowed.'
+            )
+        }
+
+        consequencesAnalyzed <-
+            unique(switchAnalyzeRlist$switchConsequence$featureCompared)
+        if ('all' %in% consequencesToAnalyze) {
+            consequencesToAnalyze <- consequencesAnalyzed
+        }
+
+        consequencesNotAnalyzed <-
+            setdiff(consequencesToAnalyze, consequencesAnalyzed)
+        if (length(consequencesNotAnalyzed)) {
+            warning(
+                paste(
+                    'The following consequences appear not to have been analyzed and will therefor not be summarized:',
+                    paste(consequencesNotAnalyzed, collapse = ', '),
+                    sep = ' '
+                )
+            )
+        }
+
+
+    }
+
+    ### Get Consequences
+    localConseq <- switchAnalyzeRlist$switchConsequence[
+        which( !is.na(
+            switchAnalyzeRlist$switchConsequence$switchConsequence
+        ))
+        ,]
+    localConseq <- localConseq[which( ! grepl('switch', localConseq$switchConsequence)),]
+
+    ### make list with levels
+    levelList <- list(
+        tss=c('Tss more upstream','Tss more downstream'),
+        tts=c('Tts more downstream','Tts more upstream'),
+        last_exon=c('Last exon more downstream','Last exon more upstream'),
+        isoform_length=c('Length gain','Length loss'),
+        isoform_seq_similarity=c('Length gain','Length loss'),
+        exon_number=c('Exon gain','Exon loss'),
+        intron_retention=c('Intron retention gain','Intron retention loss'),
+        ORF_length=c('ORF is longer','ORF is shorter'),
+        ORF=c('Complete ORF loss','Complete ORF gain'),
+        x5_utr_length=c('5UTR is longer','5UTR is shorter'),
+        x3_utr_length=c('3UTR is longer','3UTR is shorter'),
+        NMD_status=c('NMD sensitive','NMD insensitive'),
+        coding_potential=c('Transcript is coding','Transcript is Noncoding'),
+        domains_identified=c('Domain gain','Domain loss'),
+        domain_length=c('Domain length gain','Domain length loss'),
+        signal_peptide_identified=c('Signal peptide gain','Signal peptide loss')
+    )
+    levelListDf <- ldply(levelList, function(x) data.frame(feature=x, stringsAsFactors = FALSE))
+
+    ### Add consequence paris
+    localConseq$conseqPair <- levelListDf$.id[match(localConseq$switchConsequence, levelListDf$feature)]
+    localConseq <- localConseq[which( !is.na(localConseq$conseqPair)),]
+
+    ### Subset to consequences analyzed
+    localConseq <- localConseq[which(
+        localConseq$featureCompared %in% consequencesToAnalyze
+    ),]
+
+    ### Subset to significant features
+    if(TRUE) {
+        ### Extract Sig iso
+        isoResTest <-
+            any(!is.na(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+            ))
+        if (isoResTest) {
+            sigIso <- switchAnalyzeRlist$isoformFeatures[which(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            ),
+            c('iso_ref', 'gene_ref')]
+        } else {
+            sigIso <- switchAnalyzeRlist$isoformFeatures[which(
+                switchAnalyzeRlist$isoformFeatures$gene_switch_q_value < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            ),
+            c('iso_ref', 'gene_ref')]
+        }
+
+        if(isoResTest) {
+            localConseq <- localConseq[which(
+                localConseq$iso_ref_down %in% sigIso$iso_ref |
+                localConseq$iso_ref_up   %in% sigIso$iso_ref
+            ),]
+
+        } else {
+            localConseq <- localConseq[which(
+                localConseq$gene_ref %in% sigIso$gene_ref
+            ),]
+        }
+    }
+
+
+    ### Summarize gain vs loss for each AStype in each condition
+    consequenceBalance <- ddply(
+        .data = localConseq,
+        .variables = c('condition_1','condition_2','conseqPair'),
+        #.inform = TRUE,
+        .fun = function(aDF) { # aDF <- localConseq[1:20,]
+            ### Add levels
+            if(analysisOppositeConsequence) {
+                localLvl <- rev(sort(
+                    levelList[[ aDF$conseqPair[1] ]]
+                ))
+            } else {
+                localLvl <- sort(
+                    levelList[[ aDF$conseqPair[1] ]]
+                )
+            }
+            aDF$switchConsequence <- factor(
+                aDF$switchConsequence,
+                levels=localLvl
+            )
+
+            ### Summarize category
+            localNumber <- as.data.frame(table(aDF$switchConsequence))
+
+            if(nrow(localNumber) == 2) {
+                localTest <- suppressWarnings(
+                    prop.test(localNumber$Freq[1], sum(localNumber$Freq))
+                )
+
+                localRes <- data.frame(
+                    feature=paste0(
+                        localNumber$Var1[1],
+                        ' (paired with ',
+                        localNumber$Var1[2],
+                        ')'
+                    ),
+                    propOfRelevantEvents=localTest$estimate,
+                    stringsAsFactors = FALSE
+                )
+
+                localRes$propCiLo <- min(localTest$conf.int)
+                localRes$propCiHi <- max(localTest$conf.int)
+                localRes$propPval <- localTest$p.value
+            } else {
+                warning('Somthing strange happend - contact developer with reproducible example')
+            }
+
+            localRes$nUp   <- localNumber$Freq[which( localNumber$Var1 == levels(localNumber$Var1)[1] )]
+            localRes$nDown <- localNumber$Freq[which( localNumber$Var1 == levels(localNumber$Var1)[2] )]
+
+            return(localRes)
+        }
+    )
+
+    ### Plot result
+    consequenceBalance$propQval <- p.adjust(consequenceBalance$propPval)
+    consequenceBalance$Significant <- consequenceBalance$propQval < alpha
+
+    ### Add comparison
+    consequenceBalance$Comparison <- paste(
+        consequenceBalance$condition_1,
+        'vs',
+        consequenceBalance$condition_2,
+        sep='\n'
+    )
+
+    ### Massage
+    consequenceBalance$feature2 <- gsub(' \\(', '\n(', consequenceBalance$feature)
+    consequenceBalance$feature2 <- gsub('with ', 'with\n', consequenceBalance$feature2)
+
+    consequenceBalance$feature2 <- factor(
+        consequenceBalance$feature2,
+        levels = rev(sort(unique(as.character(consequenceBalance$feature2))))
+    )
+
+
+    if(plot) {
+        consequenceBalance$feature2 <- gsub('with\n','with ', consequenceBalance$feature2)
+
+        g1 <- ggplot(data=consequenceBalance, aes(y=feature2, x=propOfRelevantEvents, color=Significant)) +
+            geom_point(size=4) +
+            geom_errorbarh(aes(xmax = propCiLo, xmin=propCiHi), height = .3) +
+            facet_wrap(~Comparison) +
+            geom_vline(xintercept=0.5, linetype='dashed') +
+            labs(
+                x='Fraction of switches having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)',
+                y='Consequence of Isoform Switch\n(and the opposing consequence)') +
+            localTheme +
+            scale_color_manual('Significant', values=c('black','red')) +
+            coord_cartesian(xlim=c(0,1))
+
+        print(g1)
+    }
+
+    if(returnResult) {
+        if(returnSummary) {
+            consequenceBalance$feature2 <- NULL
+            consequenceBalance$Comparison <- NULL
+
+            return(consequenceBalance)
+
+        } else {
+            return(localConseq)
+        }
+    }
+}
+
+extractConsequenceEnrichmentComparison <- function(
+    switchAnalyzeRlist,
+    consequencesToAnalyze = 'all',
+    alpha=0.05,
+    dIFcutoff = 0.1,
+    analysisOppositeConsequence=FALSE,
+    plot=TRUE,
+    localTheme = theme_bw(base_size = 14),
+    returnResult=FALSE
+) {
+    ### Extract splicing enrichment
+    conseqCount <- extractConsequenceEnrichment(
+        switchAnalyzeRlist = switchAnalyzeRlist,
+        consequencesToAnalyze = consequencesToAnalyze,
+        alpha = alpha,
+        dIFcutoff = dIFcutoff,
+        analysisOppositeConsequence=analysisOppositeConsequence,
+        plot = FALSE,
+        returnResult = TRUE
+    )
+    conseqCount$Comparison <- paste0(
+        conseqCount$condition_1,
+        '\nvs\n',
+        conseqCount$condition_2
+    )
+
+    ### Extract pairs
+    conseqPairs <- split(as.character(unique(conseqCount$feature)), unique(conseqCount$feature))
+
+    ### Make each pairwise comparison
+    myComparisons <- mfAllPairwiseFeatures( unique(conseqCount$Comparison) )
+
+    ### Loop over each pariwise comparison
+    fisherRes <- ddply(myComparisons, c('var1','var2'), function(localComparison) { # localComparison <- myComparisons[1,]
+        ### Loop over each
+        localAsRes <- ldply(conseqPairs, .inform = T, function(localConseq) { # localConseq <- 'domains_identified'
+            ### Extract local data
+            localSpliceCount1 <- conseqCount[which(
+                conseqCount$Comparison %in% c(localComparison$var1, localComparison$var2) &
+                    conseqCount$feature == localConseq
+            ),]
+
+            if(
+                nrow(localSpliceCount1) != 2 |
+                any(is.na(localSpliceCount1[,c('nUp','nDown')]))
+            ) {
+                return(NULL)
+            }
+
+            ### Test difference
+            fisherResult <- fisher.test(localSpliceCount1[,c('nUp','nDown')])
+
+            ###
+            fisherTestResult <- data.frame(odds_ratio=fisherResult$estimate, p_value=fisherResult$p.value, lowCI=fisherResult$conf.int[1], highCI=fisherResult$conf.int[2])
+            rownames(fisherTestResult) <- NULL
+
+            localSpliceCount1$fisherPvalue <- fisherTestResult$p_value
+
+            localSpliceCount1$pair <- 1:2
+
+            return(
+                localSpliceCount1[,c('Comparison','propOfRelevantEvents','propCiLo','propCiHi','fisherPvalue','pair')]
+            )
+        })
+
+        colnames(localAsRes)[1] <- 'consequence'
+
+        return(localAsRes)
+    })
+
+    ### Add comparison
+    fisherRes$comp <- paste(
+        gsub('\\n',' ',fisherRes$var1),
+        gsub('\\n',' ',fisherRes$var2),
+        sep='\ncompared to\n'
+    )
+
+    ### Multiple test correction
+    # perform correction for pair = 1 (to avoid correcting twice for the same pair)
+    tmp <- fisherRes[which(fisherRes$pair == 1),]
+    tmp$fisherQvalue <- p.adjust(tmp$fisherPvalue, method = 'fdr')
+
+    fisherRes$fisherQvalue <- tmp$fisherQvalue[match(
+        paste0(fisherRes$var1, fisherRes$var2, fisherRes$consequence),
+        paste0(tmp$var1, tmp$var2, tmp$consequence)
+    )]
+    fisherRes$Significant <- fisherRes$fisherQvalue < alpha
+
+
+    ### Plot
+    if(plot) {
+        fisherRes2 <- fisherRes
+        fisherRes2$consequence <- gsub(' \\(paired','\n\\(paired', fisherRes2$consequence)
+        fisherRes2$consequence <- gsub('with ','with\n', fisherRes2$consequence)
+
+
+        g1 <- ggplot(data=fisherRes2, aes(y=Comparison, x=propOfRelevantEvents, color=Significant)) +
+            geom_point(size=4) +
+            geom_errorbarh(aes(xmax = propCiHi, xmin=propCiLo), height = .3) +
+            facet_grid(comp~consequence, scales = 'free_y') +
+            geom_vline(xintercept=0.5, linetype='dashed') +
+            labs(x='Fraction of alternative splicing events being gains\n(compared to losses)\n(with 95% confidence interval)', y='Comparison') +
+            scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red')) +
+            localTheme +
+            theme(strip.text.y = element_text(angle = 0)) +
+            coord_cartesian(xlim=c(0,1))
+        print(g1)
+    }
+
+    if(returnResult) {
+        fisherRes$pair <- paste0('propUp_comparison_', fisherRes$pair)
+        colnames(fisherRes)[which(colnames(fisherRes) == 'propOfRelevantEvents')] <- 'propUp'
+
+        fisherRes2 <- reshape2::dcast(data = fisherRes, comp + consequence ~ pair, value.var=c('propUp'))
+
+        fisherRes2$fisherQvalue <- tmp$fisherQvalue[match(
+            paste0(fisherRes2$comp, fisherRes2$consequence),
+            paste0(tmp$comp, tmp$consequence)
+        )]
+        fisherRes2$Significant <- fisherRes2$fisherQvalue < alpha
+        colnames(fisherRes2)[1] <- 'comparisonsCompared'
+        fisherRes2$comparisonsCompared <- gsub('\\n', ' ', fisherRes2$comparisonsCompared)
+        return(fisherRes2)
+    }
+
+}
+
+extractConsequenceGenomeWide <- function(
+    switchAnalyzeRlist,
+    featureToExtract = 'isoformUsage',
+    annotationToAnalyze = 'all',
+    alpha=0.05,
+    dIFcutoff = 0.1,
+    log2FCcutoff = 1,
+    violinPlot=TRUE,
+    alphas=c(0.05, 0.001),
+    localTheme=theme_bw(),
+    plot=TRUE,
+    returnResult=TRUE
+) {
+    ### Test input
+    if (TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        if (alpha < 0 |
+            alpha > 1) {
+            warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
+        }
+        if (alpha > 0.05) {
+            warning(
+                'Most journals and scientists consider an alpha larger than 0.05 untrustworthy. We therefore recommend using alpha values smaller than or queal to 0.05'
+            )
+        }
+        if (dIFcutoff < 0 | dIFcutoff > 1) {
+            stop('The dIFcutoff must be in the interval [0,1].')
+        }
+        if (log2FCcutoff < 0) {
+            stop(
+                'The log2FCcutoff cannot be negative (as the cutoff is applied to absolute values)'
+            )
+        }
+        if (length(alphas) != 2) {
+            stop('A vector of length 2 must be given to the argument \'alphas\'')
+        }
+        if (any(alphas < 0) |
+            any(alphas > 1)) {
+            stop('The \'alphas\' parameter must be numeric between 0 and 1 ([0,1]).')
+        }
+        if (any(alphas > 0.05)) {
+            warning(
+                'Most journals and scientists consider an alpha larger than 0.05 untrustworthy. We therefore recommend using alpha values smaller than or queal to 0.05'
+            )
+        }
+        if (!featureToExtract %in%
+            c('isoformUsage', 'isoformExp', 'geneExp', 'all')
+        ) {
+            stop(
+                'The \'featureToExtract\' argument must be  \'isoformUsage\', \'isoformExp\',  \'geneExp\' or \'all\''
+            )
+        }
+
+        ### Check annotation
+        okAnnot <-
+            c(
+                'ORF',
+                'NMD_status',
+                'coding_potential',
+                'signal_peptide_identified',
+                'domains_identified',
+                'intron_retention',
+                'switch_consequences',
+                'isoform_class_code'
+            )
+        if ('all' %in% annotationToAnalyze) {
+            annotationToAnalyze <- okAnnot
+        }
+        if (!all(annotationToAnalyze %in% okAnnot)) {
+            stop(
+                paste(
+                    'The \'annotationToAnalyze\' argument must be a one (or multiple) of: \'',
+                    paste(annotationToAnalyze, collapse = '\', \''),
+                    '\'',
+                    sep = ''
+                )
+            )
+        }
+
+        ### Replace with annotaion names with collum names
+        annotToExtract <-
+            unique(gsub('NMD_status|ORF', 'PTC', annotationToAnalyze))
+        annotToExtract <- gsub(
+            'coding_potential',
+            'codingPotential',
+            annotToExtract
+        )
+        annotToExtract <- gsub(
+            'domains_identified'  ,
+            'domain_identified',
+            annotToExtract
+        )
+        annotToExtract <-gsub(
+            'intron_retention',
+            'IR',
+            annotToExtract
+        )
+        annotToExtract <- gsub(
+            'switch_consequences' ,
+            'switchConsequencesGene',
+            annotToExtract
+        )
+        annotToExtract <- gsub(
+            'isoform_class_code',
+            'class_code',
+            annotToExtract
+        )
+
+        if (length(annotToExtract) == 0) {
+            stop(
+                'Somthing in the annoation decoding went wrong - please send a small example dataset reconstructing the mistake to the developers.'
+            )
+        }
+    }
+
+    ### Extract annotation
+    if (TRUE) {
+        switchAnalyzeRlist$isoformFeatures$comparison <- paste(
+            switchAnalyzeRlist$isoformFeatures$condition_1,
+            switchAnalyzeRlist$isoformFeatures$condition_2,
+            sep = ' vs '
+        )
+
+        isoformsToAnalyze <- extractSigData(
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            log2FCcutoff = log2FCcutoff,
+            featureToExtract = featureToExtract
+        )
+
+        colToExtract <-
+            c('iso_ref',
+              'isoform_id',
+              'comparison',
+              'IF1',
+              'IF2',
+              annotToExtract)
+        colToExtract <-
+            intersect(colToExtract,
+                      colnames(switchAnalyzeRlist$isoformFeatures))
+
+        isoData <- switchAnalyzeRlist$isoformFeatures[
+            which(
+                switchAnalyzeRlist$isoformFeatures$iso_ref %in%
+                    isoformsToAnalyze
+            ),
+            na.omit(match(
+                colToExtract ,
+                colnames(switchAnalyzeRlist$isoformFeatures)
+            ))
+            ]
+
+
+
+        if (nrow(isoData) == 0) {
+            stop('No data left after filtering')
+        }
+    }
+
+    ### Overwrite annotation with propper categories
+    if (TRUE) {
+        # ORF
+        if (!is.null(isoData$PTC) &
+            'ORF' %in% annotationToAnalyze) {
+            # ORF
+            isoData$ORF <- 'With ORF'
+            isoData$ORF[which(is.na(isoData$PTC))] <- 'Without ORF'
+        }
+        # PTC
+        if (!is.null(isoData$PTC) &
+            'NMD_status' %in% annotationToAnalyze) {
+            # PTC
+            isoData$PTC <-
+                ifelse(test = isoData$PTC,
+                       yes = 'NMD sensitive',
+                       no = 'NMD insensitive')
+        } else {
+            isoData$PTC <- NULL
+        }
+        # coding potential
+        if (!is.null(isoData$codingPotential)) {
+            isoData$codingPotential <-
+                ifelse(test = isoData$codingPotential,
+                       yes = 'Isoform is coding',
+                       no = 'Isoform is non-coding')
+        }
+        # signal peptide
+        if (!is.null(isoData$signal_peptide_identified)) {
+            isoData$signal_peptide_identified <-
+                ifelse(
+                    test = isoData$signal_peptide_identified == 'yes',
+                    yes = 'With signal peptide',
+                    no = 'Without signal peptide'
+                )
+        }
+        # protein domains
+        if (!is.null(isoData$domain_identified)) {
+            isoData$domain_identified <-
+                ifelse(
+                    test = isoData$domain_identified == 'yes',
+                    yes = 'With protein domain',
+                    no = 'Without protein domain'
+                )
+        }
+        # intron retention
+        if (!is.null(isoData$IR)) {
+            isoData$IR <-
+                ifelse(test = isoData$IR > 0,
+                       yes = 'With intron retention',
+                       no = 'Without intron retention')
+        }
+        # switch consequences
+        if (!is.null(isoData$switchConsequences)) {
+            isoData$switchConsequences <-
+                ifelse(
+                    test = isoData$switchConsequences,
+                    yes = 'With switch consequence',
+                    no = 'Without switch consequence'
+                )
+        }
+        # class code
+        if (!is.null(isoData$class_code)) {
+            isoData$class_code <-
+                paste('class code: \"', isoData$class_code, '\"', sep = '')
+        }
+    }
+
+    ### Prepare for plotting
+    if (TRUE) {
+        # melt categories
+        isoDataMelt <-
+            melt(isoData,
+                 id.vars = c(
+                     'iso_ref', 'isoform_id', 'comparison', 'IF1', 'IF2'
+                 ))
+        isoDataMelt <-
+            isoDataMelt[which(!is.na(isoDataMelt$value)), ]
+
+        # melt IF
+        colnames(isoDataMelt)[match(
+            c('variable', 'value'), colnames(isoDataMelt)
+        )] <- c('category', 'isoform_feature')
+        isoDataMelt <-
+            melt(
+                isoDataMelt,
+                id.vars = c(
+                    'iso_ref',
+                    'isoform_id',
+                    'comparison',
+                    'category',
+                    'isoform_feature'
+                )
+            )
+
+        # massage category
+        isoDataMelt$category <- as.character(isoDataMelt$category)
+
+        isoDataMelt$category <- gsub(
+            'PTC',
+            'NMD Status',
+            isoDataMelt$category
+        )
+        isoDataMelt$category <-
+            gsub('codingPotential',
+                 'Coding Potential',
+                 isoDataMelt$category)
+        isoDataMelt$category <-
+            gsub('signal_peptide_identified',
+                 'Signal Peptide',
+                 isoDataMelt$category)
+        isoDataMelt$category <-
+            gsub('domain_identified',
+                 'Protein Domains',
+                 isoDataMelt$category)
+        isoDataMelt$category <-
+            gsub('IR','Intron Retention',isoDataMelt$category)
+        isoDataMelt$category <-
+            gsub('switchConsequences',
+                 'Switch Consequence',
+                 isoDataMelt$category)
+        isoDataMelt$category <-
+            gsub('class_code','Isoform Class',isoDataMelt$category)
+
+        isoDataMelt$comparison2 <-
+            paste(isoDataMelt$comparison, '\n(IF1 vs IF2)', sep = '')
+    }
+
+    ### Calculate statistics
+    if (TRUE) {
+        mySigTest <-
+            ddply(
+                isoDataMelt,
+                .variables = c('comparison', 'category', 'isoform_feature'),
+                .drop = TRUE,
+                .fun = function(aDF) {
+                    data1 <- aDF$value[which(aDF$variable == 'IF1')]
+                    data2 <- aDF$value[which(aDF$variable == 'IF2')]
+
+                    myTest <- suppressWarnings(wilcox.test(data1,
+                                                           data2))
+
+                    myResult <- data.frame(
+                        n = length(data1),
+                        medianIF1 = median(data1),
+                        medianIF2 = median(data2)
+                    )
+                    myResult$medianDIF <-
+                        myResult$medianIF2 - myResult$medianIF1
+
+                    myResult$wilcoxPval <- myTest$p.value
+                    myResult$ymax <- max(c(data1, data2))
+
+                    return(myResult)
+                }
+            )
+        mySigTest$ymax <- mySigTest$ymax * 1.05
+        mySigTest$wilcoxQval <-
+            p.adjust(mySigTest$wilcoxPval, method = 'fdr')
+        mySigTest$significance <-
+            sapply(mySigTest$wilcoxQval, function(x)
+                evalSig(x, alphas))
+
+
+        mySigTest <-
+            ddply(
+                mySigTest,
+                .variables = 'category',
+                .fun = function(aDF) {
+                    aDF$isoform_feature <- factor(aDF$isoform_feature)
+                    aDF$idNr <- as.numeric(aDF$isoform_feature)
+                    return(aDF)
+                }
+            )
+
+        mySigTest$comparison2 <-
+            paste(mySigTest$comparison, '\n(IF1 vs IF2)', sep = '')
+
+    }
+
+    ### Plot result
+    if (plot) {
+        # start plot
+        if (violinPlot) {
+            p1 <- ggplot() +
+                geom_violin(
+                    data = isoDataMelt,
+                    aes(
+                        x = isoform_feature,
+                        y = value,
+                        fill = variable
+                    ),
+                    scale = 'area'
+                ) +
+                stat_summary(
+                    data = isoDataMelt,
+                    aes(
+                        x = isoform_feature,
+                        y = value,
+                        fill = variable
+                    ),
+                    fun.y = medianQuartile,
+                    geom = 'point',
+                    position = position_dodge(width = 0.9),
+                    size = 2
+                )
+        } else {
+            p1 <- ggplot() +
+                geom_boxplot(data = isoDataMelt, aes(
+                    x = isoform_feature,
+                    y = value,
+                    fill = variable
+                ))
+        }
+
+        # add significance
+        p1 <- p1 +
+            geom_text(
+                data = mySigTest,
+                aes(x = isoform_feature, y = ymax, label = significance),
+                vjust = -0.2,
+                size = localTheme$text$size * 0.3
+            ) +
+            geom_segment(data = mySigTest, aes(
+                x = idNr - 0.25,
+                xend = idNr + 0.25,
+                y = ymax,
+                yend = ymax
+            ))
+
+        # build rest of plot
+        p1 <- p1 +
+            facet_grid(comparison2 ~ category,
+                       scales = 'free_x',
+                       space = 'free_x') +
+            localTheme +
+            theme(strip.text.y = element_text(angle = 0)) +
+            theme(axis.text.x = element_text(
+                angle = -45,
+                hjust = 0,
+                vjust = 1
+            )) +
+            scale_fill_discrete(name = NULL) + theme(legend.position = "top") +
+            labs(x = 'Isoform feature', y = 'Isoform Usage (IF)') +
+            #coord_cartesian(ylim=c(0,1.25))
+            coord_cartesian(ylim = c(0, 1.1 + max(c(
+                0, 0.02 * (length(unique(
+                    mySigTest$comparison2
+                )) - 2)
+            ))))
+
+        print(p1)
+    }
+
+    ### Return result
+    if (returnResult) {
+        mySigTest2 <-
+            mySigTest[, c(
+                'comparison',
+                'category',
+                'isoform_feature',
+                'n',
+                'medianIF1',
+                'medianIF2',
+                'medianDIF',
+                'wilcoxPval',
+                'wilcoxQval',
+                'significance'
+            )]
+        mySigTest2 <-
+            mySigTest2[order(mySigTest2$comparison,
+                             mySigTest2$category,
+                             mySigTest2$isoform_feature), ]
+        return(mySigTest2)
+    }
+}
+
+extractGenomeWideAnalysis <- function(
+    switchAnalyzeRlist,
+    featureToExtract = 'isoformUsage',
+    annotationToAnalyze = 'all',
+    alpha=0.05,
+    dIFcutoff = 0.1,
+    log2FCcutoff = 1,
+    violinPlot=TRUE,
+    alphas=c(0.05, 0.001),
+    localTheme=theme_bw(),
+    plot=TRUE,
+    returnResult=TRUE
+) {
+    extractConsequenceGenomeWide(
+        switchAnalyzeRlist=switchAnalyzeRlist,
+        featureToExtract=featureToExtract,
+        annotationToAnalyze=annotationToAnalyze,
+        alpha=alpha,
+        dIFcutoff=dIFcutoff,
+        log2FCcutoff=log2FCcutoff,
+        violinPlot=violinPlot,
+        alphas=alphas,
+        localTheme=localTheme,
+        plot=plot,
+        returnResult=returnResult
+    )
 }

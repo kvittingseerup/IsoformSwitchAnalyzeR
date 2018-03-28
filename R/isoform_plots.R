@@ -1675,7 +1675,7 @@ expressionAnalysisPlot <- function(
                 levels = geneExpressionCombined$Condition[sapply(
                     levelsToMatch, function(x) {
                         which(grepl(
-                            x,
+                            paste0('^',x,'$'),
                             trimWhiteSpace(geneExpressionCombined$Condition)
                         ))[1]
                     }
@@ -1969,7 +1969,7 @@ expressionAnalysisPlot <- function(
                         levelsToMatch,
                         function(x) {
                             which(grepl(
-                                x,
+                                paste0('^',x,'$'),
                                 trimWhiteSpace(isoExpressionCombined$Condition)
                             ))[1]
                         }
@@ -2115,7 +2115,8 @@ expressionAnalysisPlot <- function(
                         levelsToMatch,
                         function(x){
                             which(grepl(
-                                x, trimWhiteSpace(isoformUsage2$Condition)
+                                paste0('^',x,'$'),
+                                trimWhiteSpace(isoformUsage2$Condition)
                             ))[1]
                         }
                     )
@@ -2193,6 +2194,13 @@ switchPlot <- function(
 ) {
     ### Test Input
     if (TRUE) {
+        # check switchAnalyzeRlist
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
+            )
+        }
+
         if (all(is.na(
             switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
         ))) {
@@ -2201,12 +2209,6 @@ switchPlot <- function(
             )
         }
 
-        # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
-            stop(
-                'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
-            )
-        }
 
         # check isoform and gene name input
         idInfoCheck <- sum(c(is.null(gene), is.null(isoform_id)))

@@ -1,3 +1,25 @@
+2017-XX-XX : IsoformSwitchAnalyzeR 1.1.06 ( MAJOR )
+    - We are very pleased to introduce a splicing modul for the analysis of isoform switches which allows for thorough analysis of alternative splicing, alternative transcription start sites and alternative transcription termination sites. Although the core of this modul is a liftover of the main functions form the now decapitated R pacakge spliceR we have made several new post analysis directly available. The introduction does however cause a few changes:
+        - The main function for analyzing alternative splicing (including intron retention) is now the analyzeAlternativeSplicing() function (although analyzeIntronRetention() is keept for backward compatability).
+            - The resulting analysis is stored in the 'AlternativeSplicingAnalysis' entry of the switchAnalyzeRlist (instead of under 'IntronRetentionAnalysis')
+
+    - IsoformSwitchAnalyzeR have been extensively updated with build in functions for global analysis of consequences and splicing. Here we introduce:
+        - extractSwitchOverlap()                    : Visualizes the overlap in switching features in different comparisons
+        - extractConsequenceEnrichment()            : Analyze for enrichment of either of opposite consequences (e.g. more protein domain loss than gain?)
+        - extractConsequenceEnrichmentComparison()  : Comparare enrichment of either of opposite consequences (e.g. more protein domain loss than gain?) between comparisons
+
+        - extractSplicingSummary()                  : Global summary of alternative splicing events
+        - extractSplicingEnrichment()               : Analyze for enrichment of either of opposite consequences (e.g. more exon skipping than exon inclusion?)
+        - extractSplicingEnrichmentComparison()     : Comparare enrichment of either of opposite consequences (e.g. more exon skipping than exon inclusion?) between comparisons
+        - extractGenomeWideSplicingAnalysis()       : Global analysis of changes in isoform fraction of isoforms with a specific splice patterns (e.g. exon skipping)
+    - The example data 'exampleSwitchListAnalyzed' included in IsoformSwitchAnalyzeR was exchanged to a dataet which better illustrate the usefullness of the analysis that can be done.
+    - The vignette were updated to reflect these changes with a whole section of analysis of alternative splicing.
+    - The vignette also got a thorough workover.
+    - The getCDS spliceR function and CDSset class was lifted over and updated to the current UCSC genome browser layout.
+    - isoformSwitchTest() was updated so it only callibrates p-values if all comparisons meet the requirements.
+    - The switchPlotTranscript() was updated to handle condition names is a perfect substring of another condition name.
+    - Small improvements in documentations
+
 2017-03-06 : IsoformSwitchAnalyzeR 1.1.05 (minor)
     - The importIsoformExpression() function was improved to handle file names with costom pre-fixes and now adds the 'isoform_id' column itself making the matrixes directly compatible with importRdata().
     - Various small imporvements in documentation.

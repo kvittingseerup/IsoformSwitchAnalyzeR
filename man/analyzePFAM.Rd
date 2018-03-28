@@ -44,6 +44,7 @@ Use default paramters. If you want to use the webserver it is easily done as fol
 To run PFAM locally you should use the pfam_scan.pl script as described in the readme at \url{ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/} and supply the path to the result file to analyzePFAM().
 
 Protein domains are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run pfam once on all isoforms and then supply the entire file to \code{analyzePFAM()}.
+
 }
 
 \value{

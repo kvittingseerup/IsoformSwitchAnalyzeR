@@ -37,7 +37,7 @@ The data.frame added have one row pr isoform and contains 6 columns:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{has_signal_peptide}: A text string indicating whether there is a signal peptide or not. Can be yes or no}
-    \item{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Refrence: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php#method}}
+    \item{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Refrence: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php}}
     \item{\code{aa_removed}: A integer giving the number of amino acids removed when the signal peptide is cleaved off.}
     \item{\code{transcriptClevageAfter}: The transcript position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
     \item{\code{genomicClevageAfter}: The genomic position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
@@ -60,14 +60,16 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{
-### Load example data (matching the result files also store in IsoformSwitchAnalyzeR)
+### Load example data
 data("exampleSwitchListIntermediary")
 exampleSwitchListIntermediary
 
 ### Add SignalP analysis
 exampleSwitchListAnalyzed <- analyzeSignalP(
     switchAnalyzeRlist       = exampleSwitchListIntermediary,
-    pathToSignalPresultFile = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR")
+    pathToSignalPresultFile = system.file(
+        "extdata/signalP_results.txt",
+        package = "IsoformSwitchAnalyzeR")
     )
 
 exampleSwitchListAnalyzed

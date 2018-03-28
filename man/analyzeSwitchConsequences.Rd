@@ -151,7 +151,9 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{extractConsequenceSummary}}\cr
-\code{\link{extractConsequenceEnrichment}}
+\code{\link{extractConsequenceEnrichment}}\cr
+\code{\link{extractConsequenceEnrichmentComparison}} \cr
+\code{\link{extractConsequenceGenomeWide}}
 }
 \examples{
 ### Prepare example data

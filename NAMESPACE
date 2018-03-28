@@ -13,8 +13,10 @@ import(ggplot2)
 import(VennDiagram)
 import(DBI)
 import(DRIMSeq)
-import(spliceR)
 import(tximport)
+
+### Import compiled code
+useDynLib(IsoformSwitchAnalyzeR)
 
 ### Import specific functions
 importFrom("grDevices", "dev.off", "hcl", "pdf", "png")
@@ -29,6 +31,8 @@ importFrom('grid','grid.layout')
 importFrom('DBI','dbGetQuery','dbDriver')
 importFrom("stats", "as.formula", "model.matrix")
 importFrom("edgeR", "calcNormFactors")
+importFrom("stats", "prop.test")
+importFrom("futile.logger","flog.threshold")
 
 ### Export functions from my R package
 # Creating list
@@ -43,19 +47,18 @@ export('importIsoformExpression')
 export('importRdata')
 export('preFilter')
 
-
-
 # Test isoform switches
 export('isoformSwitchTestDRIMSeq')
 export('isoformSwitchTest')
 export('extractSwitchSummary')
+export('extractSwitchOverlap')
 export('extractTopSwitches')
 export('extractCalibrationStatus')
 
 
 # Analyze functional potential
-#export('CDSSet')
-#export('getCDS')
+export('CDSSet')
+export('getCDS')
 export('extractSequence')
 export('analyzeORF')
 
@@ -63,15 +66,23 @@ export('analyzeCPAT')
 export('analyzePFAM')
 export('analyzeSignalP')
 
+# Splicing analysis
+export('analyzeAlternativeSplicing')
 export('analyzeIntronRetention')
+export('extractSplicingSummary')
+export('extractSplicingEnrichment')
+export('extractSplicingEnrichmentComparison')
+export('extractSplicingGenomeWide')
 
 
-# Analyze switch consequences
+# Switch consequences analysis
 export('analyzeSwitchConsequences')
 export('extractConsequenceSummary')
-
-# genome wide analysis
+export('extractConsequenceEnrichment')
+export('extractConsequenceEnrichmentComparison')
+export('extractConsequenceGenomeWide')
 export('extractGenomeWideAnalysis')
+
 
 # Plotting
 export('switchPlotTranscript')

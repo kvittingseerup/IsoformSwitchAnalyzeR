@@ -105,6 +105,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeAlternativeSplicing}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{analyzeSwitchConsequences}}\cr
 \code{\link{switchPlotTopSwitches}}

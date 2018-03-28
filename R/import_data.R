@@ -2104,7 +2104,7 @@ importIsoformExpression <- function(
                 list.files(
                     path = paste0( parentDir, '/', aDir, '/' ),
                     pattern = paste0(dataAnalyed$fileName, '$'),
-                    full.names = T
+                    full.names = TRUE
                 )
 
             }
@@ -2270,7 +2270,7 @@ importRdata <- function(
 
             if (!all(c('sampleID', 'condition') %in% colnames(designMatrix))) {
                 stop(paste(
-                    'The data.frame passed to the \'isoformRepExpression\'',
+                    'The data.frame passed to the \'designMatrix\'',
                     'argument must contain both a \'sampleID\' and a',
                     '\'condition\' column'
                 ))

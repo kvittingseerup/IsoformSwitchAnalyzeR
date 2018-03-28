@@ -108,7 +108,24 @@ mostSwitchingGene <- extractTopSwitches(
 )
 
 ### Plot expression
-switchPlotGeneExp(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
-switchPlotIsoExp(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
-switchPlotIsoUsage(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id, condition1 = 'hESC', condition2 = 'Fibroblasts')
+switchPlotGeneExp(
+    exampleSwitchListAnalyzed,
+    gene = mostSwitchingGene$gene_id,
+    condition1 = mostSwitchingGene$condition_1,
+    condition2 = mostSwitchingGene$condition_2
+)
+
+switchPlotIsoExp(
+    exampleSwitchListAnalyzed,
+    gene = mostSwitchingGene$gene_id,
+    condition1 = mostSwitchingGene$condition_1,
+    condition2 = mostSwitchingGene$condition_2
+)
+
+switchPlotIsoUsage(
+    exampleSwitchListAnalyzed,
+    gene = mostSwitchingGene$gene_id,
+    condition1 = mostSwitchingGene$condition_1,
+    condition2 = mostSwitchingGene$condition_2
+)
 }
