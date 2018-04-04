@@ -23,7 +23,7 @@ importRdata(
     designMatrix,
     isoformExonAnnoation,
     comparisonsToMake=NULL,
-    addAnnotatedORFs=FALSE,
+    addAnnotatedORFs=TRUE,
     onlyConsiderFullORF=FALSE,
     removeNonConvensionalChr=FALSE,
     PTCDistance=50,
@@ -61,7 +61,7 @@ A data.frame indicating which pairwise comparisons the switchAnalyzeRlist create
 }
 
 \item{addAnnotatedORFs}{
-Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indicating whether the ORF from the GTF should be added to the \code{switchAnalyzeRlist}. This ORF is defined as the regions annotated  as 'CDS' in the 'type' column (column 3). Default is FALSE.
+Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indicating whether the ORF from the GTF should be added to the \code{switchAnalyzeRlist}. This ORF is defined as the regions annotated  as 'CDS' in the 'type' column (column 3). Default is TRUE.
 }
 
 \item{onlyConsiderFullORF}{ A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annotated is defined as those that both have a annotated 'start_codon' codon in the 'type' column (column 3). This argument exists because these CDS regions are highly problematic and does not resemble true ORFs as >50\% of CDS without a stop_codon annotated contain multiple stop codons (see Vitting-Seerup et al 2017 - supplementary materials). This argument is only considered if onlyConsiderFullORF=TRUE. Default is FALSE.}

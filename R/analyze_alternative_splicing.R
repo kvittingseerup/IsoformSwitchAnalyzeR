@@ -1485,11 +1485,11 @@ analyzeIntronRetention <- function(
     )
 
     ### Transfer result to switchAnalyzeRlist list
-    switchAnalyzeRlist$isoformFeatures$IR <- localAS$IR[match(
-        switchAnalyzeRlist$isoformFeatures$isoform_id ,localAS$isoform_id
+    switchAnalyzeRlist$isoformFeatures$IR <- localAS$AlternativeSplicingAnalysis$IR[match(
+        switchAnalyzeRlist$isoformFeatures$isoform_id ,localAS$AlternativeSplicingAnalysis$isoform_id
     )]
 
-    switchAnalyzeRlist$intronRetentionAnalysis <- localAS[,c(
+    switchAnalyzeRlist$intronRetentionAnalysis <- localAS$AlternativeSplicingAnalysis[,c(
         'isoform_id',
         'IR',
         'IR_genomic_start',

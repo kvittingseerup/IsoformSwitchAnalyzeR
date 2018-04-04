@@ -9,7 +9,7 @@ Function for importing a GTF into R as a \code{switchAnalyzeRlist}. This approac
 \usage{
 importGTF(
     pathToGTF,
-    addAnnotatedORFs=FALSE,
+    addAnnotatedORFs=TRUE,
     onlyConsiderFullORF=FALSE,
     removeNonConvensionalChr=FALSE,
     PTCDistance=50,
@@ -19,7 +19,7 @@ importGTF(
 \arguments{
 \item{pathToGTF}{ A string indicating the full path to the GTF that should be imported.}
 
-\item{addAnnotatedORFs}{ A logic indicating whether the ORF from the GTF should be added to the \code{switchAnalyzeRlist}. This ORF is defined as the regions annoated as 'CDS' in the 'type' collumn (collumn 3). Default is FALSE.}
+\item{addAnnotatedORFs}{ A logic indicating whether the ORF from the GTF should be added to the \code{switchAnalyzeRlist}. This ORF is defined as the regions annoated as 'CDS' in the 'type' collumn (collumn 3). Default is TRUE.}
 
 \item{onlyConsiderFullORF}{ A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annoated is defined as those that both have a annotated 'start_codon' and 'stop_codon' in the 'type' column (column 3). This argument is only considered if onlyConsiderFullORF=TRUE. Default is FALSE.}
 

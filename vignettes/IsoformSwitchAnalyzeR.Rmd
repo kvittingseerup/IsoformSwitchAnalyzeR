@@ -428,7 +428,7 @@ extractConsequenceSummary(
 
 Note the "consequencesToAnalyze" argument enables analysis of only a subset of features.
 
-From this summary plot many conclusions are possible. First of all, the most frequent changes are changes affecting protein domains and ORFs. Secondly,intron retention is more commonin LUAD than in COAD. Lastly, when considering oposite consequence (e.g. the gain vs loss of protein domains) its quite easy to see they are unevenly distributed (e.g. more protein domain loss than protein domain gain). This uneven distribution can be systematically analyzed using the build in enrichment analysis:
+From this summary plot many conclusions are possible. First of all, the most frequent changes are changes affecting protein domains and ORFs. Secondly,intron retention is more commonin LUAD than in COAD. Lastly, when considering oppositeconsequence (e.g. the gain vs loss of protein domains) its quite easy to see they are unevenly distributed (e.g. more protein domain loss than protein domain gain). This uneven distribution can be systematically analyzed using the build in enrichment analysis:
 
 
 ```{r, fig.width=12, fig.height=5}
@@ -439,13 +439,13 @@ extractConsequenceEnrichment(
 )
 ```
 
-For each pair of oposite consequences (e.g. protein domain loss vs grain) (y-axis) this plot shows the fraction of switches, affected by either of the opposing consequence, that results in the consequnce indicated (e.g. protein domain loss) (x-axis). If this fraction is significantly different from 0.5 it indicates there is a systematic biases in which consequence is detected. 
+For each pair of oppositeconsequences (e.g. protein domain loss vs grain) (y-axis) this plot shows the fraction of switches, affected by either of the opposing consequence, that results in the consequnce indicated (e.g. protein domain loss) (x-axis). If this fraction is significantly different from 0.5 it indicates there is a systematic biases in which consequence is detected. 
 
 From the analysis above, it is therefore quite clear, that many of the oposing consequences are significantly unevenly distributed. In other words, many types of consequences seems to be used in a group-specific manner.
 
 <br />
 
-When comparing the two cancer types (right vs left plot) the overall pattern seems similar - but there might be differences. This can formaly be analyzed with the _extractConsequenceEnrichmentComparison()_ function. This function with for each oposing set of consequence (e.g. protein domain loss vs grain), in a pairwise manner contrasts the individual comparisons to assess whether the ratio of loss/gains are indeed significantly different:
+When comparing the two cancer types (right vs left plot) the overall pattern seems similar - but there might be differences. This can formally be analyzed with the _extractConsequenceEnrichmentComparison()_ function. This function with for each oposing set of consequence (e.g. protein domain loss vs grain), in a pairwise manner contrasts the individual comparisons to assess whether the ratio of loss/gains are indeed significantly different:
 
 ```{r, fig.width=12, fig.height=4}
 extractConsequenceEnrichmentComparison(
@@ -455,7 +455,7 @@ extractConsequenceEnrichmentComparison(
 )
 ```
 
-The analysis shows that compared to LUAD, COAD have a significantly higher fraction of switches resulting in protein domain loss, but there are no difference in terms of intron retention loss or switches from noncoding to to coding transcripts. 
+The analysis shows that compared to LUAD, COAD have a significantly higher fraction of switches resulting in protein domain loss, but there is no difference in terms of intron retention loss or switches from noncoding to to coding transcripts. 
 
 <br />
 

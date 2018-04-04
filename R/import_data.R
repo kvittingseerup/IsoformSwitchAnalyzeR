@@ -1450,7 +1450,7 @@ importCufflinksFiles <- function(
 
 importGTF <- function(
     pathToGTF,
-    addAnnotatedORFs = FALSE,
+    addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
     PTCDistance = 50,
@@ -2229,7 +2229,7 @@ importRdata <- function(
     designMatrix,
     isoformExonAnnoation,
     comparisonsToMake = NULL,
-    addAnnotatedORFs = FALSE,
+    addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
     PTCDistance = 50,
