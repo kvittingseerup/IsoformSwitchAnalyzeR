@@ -1,3 +1,18 @@
+2017-04-17 : IsoformSwitchAnalyzeR 1.1.08 ( minor )
+    - The preFilter function was updated to only allow filtering on mean expression/usage (gene expression, isoform expression and isoform usage)
+         accross all samples since filtering on individal conditions can lead to loss of false discovery rate.
+         For more information refere to https://www.nature.com/articles/nmeth.3885 and the IWH Bioconductor package.
+         Therefore
+         - All import* functions was updated to include calculation of these means.
+         - All example data was updated to include these meanse.
+         - Relevant documentation was updated to include description of these means
+         - Vignette was updated to reflect these changes
+    - The importRdata() was updated to better handle differences in which isoforms have been quantified and which isoforms are in the GTF and quantifications.
+    - Information on how to install from the developmental branch of Bioconductor was added to vignette.
+    - Small updates to make error messages more informative
+    - Update of unclear import error message
+    - Updated FAQ in vignette
+
 2017-04-04 : IsoformSwitchAnalyzeR 1.1.07 ( minor )
     - A bug was fixed in analyzeIntronRetention() so it now works.
     - All import functions (importRdata and importGTF) now per default import CDS as ORF if a GTF file is suppled.

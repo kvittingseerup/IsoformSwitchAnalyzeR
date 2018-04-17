@@ -92,7 +92,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 - [Analyzing the Biological Mechanisms Behind Isoform Switching]
 - [Analysing experiments without replicates]
 
-[Frequently Asked Questions and Problems]
+[Frequently Asked Questions, Problems and Errors]
 
 [Final Remarks]
 
@@ -155,16 +155,26 @@ After you have installed the basic Bioconductor packages you can install Isoform
 
 This will install the IsoformSwitchAnalyzeR package as well as other R packages that are needed for IsoformSwitchAnalyzeR to work.
 
+<br />
+
+If you need to install from the developmental branch of Bioconductor you need to specify that - note that this is for advanced uses and should not be done unless you have good reason to:
+
+    source("http://bioconductor.org/biocLite.R")
+    useDevel(devel = TRUE)
+    biocLite("IsoformSwitchAnalyzeR")
+
+<br />
+
 <!-- Help -->
 ### How To Get Help
-This R package comes with plenty of documentation. Much information can be found in the R help files (which can easily be accessed by running the following command in R "?functionName", for example "?isoformSwitchTest"). Furthermore, this vignette contains a lot of information and will be continously updated, so make sure to read both sources carefully as it contains the answers to the most Frequently Asked Questions and Problems.
+This R package comes with plenty of documentation. Much information can be found in the R help files (which can easily be accessed by running the following command in R "?functionName", for example "?isoformSwitchTest"). Furthermore, this vignette contains a lot of information and will be continously updated, so make sure to read both sources carefully as it contains the answers to the most Frequently Asked Questions, Problems and Errors.
 
-If you want to report a bug/error (found in the newest version of the R package!) please make an issue with a reproducible example at github https://github.com/kvittingseerup/IsoformSwitchAnalyzeR --- remember to add the appropriate label.
+If you want to report a bug/error (found in the newest version of the R package!) please make an issue with a reproducible example at [github](https://github.com/kvittingseerup/IsoformSwitchAnalyzeR) --- remember to add the appropriate label.
 
-If you have unanswered questions or comments regarding IsoformSwitchAnalyzeR, please post them on the associated google group: https://groups.google.com/forum/#!forum/isoformswitchanalyzer (plase make sure the question was not already answered there). 
+If you have unanswered questions or comments regarding IsoformSwitchAnalyzeR, please post them on the associated [google group](https://groups.google.com/forum/#!forum/isoformswitchanalyzer) (plase make sure the question was not already answered there). 
 
 
-If you have suggestions for improvements, please put them on github (https://github.com/kvittingseerup/IsoformSwitchAnalyzeR). This will allow other people to upvote your idea, thereby showing us there is wide support of implementing your idea.
+If you have suggestions for improvements, please put them on [github](https://github.com/kvittingseerup/IsoformSwitchAnalyzeR). This will allow other people to upvote your idea, thereby showing us there is wide support of implementing your idea.
 
 Back to [Table of Content].
 
@@ -1158,16 +1168,16 @@ Back to [Table of Content]
 The two fasta files that are the output by _extractSequence()_ (if writeToFile=TRUE) can be used as input, to amongst, others:
 
 * CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
-* Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/)) or via their [webserver](http://pfam.xfam.org/search#tabview=tab1).
+* Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) ) or via their [webserver](http://pfam.xfam.org/search#tabview=tab1).
 * SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
 
 These three tools are the ones currently supported, but if you have additional ideas please do not hesitate to contact us as described in [How To Get Help].
 
 We suggest that the external sequence analysis tools are run as follows:
 
-* CPAT : Use default parameters and the nucleotide fasta file (_nt.fasta). If the webserver (http://lilab.research.bcm.edu/cpat/) was used, download the tab-delimited result file (available at the bottom of the result page). If a stand-alone version was used, just supply the path to the result file. 
-* Pfam : Use default parameters and the amino acid fasta file (_AA.fasta). If the webserver (https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan) is used you need to copy/paste the result part of the mail you receive into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to a plain text (txt) file. The path to that file should be supplied. If a stand-alone version was used, just supply the path to the result file. A more detailed walkthrough is found under details in the documentation of the \code{analyzePFAM()} function (?analyzePFAM).
-* SignalP : Use the amino acid fasta file (_AA.fasta). When using a stand-alone version, SignalP should be run with the '-f summary' option. If using the web-server (http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "standard" under "Output format" and "No graphics" under "Graphics output". When using the web-server, the results (everything between the two hoizontal lines) should be copy/pasted into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to plain text (txt) file. This file is then used as input to the function. If a stand-alone version was used, just supply the path to the summary result file.
+* CPAT : Use default parameters and the nucleotide fasta file (_nt.fasta). If the [webserver](http://lilab.research.bcm.edu/cpat/) was used, download the tab-delimited result file (available at the bottom of the result page). If a stand-alone version was used, just supply the path to the result file. 
+* Pfam : Use default parameters and the amino acid fasta file (_AA.fasta). If the [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan) is used you need to copy/paste the result part of the mail you receive into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to a plain text (txt) file. The path to that file should be supplied. If a stand-alone version was used, just supply the path to the result file. A more detailed walkthrough is found under details in the documentation of the \code{analyzePFAM()} function (?analyzePFAM).
+* SignalP : Use the amino acid fasta file (_AA.fasta). When using a stand-alone version, SignalP should be run with the '-f summary' option. If using the [webserver](http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "standard" under "Output format" and "No graphics" under "Graphics output". When using the web-server, the results (everything between the two hoizontal lines) should be copy/pasted into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to plain text (txt) file. This file is then used as input to the function. If a stand-alone version was used, just supply the path to the summary result file.
 
 Back to [Table of Content]
 
@@ -1795,16 +1805,27 @@ Back to [Table of Content]
 
 <br />
 
-## Frequently Asked Questions and Problems
+## Frequently Asked Questions, Problems and Errors
 #### The error "The annotation does not fit the expression data"
-To fix this problem you need to update the underlying package tximport. This can be done by copy/pasting this command into R:
+This problem can arrise from multiple sources but essentially means that not all isoforms quantified are found in the annotation or vise versa. This problem cannot be tolerated because it will lead to wrong estimations of Isoform Fractions if some isoforms were not quantifed or if it is the other way around we could not analyze the isoforms because the isoform structure is not annotated.
+
+Currently we have documented this problem from two different sources:
+
+Source 1: The GTF and FASTQ file used to quantify with Kallisto/Salmon/RSEM contain non-overlapping isoforms. We have found this when using data downloaded from Ensembl. Try [gencode genes](http://gencodegenes.org/) instead.
+
+Source 2: When using Kallisto/Salmon/RSEM data older versions of tximport can cause this problm. To fix this problem you need to update the underlying package tximport. This can be done by copy/pasting this command into R:
 
     devtools::install_github("mikelove/tximport")
 
 Back to [Table of Content]
 
+#### The error "The annotation (count matrix and isoform annotation) contain differences in which isoforms are analyzed..."
+This error occures because there is differences in which isoforms are found in the annotation and which isoforms have been quantified. This problem have (so far) only been observed in data quantified with Salmon. It typically occres because during the index building Salmon collapses identical transcripts. A discussion with the Salmon authors of pros and cons of this behaviour can be found [here](https://github.com/COMBINE-lab/salmon/issues/214).
+
+We ask the user to make sure why this problem occures in the user-specific setting, and that removing the non-quantified isoforms is the desired solution, before continuing.
 
 <br />
+
 
 ## Final Remarks
 With this vignette, we hope to provide a thorough introduction to IsoformSwitchAnalyzeR and give some examples of what IsoformSwitchAnalyzeR can be used for.

@@ -87,7 +87,7 @@ Changes in isoform usage are measure as the difference in isoform fraction (dIF)
 }
 
 \value{
-A SwitchAnalyzeRlist containing the data supplied wrap into the SwitchAnalyzeRlist format.
+A SwitchAnalyzeRlist containing the data supplied stored into the SwitchAnalyzeRlist format (created by \code{createSwitchAnalyzeRlist()}). For detials about the format see details of \code{\link{createSwitchAnalyzeRlist}}.
 
 If a GTF file was supplied to \code{isoformExonAnnoation} and \code{addAnnotatedORFs=TRUE} a \code{data.frame} containing the details of the ORF analysis have been added to the switchAnalyzeRlist under the name 'orfAnalysis'. The data.frame added have one row pr isoform and contains 11 columns:
 \itemize{

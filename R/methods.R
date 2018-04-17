@@ -224,10 +224,10 @@ createSwitchAnalyzeRlist <- function(
             # isoformFeatures
             neededCols <- c(
                 'isoform_id','gene_id','condition_1','condition_2','gene_name',
-                'gene_value_1','gene_value_2','gene_stderr_1','gene_stderr_2',
-                'gene_log2_fold_change','gene_q_value','iso_value_1',
+                'gene_overall_mean','gene_value_1','gene_value_2','gene_stderr_1','gene_stderr_2',
+                'gene_log2_fold_change','gene_q_value','iso_overall_mean','iso_value_1',
                 'iso_value_2', 'iso_stderr_1','iso_stderr_2',
-                'iso_log2_fold_change','iso_q_value','IF1','IF2','dIF',
+                'iso_log2_fold_change','iso_q_value','IF_overall','IF1','IF2','dIF',
                 'isoform_switch_q_value','gene_switch_q_value'
             )
 

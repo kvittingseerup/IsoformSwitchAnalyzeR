@@ -5,7 +5,7 @@ Filtering of a switchAnalyzeRlist
 }
 
 \description{
-This function removes genes/isoforms from a switchAnalyzeRlist with the aim of allowing faster processing time as well as more trustworthy results. The filtering is applied to each isoform in each comparison analyzed (unless keepIsoformInAllConditions is set to TRUE).
+This function removes genes/isoforms from a switchAnalyzeRlist with the aim of allowing faster processing time as well as more trustworthy results.
 }
 
 \usage{
@@ -14,7 +14,6 @@ preFilter(
     geneExpressionCutoff = 1,
     isoformExpressionCutoff = 0,
     IFcutoff=0.01,
-    geneCutoffInBothConditions=TRUE,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
     reduceToSwitchingGenes=FALSE,
@@ -30,7 +29,7 @@ preFilter(
 A \code{switchAnalyzeRlist} object.
 }
   \item{geneExpressionCutoff}{
-The expression cutoff (most likely in RPKM/FPKM) which genes must be expressed more than, in at least one conditions of a comparison. NULL disables the filter. Default is 1 (in both conditions since default of \code{geneCutoffInBothConditions} is \code{TRUE}).
+The expression cutoff (most likely in RPKM/FPKM) which genes must be expressed more than, in at least one conditions of a comparison. NULL disables the filter. Default is 1 FPKM/TPM/RPKM.).
 }
 
   \item{isoformExpressionCutoff}{
@@ -39,10 +38,6 @@ The expression cutoff (most likely in RPKM/FPKM) which isoforms must be expresse
 
   \item{IFcutoff}{
 The cutoff on isoform usage (measured as Isoform Fraction, see details) which isoforms must be used more than in at least one conditions of a comparison. NULL disables the filter. Default is 0 (which removes non-contributing isoforms).
-}
-
-\item{geneCutoffInBothConditions}{
-A logic indicating whether to requiring the gene expression cutoff (given by \code{geneExpressionCutoff}) in both conditions. This can be usefull since isoform fraction (IF) values are untrustworthy when the gene expression is to low, see \code{isoformSwitchTest} under details for more information. Default is TRUE.
 }
 
   \item{acceptedIsoformClassCode}{
@@ -74,9 +69,9 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 
 
 \details{
-The filtering works by first requiring that the isoforms/genes is expressed above the cutoffs supplied in at least one condition of a comparison, then the data is filtered for isoform classes and lastly for single-isoform genes.\cr
+The filtering works by first requiring that the average isoforms/genes expression/usage accross all samples is expressed above the cutoffs supplied, then the data is filtered for isoform classes and lastly for single-isoform genes.\cr
 
-Especially the filter for gene expression can be important since a fundamental problem with the IF values (calculated as <isoform_exp> / <gene_exp>) is when the gene expression is low it causes the IF measure to loose precision. This can easily be illustrated with the following example: Lets consider a gene with two isoforms which are expressed so they contribute to the gene expression with 73.3\% and 26.7\%, if we have 100 RNA-seq reads to describe these the problem is easy and we recapitulate the 73\%/27\% ratio - which is decent. If we only have 10 reads the measurements get a little more inaccurate since the estimates now will be 70\% vs 30\%. If the gene is even lower expressed say 5 reads the estimates become 80\%/20\%.
+Especially the filter for gene expression can be important since a fundamental problem with the IF values (calculated as <isoform_exp> / <gene_exp>) is when the gene expression is low it causes the IF measure to loose precision. This can easily be illustrated with the following example: Lets consider a gene with two isoforms which are expressed so they contribute to the gene expression with 73.3\% and 26.7\%, if we have 100 RNA-seq reads to describe these the problem is easy and we recapitulate the 73\%/27\% ratio. If we only have 10 reads the measurements get a little more inaccurate since the estimates now will be 70\% vs 30\%. If the gene is even lower expressed say 5 reads the estimates become 80\%/20\%. Therefore we want to filter out these genes.
 }
 
 \value{

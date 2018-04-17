@@ -1252,7 +1252,7 @@ analyzeAlternativeSplicing <- function(
                 switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
             ))) {
                 stop(
-                    'The analsis of isoform switching must be performed before functional consequences can be analyzed. Please run ?detectIsoformSwitching and try again.'
+                    'The analsis of isoform switching must be performed before alternative splicing can be analyzed. Please run ?detectIsoformSwitching and try again.'
                 )
             }
         }
@@ -1530,13 +1530,13 @@ extractSplicingSummary <- function(
             switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
         ))) {
             stop(
-                'The analsis of isoform switching must be performed before functional consequences can be analyzed. Please run detectIsoformSwitching() and try again.'
+                'The analsis of isoform switching must be performed before alternative splicing can be analyzed. Please run detectIsoformSwitching() and try again.'
             )
         }
-        # test whether switches have been predicted
-        if (is.null(switchAnalyzeRlist$switchConsequence)) {
+        # test whether AS have been predicted
+        if (is.null(switchAnalyzeRlist$AlternativeSplicingAnalysis)) {
             stop(
-                'The analsis of isoform switch consequences must be performed before it can be summarized. Please use analyzeSwitchConsequences() and try again.'
+                'The analsis of alternative must be performed before it can be summarized. Please use analyzeAlternativeSplicing() and try again.'
             )
         }
 
@@ -1559,7 +1559,7 @@ extractSplicingSummary <- function(
 
         if (!all(splicingToAnalyze %in% c('all', acceptedTypes))) {
             stop(
-                'The argument(s) supplied to \'typeOfconsequence\' are not accepted. Please see ?summarizeSwitchConsequences under details for description of which strings are allowed.'
+                'The argument(s) supplied to \'typeOfconsequence\' are not accepted. Please see ?analyzeAlternativeSplicing under details for description of which strings are allowed.'
             )
         }
 
@@ -1973,13 +1973,13 @@ extractSplicingEnrichment <- function(
             switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
         ))) {
             stop(
-                'The analsis of isoform switching must be performed before functional consequences can be analyzed. Please run detectIsoformSwitching() and try again.'
+                'The analsis of isoform switching must be performed before alternative splicing can be analyzed. Please run detectIsoformSwitching() and try again.'
             )
         }
-        # test whether switches have been predicted
-        if (is.null(switchAnalyzeRlist$switchConsequence)) {
+        # test whether AS have been predicted
+        if (is.null(switchAnalyzeRlist$AlternativeSplicingAnalysis)) {
             stop(
-                'The analsis of isoform switch consequences must be performed before it can be summarized. Please use analyzeSwitchConsequences() and try again.'
+                'The analsis of alternative must be performed before it can be summarized. Please use analyzeAlternativeSplicing() and try again.'
             )
         }
 
@@ -2002,7 +2002,7 @@ extractSplicingEnrichment <- function(
 
         if (!all(splicingToAnalyze %in% c('all', acceptedTypes))) {
             stop(
-                'The argument(s) supplied to \'typeOfconsequence\' are not accepted. Please see ?summarizeSwitchConsequences under details for description of which strings are allowed.'
+                'The argument(s) supplied to \'typeOfconsequence\' are not accepted. Please see ?analyzeAlternativeSplicing under details for description of which strings are allowed.'
             )
         }
 

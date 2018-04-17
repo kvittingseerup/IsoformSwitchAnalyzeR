@@ -43,20 +43,23 @@ The \code{isoformFeatures} should be a data.frame where each row corresponds to 
     \item{\code{condition_2} : Name of the second condition  in the comparison}
     \item{\code{gene_name} : The gene name associated with the <gene_id>, typically a more readable one (for example p53 or BRCA1) }
 
-    \item{\code{gene_value_1} : Expression of <gene_id> in condition_1 (must be normalized) }
-    \item{\code{gene_value_2} : Expression of <gene_id> in condition_2 (must be normalized) }
+    \item{\code{gene_overall_mean} : Mean expression of <gene_id> accros all samples (if you create it yourself consider inter-library normalization) }
+    \item{\code{gene_value_1} : Expression of <gene_id> in condition_1 (if you create it yourself consider inter-library normalization) }
+    \item{\code{gene_value_2} : Expression of <gene_id> in condition_2 (if you create it yourself consider inter-library normalization) }
     \item{\code{gene_stderr_1} : Standard error (of mean) of <gene_id> expression in condition_1 }
     \item{\code{gene_stderr_2} : Standard error (of mean) of <gene_id> expression in condition_2 }
     \item{\code{gene_log2_fold_change} : log2 fold change of <gene_id> expression between condition_1 and condition_2 }
     \item{\code{gene_q_value} : The FDR corrected (for multiple testing) p-value of the differential expression test of <gene_id> }
 
-    \item{\code{iso_value_1} : Expression of <isoform_id> in condition_1 (must be normalized)}
-    \item{\code{iso_value_2} : Expression of <isoform_id> in condition_2 (must be normalized)}
+    \item{\code{iso_overall_mean} : Mean expression of <isoform_id> accros all samples (if you create it yourself consider inter-library normalization) }
+    \item{\code{iso_value_1} : Expression of <isoform_id> in condition_1 (if you create it yourself consider inter-library normalization)}
+    \item{\code{iso_value_2} : Expression of <isoform_id> in condition_2 (if you create it yourself consider inter-library normalization)}
     \item{\code{iso_stderr_1} : Standard error (of mean) of <isoform_id> expression in condition_1}
     \item{\code{iso_stderr_2} : Standard error (of mean) of <isoform_id> expression in condition_2}
     \item{\code{iso_log2_fold_change} : log2 fold change of <isoform_id> expression between condition_1 and condition_2}
     \item{\code{iso_q_value} : The FDR corrected (for multiple testing) p-value of the differential expression test of <isoform_id>}
 
+    \item{\code{IF_overall} : The average <isoform_id> usage accross all samples (given as Isoform Fraction (IF) value)}
     \item{\code{IF1} : The <isoform_id> usage in condtion 1 (given as Isoform Fraction (IF) value)}
     \item{\code{IF2} : The <isoform_id> usage in condtion 2 (given as Isoform Fraction (IF) value)}
     \item{\code{dIF} : The change in isoform usage from condtion_1 to condition_2 (difference in IF values (dIF))}

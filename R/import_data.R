@@ -24,7 +24,7 @@ allPairwiseFeatures <- function(aNameVec1, forceNonOverlap = FALSE) {
 
     return(myCombinations)
 }
-jaccardDistance <- function(x, y) {
+jaccardSimilarity <- function(x, y) {
     length(intersect(x, y)) / length(union(x, y))
 }
 
@@ -135,6 +135,16 @@ importCufflinksCummeRbund <- function(
         grepl('iso_stderr$', colnames(isoformDiffanalysis), perl = TRUE)
     )] <- c('iso_stderr_1')
 
+    ### add mean exp
+    meanIsoFpkm <- rowMeans(
+        cummeRbund::repFpkmMatrix(cuffIsoforms)
+    )
+    isoformDiffanalysis$iso_overall_mean <-
+        meanIsoFpkm[match(
+            isoformDiffanalysis$isoform_id,
+            names(meanIsoFpkm)
+        )]
+
     # reorder
     isoformDiffanalysis <-
         isoformDiffanalysis[, c(
@@ -142,6 +152,7 @@ importCufflinksCummeRbund <- function(
             'sample_1',
             'sample_2',
             'iso_status',
+            'iso_overall_mean',
             'iso_value_1',
             'iso_value_2',
             'iso_stderr_1',
@@ -181,6 +192,16 @@ importCufflinksCummeRbund <- function(
         grepl('gene_stderr$', colnames(geneDiffanalysis), perl = TRUE)
     )] <- c('gene_stderr_1')
 
+    ### add mean exp
+    meanGeneFpkm <- rowMeans(
+        cummeRbund::repFpkmMatrix(cuffGenes)
+    )
+    geneDiffanalysis$gene_overall_mean <-
+        meanGeneFpkm[match(
+            geneDiffanalysis$gene_id,
+            names(meanGeneFpkm)
+        )]
+
     # reorder
     geneDiffanalysis <-
         geneDiffanalysis[, c(
@@ -188,6 +209,7 @@ importCufflinksCummeRbund <- function(
             'sample_1',
             'sample_2',
             'gene_status',
+            'gene_overall_mean',
             'gene_value_1',
             'gene_value_2',
             'gene_stderr_1',
@@ -328,6 +350,7 @@ importCufflinksCummeRbund <- function(
                     'gene_id',
                     'sample_1',
                     'sample_2',
+                    'gene_overall_mean',
                     'gene_value_1',
                     'gene_value_2',
                     'gene_stderr_1',
@@ -337,6 +360,7 @@ importCufflinksCummeRbund <- function(
                     'gene_q_value',
                     'gene_significant',
                     'iso_status',
+                    'iso_overall_mean',
                     'iso_value_1',
                     'iso_value_2'
                 )]
@@ -345,10 +369,11 @@ importCufflinksCummeRbund <- function(
                           TRUE)
 
             correctedGenes <-
-                ldply(
+                plyr::ldply(
                     problematicGenesSplit,
                     .fun = function(df) {
                         # df <- problematicGenesSplit[[1]]
+                        df$gene_overall_mean <- sum(df$iso_overall_mean)
                         df$gene_value_1 <- sum(df$iso_value_1)
                         df$gene_value_2 <- sum(df$iso_value_2)
                         df$gene_stderr_1 <- NA
@@ -376,6 +401,7 @@ importCufflinksCummeRbund <- function(
                 'gene_id',
                 'sample_1',
                 'sample_2',
+                'gene_overall_mean',
                 'gene_value_1',
                 'gene_value_2',
                 'gene_stderr_1',
@@ -385,6 +411,7 @@ importCufflinksCummeRbund <- function(
                 'gene_q_value',
                 'gene_significant',
                 'iso_status',
+                'iso_overall_mean',
                 'iso_value_1',
                 'iso_value_2'
             )] <- correctedGenes[, -1] # -1 removes the isoform id
@@ -409,6 +436,7 @@ importCufflinksCummeRbund <- function(
     }
 
     ### Calculate IF values
+    isoformData$IF_overall <- isoformData$iso_overall_mean / isoformData$gene_overall_mean
     isoformData$IF1 <-
         isoformData$iso_value_1 / isoformData$gene_value_1
     isoformData$IF2 <-
@@ -929,18 +957,62 @@ importCufflinksFiles <- function(
                 )
 
             # rep expression
-            isoRepExp <-
+            isoRepExp2 <-
                 isoRepExp[, c("tracking_id",
                               "condition",
                               "replicate",
                               "raw_frags")]
-            colnames(isoRepExp)[1] <- 'isoform_id'
-            isoRepExp$rep <-
-                paste(isoRepExp$condition, isoRepExp$replicate, sep = '_')
-            isoRepExp <-
-                reshape2::dcast(data = isoRepExp,
+            colnames(isoRepExp2)[1] <- 'isoform_id'
+            isoRepExp2$rep <-
+                paste(isoRepExp2$condition, isoRepExp2$replicate, sep = '_')
+            isoRepExp2 <-
+                reshape2::dcast(data = isoRepExp2,
                                 isoform_id ~ rep,
                                 value.var = 'raw_frags')
+
+
+            ### rep fpkm
+            # iso
+            isoRepFpkm <- isoRepExp[, c(
+                "tracking_id",
+                "condition",
+                "replicate",
+                "FPKM"
+            )]
+            colnames(isoRepFpkm)[1] <- 'isoform_id'
+            isoRepFpkm$rep <-
+                paste(isoRepFpkm$condition, isoRepFpkm$replicate, sep = '_')
+            isoRepFpkm <-
+                reshape2::dcast(data = isoRepFpkm,
+                                isoform_id ~ rep,
+                                value.var = 'FPKM')
+
+            ### Gene
+            isoRepFpkm2 <- isoRepFpkm
+            isoRepFpkm2$gene_id <- isoformAnnotation2$gene_id[match(
+                isoRepFpkm2$isoform_id, isoformAnnotation2$isoform_id
+            )]
+            isoRepFpkm2$isoform_id <- NULL
+
+            geneRepFpkm <- IsoformSwitchAnalyzeR::isoformToGeneExp(isoRepFpkm2, quiet = T)
+
+            ### Calculate means
+            rownames(isoRepFpkm) <- isoRepFpkm$isoform_id
+            isoRepFpkm$isoform_id <- NULL
+            isoMean <- rowMeans(isoRepFpkm)
+
+            rownames(geneRepFpkm) <- geneRepFpkm$gene_id
+            geneRepFpkm$gene_id <- NULL
+            geneMean <- rowMeans(geneRepFpkm)
+
+            ### add means
+            geneDiffanalysis$gene_overall_mean <- geneMean[match(
+                geneDiffanalysis$gene_id, names(geneMean)
+            )]
+
+            isoformDiffanalysis$iso_overall_mean <- isoMean[match(
+                isoformDiffanalysis$isoform_id, names(isoMean)
+            )]
 
         }
 
@@ -1065,6 +1137,7 @@ importCufflinksFiles <- function(
                     'sample_1',
                     'sample_2',
                     'iso_status',
+                    'iso_overall_mean',
                     'iso_value_1',
                     'iso_value_2',
                     'iso_stderr_1',
@@ -1105,6 +1178,7 @@ importCufflinksFiles <- function(
                     'sample_1',
                     'sample_2',
                     'gene_status',
+                    'gene_overall_mean',
                     'gene_value_1',
                     'gene_value_2',
                     'gene_stderr_1',
@@ -1173,11 +1247,11 @@ importCufflinksFiles <- function(
             unique(c(
                 isoformData$isoform_id,
                 exonFeatures$isoform_id,
-                isoRepExp$isoform_id
+                isoRepExp2$isoform_id
             ))
         myIntersect <- intersect(
             intersect(isoformData$isoform_id, exonFeatures$isoform_id),
-            isoRepExp$isoform_id
+            isoRepExp2$isoform_id
         )
 
         # If there are descripencies
@@ -1197,8 +1271,8 @@ importCufflinksFiles <- function(
                 isoformData$isoform_id     %in% myIntersect), ]
             exonFeatures <- exonFeatures[which(
                     exonFeatures$isoform_id    %in% myIntersect), ]
-            isoRepExp <- isoRepExp[which(
-                isoRepExp$isoform_id       %in% myIntersect), ]
+            isoRepExp2 <- isoRepExp2[which(
+                isoRepExp2$isoform_id       %in% myIntersect), ]
 
             if (!quiet) {
                 message(
@@ -1257,6 +1331,7 @@ importCufflinksFiles <- function(
                     'gene_id',
                     'sample_1',
                     'sample_2',
+                    'gene_overall_mean',
                     'gene_value_1',
                     'gene_value_2',
                     'gene_stderr_1',
@@ -1266,6 +1341,7 @@ importCufflinksFiles <- function(
                     'gene_q_value',
                     'gene_significant',
                     'iso_status',
+                    'iso_overall_mean',
                     'iso_value_1',
                     'iso_value_2'
                 )]
@@ -1274,10 +1350,11 @@ importCufflinksFiles <- function(
                     ,c('gene_id', 'sample_1', 'sample_2')], drop =TRUE)
 
             correctedGenes <-
-                ldply(
+                plyr::ldply(
                     problematicGenesSplit,
                     .fun = function(df) {
                         # df <- problematicGenesSplit[[1]]
+                        df$gene_overall_mean <- sum(df$iso_overall_mean)
                         df$gene_value_1 <- sum(df$iso_value_1)
                         df$gene_value_2 <- sum(df$iso_value_2)
                         df$gene_stderr_1 <- NA
@@ -1307,6 +1384,7 @@ importCufflinksFiles <- function(
                 'gene_id',
                 'sample_1',
                 'sample_2',
+                'gene_overall_mean',
                 'gene_value_1',
                 'gene_value_2',
                 'gene_stderr_1',
@@ -1316,6 +1394,7 @@ importCufflinksFiles <- function(
                 'gene_q_value',
                 'gene_significant',
                 'iso_status',
+                'iso_overall_mean',
                 'iso_value_1',
                 'iso_value_2'
             )] <- correctedGenes[, -1] # -1 removes the isoform id
@@ -1345,6 +1424,7 @@ importCufflinksFiles <- function(
     }
 
     ### Calculate IF values
+    isoformData$IF_overall <- isoformData$iso_overall_mean / isoformData$gene_overall_mean
     isoformData$IF1 <-
         isoformData$iso_value_1 / isoformData$gene_value_1
     isoformData$IF2 <-
@@ -1437,7 +1517,7 @@ importCufflinksFiles <- function(
         isoformFeatures = isoformData,
         exons = exonFeatures,
         designMatrix = designMatrix,
-        isoformCountMatrix = isoRepExp,
+        isoformCountMatrix = isoRepExp2,
         sourceId = paste("cufflinks", cuffVersion , sep = '_')
     )
 
@@ -1516,6 +1596,7 @@ importGTF <- function(
         condition_2 = "plaseholder2",
         gene_name = myIso$gene_name,
         class_code = NA,
+        gene_overall_mean = 0,
         gene_value_1 = 0,
         gene_value_2 = 0,
         gene_stderr_1 = NA,
@@ -1523,6 +1604,7 @@ importGTF <- function(
         gene_log2_fold_change = 0,
         gene_p_value = 1,
         gene_q_value = 1,
+        iso_overall_mean = 0,
         iso_value_1 = 0,
         iso_value_2 = 0,
         iso_stderr_1 = NA,
@@ -1530,6 +1612,7 @@ importGTF <- function(
         iso_log2_fold_change = 0,
         iso_p_value = 1,
         iso_q_value = 1,
+        IF_overall = NA,
         IF1 = NA,
         IF2 = NA,
         dIF = NA,
@@ -2291,7 +2374,7 @@ importRdata <- function(
             }
         }
 
-        ### Removel potential levels
+        ### Convert potential factors
         if (TRUE) {
             designMatrix$condition <- as.character(designMatrix$condition)
             designMatrix$sampleID  <-
@@ -2415,7 +2498,7 @@ importRdata <- function(
         } else {
             gtfImported <- FALSE
 
-            ###
+            ### Test
             if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
                 stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
             }
@@ -2429,19 +2512,6 @@ importRdata <- function(
             if (!'gene_name' %in% colnames(isoformAnnotation)) {
                 isoformAnnotation$gene_name <- NA
             }
-        }
-
-        ### Reduce to those expressed
-        isoformExonStructure <- isoformExonStructure[which(
-            isoformExonStructure$isoform_id %in% isoformCountMatrix$isoform_id
-        ), ]
-        isoformAnnotation <-isoformAnnotation[which(
-            isoformAnnotation$isoform_id    %in% isoformCountMatrix$isoform_id
-        ), ]
-
-        if (length(isoformExonStructure) == 0 |
-            nrow(isoformAnnotation) == 0) {
-            stop('The annotation does not fit the expression data')
         }
 
         ### Test the obtained annoation
@@ -2468,13 +2538,54 @@ importRdata <- function(
             ))
         }
 
-        if (jaccardDistance(isoformCountMatrix$isoform_id,
-                            isoformAnnotation$isoform_id) == 0) {
-            stop('The annotation does not fit the expression data')
-        }
-        if (jaccardDistance(isoformCountMatrix$isoform_id,
-                            isoformExonStructure$isoform_id) == 0) {
-            stop('The annotation does not fit the expression data')
+        j1 <- jaccardSimilarity(
+            isoformCountMatrix$isoform_id,
+            isoformAnnotation$isoform_id
+        )
+        jcCutoff <- 0.95
+        if (j1 != 1 ) {
+            if( J1 < jcCutoff) {
+                stop(
+                    paste(
+                        'The annotation (count matrix and isoform annotation)',
+                        'seems to be different (jacard similarity < 0.95).',
+                        'Either isforoms found in the annotation are',
+                        'not quantifed or vise versa.',
+                        sep=' '
+                    )
+                )
+            }
+            if( J1 >= jcCutoff ) {
+                warning(
+                    paste(
+                        'The annotation (count matrix and isoform annotation)',
+                        'contain differences in which isoforms are analyzed.',
+                        'specifically the annotation provided comtain:',
+                        length(unique(isoformAnnotation$isoform_id)) - length(unique(isoformCountMatrix$isoform_id)),
+                        'more isoforms than the count matrix.',
+                        'Please make sure this is on purpouse since differences',
+                        'will cause inaccurate quantification and thereby skew all analysis',
+                        sep=' '
+                    )
+                )
+
+                ### Reduce to those found in all
+                isoformsUsed <- intersect(
+                    isoformCountMatrix$isoform_id,
+                    isoformAnnotation$isoform_id
+                )
+
+                isoformExonStructure <- isoformExonStructure[which(
+                    isoformExonStructure$isoform_id %in% isoformsUsed
+                ), ]
+                isoformAnnotation <-isoformAnnotation[which(
+                    isoformAnnotation$isoform_id    %in% isoformsUsed
+                ), ]
+
+                isoformCountMatrix <-isoformCountMatrix[which(
+                    isoformCountMatrix$isoform_id    %in% isoformsUsed
+                ), ]
+            }
         }
     }
 
@@ -2599,7 +2710,7 @@ importRdata <- function(
         conditionList <-
             split(designMatrix$sampleID, f = designMatrix$condition)
         conditionSummary <-
-            llply(
+            plyr::llply(
                 .data = conditionList,
                 .progress = progressBar,
                 .fun = function(sampleVec) {
@@ -2610,6 +2721,7 @@ importRdata <- function(
 
                     isoSummary <- data.frame(
                         isoform_id = isoformRepExpression$isoform_id,
+                        iso_overall_mean = rowMeans(isoformRepExpression[,designMatrix$sampleID]),
                         iso_value = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
                         iso_std = apply(isoformRepExpression[, isoIndex], 1, sd),
                         stringsAsFactors = FALSE
@@ -2624,6 +2736,7 @@ importRdata <- function(
 
                     geneSummary <- data.frame(
                         gene_id = geneRepExpression$gene_id,
+                        gene_overall_mean = rowMeans(geneRepExpression[,designMatrix$sampleID]),
                         gene_value = rowMeans(geneRepExpression[, geneIndex, drop=FALSE]),
                         gene_std = apply(geneRepExpression[, geneIndex], 1, sd),
                         stringsAsFactors = FALSE
@@ -2649,15 +2762,20 @@ importRdata <- function(
     }
     if (TRUE) {
         isoAnnot <-
-            ddply(
+            plyr::ddply(
                 .data = comparisonsToMake,
                 .variables = c('condition_1', 'condition_2'),
                 .drop = TRUE,
                 .progress = progressBar,
-                .fun = function(aDF) {
+                .fun = function(aDF) { # aDF <- comparisonsToMake[1,]
                     ### Extract data
                     cond1data <- conditionSummary[[aDF$condition_1]]
                     cond2data <- conditionSummary[[aDF$condition_2]]
+
+                    ### remove overall estimates from second condition
+                    cond2data$iso_overall_mean <- NULL
+                    cond2data$gene_overall_mean <- NULL
+
 
                     # modify colnames
                     matchIndex <-
@@ -2717,6 +2835,7 @@ importRdata <- function(
         isoAnnot$iso_q_value  <- NA
 
         # Isoform fraction values
+        isoAnnot$IF_overall <- isoAnnot$iso_overall_mean / isoAnnot$gene_overall_mean
         isoAnnot$IF1 <-
             round(isoAnnot$iso_value_1 / isoAnnot$gene_value_1 , digits = 4)
         isoAnnot$IF2 <-
@@ -2736,18 +2855,21 @@ importRdata <- function(
                 'condition_2',
                 'gene_name',
                 'class_code',
+                'gene_overall_mean',
                 'gene_value_1',
                 'gene_value_2',
                 'gene_stderr_1',
                 'gene_stderr_2',
                 'gene_log2_fold_change',
                 'gene_q_value',
+                'iso_overall_mean',
                 'iso_value_1',
                 'iso_value_2',
                 'iso_stderr_1',
                 'iso_stderr_2',
                 'iso_log2_fold_change',
                 'iso_q_value',
+                'IF_overall',
                 'IF1',
                 'IF2',
                 'dIF',
@@ -2801,7 +2923,6 @@ preFilter <- function(
     geneExpressionCutoff = 1,
     isoformExpressionCutoff = 0,
     IFcutoff = 0.01,
-    geneCutoffInBothConditions = TRUE,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
     reduceToSwitchingGenes = FALSE,
@@ -2848,9 +2969,6 @@ preFilter <- function(
         if (!is.logical(removeSingleIsoformGenes)) {
             stop('The removeSingleIsoformGenes must be either TRUE or FALSE')
         }
-        if (!is.logical(geneCutoffInBothConditions)) {
-            stop('The geneCutoffInBothConditions must be either TRUE or FALSE')
-        }
 
         if (reduceToSwitchingGenes) {
             if (alpha < 0 |
@@ -2877,12 +2995,9 @@ preFilter <- function(
                 'isoform_id',
                 'gene_id',
                 'class_code',
-                'gene_value_1',
-                'gene_value_2',
-                'iso_value_1',
-                'iso_value_2',
-                'IF1',
-                'IF2',
+                'gene_overall_mean',
+                'iso_overall_mean',
+                'IF_overall',
                 'dIF',
                 'gene_switch_q_value'
             )
@@ -2909,17 +3024,9 @@ preFilter <- function(
         }
 
         if (!is.null(geneExpressionCutoff)) {
-            if (geneCutoffInBothConditions) {
-                localData <- localData[which(
-                    localData$gene_value_1 > geneExpressionCutoff &
-                        localData$gene_value_2 > geneExpressionCutoff
-                ), ]
-            } else {
-                localData <- localData[which(
-                    localData$gene_value_1 > geneExpressionCutoff |
-                        localData$gene_value_2 > geneExpressionCutoff
-                ), ]
-            }
+            localData <- localData[which(
+                localData$gene_overall_mean > geneExpressionCutoff
+            ), ]
             if (!nrow(localData)) {
                 stop('No genes were left after filtering for gene expression')
             }
@@ -2927,17 +3034,17 @@ preFilter <- function(
 
         if (!is.null(isoformExpressionCutoff)) {
             localData <- localData[which(
-                localData$iso_value_1 > isoformExpressionCutoff |
-                    localData$iso_value_2 > isoformExpressionCutoff
+                localData$iso_overall_mean > isoformExpressionCutoff
             ), ]
             if (!nrow(localData)) {
                 stop('No genes were left after filtering for isoform expression')
             }
         }
 
-        if (!is.null(isoformExpressionCutoff)) {
-            localData <- localData[which(localData$IF1 > IFcutoff |
-                                             localData$IF2 > IFcutoff), ]
+        if (!is.null(IFcutoff)) {
+            localData <- localData[which(
+                localData$IF_overall > IFcutoff
+            ), ]
             if (!nrow(localData)) {
                 stop('No genes were left after filtering for isoform fraction (IF) values')
             }
