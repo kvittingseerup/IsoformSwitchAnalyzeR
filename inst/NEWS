@@ -1,3 +1,6 @@
+2017-04-23 : IsoformSwitchAnalyzeR 1.1.09 ( minor )
+    - Small update to importRdata which in rare circumstances could cause an error (J1 not found)
+
 2017-04-17 : IsoformSwitchAnalyzeR 1.1.08 ( minor )
     - The preFilter function was updated to only allow filtering on mean expression/usage (gene expression, isoform expression and isoform usage)
          accross all samples since filtering on individal conditions can lead to loss of false discovery rate.

@@ -2544,7 +2544,7 @@ importRdata <- function(
         )
         jcCutoff <- 0.95
         if (j1 != 1 ) {
-            if( J1 < jcCutoff) {
+            if( j1 < jcCutoff) {
                 stop(
                     paste(
                         'The annotation (count matrix and isoform annotation)',
@@ -2555,7 +2555,7 @@ importRdata <- function(
                     )
                 )
             }
-            if( J1 >= jcCutoff ) {
+            if( j1 >= jcCutoff ) {
                 warning(
                     paste(
                         'The annotation (count matrix and isoform annotation)',
