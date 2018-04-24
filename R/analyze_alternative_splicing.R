@@ -2365,7 +2365,7 @@ extractSplicingEnrichment <- function(
         gainLossBalance <- gainLossBalance[which(
             ! is.na(gainLossBalance$propUp)
         ),]
-        gainLossBalance$propUpQval <- p.adjust(gainLossBalance$propUpPval)
+        gainLossBalance$propUpQval <- p.adjust(gainLossBalance$propUpPval, method = 'fdr')
         gainLossBalance$Significant <- gainLossBalance$propUpQval < alpha
 
         gainLossBalance$Comparison <- paste(

@@ -1,3 +1,7 @@
+2017-04-24 : IsoformSwitchAnalyzeR 1.1.10 ( minor )
+    - Corrected a mistake in extractSplicingEnrichment() and extractConsequenceEnrichment() which
+      caused p-values to be corrected for multiple testing with Holms methods instead of BH/FDR (which it is now).
+
 2017-04-23 : IsoformSwitchAnalyzeR 1.1.09 ( minor )
     - Small update to importRdata which in rare circumstances could cause an error (J1 not found)
 

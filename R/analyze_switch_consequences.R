@@ -2490,7 +2490,7 @@ extractConsequenceEnrichment <- function(
     )
 
     ### Plot result
-    consequenceBalance$propQval <- p.adjust(consequenceBalance$propPval)
+    consequenceBalance$propQval <- p.adjust(consequenceBalance$propPval, method = 'fdr')
     consequenceBalance$Significant <- consequenceBalance$propQval < alpha
 
     ### Add comparison
