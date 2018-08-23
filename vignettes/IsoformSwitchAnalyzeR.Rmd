@@ -27,7 +27,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 <!-- Abstract -->
 ## Abstract
-Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data (via tools such as Cufflinks, Kallisto and Salmon). These tools make it possible to analyzing alternative isoform usage, but unfortunatly this is rarely done. Thus, RNA-se data is typically not used to its full potential. 
+Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data (via tools such as Cufflinks, Kallisto and Salmon). These tools make it possible to analyzing alternative isoform usage, but unfortunatly this is rarely done. Thus, RNA-seq data is typically not used to its full potential. 
 
 To solve this problem we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR  facilitates integration of many sources of (predicted) annotation including features, including Open Reading Frame (ORF), protein domains (via Pfam), signal peptides (via SignalP), coding potential (via CPAT) and sensitivity to Non-sense Mediated Decay (NMD). The combination of identified isoform switches and their annotation also enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains or coding potential --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches, and summary statistics describing the genome-wide occurences of isoform switches, their consequences as well as the associated alternative splicing.
 
@@ -103,7 +103,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 <!-- Preliminaries  -->
 ## Preliminaries
 ### Background and Package Description
-The usage of Alternative Transcription Start sites (aTSS), Alternative Splicing (AS) and alternative Transcription Termination Sites (aTTS) are collectively collectively results in the production of different isoforms. Alternative isoforms are widely used as recently demonstrated by The ENCODE Consortium, which found that on average, 6.3 different transcripts are generated per gene; a number whic may var considerably per gene. 
+The usage of Alternative Transcription Start sites (aTSS), Alternative Splicing (AS) and alternative Transcription Termination Sites (aTTS) are collectively collectively results in the production of different isoforms. Alternative isoforms are widely used as recently demonstrated by The ENCODE Consortium, which found that on average, 6.3 different transcripts are generated per gene; a number which may vary considerably per gene. 
 
 The importance of analyzing isoforms instead of genes has been highlighted by many examples showing functionally important changes. One of these examples is the pyruvate kinase. In normal adult homeostasis, cells use the adult isoform (M1), which supports oxidative phosphorylation. However, almost all cancer cells use the embryonic isoform (M2), which promotes aerobic glycolysis, one of the hallmarks of cancer. Such shifts in isoform usage are termed 'isoform switching' and cannot be detected at when only analyzing data on gene level.
 
@@ -117,7 +117,7 @@ We hypothesize that there are multiple reasons why RNA-seq data is not used to i
 
 To solve all these problems, we developed IsoformSwitchAnalyzeR.
 
-IsoformSwitchAnalyzeR is an easy-to-use R package that enables the user to import  (novel) full-length derived isoforms from an RNA-seq experiment into R. If annotated transcripts are analyzed, IsoformSwitchAnalyzeR offers integration with the multi-layer information stored in a GTF file including the annotated coding sequences (CDS). If transcript structures are predicted (either  de-novo or guided) IsoformSwitchAnalyzeR offers an accurate tool for identifying the dominant ORF of the isoforms. The knowledge of isoform positions for the CDS/ORF  allows for prediction of sensitivity to Nonsense Mediated Decay (NMD) --- the mRNA quality control machinery that degrades isoforms with pre-mature termination codons (PTC).
+IsoformSwitchAnalyzeR is an easy-to-use R package that enables the user to import (novel) full-length derived isoforms from an RNA-seq experiment into R. If annotated transcripts are analyzed, IsoformSwitchAnalyzeR offers integration with the multi-layer information stored in a GTF file including the annotated coding sequences (CDS). If transcript structures are predicted (either de-novo or guided) IsoformSwitchAnalyzeR offers an accurate tool for identifying the dominant ORF of the isoforms. The knowledge of isoform positions for the CDS/ORF  allows for prediction of sensitivity to Nonsense Mediated Decay (NMD) --- the mRNA quality control machinery that degrades isoforms with pre-mature termination codons (PTC).
 
 IsoformSwitchAnalyzeR facilitates identification of isoform switches via newly developed statistical methods that tests each individual isoform for differential usage and thereby identifies the exact isoforms involved in an isoform switch.
 
@@ -129,7 +129,7 @@ IsoformSwitchAnalyzeR contains tools that allow the user to create article-ready
 
 1) Individual isoform switches
 2) Genome-wide analysis of isoform switches and their predicted consequences
-3) Genome-wide analusis of alternative splicing.
+3) Genome-wide analysis of alternative splicing.
 
 These visualizations are easy to understand and integrate all information gathered throughout the workflow. Example of visualizations can be found in the [Examples of Switch Visualizations] section.
 
@@ -225,7 +225,7 @@ The idea behind IsoformSwitchAnalyzeR is to make it easy to do advanced post-ana
 
 - Identification of isoform switches.
 - Annotation of the transcripts involved in the isoform switches.
-- Visualization of predicted consequences of the isoform switches, for indivsual switches and globally.
+- Visualization of predicted consequences of the isoform switches, for individual switches and globally.
 
 A normal workflow for identification and analysis of isoform switches with functional consequences can be divided into two parts (also illustrated below in Figure 1).
 
@@ -309,16 +309,16 @@ The data stored in this example switch list correspond to a small subset of the 
 <br />
 
 #### Part 1
-Before we can run the analysis it is nessesary to know that IsoformSwitchAnalyzeR measures isoform usageas via isoform fraction (IF) values which quantifies the fration of the parent gene expression originating from a specific isoform (calculated as <isoform_exp> / <gene_exp>). Consequently the difference in isoform usage is quantifed as the difference in isoform fraction (dIF) caluclated as IF2 - IF1.
+Before we can run the analysis it is necessary to know that IsoformSwitchAnalyzeR measures isoform usage via isoform fraction (IF) values which quantifies the fraction of the parent gene expression originating from a specific isoform (calculated as <isoform_exp> / <gene_exp>). Consequently the difference in isoform usage is quantifed as the difference in isoform fraction (dIF) calculated as IF2 - IF1.
 
 We can now run the first part of the isoform switch analysis workflow which filters for non-expressed genes/isoforms, identifies isoform switches, annotates open reading frames (ORF), switches with and extracts both the nucleotide and peptide (amino acid) sequences.
 
 ```{r, results = "hide", message = FALSE, warning=FALSE}
 ### isoformSwitchAnalysisPart1 needs the genomic sequence to predict ORFs
 
-# Genome sequences are available from Biocindoctor as BSgenome objects: 
+# Genome sequences are available from Bioconductor as BSgenome objects: 
 # http://bioconductor.org/packages/release/BiocViews.html#___BSgenome
-# Here we use the gg19 reference genome - which can be downloaded by
+# Here we use the hg19 reference genome - which can be downloaded by
 # copy/pasting the following two lines into the R terminal:
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("BSgenome.Hsapiens.UCSC.hg19")
@@ -387,9 +387,9 @@ Let's take a look at the isoform switch in the KIF1B gene via the switch plot pr
 switchPlot(exampleSwitchList, gene='KIF1B')
 ```
 
-From this plot, we first note that the gene expression is not significantly changed (bottom left). Next, we see the large significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are chaning (bottom right) to the isoform structure (top) it can be seen that in hESC it is primarly the long isoforms that are used, but as the cells are differentiated to fibroblasts, there is a change towards mainly using the short isoform. Interestingly, this isoform switch results in the loss of several protein domains including the PH domain which plays a role in anchoring proteins to cell membranes. This could lead to the hypothesis that KIF1B would lose its ability to bind vesicles --- , which would have to be confirmed experimentally.
+From this plot, we first note that the gene expression is not significantly changed (bottom left). Next, we see the large significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be seen that in hESC it is primarly the long isoforms that are used, but as the cells are differentiated to fibroblasts, there is a change towards mainly using the short isoform. Interestingly, this isoform switch results in the loss of several protein domains including the PH domain which plays a role in anchoring proteins to cell membranes. This could lead to the hypothesis that KIF1B would lose its ability to bind vesicles --- , which would have to be confirmed experimentally.
 
-Note that if you want to save this plot as a pdf file via the _pdf_ command, you need to specify "onefile = FALSE". The folloing colde chunk that will produce a nicely-sized figure:
+Note that if you want to save this plot as a pdf file via the _pdf_ command, you need to specify "onefile = FALSE". The following code chunk will produce a nicely-sized figure:
 
     pdf(file = '<outoutDirAndFileName>.pdf', onefile = FALSE, height=5, width = 8)
     switchPlot(exampleSwitchList, gene='KIF1B')
