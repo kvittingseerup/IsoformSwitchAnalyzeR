@@ -141,8 +141,9 @@ Back to [Table of Content].
 ### Installation
 IsoformSwitchAnalyzeR is part of the Bioconductor repository and community which means it is distributed with, and dependent on, Bioconductor. Installation of IsoformSwitchAnalyzeR is  easy and can be done from within the R terminal. If it is the first time you use Bioconductor, simply copy-paste the following into an R session to install the basic Bioconductor packages:
 
-    source("http://bioconductor.org/biocLite.R")
-    biocLite()
+    if (!requireNamespace("BiocManager", quietly=TRUE))
+        install.packages("BiocManager")
+    BiocManager::install()
 
 If you already have installed Bioconductor, running these two commands will check whether updates for installed packages are available.
 
@@ -150,8 +151,9 @@ If you already have installed Bioconductor, running these two commands will chec
 
 After you have installed the basic Bioconductor packages you can install IsoformSwitchAnalyzeR by copy-pasting the following into an R session:
 
-    source("http://bioconductor.org/biocLite.R")
-    biocLite("IsoformSwitchAnalyzeR")
+    if (!requireNamespace("BiocManager", quietly=TRUE))
+        install.packages("BiocManager")
+    BiocManager::install("IsoformSwitchAnalyzeR")
 
 This will install the IsoformSwitchAnalyzeR package as well as other R packages that are needed for IsoformSwitchAnalyzeR to work.
 
@@ -159,9 +161,10 @@ This will install the IsoformSwitchAnalyzeR package as well as other R packages 
 
 If you need to install from the developmental branch of Bioconductor you need to specify that - note that this is for advanced uses and should not be done unless you have good reason to:
 
-    source("http://bioconductor.org/biocLite.R")
+    if (!requireNamespace("BiocManager", quietly=TRUE))
+        install.packages("BiocManager")
     useDevel(devel = TRUE)
-    biocLite("IsoformSwitchAnalyzeR")
+    BiocManager::install("IsoformSwitchAnalyzeR")
 
 <br />
 
