@@ -323,8 +323,9 @@ We can now run the first part of the isoform switch analysis workflow which filt
 # http://bioconductor.org/packages/release/BiocViews.html#___BSgenome
 # Here we use the gg19 reference genome - which can be downloaded by
 # copy/pasting the following two lines into the R terminal:
-# source("https://bioconductor.org/biocLite.R")
-# biocLite("BSgenome.Hsapiens.UCSC.hg19")
+# if (!requireNamespace("BiocManager", quietly=TRUE))
+    # install.packages("BiocManager")
+# BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
 
 library(BSgenome.Hsapiens.UCSC.hg19)
 
@@ -1122,8 +1123,9 @@ The _analyzeORF()_ function can be used as follows:
 # These are readily available from Bioconductor as BSgenome orbjects: 
 # http://bioconductor.org/packages/release/BiocViews.html#___BSgenome
 # Here we use Hg19 --- which can be downloaded by copy/pasting the following two lines into the R termminal:
-# source("https://bioconductor.org/biocLite.R")
-# biocLite("BSgenome.Hsapiens.UCSC.hg19")
+# if (!requireNamespace("BiocManager", quietly=TRUE))
+    # install.packages("BiocManager")
+# BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
 
 library(BSgenome.Hsapiens.UCSC.hg19)
 
