@@ -163,7 +163,7 @@ If you need to install from the developmental branch of Bioconductor you need to
 
     if (!requireNamespace("BiocManager", quietly=TRUE))
         install.packages("BiocManager")
-    useDevel(devel = TRUE)
+    BiocManager::install(version = "devel")
     BiocManager::install("IsoformSwitchAnalyzeR")
 
 <br />
