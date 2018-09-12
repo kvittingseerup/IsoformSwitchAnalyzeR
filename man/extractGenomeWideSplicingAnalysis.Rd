@@ -32,7 +32,7 @@ extractSplicingGenomeWide(
 }
 
 \arguments{
-\item{switchAnalyzeRlist}{A \code{switchAnalyzeRlist} object containing the result of an isoform switch analysis (such as the one provided by \code{isoformSwitchTest()}) as well as additional annotation data for the isoforms.}
+\item{switchAnalyzeRlist}{A \code{switchAnalyzeRlist} object containing the result of an isoform switch analysis (such as the one provided by \code{isoformSwitchTestDEXSeq()}) as well as additional annotation data for the isoforms.}
 
 \item{featureToExtract}{
 This argument, given as a string, defines the set isoforms which should be analyzed. The advailable options are:
@@ -40,7 +40,7 @@ This argument, given as a string, defines the set isoforms which should be analy
     \item {\code{'isoformUsage'} (Default): Analyze a subset of isoforms defined by change in isoform usage (controlled by \code{dIFcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
     \item {\code{'isoformExp'} :Analyze a subset of isoforms defined by change in isoform expression (controlled by \code{log2FCcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
     \item {\code{'geneExp'} :Analyze all isoforms from a subset of genes defined by by change in gene expression (controlled by \code{log2FCcutoff}) and the significance of the change in gene expression (controlled by \code{alpha})}
-    \item {\code{'all'} : Analyze all isoforms stored in the switchAnalyzeRlist (note that this is highly depending on the parameter \code{reduceToSwitchingGenes} in \link{isoformSwitchTest} - which should be set to FALSE (default is TRUE) if the 'all' option should be used here).}
+    \item {\code{'all'} : Analyze all isoforms stored in the switchAnalyzeRlist (note that this is highly depending on the parameter \code{reduceToSwitchingGenes} in \link{isoformSwitchTestDEXSeq} - which should be set to FALSE (default is TRUE) if the 'all' option should be used here).}
 }
 }
 
@@ -117,6 +117,8 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{analyzeAlternativeSplicing}}\cr
 \code{\link{extractSplicingSummary}}\cr
 \code{\link{extractSplicingEnrichment}}\cr

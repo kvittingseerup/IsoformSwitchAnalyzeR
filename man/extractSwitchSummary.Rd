@@ -40,10 +40,7 @@ A \code{data.frame} with the number of switches found in each comparison (as wel
 }
 
 \references{
-\itemize{
-    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
-}
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
 
 \author{
@@ -51,7 +48,8 @@ Kristoffer Vitting-Seerup
 }
 \seealso{
 \code{\link{preFilter}}\cr
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{extractSwitchOverlap}}\cr
 \code{\link{extractTopSwitches}}\cr
 \code{\link{analyzeSwitchConsequences}}
@@ -63,7 +61,7 @@ data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList)
 
 # Perfom test
-exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList)
+exampleSwitchListAnalyzed <- isoformSwitchTestDEXSeq(exampleSwitchList)
 
 # extract summary of number of switching features
 extractSwitchSummary(exampleSwitchListAnalyzed)

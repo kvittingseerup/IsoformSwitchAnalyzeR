@@ -26,7 +26,7 @@ A \code{switchAnalyzeRlist} object.
 }
 
 \item{extractGenes}{
-A logic indicating whether to extract the (top) switching isoforms (if TURE) or top swiching genes (if FALSE). Default is TRUE (extract isoforms).
+A logic indicating whether to extract the (top) switching isoforms (if FALSE) or top swiching genes (if TRUE). Default is TRUE (extract genes).
 }
 \item{filterForConsequences}{
 A logical indicating whether to filter for genes with functional consequences. Requtires that analyzeSwitchConsequences() have been run on the switchAnalyzeRlist. Default is FALSE.
@@ -54,10 +54,7 @@ A \code{data.frame} containing the top \code{n} switching genes or isoforms as c
 }
 
 \references{
-\itemize{
-    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{Ferguson JP, Palejev D: P-value calibration fro multiple testing problems in genomics. Stat. Appl. Genet. Mol. Biol. 2014, 13:659-673.}
-}
+Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
 
 \author{
@@ -65,7 +62,8 @@ Kristoffer Vitting-Seerup
 }
 \seealso{
 \code{\link{preFilter}}\cr
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{
@@ -74,7 +72,7 @@ data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList)
 
 # Perfom test
-exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList)
+exampleSwitchListAnalyzed <- isoformSwitchTestDEXSeq(exampleSwitchList)
 
 # extract summary of number of switching features
 extractSwitchSummary(exampleSwitchListAnalyzed)

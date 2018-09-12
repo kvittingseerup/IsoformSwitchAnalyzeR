@@ -22,28 +22,28 @@ getCDS <- function(
             genome='hg19',
             repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
             track =c("ensGene" , "knownGene", "refGene"        , "wgEncodeGencodeV19"),
-            stringsAsFactors = F
+            stringsAsFactors = FALSE
         ),
         # hg38
         data.frame(
             genome='hg38',
             repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
             track =c(NA        , NA         , 'refSeqComposite', "knownGene"), # gencode is stored as knownGene according to trackNames() annotation
-            stringsAsFactors = F
+            stringsAsFactors = FALSE
         ),
         # mm9
         data.frame(
             genome='mm9',
             repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
             track =c("ensGene" , "knownGene", "refGene"        , NA),
-            stringsAsFactors = F
+            stringsAsFactors = FALSE
         ),
         # mm10
         data.frame(
             genome='mm10',
             repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
             track =c(NA        , "knownGene", "refSeqComposite", "wgEncodeGencode"),
-            stringsAsFactors = F
+            stringsAsFactors = FALSE
         )
     )
     repoOfInterest <- localRepos[which(
@@ -207,7 +207,10 @@ analyzeORF <- function(
             paste('cds_', 1:length(annoatedStartGRanges), sep = '')
 
         ### Extract exons
-        localExons <-  switchAnalyzeRlist$exons
+        localExons <-  switchAnalyzeRlist$exons[which(
+            switchAnalyzeRlist$exons$isoform_id %in%
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+        ),]
         #localExons <- localExons[which(strand(localExons) %in% c('+','-')),]
         localExons <-
             localExons[which(as.character(localExons@strand) %in% c('+', '-')),]
@@ -346,12 +349,12 @@ analyzeORF <- function(
                 tmpSwitchAnalyzeRlist$isoform_feature[which(
                     tmpSwitchAnalyzeRlist$isoform_feature$isoform_id %in%
                         overlappingAnnotStart2$isoform_id
-                ), ]
+                ),]
             tmpSwitchAnalyzeRlist$exons <-
                 tmpSwitchAnalyzeRlist$exons[which(
                     tmpSwitchAnalyzeRlist$exons$isoform_id %in%
                         overlappingAnnotStart2$isoform_id
-                ), ]
+                ),]
         }
 
         transcriptSequencesDNAstring <-
@@ -404,7 +407,7 @@ analyzeORF <- function(
 
         ### Find the disired ORF
         transcriptORFs <-
-            llply(
+            plyr::llply(
                 overlappingAnnotStartList,
                 .progress = progressBar,
                 function(
@@ -496,7 +499,10 @@ analyzeORF <- function(
     }
     if (TRUE) {
         ### Extract exon structure for each transcript
-        myExons <- as.data.frame(switchAnalyzeRlist$exons)
+        myExons <- as.data.frame(switchAnalyzeRlist$exons[which(
+            switchAnalyzeRlist$exons$isoform_id %in%
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+        ),])
         myExons <- myExons[which(myExons$strand %in% c('+', '-')), ]
         myExons <-
             myExons[which(myExons$isoform_id %in% names(transcriptORFs)), ]
@@ -506,7 +512,7 @@ analyzeORF <- function(
         allIsoforms <-
             split(names(myExonsSplit), names(myExonsSplit))
         ptcResult <-
-            llply(
+            plyr::llply(
                 allIsoforms,
                 .fun = function(isoformName) {
                     # isoformName <- allIsoforms[[1]]
@@ -546,7 +552,11 @@ analyzeORF <- function(
     if (TRUE) {
         # merge ORF and PTC analysis together
         myResultDf <-
-            merge(myTranscriptORFdf, myPTCresults, by = 'orign')
+            dplyr::inner_join(
+                myTranscriptORFdf[,c('orign','start','end','length')],
+                myPTCresults,
+                by = 'orign'
+            )
         colnames(myResultDf)[1] <- 'isoform_id'
         colnames(myResultDf)[2:4] <-
             paste(
@@ -642,7 +652,7 @@ extractSequence <- function(
                 switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
             ))) {
                 stop(
-                    'If only switching genes should be outputted please run the \'isoformSwitchTest\' function first and try again'
+                    'If only switching genes should be outputted please run the \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\' function first and try again'
                 )
             }
         }
@@ -722,7 +732,10 @@ extractSequence <- function(
                     switchAnalyzeRlist$exons$isoform_id %in% switchingIsoforms
                 ),]
         } else {
-            myExonGranges <- switchAnalyzeRlist$exons
+            myExonGranges <- switchAnalyzeRlist$exons[which(
+                switchAnalyzeRlist$exons$isoform_id %in%
+                    switchAnalyzeRlist$isoformFeatures$isoform_id
+            ),]
         }
 
         myExonGranges <-
@@ -732,7 +745,7 @@ extractSequence <- function(
 
         # update grange levels (migth be nessesary if it is a subset)
         seqlevels(myExonGranges) <-
-            as.character(seqnames(myExonGranges)@values) # nessesary to make sure seqlevels not pressented in the input data casuses problems - if presented with a subset for example
+            unique( as.character(seqnames(myExonGranges)@values) ) # nessesary to make sure seqlevels not pressented in the input data casuses problems - if presented with a subset for example
 
 
         ### Check whether isoform annotation and genome fits together
@@ -1024,7 +1037,7 @@ extractSequence <- function(
                 transcriptORFaaSeq2 <-
                     transcriptORFaaSeq[which(
                         width(transcriptORFaaSeq) >= 6 &
-                        width(transcriptORFaaSeq) <= 6000
+                        width(transcriptORFaaSeq) <= 1000 # Update to new
                     )]
             } else {
                 transcriptORFaaSeq2 <- transcriptORFaaSeq
@@ -1311,8 +1324,4 @@ analyzeORFforPTC <- function(
         )
     )
 
-}
-
-startCapitalLetter <- function(aVec) {
-    paste(toupper(substr(aVec, 1, 1)), substr(aVec, 2, nchar(aVec)), sep = "")
 }

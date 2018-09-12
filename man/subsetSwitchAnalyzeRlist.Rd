@@ -6,7 +6,7 @@ A function which subset all enteries in a switchAnalyzeRlist.
 }
 
 \description{
-This function allows the user to remove data from all entereis in a switchAnalyzeRlist about isoforms that are no longer of interest.
+This function allows the user to remove data from all entereis in a switchAnalyzeRlist about isoforms that are no longer of interest. Note that it retain replicate isoforms information for all isoforms assocaited with genes containing isoforms in the subset (to enable correction for confounding factors when testing with isoformSwitchTestDEXSeq()).
 }
 
 \usage{
@@ -27,7 +27,6 @@ subsetSwitchAnalyzeRlist(
 A SwitchAnalyzeRlist only containing information about the isoforms (in their specific comparisons) indeicated with TRUE in the .
 }
 
-
 \references{
 Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
@@ -39,4 +38,14 @@ Kristoffer Vitting-Seerup
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{preFilter}}
 }
+
+\examples{
+data("exampleSwitchList")
+
+subsetSwitchAnalyzeRlist(
+    switchAnalyzeRlist = exampleSwitchList,
+    subset = exampleSwitchList$isoformFeatures$gene_overall_mean > 10
+)
+}
+
 

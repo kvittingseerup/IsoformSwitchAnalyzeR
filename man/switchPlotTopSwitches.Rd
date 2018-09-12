@@ -18,7 +18,7 @@ switchPlotTopSwitches(
     pathToOutput = getwd(),
     splitComparison=TRUE,
     splitFunctionalConsequences = TRUE,
-    IFcutoff=0,
+    IFcutoff=0.05,
     fileType = "pdf",
     additionalArguments=list(),
     quiet=FALSE

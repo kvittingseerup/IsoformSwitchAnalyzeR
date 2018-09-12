@@ -1,667 +1,3 @@
-### Helper function for p-value calibration
-pvcEstimateSigma2 <- function(
-    ### The implementation of the p-value correction found in Ferguson et al P-value calibration for multiple testing problems in genomics ###
-    # This is a modified version of the R function published with the article. The modification was simply to split the function into two functions.
-    # This modified version only contains the parts for esimating and returning the Sigma2.
-    # R code: http://www.math.bas.bg/~palejev/pvc/pvc.r
-    # vignette : http://www.math.bas.bg/~palejev/pvc/
-
-    ### Arguments
-    pvalues,        # the original p-values
-    pvaluesUse=NA,  # indicates which p-values would be used when estimating the likelihood. Possible values: either NA (default) or a boolean vector of the same length as pvalues. If NA, all p-values would be used when estimating the likelihood.If boolean vector of the same length as pvalues, only the elements of pvalues sliced by pvalueUse would be used when estimating the likelihood
-    startsigma2=1,  # starting value of sigma2 in conditional likelihood and EM algorithm.
-    condlik = TRUE, # set to FALSE if EM-algorithm based calibration is desired
-    # conditional likelihood
-    neff=NA,        # a prior estimate of the number of effective genes. Only useful when plotting the conditional likelihood
-    plotl=FALSE,    # A logic indicting if a plot of the likelihood is desired, when running the conditional likelihood method
-    le=0.1,          # lower bound for inclusion of p-values into the likelihood when running conditional likelihood method
-    ue=1,           # upper bound for inclusion of p-values into the likelihood when running conditional likelihood method
-    # EM implementation
-    starteps=0.01,  # starting value for epsilon parameter in EM algorithm
-    startmu=1,      # starting value for mu parameter in EM algorithm
-    tol=.00001      # convergence criterion for EM algorithm
-
-    ### Output
-    # sigma2 - estimate of sigma2
-) {
-    Np <- length(pvalues)
-    if((length(pvaluesUse)==1) && is.na(pvaluesUse)) {
-        pvaluesUse <- rep(TRUE, Np)}
-    if(length(pvaluesUse)!=Np) return("pvaluesUse not specified correctly")
-    myindexes <- c(1:length(pvalues))[!is.na(pvalues)]
-    pvalues <- pvalues[myindexes]
-    pvaluesUse <- pvaluesUse[myindexes]
-    prob_cal_needed <- NA
-
-    ### Conditional likelyhood
-    if(condlik){
-        indexes <- c(1:length(pvalues))[pvalues < ue & pvalues >= le & pvaluesUse]
-        tv <- qnorm(1-pvalues[indexes]/2)
-        N <- length(tv)
-        c1 <- qnorm(1-le/2)
-        c2 <- qnorm(1-ue/2)
-        simple_l <- function(sigma2){
-            -(N/2)*log(sigma2)+sum(-1*tv^2/(2*sigma2))-
-                N*log(pnorm(c1/sqrt(sigma2))-pnorm(c2/sqrt(sigma2)))}
-        if(!is.na(neff)) simple_l <- function(sigma2){-(neff/2)*log(sigma2)+
-                (neff/N)*sum(-1*tv^2/(2*sigma2))-neff*
-                log(pnorm(c1/sqrt(sigma2))-pnorm(c2/sqrt(sigma2)))}
-        sigma2new <- optim(par=startsigma2,method="L-BFGS-B",function(x){
-            -1*simple_l(x)},lower=0.01, upper=10)$par
-        if(plotl) {
-            sigma_possible <- seq(from = 0.2, to = 2, by = 0.0001)
-            like_vals <- sapply(sigma_possible, function(x){simple_l(x)})
-            like_vals <- like_vals - max(like_vals)
-            cum_area <- cumsum(exp(like_vals))/sum(exp(like_vals))
-            prob_cal_needed <- max(cum_area[sigma_possible < 0.9])
-            plot(sigma_possible, exp(like_vals)/(.0001*sum(exp(like_vals))),
-                 type="l",main="", xlab=expression(sigma^2),ylab = "")
-            title(expression(paste("Normalized likelihood for ",sigma^2)))
-            S <- .0001*sum(exp(like_vals))
-            for(j in 1:length(cum_area[sigma_possible < 0.9])) lines(
-                x=rep(sigma_possible[j],2),y=c(0,exp(like_vals[j])/S),
-                col="palevioletred")
-            text(x=.75,y=.5,labels=paste(
-                "area = ",round(prob_cal_needed,2),sep=""))
-        }
-    }
-
-    ### EM algorithm
-    if(!condlik){
-        indexes <- c(1:length(pvalues))[pvalues<1 & pvaluesUse]
-        tv <- qnorm(1-pvalues[indexes]/2)
-        tv[tv=="Inf"]=max(tv[tv!="Inf"])
-        N <- length(tv)
-
-        sigma2old <- startsigma2
-        currenterror <- 1
-        muold <- startmu
-        epsold <- starteps
-        while(currenterror > tol){
-            ddiff <- dnorm((tv-muold)/sqrt(sigma2old))+dnorm((-1*tv-muold)/sqrt(sigma2old))
-            dnormal <- 2*dnorm(tv/sqrt(sigma2old))
-            probs <- epsold*ddiff/((epsold*ddiff)+(1-epsold)*dnormal)
-            a1 <- epsold*dnorm((tv-muold)/sqrt(sigma2old))/((epsold*ddiff)+(1-epsold)*dnormal)
-            a2 <- epsold*dnorm((-1*tv-muold)/sqrt(sigma2old))/((epsold*ddiff)+(1-epsold)*dnormal)
-            munew <- weighted.mean(c(tv,-1*tv), w=c(a1,a2))
-            sigma2new <- (1/N)*sum((1-probs)*tv^2 + a1*(tv-munew)^2+a2*(-1*tv-munew)^2)
-            epsnew <- mean(probs)
-            currenterror <- max(abs(epsnew-epsold),abs(sigma2new-sigma2old),abs(munew-muold))
-            sigma2old <- sigma2new
-            muold <- munew
-            epsold <- epsnew
-
-        }
-        postprobs= rep(NA,length(pvalues))
-        postprobs[indexes]=probs
-        if(length(myindexes)<Np){
-            postprobs1 <- rep(NA,Np)
-            postprobs1[myindexes] <- postprobs
-            postprobs <- postprobs1
-        }
-        logL <- -1*sum((1-probs)*tv^2)/(2*sigma2new)-1*sum(a1*(tv-munew)^2)/(2*sigma2new)-1*sum(a2*(-1*tv-munew)^2)/(2*sigma2new)-(N/2)*log(2*pi*sigma2new)+log(epsnew)*sum(probs)+log(1-epsnew)*(N-sum(probs))
-    }
-
-    return(sigma2new)
-
-}
-
-pvcApplySigma <- function(
-    ### The implementation of the p-value correction found in Ferguson et al P-value calibration for multiple testing problems in genomics ###
-    # This is a modified version of the R function published with the article. The modification was simply to split the function into two functions.
-    # This modified version only contains the parts for using the estimated sigma2 to callibrated the p-values.
-    # R code: http://www.math.bas.bg/~palejev/pvc/pvc.r
-    # vignette : http://www.math.bas.bg/~palejev/pvc/
-
-    ### Arguments
-    pvalues,        # the original p-values
-    sigma2new
-
-    ### Output
-    # calibrated p-values
-) {
-    Np <- length(pvalues)
-    myindexes <- c(1:length(pvalues))[!is.na(pvalues)]
-    pvalues <- pvalues[myindexes]
-
-    ### transform the original pvalues.
-    indexes <- c(1:length(pvalues))[pvalues<1]
-    tv <- qnorm(1-pvalues[indexes]/2)
-    tv[tv=="Inf"]=max(tv[tv!="Inf"])
-    N <- length(tv)
-    pvalues= rep(1,length(pvalues))
-    pvalues[indexes] <- pchisq(tv^2/sigma2new,0,lower.tail=FALSE,df=1)
-    if(length(myindexes)<Np){
-        pvalues1 <- rep(NA,Np)
-        pvalues1[myindexes] <- pvalues
-        pvalues <- pvalues1
-    }
-
-    return(pvalues)
-}
-
-
-### Test for isoform switching
-isoformSwitchTest <- function(
-    switchAnalyzeRlist,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    reduceToSwitchingGenes = TRUE,
-    calibratePvalues = TRUE,
-    showProgress = FALSE,
-    quiet = FALSE
-) {
-    ### Test input
-    if (TRUE) {
-        ### Check cufflinks version (if data originates from cufflinks)
-        if (grepl('^cufflinks_', switchAnalyzeRlist$sourceId)) {
-            checkVersionFail <- function(versionVector,
-                                         minVersionVector) {
-                for (i in seq_along(versionVector)) {
-                    if (versionVector[i] > minVersionVector[i]) {
-                        return(FALSE)
-                    }
-                    if (versionVector[i] < minVersionVector[i]) {
-                        return(TRUE)
-                    }
-                }
-                return(FALSE)
-            }
-            cuffVersionDeconstructed <-
-                as.integer(strsplit(
-                    gsub('cufflinks_', '', switchAnalyzeRlist$sourceId),
-                    '\\.'
-                )[[1]])
-            if (checkVersionFail(cuffVersionDeconstructed, c(2, 2, 1))) {
-                stop(
-                    paste(
-                        'The version of cufflinks you have used is outdated.',
-                        'An error in the estimations of expression standard',
-                        'errors was not corrected untill',
-                        'cufflinks v2.2.1. Since the detection of isoform',
-                        'switches using this function',
-                        'relies on this standard error estimat, isoform',
-                        'switches cannot be tested from this',
-                        'versions of cufflinks. Please upgrade cufflinks',
-                        'to >=version 2.2.1 or newer and try again.',
-                        sep = ' '
-                    )
-                )
-            }
-        }
-
-        ### Tjek number of replicates
-        if (any(switchAnalyzeRlist$conditions$nrReplicates == 1)) {
-            stop(paste(
-                'This function relies on biological replicates to estimate',
-                'the untertainties in the data and can therefore',
-                'not be used in comparisons without replicates'
-            ))
-        }
-
-        if (reduceToSwitchingGenes) {
-            if (alpha < 0 |
-                alpha > 1) {
-                warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
-            }
-            if (alpha > 0.05) {
-                warning(paste(
-                    'Most journals and scientists consider an alpha larger',
-                    'than 0.05 untrustworthy. We therefore recommend using',
-                    'alpha values smaller than or queal to 0.05'
-                ))
-            }
-        }
-
-        ### Tjek arguments
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
-            stop(paste(
-                'The object supplied to \'switchAnalyzeRlist\'',
-                'must be a \'switchAnalyzeRlist\''
-            ))
-        }
-        if (!is.logical(reduceToSwitchingGenes))  {
-            stop(paste(
-                'The argument supplied to \'reduceToSwitchingGenes\'',
-                'must be an a logic'
-            ))
-        }
-        if (dIFcutoff < 0 | dIFcutoff > 1) {
-            stop('The dIFcutoff must be in the interval [0,1].')
-        }
-
-    }
-
-    if (showProgress &  !quiet) {
-        progressBar <- 'text'
-    } else {
-        progressBar <- 'none'
-    }
-
-    ### Extract and filter expression data
-    if (!quiet) {
-        message('Step 1 of 3: Filtering for eligible data...')
-    }
-    if (TRUE) {
-        ### Extract data
-        columnsToExtract <-
-            c(
-                'iso_ref',
-                'gene_ref',
-                "isoform_id",
-                "gene_id",
-                "condition_1",
-                "condition_2",
-                "gene_value_1",
-                "gene_value_2",
-                'gene_stderr_1',
-                'gene_stderr_2',
-                "iso_value_1",
-                "iso_value_2",
-                'iso_stderr_1',
-                'iso_stderr_2',
-                'IF1',
-                'IF2',
-                'dIF'
-            )
-        myDiffData <-
-            switchAnalyzeRlist$isoformFeatures[, columnsToExtract]
-
-        ### Filter for null variance
-        myDiffData <-
-            myDiffData[which(myDiffData$iso_stderr_1 != 0 &
-                                 myDiffData$iso_stderr_2 != 0),]
-        myDiffData <-
-            myDiffData[which(!is.na(myDiffData$gene_stderr_1) |
-                                 !is.na(myDiffData$gene_stderr_2)), ]
-        if (!nrow(myDiffData)) {
-            stop(paste(
-                'No isoforms were eligible for isoform switch',
-                'analysis after removing zero-variance genes'
-            ))
-        }
-
-        ### Extract genes with multiple isoforms
-        # get genes with multiple isoforms
-        geneIsoOverview <-
-            unique(myDiffData[, c('isoform_id', 'gene_id')])
-        isoList <-
-            split(geneIsoOverview$isoform_id, f = geneIsoOverview$gene_id)
-        genesOfInterest <-
-            names(isoList[which(sapply(isoList, length) > 1)])
-        # do the filtering
-        myDiffData <-
-            myDiffData[which(myDiffData$gene_id %in% genesOfInterest), ]
-        if (!nrow(myDiffData)) {
-            stop(paste(
-                'No isoforms were eligible for isoform switch',
-                'analysis after removing single-isoform genes'
-            ))
-        }
-
-        ### Add replcate number
-        myDiffData$nrReplicates_1 <-
-            switchAnalyzeRlist$conditions$nrReplicates[match(
-                myDiffData$condition_1 ,
-                switchAnalyzeRlist$conditions$condition)]
-        myDiffData$nrReplicates_2 <-
-            switchAnalyzeRlist$conditions$nrReplicates[match(
-                myDiffData$condition_2 ,
-                switchAnalyzeRlist$conditions$condition)]
-
-        myDiffData$gene_cv1 <-
-            (myDiffData$gene_stderr_1 * sqrt(myDiffData$nrReplicates_1)) /
-            myDiffData$gene_value_1
-        myDiffData$gene_cv2 <-
-            (myDiffData$gene_stderr_2 * sqrt(myDiffData$nrReplicates_2)) /
-            myDiffData$gene_value_2
-
-        ### Calculate CI
-        confidenceInterval <-
-            0.95 # hardcoded since this is not subject to change
-        myDiffData$gene_lower_CI_1 <-
-            myDiffData$gene_value_1 - myDiffData$gene_stderr_1 *
-            qt(confidenceInterval / 2 + .5,
-               df = myDiffData$nrReplicates_1 - 1)
-        myDiffData$gene_lower_CI_2 <- myDiffData$gene_value_2 -
-            myDiffData$gene_stderr_2 *
-            qt(confidenceInterval /2 + .5, df = myDiffData$nrReplicates_2 - 1)
-
-        ### Filter on CV and CI - this is nesseary
-        # for the implemnted version of Fieller's theorem
-        myDiffData2 <-
-            myDiffData[which(myDiffData$gene_lower_CI_1 > 0 &
-                                 myDiffData$gene_lower_CI_2 > 0), ] # This will also remove the genes with gene NA in standard error.
-        myDiffData2 <- myDiffData2[which(
-            myDiffData2$gene_stderr_1 * sqrt(myDiffData2$nrReplicates_1) <
-                myDiffData2$gene_value_1 / 2 &
-                myDiffData2$gene_stderr_2 * sqrt(myDiffData2$nrReplicates_2) <
-                myDiffData2$gene_value_2 / 2
-        ), ]
-
-        if (!nrow(myDiffData2)) {
-            stop(paste(
-                'No isoforms were eligible for isoform switch analysis',
-                'after removing genes expressed to close to zero'
-            ))
-        }
-    }
-
-    ### Calculate isoform fraction variance
-    if (TRUE) {
-        ### Calculate expression variannce
-        myDiffData2$gene_var_1 <-
-            (myDiffData2$gene_stderr_1 * sqrt(myDiffData2$nrReplicates_1)) ^ 2
-        myDiffData2$gene_var_2 <-
-            (myDiffData2$gene_stderr_2 * sqrt(myDiffData2$nrReplicates_2)) ^ 2
-
-        myDiffData2$iso_var_1 <-
-            (myDiffData2$iso_stderr_1 * sqrt(myDiffData2$nrReplicates_1)) ^ 2
-        myDiffData2$iso_var_2 <-
-            (myDiffData2$iso_stderr_2 * sqrt(myDiffData2$nrReplicates_2)) ^ 2
-
-        ### calculate var of isoform fraction
-        myDiffData2$IF_var_1 <- (1 / myDiffData2$gene_value_1 ^ 2) *
-            (
-                myDiffData2$iso_var_1 +
-                    (myDiffData2$IF1 ^ 2 * myDiffData2$gene_var_1) -
-                    (2 * myDiffData2$IF1 * myDiffData2$iso_var_1)
-            )
-
-        myDiffData2$IF_var_2 <- (1 / myDiffData2$gene_value_2 ^ 2) *
-            (
-                myDiffData2$iso_var_2 +
-                    (myDiffData2$IF2 ^ 2 * myDiffData2$gene_var_2) -
-                    (2 * myDiffData2$IF2 * myDiffData2$iso_var_2)
-            )
-
-
-        myDiffData2 <-
-            myDiffData2[which(myDiffData2$IF_var_1 > 0 &
-                                  myDiffData2$IF_var_2 > 0), ]
-
-        ### Print message
-        localFraction <-
-            round(
-                nrow(myDiffData2) /
-                    nrow(switchAnalyzeRlist$isoformFeatures) * 100,
-                digits = 2)
-        if (!quiet) {
-            message(
-                paste(
-                    'Found',
-                    nrow(myDiffData2),
-                    '(',
-                    localFraction ,
-                    '%)',
-                    'of isoform comparisons eligable for switch analysis',
-                    sep = ' '
-                )
-            )
-        }
-    }
-
-    ### Do statistical test of IF differences
-    if (!quiet) {
-        message('Step 2 of 3: Testing isoform usage...')
-    }
-    if (TRUE) {
-        ### Split in comparisons (since different
-        # comparisons might have different numbert of replicates)
-        myDiffData2List <-
-            split(myDiffData2, f = myDiffData2[, c(
-                'condition_1', 'condition_2')
-                ], drop = TRUE)
-
-        ### For each condition, do test,
-        myDiffData3list <- plyr::llply(
-            .data = myDiffData2List,
-            .progress = progressBar,
-            .fun = function(
-                aDF
-            ) {
-                # aDF <- myDiffData2List[[1]]
-                ### Calculate standard error of dIF
-                aDF$dIF_std_err <-
-                    sqrt(
-                        (aDF$IF_var_1 / aDF$nrReplicates_1) +
-                            (aDF$IF_var_2 / aDF$nrReplicates_2)
-                    )
-
-                ### Calculate test statistics
-                aDF$t_statistics <- aDF$dIF / aDF$dIF_std_err
-
-                ### Calulate degrees of freedome
-                aDF$deg_free <-
-                    (
-                        (aDF$IF_var_1 / aDF$nrReplicates_1) +
-                            (aDF$IF_var_2 / aDF$nrReplicates_2)
-                    ) ^ 2    /    (((aDF$IF_var_1 ^ 2) / (
-                        aDF$nrReplicates_1 ^ 2 *
-                            (aDF$nrReplicates_1 - 1)
-                    ))  +  ((aDF$IF_var_2 ^ 2) / (
-                        aDF$nrReplicates_2 ^ 2 *
-                            (aDF$nrReplicates_2 - 1)
-                    )))
-
-                ### Calculate p value
-                aDF$p_value <-
-                    2 * pt(abs(aDF$t_statistics),
-                           df = aDF$deg_free,
-                           lower.tail = FALSE) # The 2* to make it two tailed
-
-                aDF <- aDF[which(!is.na(aDF$p_value)),]
-                if (nrow(aDF) == 0) {
-                    return(NULL)
-                }
-                return(aDF)
-            }
-        )
-
-        ### Remove empty entries
-        myDiffData3list <- myDiffData3list[which(
-            sapply( myDiffData3list, nrow ) > 0
-        )]
-
-        ### Perform p-value callibration
-        stdQvals <- ! calibratePvalues
-        if( calibratePvalues ) {
-            ### Extract sigmas
-            mySigmaVals <- sapply(myDiffData3list, function(aDF) {
-                # Create subset of highly expressed isoforms
-                isoExpCutoff <-
-                    max(c(1, quantile(
-                        c(aDF$iso_value_1, aDF$iso_value_2) ,
-                        probs = 0.50
-                    )))
-
-                highlyExpressedIsoforms <- aDF[which(
-                    aDF$iso_value_1  > isoExpCutoff  &
-                        aDF$iso_value_2  > isoExpCutoff
-                ),]
-
-                # estimate sigma squared from highly expressed data
-                estimatedSigma2 <-
-                    pvcEstimateSigma2(highlyExpressedIsoforms$p_value)
-                return(estimatedSigma2)
-            })
-
-            allEligable <- all(mySigmaVals < 0.9 )
-            if( allEligable ) {
-                myDiffData3 <- do.call(
-                    rbind,
-                    lapply(myDiffData3list, function(aDF) {
-                        # Create subset of highly expressed isoforms
-                        isoExpCutoff <-
-                            max(c(1, quantile(
-                                c(aDF$iso_value_1, aDF$iso_value_2) ,
-                                probs = 0.50
-                            )))
-
-                        highlyExpressedIsoforms <- aDF[which(
-                            aDF$iso_value_1  > isoExpCutoff  &
-                                aDF$iso_value_2  > isoExpCutoff
-                        ),]
-
-                        # estimate sigma squared from highly expressed data
-                        estimatedSigma2 <-
-                            pvcEstimateSigma2(highlyExpressedIsoforms$p_value)
-
-                        # in accordance with article advice
-                        aDF$calibrated_p_values <-
-                            pvcApplySigma(pvalues = aDF$p_value,
-                                          sigma2new = estimatedSigma2)
-                        aDF$isoform_switch_q_value <-
-                            p.adjust(aDF$calibrated_p_values, method = 'BH')
-                        return(aDF)
-                    })
-                )
-            } else {
-                warning('Not all comparisons were eligible for p-value callibration. No comparisons were callibration')
-                stdQvals <- TRUE
-            }
-        }
-        if( stdQvals ) {
-            myDiffData3 <- do.call(
-                rbind,
-                plyr::llply(myDiffData3list, function(aDF) {
-                    aDF$calibrated_p_values <- NA
-                    aDF$isoform_switch_q_value <-
-                        p.adjust(aDF$p_value , method = 'BH')
-                    return(aDF)
-                })
-            )
-        }
-
-
-        ### Extrapolate to gene level
-        geneQlevel <- sapply(
-            X = split(
-                myDiffData3$isoform_switch_q_value,
-                f = myDiffData3$gene_ref
-            ),
-            FUN = function(x) {
-                min(c(1, x), na.rm = TRUE)
-            }
-        )
-        myDiffData3$gene_switch_q_value <-
-            geneQlevel[match(myDiffData3$gene_ref , names(geneQlevel))]
-        rownames(myDiffData3) <- NULL
-    }
-
-    ### Report results
-    if (!quiet) {
-        message('Step 3 of 3: Preparing output...')
-    }
-    if (TRUE) {
-        ### Overwrite previous results
-        switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <- NA
-        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <-
-            NA
-
-        ### Add significance to isoform_feature tab
-        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <-
-            myDiffData3$isoform_switch_q_value[match(
-                switchAnalyzeRlist$isoformFeatures$iso_ref,
-                myDiffData3$iso_ref
-            )]
-        switchAnalyzeRlist$isoformFeatures$gene_switch_q_value  <-
-            myDiffData3$gene_switch_q_value[match(
-                switchAnalyzeRlist$isoformFeatures$gene_ref,
-                myDiffData3$gene_ref
-            )]
-
-        ### Reduce data to significnat if needed
-        if (reduceToSwitchingGenes) {
-            isoResTest <-
-                any(!is.na(
-                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-                ))
-            if (isoResTest) {
-                combinedGeneIDsToKeep <- myDiffData3$gene_ref[which(
-                    myDiffData3$isoform_switch_q_value < alpha &
-                        abs(myDiffData3$dIF) > dIFcutoff
-                )]
-            } else {
-                combinedGeneIDsToKeep <- myDiffData3$gene_ref[which(
-                    myDiffData3$gene_switch_q_value    < alpha &
-                        abs(myDiffData3$dIF) > dIFcutoff
-                )]
-            }
-            if (length(combinedGeneIDsToKeep) == 0) {
-                stop(paste(
-                    'No signifcant switches were found with the supplied',
-                    'cutoffs whereby we cannot reduce the',
-                    'switchAnalyzeRlist to only significant genes'
-                ))
-            }
-
-            myDiffData3 <-
-                myDiffData3[which(myDiffData3$gene_ref %in%
-                                      combinedGeneIDsToKeep), ]
-            switchAnalyzeRlist <-
-                subsetSwitchAnalyzeRlist(
-                    switchAnalyzeRlist,
-                    switchAnalyzeRlist$isoformFeatures$gene_ref %in%
-                        combinedGeneIDsToKeep
-                )
-        }
-
-        ### Add detailed switch analysis to switchAnalyzeRlist
-        columnsToExtract <-
-            c(
-                'iso_ref',
-                'gene_ref',
-                "isoform_id",
-                "gene_id",
-                "condition_1",
-                "condition_2",
-                'nrReplicates_1',
-                'nrReplicates_2',
-                'IF1',
-                'IF2',
-                'IF_var_1',
-                'IF_var_2',
-                'dIF',
-                'dIF_std_err',
-                't_statistics',
-                'deg_free',
-                'p_value',
-                'calibrated_p_values',
-                'isoform_switch_q_value',
-                'gene_switch_q_value'
-            )
-
-        myDiffData4 <- myDiffData3[, columnsToExtract]
-        rownames(myDiffData4) <- NULL
-
-        switchAnalyzeRlist$isoformSwitchAnalysis <- myDiffData4
-
-        ### test callibration status
-        if (calibratePvalues) {
-            if (length(unique(
-                extractCalibrationStatus(switchAnalyzeRlist)$pvalsAreCalibrated
-            )) != 1) {
-                warning(
-                    paste(
-                        'Note that not all comparison was callibrated',
-                        '- which means',
-                        'they cannot be directly be compared as they have',
-                        'been treated differently.',
-                        'See ?extractCalibrationStatus for more information or',
-                        'run isoformSwitchTest() with calibratePvalues=FALSE.',
-                        sep = ' '
-                    )
-                )
-            }
-        }
-
-    }
-
-    return(switchAnalyzeRlist)
-}
-
-
 ### Test via DRIMSeq
 isoformSwitchTestDRIMSeq <- function(
     switchAnalyzeRlist,
@@ -749,8 +85,23 @@ isoformSwitchTestDRIMSeq <- function(
 
     ### Make model matrix
     if(TRUE) {
-        localDesign <- switchAnalyzeRlist$designMatrix
+        localDesign <-switchAnalyzeRlist$designMatrix
 
+        ### Convert group of interest to factors
+        localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
+
+        ### Check co-founders for group vs continous variables
+        if( ncol(localDesign) > 2 ) {
+            for(i in 3:ncol(localDesign) ) { # i <- 4
+                if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+                    if( uniqueLength( localDesign[,i] ) * 2 < length(localDesign) ) {
+                        localDesign[,i] <- factor(localDesign[,i])
+                    }
+                }
+            }
+        }
+
+        ### Make formula for model
         localFormula <- '~ 0 + condition'
         if (ncol(localDesign) > 2) {
             localFormula <- paste(
@@ -758,13 +109,14 @@ isoformSwitchTestDRIMSeq <- function(
                 '+',
                 paste(
                     colnames(localDesign)[3:ncol(localDesign)],
-                    collapse = '+'
-                )
+                    collapse = ' + '
+                ),
+                sep=' '
             )
         }
         localFormula <- as.formula(localFormula)
 
-        # model
+        ### Make model
         localModel <- model.matrix(localFormula, data = localDesign)
         indexToModify <- 1:nConditions
         colnames(localModel)[indexToModify] <- gsub(
@@ -784,8 +136,13 @@ isoformSwitchTestDRIMSeq <- function(
         localSamples <- localDesign
         colnames(localSamples)[1:2] <- c('sample_id','group')
 
-        # count matrix
-        localCount <- switchAnalyzeRlist$isoformCountMatrix
+        # Subset count matrix (to used)
+        localCount <- switchAnalyzeRlist$isoformCountMatrix[which(
+            switchAnalyzeRlist$isoformCountMatrix$isoform_id %in%
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+        ),]
+
+        # add gene id
         localCount$gene_id <- switchAnalyzeRlist$isoformFeatures$gene_id[match(
             localCount$isoform_id, switchAnalyzeRlist$isoformFeatures$isoform_id
         )]
@@ -805,7 +162,9 @@ isoformSwitchTestDRIMSeq <- function(
 
     ### Filter
     if(TRUE) {
-        message('Step 2 of 6: Filtering DM data object...')
+        if (!quiet) {
+            message('Step 2 of 6: Filtering DM data object...')
+        }
 
         dmFilterArgs$x <- localDm
 
@@ -856,7 +215,7 @@ isoformSwitchTestDRIMSeq <- function(
             message('Step 5 of 6: Testing pairwise comparison(s)...')
         }
 
-        resultOfPairwiseTest <- myListToDf(dlply(
+        resultOfPairwiseTest <- myListToDf(plyr::dlply(
             .data = comaprisonsToMake,
             .variables = c('condition_1', 'condition_2'),
             .progress = progressBar,
@@ -886,7 +245,7 @@ isoformSwitchTestDRIMSeq <- function(
 
                 ### Extract result
                 localRes <- merge(
-                    x = results(localDmTest, level = "feature")[, c(
+                    x = DRIMSeq::results(localDmTest, level = "feature")[, c(
                         'feature_id',
                         'gene_id',
                         'lr',
@@ -894,7 +253,7 @@ isoformSwitchTestDRIMSeq <- function(
                         'pvalue',
                         'adj_pvalue'
                     )],
-                    y = results(localDmTest)[, c(
+                    y = DRIMSeq::results(localDmTest)[, c(
                         'gene_id', 'lr', 'df', 'pvalue', 'adj_pvalue'
                     )],
                     by = 'gene_id',
@@ -924,12 +283,12 @@ isoformSwitchTestDRIMSeq <- function(
         ### Replace with refrence ids
         resultOfPairwiseTest$iso_ref <-
             switchAnalyzeRlist$isoformFeatures$iso_ref[match(
-                paste0(
+                stringr::str_c(
                     resultOfPairwiseTest$feature_id,
                     resultOfPairwiseTest$condition_1,
                     resultOfPairwiseTest$condition_2
                 ),
-                paste0(
+                stringr::str_c(
                     switchAnalyzeRlist$isoformFeatures$isoform_id,
                     switchAnalyzeRlist$isoformFeatures$condition_1,
                     switchAnalyzeRlist$isoformFeatures$condition_2
@@ -961,9 +320,9 @@ isoformSwitchTestDRIMSeq <- function(
         colnames(resultOfPairwiseTest) <-
             gsub('\\.gene|\\.iso', '', colnames(resultOfPairwiseTest))
 
-        colnames(resultOfPairwiseTest)[isoInd] <- paste0(
+        colnames(resultOfPairwiseTest)[isoInd] <- stringr::str_c(
             'iso_', colnames(resultOfPairwiseTest)[isoInd])
-        colnames(resultOfPairwiseTest)[geneInd] <- paste0(
+        colnames(resultOfPairwiseTest)[geneInd] <- stringr::str_c(
             'gene_', colnames(resultOfPairwiseTest)[geneInd])
         colnames(resultOfPairwiseTest) <-
             gsub('adj_pvalue',
@@ -1127,6 +486,600 @@ isoformSwitchTestDRIMSeq <- function(
     return(switchAnalyzeRlist)
 }
 
+### Test via DEXSeq
+isoformSwitchTestDEXSeq <- function(
+    switchAnalyzeRlist,
+    alpha = 0.05,
+    dIFcutoff = 0.1,
+    correctForConfoundingFactors=TRUE,
+    overwriteIFvalues=TRUE,
+    reduceToSwitchingGenes = TRUE,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Test input
+    if (TRUE) {
+        ### Tjek arguments
+        if(TRUE) {
+            if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+                stop(paste(
+                    'The object supplied to \'switchAnalyzeRlist\'',
+                    'must be a \'switchAnalyzeRlist\''
+                ))
+            }
+            if (!is.logical(reduceToSwitchingGenes))  {
+                stop(paste(
+                    'The argument supplied to \'reduceToSwitchingGenes\'',
+                    'must be an a logic'
+                ))
+            }
+            if (dIFcutoff < 0 | dIFcutoff > 1) {
+                stop('The dIFcutoff must be in the interval [0,1].')
+            }
+            if (reduceToSwitchingGenes) {
+                if (alpha < 0 |
+                    alpha > 1) {
+                    stop('The alpha parameter must be between 0 and 1 ([0,1]).')
+                }
+                if (alpha > 0.05) {
+                    warning(paste(
+                        'Most journals and scientists consider an alpha',
+                        'larger than 0.05 untrustworthy. We therefore recommend',
+                        'using alpha values smaller than or queal to 0.05'
+                    ))
+                }
+            }
+
+        }
+
+        ### Setup progress bar
+        comaprisonsToMake <- unique(switchAnalyzeRlist$isoformFeatures[, c(
+            'condition_1', 'condition_2'
+        )])
+        if (showProgress &  !quiet &  nrow(comaprisonsToMake) > 1) {
+            progressBar <- 'text'
+        } else {
+            progressBar <- 'none'
+        }
+
+        ### Check Input
+        haveBatchEffect <- ncol(switchAnalyzeRlist$designMatrix) > 2
+        countsAvailable <- !is.null( switchAnalyzeRlist$isoformCountMatrix)
+        abundAvailable <- !is.null( switchAnalyzeRlist$isoformRepExpression )
+        ifAvailable <- ! is.null ( switchAnalyzeRlist$isoformRepIF )
+
+        recalcIF <- (haveBatchEffect & correctForConfoundingFactors)
+
+        if( ! countsAvailable ) {
+            stop('isoformSwitchTestDEXSeq requires count data to work. Please remake switchAnalyzeRlist and try again')
+        }
+
+        ### For messages
+        nrAnalysis <- 2 +
+            as.integer(!abundAvailable) +
+            as.integer(haveBatchEffect & correctForConfoundingFactors) +
+            as.integer(recalcIF)
+        analysisDone <- 1
+    }
+
+    ### Extract (corrected) isoform abundances
+    if(TRUE) {
+        ### Extract or calculate abundances
+        if(TRUE) {
+            if( abundAvailable ) {
+                isoformRepExpression <- switchAnalyzeRlist$isoformRepExpression
+                rownames(isoformRepExpression) <- isoformRepExpression$isoform_id
+                isoformRepExpression$isoform_id <- NULL
+            } else {
+                if (!quiet) {
+                    message(paste(
+                        'Step ',
+                        analysisDone,
+                        ' of ',
+                        nrAnalysis,
+                        ': Calculating isoform abundances (from counts)...',
+                        sep=''
+                    ))
+                }
+
+                ### Extract lengths
+                isoformLengths <- sapply(
+                    X = split(
+                        switchAnalyzeRlist$exons@ranges@width,
+                        f = switchAnalyzeRlist$exons$isoform_id
+                    ),
+                    FUN = sum
+                )
+
+                ### Calulate CPM
+                # convert to matrix
+                localCM <- switchAnalyzeRlist$isoformCountMatrix
+                rownames(localCM) <- localCM$isoform_id
+                localCM$isoform_id <- NULL
+                localCM <- as.matrix(localCM)
+
+                myCPM <- t(t(localCM) / colSums(localCM)) * 1e6
+
+                ### Calculate RPKM
+                isoformLengths <-
+                    isoformLengths[match(rownames(myCPM), names(isoformLengths))]
+
+                isoformRepExpression <-
+                    as.data.frame(myCPM / (isoformLengths / 1e3))
+
+                ### Update counter
+                analysisDone <- analysisDone + 1
+            }
+        }
+
+        ### Potentially batch correct
+        if( haveBatchEffect & correctForConfoundingFactors ) {
+            if (!quiet) {
+                message(paste(
+                    'Step ',
+                    analysisDone,
+                    ' of ',
+                    nrAnalysis,
+                    ': Correcting for batch effect...',
+                    sep=''
+                ))
+            }
+
+            ### Make model matrix (which also take additional factors into account)
+            if(TRUE) {
+                localDesign <-switchAnalyzeRlist$designMatrix
+
+                ### Convert group of interest to factors
+                localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
+
+                ### Check co-founders for group vs continous variables
+                if( ncol(localDesign) > 2 ) {
+                    for(i in 3:ncol(localDesign) ) { # i <- 4
+                        if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+                            if( uniqueLength( localDesign[,i] ) * 2 < length(localDesign) ) {
+                                localDesign[,i] <- factor(localDesign[,i])
+                            }
+                        } else {
+                            localDesign[,i] <- factor(localDesign[,i])
+                        }
+                    }
+                }
+
+                ### Make formula for model
+                localFormula <- '~ 0 + condition'
+                if (ncol(localDesign) > 2) {
+                    localFormula <- paste(
+                        localFormula,
+                        '+',
+                        paste(
+                            colnames(localDesign)[3:ncol(localDesign)],
+                            collapse = ' + '
+                        ),
+                        sep=' '
+                    )
+                }
+                localFormula <- as.formula(localFormula)
+
+                ### Make model
+                localModel <- model.matrix(localFormula, data = localDesign)
+                indexToModify <- 1:length(unique( localDesign$condition ))
+                colnames(localModel)[indexToModify] <- gsub(
+                    pattern =  '^condition',
+                    replacement =  '',
+                    x =  colnames(localModel)[indexToModify]
+                )
+            }
+
+            ### Batch correct expresison matrix
+            suppressWarnings(
+                isoRepBatch <- as.data.frame( limma::removeBatchEffect(
+                    x = log2( isoformRepExpression + 1),
+                    design     = localModel[,which(   colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
+                    covariates = localModel[,which( ! colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
+                    method='robust'
+                ))
+            )
+
+            isoformRepExpression <- 2^isoRepBatch - 1
+            isoformRepExpression[which( isoformRepExpression < 0, arr.ind = TRUE)] <- 0
+
+            ### update counter
+            analysisDone <- analysisDone + 1
+        }
+    }
+
+    ### If nessesary (re-)calculate IF matrix
+    if(TRUE) {
+        if( (! ifAvailable) | recalcIF ) {
+            ### Extract annotation
+            localAnnoation <- unique(as.data.frame(
+                switchAnalyzeRlist$exons@elementMetadata[,c('gene_id','isoform_id')]
+            ))
+
+            ### Calculate IF from abundances
+            if (!quiet) {
+                message(paste(
+                    'Step ',
+                    analysisDone,
+                    ' of ',
+                    nrAnalysis,
+                    ': Calculating Isoform Fraction matrix...',
+                    sep=''
+                ))
+            }
+            localIF <- isoformToIsoformFraction(
+                isoformRepExpression  = isoformRepExpression,
+                isoformGeneAnnotation = localAnnoation,
+                quiet = TRUE
+            )
+            localIF <- localIF[,switchAnalyzeRlist$designMatrix$sampleID]
+
+            ### update counter
+            analysisDone <- analysisDone + 1
+
+        } else {
+            localIF <- switchAnalyzeRlist$isoformRepIF[,switchAnalyzeRlist$designMatrix$sampleID]
+            rownames(localIF) <- switchAnalyzeRlist$isoformRepIF$isoform_id
+
+        }
+    }
+
+    ### Extract mean IFs
+    if(TRUE) {
+        ifMeans <- rowMeans(
+            localIF[,switchAnalyzeRlist$designMatrix$sampleID,drop=FALSE],
+            na.rm = TRUE
+        )
+
+        ifMeanList <- plyr::dlply(
+            .data = switchAnalyzeRlist$designMatrix,
+            .variables = 'condition',
+            .fun = function(aDF) { # aDF <- switchAnalyzeRlist$designMatrix[1:2,]
+                rowMeans(localIF[,aDF$sampleID,drop=FALSE], na.rm = TRUE)
+            }
+        )
+    }
+
+    ### For each pariwise comparison build and test with DEXSeq
+    if(TRUE) {
+        if (!quiet) {
+            message(paste(
+                'Step ',
+                analysisDone,
+                ' of ',
+                nrAnalysis,
+                ': Testing each pariwise comparisons with DEXSeq (this might be a bit slow)...',
+                sep=''
+            ))
+
+            ### Estimate runtime time
+            if(TRUE) {
+                expectedTime <- plyr::ddply(
+                    .data = comaprisonsToMake,
+                    .variables = c('condition_1','condition_2'),
+                    .progress = progressBar,
+                    .fun = function(aComp) { # aComp <- comaprisonsToMake[1,]
+                        sampleOverview <- switchAnalyzeRlist$conditions[which(
+                            switchAnalyzeRlist$conditions$condition %in% unlist(aComp)
+                        ),]
+
+                        localExp <- data.frame(
+                            samples=sum(sampleOverview$nrReplicates)
+                        )
+
+                        localExp$min <- 10^(1.78340190 + (0.04996058 * localExp$samples)) / 60 # min
+
+                        return(localExp)
+                    }
+                )
+
+                expectedTime <- sum(expectedTime$min)
+
+                message(paste(
+                    '    Estimated time (for dataset with ~30.000 isoforms):',
+                    round(expectedTime, digits = 1),
+                    'min',
+                    sep=' '
+                ))
+
+
+            }
+        }
+
+        ### Do pariwise test
+        dexseqPairwiseResults <- plyr::ddply(
+            .data = comaprisonsToMake,
+            .variables = c('condition_1','condition_2'),
+            .progress = progressBar,
+            .fun = function(aComp) { # aComp <- comaprisonsToMake[1,]
+                ### Extract data
+                if(TRUE) {
+                    ### Extract local design
+                    designSubset <- switchAnalyzeRlist$designMatrix[which(
+                        switchAnalyzeRlist$designMatrix$condition %in% unlist(aComp)
+                    ),]
+
+                    ### Extract corresponding count data
+                    localCount <- switchAnalyzeRlist$isoformCountMatrix[
+                        which(
+                            switchAnalyzeRlist$isoformCountMatrix$isoform_id %in%
+                                switchAnalyzeRlist$isoformFeatures$isoform_id
+                        ),
+                        which(
+                            colnames(switchAnalyzeRlist$isoformCountMatrix) %in%
+                                c('isoform_id', designSubset$sampleID)
+                        )
+                        ]
+
+                    ### Massage for DEXSeq
+                    localCount$gene_ref <- switchAnalyzeRlist$isoformFeatures$gene_ref[match(
+                        localCount$isoform_id, switchAnalyzeRlist$isoformFeatures$isoform_id
+                    )]
+
+                    localCount$iso_ref <- switchAnalyzeRlist$isoformFeatures$iso_ref[match(
+                        localCount$isoform_id, switchAnalyzeRlist$isoformFeatures$isoform_id
+                    )]
+
+
+                    localCount$isoform_id <- NULL
+                    rownames(localCount) <- localCount$iso_ref
+                }
+
+                ### Make formulas
+                if(TRUE) {
+                    ### Convert group of interest to factors
+                    designSubset$condition <- factor(designSubset$condition, levels=unique(designSubset$condition))
+
+                    colnames(designSubset)[1] <- 'sample'
+
+                    ### Check co-founders for group vs continous variables
+                    if( ncol(designSubset) > 2 ) {
+                        for(i in 3:ncol(designSubset) ) { # i <- 4
+                            if( class(designSubset[,i]) %in% c('numeric', 'integer') ) {
+                                if( uniqueLength( designSubset[,i] ) * 2 < length(designSubset) ) {
+                                    designSubset[,i] <- factor(designSubset[,i])
+                                }
+                            } else {
+                                designSubset[,i] <- factor(designSubset[,i])
+                            }
+                        }
+                    }
+
+                    ### Make formula for model (exon reads as "isoform")
+                    basicFormula <- '~ sample + exon'
+                    if (ncol(designSubset) > 2) {
+                        basicFormula <- paste(
+                            basicFormula,
+                            '+',
+                            paste(
+                                paste0(
+                                    'exon:', colnames(designSubset)[3:ncol(designSubset)]
+                                ),
+                                collapse = ' + '
+                            ),
+                            sep=' '
+                        )
+                    }
+
+                    ### Make full formula
+                    fullFormula <- paste(basicFormula, '+ condition:exon', sep=' ')
+
+                    fullFormula <- as.formula( fullFormula )
+                    basicFormula <- as.formula( basicFormula )
+                }
+
+                ### Test with DEXSeq
+                if(TRUE) {
+                    suppressMessages(
+                        dexList <- DEXSeqDataSet(
+                            countData  = round(localCount[,which( ! colnames(localCount) %in% c('gene_ref','iso_ref'))]),      # cannot handle non-integers
+                            alternativeCountData = NULL,
+                            sampleData = designSubset,
+                            design     = fullFormula,
+                            featureID  = localCount$iso_ref,
+                            groupID    = localCount$gene_ref
+                        )
+                    )
+
+                    ### Estimate parmeters
+                    suppressMessages(
+                        dexList <- estimateSizeFactors(dexList)
+                    )
+                    suppressMessages(
+                        dexList <- estimateDispersions(dexList, quiet=TRUE)
+                    )
+
+                    ### Test
+                    suppressMessages(
+                        dexList <- nbinomLRT(dexList, reduced = basicFormula)
+                    )
+                }
+
+                ### Extract and augment test result
+                if(TRUE) {
+                    dexRes <- as.data.frame(
+                        DEXSeqResults(dexList, independentFiltering=FALSE)
+                    )
+                    dexRes <- dexRes[,c('groupID','featureID','pvalue','padj')] # fdr corrected
+                    dexRes <- dexRes[which( !is.na(dexRes$pvalue)),]
+                    rownames(dexRes) <- NULL
+
+                    colnames(dexRes)[1:2] <- c('gene_ref','iso_ref')
+
+                    dexRes$isoform_id <- switchAnalyzeRlist$isoformFeatures$isoform_id[match(
+                        dexRes$iso_ref,
+                        switchAnalyzeRlist$isoformFeatures$iso_ref
+                    )]
+
+                    ### Add means IFs
+                    if(TRUE) {
+                        dexRes$IF1 <- ifMeanList[[ aComp$condition_1 ]][
+                            match(
+                                dexRes$isoform_id,
+                                names(ifMeanList[[ aComp$condition_1 ]])
+                            )
+                            ]
+                        dexRes$IF2 <- ifMeanList[[ aComp$condition_2 ]][
+                            match(
+                                dexRes$isoform_id,
+                                names(ifMeanList[[ aComp$condition_2 ]])
+                            )
+                            ]
+                        dexRes$dIF <- dexRes$IF2 - dexRes$IF1
+                    }
+
+                }
+
+                return(dexRes)
+            }
+        )
+
+        ### Reorder
+        ofInterest <- c('iso_ref','gene_ref','isoform_id','condition_1','condition_2','dIF')
+        desiredOrder <- c(
+            ofInterest,
+            setdiff(colnames(dexseqPairwiseResults), ofInterest)
+        )
+
+        dexseqPairwiseResults <- dexseqPairwiseResults[,match(
+            desiredOrder, colnames(dexseqPairwiseResults)
+        )]
+
+        ### Update counter
+        analysisDone <- analysisDone + 1
+
+    }
+
+    ### Integrate with switchList
+    if(TRUE) {
+        if (!quiet) {
+            message(paste(
+                'Step ',
+                analysisDone,
+                ' of ',
+                nrAnalysis,
+                ': Integrating result into switchAnalyzeRlist...',
+                sep=''
+            ))
+        }
+
+        ### Test result
+        if(TRUE) {
+            ### Overwrite previous results
+            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <- NA
+            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <- NA
+
+            ### summarize to gene level
+            geneQlevel <- sapply(
+                X = split(
+                    dexseqPairwiseResults$padj,
+                    dexseqPairwiseResults$gene_ref
+                ),
+                FUN = function(x) {
+                    min(c(1, x), na.rm = TRUE)
+                }
+            )
+            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <-
+                geneQlevel[match(
+                    switchAnalyzeRlist$isoformFeatures$gene_ref,
+                    names(geneQlevel)
+                )]
+
+            ### Isoform level
+            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <-
+                dexseqPairwiseResults$padj[match(
+                    switchAnalyzeRlist$isoformFeatures$iso_ref,
+                    dexseqPairwiseResults$iso_ref
+                )]
+        }
+
+        ### Overwrite IF values
+        if(overwriteIFvalues & recalcIF) {
+            ### Remove old values
+            switchAnalyzeRlist$isoformFeatures$IF_overall <- NA
+            switchAnalyzeRlist$isoformFeatures$IF1        <- NA
+            switchAnalyzeRlist$isoformFeatures$IF2        <- NA
+            switchAnalyzeRlist$isoformFeatures$dIF        <- NA
+
+            ### Add new values
+            switchAnalyzeRlist$isoformFeatures$IF_overall <- ifMeans[match(
+                switchAnalyzeRlist$isoformFeatures$isoform_id, names(ifMeans)
+            )]
+
+            switchAnalyzeRlist$isoformFeatures$IF1 <-
+                dexseqPairwiseResults$IF1[match(
+                    switchAnalyzeRlist$isoformFeatures$iso_ref,
+                    dexseqPairwiseResults$iso_ref
+                )]
+            switchAnalyzeRlist$isoformFeatures$IF2 <-
+                dexseqPairwiseResults$IF2[match(
+                    switchAnalyzeRlist$isoformFeatures$iso_ref,
+                    dexseqPairwiseResults$iso_ref
+                )]
+
+            ### dIF values
+            switchAnalyzeRlist$isoformFeatures$dIF <-
+                dexseqPairwiseResults$dIF[match(
+                    switchAnalyzeRlist$isoformFeatures$iso_ref,
+                    dexseqPairwiseResults$iso_ref
+                )]
+
+            ### Full IF matrix
+            switchAnalyzeRlist$isoformRepIF <- localIF
+        }
+
+        switchAnalyzeRlist$isoformSwitchAnalysis <- dexseqPairwiseResults
+    }
+
+    ### Print status
+    if (!quiet) {
+        myN <-
+            length(unique(switchAnalyzeRlist$isoformSwitchAnalysis$gene_ref))
+        myFrac <-
+            myN / length(unique(
+                switchAnalyzeRlist$isoformFeatures$gene_ref
+            )) * 100
+        message(
+            paste(
+                '    Isoform switch analysis was performed for ',
+                myN,
+                ' gene comparisons (',
+                round(myFrac, digits = 1),
+                '%).',
+                sep = ''
+            )
+        )
+    }
+
+    ### Reduce to genes with switches
+    if (reduceToSwitchingGenes) {
+        combinedGeneIDsToKeep <-
+            switchAnalyzeRlist$isoformFeatures$gene_ref[which(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
+                    alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            )]
+
+        if (length(combinedGeneIDsToKeep) == 0) {
+            stop(paste(
+                'No signifcant switches were found with the supplied cutoffs',
+                'whereby we cannot reduce the switchAnalyzeRlist to only',
+                'significant genes'
+            ))
+        }
+
+        switchAnalyzeRlist <-
+            subsetSwitchAnalyzeRlist(
+                switchAnalyzeRlist,
+                switchAnalyzeRlist$isoformFeatures$gene_ref %in% combinedGeneIDsToKeep
+            )
+    }
+
+    if (!quiet) {
+        message('Done')
+    }
+    return(switchAnalyzeRlist)
+}
 
 
 ### Summarize switching
@@ -1152,7 +1105,7 @@ extractSwitchSummary <- function(
         ))) {
             stop(paste(
                 'The analsis of isoform switching must be performed before',
-                'functional consequences can be analyzed. Please run ?isoformSwitchTest and try again.'
+                'functional consequences can be analyzed. Please run \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\' and try again.'
             ))
         }
         if (filterForConsequences) {
@@ -1161,7 +1114,7 @@ extractSwitchSummary <- function(
                 stop(paste(
                     'The switchAnalyzeRlist does not contain isoform',
                     'switching analysis. Please run the',
-                    '\'isoformSwitchTest\' function first.'
+                    '\'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\' function first.'
                 ))
             }
         }
@@ -1255,7 +1208,7 @@ extractSwitchSummary <- function(
         any(!is.na(
             switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
         ))
-    myNumbers <- ldply(dataList, function(aDF) {
+    myNumbers <- plyr::ldply(dataList, function(aDF) {
         if (isoResTest) {
             sigGenes <-
                 unique(aDF$gene_id   [which(aDF$isoform_switch_q_value < alpha &
@@ -1306,7 +1259,7 @@ extractSwitchOverlap <- function(
         ))) {
             stop(paste(
                 'The analsis of isoform switching must be performed before',
-                'functional consequences can be analyzed. Please run ?isoformSwitchTest and try again.'
+                'functional consequences can be analyzed. Please run \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\' and try again.'
             ))
         }
         if (filterForConsequences) {
@@ -1315,7 +1268,7 @@ extractSwitchOverlap <- function(
                 stop(paste(
                     'The switchAnalyzeRlist does not contain isoform',
                     'switching analysis. Please run the',
-                    '\'isoformSwitchTest\' function first.'
+                    '\'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\' function first.'
                 ))
             }
         }
@@ -1414,7 +1367,7 @@ extractSwitchOverlap <- function(
     }
 
     ### Make venn diagrams
-    dataDF$comparison <- paste0(
+    dataDF$comparison <- stringr::str_c(
         dataDF$condition_1,
         '\nvs\n',
         dataDF$condition_2
@@ -1422,7 +1375,7 @@ extractSwitchOverlap <- function(
 
     geneList <- split(dataDF$gene_id   , dataDF$comparison)
     isoList  <- split(
-        paste0(dataDF$isoform_id, sign(dataDF$dIF)),
+        stringr::str_c(dataDF$isoform_id, sign(dataDF$dIF)),
         dataDF$comparison
     )
 
@@ -1496,7 +1449,7 @@ extractTopSwitches <- function(
             stop(paste(
                 'The analsis of isoform switching must be performed before',
                 'functional consequences can be analyzed.',
-                'Please run ?isoformSwitchTest and try again.'
+                'Please run \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\' and try again.'
             ))
         }
         if (filterForConsequences) {
@@ -1504,7 +1457,7 @@ extractTopSwitches <- function(
                 colnames(switchAnalyzeRlist$isoformFeatures)) {
                 stop(paste(
                     'The switchAnalyzeRlist does not contain isoform',
-                    'switching analysis. Please run the \'isoformSwitchTest\'',
+                    'switching analysis. Please run the \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\'',
                     'function first.'
                 ))
             }
@@ -1641,7 +1594,7 @@ extractTopSwitches <- function(
             }
 
             dataDF2 <-
-                ddply(
+                plyr::ddply(
                     .data = dataDF2,
                     .variables = 'comparison',
                     .fun = function(aDF) {
@@ -1762,7 +1715,7 @@ extractTopSwitches <- function(
             }
 
             dataDF2 <-
-                ddply(
+                plyr::ddply(
                     .data = dataDF2,
                     .variables = 'comparison',
                     .fun = function(aDF) {
@@ -1800,41 +1753,4 @@ extractTopSwitches <- function(
         return(dataDF2)
     }
 
-}
-
-
-extractCalibrationStatus <- function(
-    switchAnalyzeRlist
-) {
-    ### Test input
-    if (TRUE) {
-        if (is.null(switchAnalyzeRlist$isoformSwitchAnalysis)) {
-            stop(paste(
-                'This function can only analyse switchAnalyzeRlist which have',
-                'been analyzed with the \'isoformSwitchTest\'',
-                'function. Please run \'isoformSwitchTest()\' and try again.'
-            ))
-        }
-    }
-
-    ### Extract status
-    callibratedPvals <- split(
-        switchAnalyzeRlist$isoformSwitchAnalysis$calibrated_p_values,
-        f = paste(
-            switchAnalyzeRlist$isoformSwitchAnalysis$condition_1,
-            ' vs ',
-            switchAnalyzeRlist$isoformSwitchAnalysis$condition_2,
-            sep = ''
-        )
-    )
-
-    myStatus <- ldply(
-        callibratedPvals,
-        .fun = function(aVec) {
-            data.frame(pvalsAreCalibrated = any(!is.na(aVec)))
-        }
-    )
-    colnames(myStatus)[1] <- 'Comparison'
-
-    return(myStatus)
 }

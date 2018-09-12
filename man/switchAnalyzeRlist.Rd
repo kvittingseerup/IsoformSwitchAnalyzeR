@@ -14,7 +14,8 @@ createSwitchAnalyzeRlist(
     isoformFeatures,
     exons,
     designMatrix,
-    isoformCountMatrix,
+    isoformCountMatrix=NULL,
+    isoformRepExpression=NULL,
     sourceId
 )
 }
@@ -23,13 +24,17 @@ createSwitchAnalyzeRlist(
 	\item{isoformFeatures}{A \code{data.frame} where each row corresponds to a isoform in a specific comparison and contains all the annotation for this isoform. See \code{details} below for details.}
 	\item{exons}{A \code{GRanges} object containing isoform exon structure. See \code{details} below for details.}
 	\item{designMatrix}{A data.frame with the information of which samples originate from which conditions. A data.frame with two collums: \code{sampleID 1} contains the sample names which matches the column names used in \code{isoformCountMatrix}. \code{condition}: which indicates which conditions the sample originate from. If sample 1-3 originate form the same condition they should all have the same string (for example 'ctrl', in this column). By adding additional columns to this designMatrix batch effects can be taking into account with the DRIMSeq based isoform switch test.}
+
 	\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) counts. Must have a column called 'isoform_id' with the isoform_id that matches \code{isoformFeatures}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
+
+	\item{isoformRepExpression}{ A data.frame with unfiltered biological (not technical) replicate isoform abundances. Must have a column called 'isoform_id' with the isoform_id that matches \code{isoformFeatures}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated abundances.}
+
 	\item{sourceId}{A character stating the origin of the data used to create the switchAnalyzeRlist.}
 }
 
 
 \details{
-For cufflinks data, use \link{importCufflinksCummeRbund} or \link{importCufflinksFiles} to prepare the switchAnalyzeRlist.
+For cufflinks data, use \link{importCufflinksFiles} to prepare the switchAnalyzeRlist.
 For other RNA-seq assemblies, either uses this constructor or the general-purpose \link{importRdata} to create the switchAnalyzeRlist - se vignette for details.
 
 
@@ -92,8 +97,6 @@ When fully analyzed the \code{isoformFeatures} entry of the  will furthermore co
 
 \seealso{
 \code{\link{importRdata}}\cr
-\code{\link{readCufflinks}}\cr
-\code{\link{importCufflinksCummeRbund}}\cr
 \code{\link{importCufflinksFiles}}\cr
 \code{\link{importGTF}}\cr
 \code{\link{importIsoformExpression}}
@@ -104,35 +107,30 @@ Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. C
 }
 
 \examples{
-#### Make example data
-cuffDB <- prepareCuffExample()
+### Please note
+# 1) The way of importing files in the following example with
+#       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+#       specialiced to access the sample data in the IsoformSwitchAnalyzeR package
+#       and not somhting you need to do - just supply the string e.g.
+#       "/myAnnotation/isoformsQuantified.gtf" to the functions
+# 2) importRdata directly supports import of a GTF file - just supply the
+#       path (e.g. "/myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 
-### Replicate count matric
-isoRepCount <- repCountMatrix(isoforms(cuffDB))
-isoRepCount$isoform_id <- rownames(isoRepCount)
+### Import quantifications
+salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))
 
-### Design matrix
-designMatrix <- cummeRbund::replicates(cuffDB)[,c('rep_name','sample_name')]
-colnames(designMatrix) <- c('sampleID','condition')
-
-### Genomic Annotation
-localAnnotaion <- import(system.file("extdata/chr1_snippet.gtf", package="cummeRbund"))[,c('transcript_id','gene_id')]
-colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
-
-
-### Take a look at the data
-head(isoRepCount, 2)
-
-designMatrix
-
-head(localAnnotaion, 3)
+### Make design matrix
+myDesign <- data.frame(
+    sampleID = colnames(salmonQuant$abundance)[-1],
+    condition = gsub('_.*', '', colnames(salmonQuant$abundance)[-1])
+)
 
 ### Create switchAnalyzeRlist
 aSwitchList <- importRdata(
-    isoformCountMatrix=isoRepCount,
-    designMatrix=designMatrix,
-    isoformExonAnnoation=localAnnotaion,
-    showProgress=FALSE
+    isoformCountMatrix   = salmonQuant$counts,
+    isoformRepExpression = salmonQuant$abundance,
+    designMatrix         = myDesign,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
 )
 aSwitchList
 }

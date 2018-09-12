@@ -11,11 +11,10 @@ This function is meant to be used as part 1 of the isoform switch analysis workf
 
 \usage{
 isoformSwitchAnalysisPart1(
-    input,
+    switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
-    switchTestMethod='DRIMSeq',
-    calibratePvalues=TRUE,
+    switchTestMethod='DEXSeq',
     orfMethod = "longest",
     genomeObject,
     cds = NULL,
@@ -27,7 +26,8 @@ isoformSwitchAnalysisPart1(
 }
 
 \arguments{
-    \item{input}{ Either a \code{CuffSet} created by readCufflins() or a \code{switchAnalyzeRlist}.
+    \item{switchAnalyzeRlist}{
+A \code{switchAnalyzeRlist}.
 }
    \item{alpha}{ The cutoff which the (calibrated) fdr correct p-values must be smaller than for calling significant switches. Defualit is 0.05.
 }
@@ -35,13 +35,11 @@ isoformSwitchAnalysisPart1(
 
     \item{switchTestMethod}{ A sting indicating which statistical method should be used for testing differential isoform usage. The following options are avilable:
         \itemize{
-            \item {\code{'DRIMSeq'} : Uses the DRIMSeq package to perform the statiscal test. See \link{isoformSwitchTestDRIMSeq}. Default}
-            \item {\code{'IsoformSwitchAnalyzeR'} : Uses the statistical test implemented in IsoformSwitchAnalyzeR. See \link{isoformSwitchTest}.}
+            \item {\code{'DEXSeq'} : Uses DEXSeq to perform the statiscal test. See \link{isoformSwitchTestDEXSeq}. Default}
+            \item {\code{'DRIMSeq'} : Uses the DRIMSeq package to perform the statiscal test. See \link{isoformSwitchTestDRIMSeq}.}
             \item {\code{'none'} : No statistical test is performed. Should only be used if a test have already been performed and should not be overwritten (e.g when importing cuffdiff data).}
         }
     }
-
-    \item{calibratePvalues}{Only applicable if \code{switchTestMethod='IsoformSwitchAnalyzeR'}.A logic indicating whether the p-values should be calibrated accordin to the methods in Ferguson et al (2014), this will only be done if the p-value distribution is very skewed (if the estimated sigma^2 values is < 0.9) as suggested by the authors. See details for more information. Defualt is TRUE.}
 
   \item{orfMethod}{
   A string indicating which of the 4 ORF identification methods should be used. The methods are:
@@ -75,7 +73,6 @@ A logical indicating whether transcript nucleotide and amino acid sequences shou
 \details{
 This function performs the first part of a Isoform Analysis Workflow by
 \enumerate{
-    \item If necessary import the data (see \link{importCufflinksCummeRbund}) and create the switchAnalyzeRlist.
     \item Remove non-expressed isoforms and single-isoform genes (see \link{preFilter})
     \item Predict isoform switches unless \code{switchTestMethod} is set to 'none'.
     \item If no ORFs are annotated the isoforms are analyzed for open reading frames (ORFs, see \link{analyzeORF})
@@ -95,7 +92,8 @@ Kristoffer Vitting-Seerup
 }
 \seealso{
 \code{\link{preFilter}}\cr
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{analyzeORF}}\cr
 \code{\link{extractSequence}}
 
@@ -106,7 +104,7 @@ exampleSwitchList
 
 library(BSgenome.Hsapiens.UCSC.hg19)
 exampleSwitchList <- isoformSwitchAnalysisPart1(
-    input=exampleSwitchList,
+    switchAnalyzeRlist=exampleSwitchList,
     genomeObject = Hsapiens,
     dIFcutoff = 0.4,        # Set high for short runtime in example data
     outputSequences = FALSE # keeps the function from outputting the fasta files from this example

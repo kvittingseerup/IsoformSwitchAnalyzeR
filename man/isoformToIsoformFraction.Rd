@@ -1,14 +1,15 @@
-\name{isoformToGeneExp}
-\alias{isoformToGeneExp}
+\name{isoformToIsoformFraction}
+\alias{isoformToIsoformFraction}
 \title{
-Summarize isoform expression to gene level expression.
+Calculate isoform fraction from isoform abundance matrix
 }
 \description{
-This function extract gene expression from isoform expression by for each condition summing the expression of all isoforms belonging to a specific gene.
+General purpose function to calculate isoform fraction (IF) matrix from isoform abundace (and potentially gene abundance) matrix.
 }
 \usage{
-isoformToGeneExp(
+isoformToIsoformFraction(
     isoformRepExpression,
+    geneRepExpression=NULL,
     isoformGeneAnnotation=NULL,
     quiet = FALSE
 )
@@ -24,6 +25,10 @@ A replicate isoform abundace matrix (not log-transformed). The isoform:gene rela
 Importantly \code{isoformRepExpression} must contain isoform ids either as seperate colum called 'isoform_id' or as row.names. The function will figure it out by itself in what combination the annotation is supplied.
 }
 
+\item{geneRepExpression}{
+Optional. A gene replciate abundance matrix. Must contain gene ids either as seperate colum called 'gene_id' or as row.names.
+}
+
 \item{isoformGeneAnnotation}{
 A data.frame or GRange with two (meta) collumns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.
 }
@@ -31,8 +36,16 @@ A data.frame or GRange with two (meta) collumns: 'isoform_id' and 'gene_id' indi
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
 }
 
+\details{
+This function calculates isoform fractions from isoform abundances. If \code{geneRepExpression} is not supplied the function automatically calculate it by itself.
+
+Note that:
+1) isoform:gene relationship can be supplied as two columns either in the \code{isoformRepExpression} or as a seperate data.frame to \code{isoformGeneAnnotation}.
+2) The ids in \code{isoformRepExpression} and \code{geneRepExpression} can be supplied either as row.names or as seperate colums respectively called 'isoform_id' and 'gene_id'.
+}
+
 \value{
-This function returns a data.frame where the first column is the gene id followed by the gene expression in all samples.
+A replicate isoform fraction matrix with layout similar to \code{isoformRepExpression}
 }
 
 \references{
@@ -60,9 +73,9 @@ salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformS
 localAnnotaion <- rtracklayer::import(system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"))[,c('transcript_id','gene_id')]
 colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
 
-### Summarize to gene level
-geneRepCount <- isoformToGeneExp(
-    isoformRepExpression  = salmonQuant$counts,
+### Calculate isoform fractions
+repIF <- isoformToIsoformFraction(
+    isoformRepExpression  = salmonQuant$abundance,
     isoformGeneAnnotation = localAnnotaion
 )
 }

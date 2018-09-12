@@ -1,7 +1,89 @@
+makeProperNames <- function(x) {
+    stuffToModify <- '\\-| |/|\\+|\\(|\\)'
+
+    if( any(grepl(stuffToModify, x)) ) {
+        x <- as.character(x)
+        x <- gsub("^\\s+|\\s+$", "", x)
+        x <- gsub(stuffToModify,'_', x)
+        x <- gsub('_{2,}','_', x, perl = TRUE)
+
+        anotherRound <- TRUE
+        while( anotherRound ) {
+            if( any( grepl('^_|_$', x) )) {
+                x <- gsub('^_|_$','', x)
+                anotherRound <- TRUE
+            } else {
+                anotherRound <- FALSE
+            }
+        }
+        return(x)
+    }
+
+    x <- make.names(x)
+
+    return(x)
+}
+
+uniqueLength <- function(x) {
+    length(unique(x))
+}
+
+testFullRank <- function(localDesign) {
+    ### Convert group of interest to factors
+    localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
+
+    ### Check co-founders for group vs continous variables
+    if( ncol(localDesign) > 2 ) {
+        for(i in 3:ncol(localDesign) ) { # i <- 4
+            if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+                if( uniqueLength( localDesign[,i] ) *2 < length(localDesign) ) {
+                    localDesign[,i] <- factor(localDesign[,i])
+                }
+            }
+        }
+    }
+
+    ### Make formula for model
+    localFormula <- '~ 0 + condition'
+    if (ncol(localDesign) > 2) {
+        localFormula <- paste(
+            localFormula,
+            '+',
+            paste(
+                colnames(localDesign)[3:ncol(localDesign)],
+                collapse = ' + '
+            ),
+            sep=' '
+        )
+    }
+    localFormula <- as.formula(localFormula)
+
+    ### Make model
+    localModel <- model.matrix(localFormula, data = localDesign)
+    indexToModify <- 1:length(unique( localDesign$condition ))
+    colnames(localModel)[indexToModify] <- gsub(
+        pattern =  '^condition',
+        replacement =  '',
+        x =  colnames(localModel)[indexToModify]
+    )
+
+
+
+    return(
+        limma::is.fullrank(localModel)
+    )
+}
+
 makeMinimumSwitchList <- function(
     orgSwitchList,
     isoformsToKeep
 ) {
+    if (class(orgSwitchList) != 'switchAnalyzeRlist')        {
+        stop(
+            'The object supplied to \'orgSwitchList\' must be a \'switchAnalyzeRlist\''
+        )
+    }
+
     ### Subset to wanted isoforms
     orgSwitchList <-
         subsetSwitchAnalyzeRlist(
@@ -46,6 +128,34 @@ makeMinimumSwitchList <- function(
         unique(orgSwitchList$isoformFeatures)
 
     return(orgSwitchList)
+}
+
+
+removeAnnoationData <- function(
+    switchAnalyzeRlist,
+    removeBioSeq = TRUE,
+    removeQuantData = TRUE
+) {
+    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        stop(
+            'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
+        )
+    }
+
+    ### Remove expression
+    if( removeQuantData ) {
+        switchAnalyzeRlist$isoformCountMatrix <- NULL
+        switchAnalyzeRlist$isoformRepExpression <- NULL
+        switchAnalyzeRlist$isoformRepIF <- NULL
+    }
+
+    ### Remove biological sequences
+    if( removeBioSeq ) {
+        switchAnalyzeRlist$ntSequence <- NULL
+        switchAnalyzeRlist$aaSequence <- NULL
+    }
+
+    return(switchAnalyzeRlist)
 }
 
 ### A faster but less dymanic version of do.call(rbind, x)
@@ -155,7 +265,13 @@ extractExpressionMatrix <- function(
             )]
 
         combinedData <-
-            unique(merge(recast1, notIn1, by = 'gene_id'))
+            unique(
+                dplyr::inner_join(
+                    recast1,
+                    notIn1,
+                    by = 'gene_id'
+                )
+            )
 
         if (na.rm) {
             combinedData <-
@@ -174,7 +290,7 @@ extractExpressionMatrix <- function(
                 )])
             # merge
             combinedData <-
-                merge(combinedData, geneInfo, by = 'gene_id')
+                dplyr::inner_join(combinedData, geneInfo, by = 'gene_id')
         } else {
             rownames(combinedData) <- combinedData$gene_id
             combinedData$gene_id <- NULL
@@ -209,7 +325,7 @@ extractExpressionMatrix <- function(
             )]
 
         combinedData <-
-            unique(merge(recast1, notIn1, by = 'isoform_id'))
+            unique(dplyr::inner_join(recast1, notIn1, by = 'isoform_id'))
 
         if (na.rm) {
             combinedData <-
@@ -254,11 +370,11 @@ extractExpressionMatrix <- function(
                         )
                 )])
             # merge
-            isoInfo <- merge(isoInfo, orfInfo, by = 'isoform_id')
+            isoInfo <- dplyr::inner_join(x=isoInfo, y=orfInfo, by = 'isoform_id')
 
             # merge
             combinedData <-
-                merge(combinedData, isoInfo, by = 'isoform_id')
+                dplyr::inner_join(x=combinedData, y=isoInfo, by = 'isoform_id')
         } else {
             rownames(combinedData) <- combinedData$isoform_id
             combinedData$isoform_id <- NULL
@@ -292,7 +408,7 @@ extractExpressionMatrix <- function(
             )]
 
         combinedData <-
-            unique(merge(recast1, notIn1, by = 'isoform_id'))
+            unique(dplyr::inner_join(recast1, notIn1, by = 'isoform_id'))
 
         if (na.rm) {
             combinedData <-
@@ -337,11 +453,11 @@ extractExpressionMatrix <- function(
                         )
                 )])
             # merge
-            isoInfo <- merge(isoInfo, orfInfo, by = 'isoform_id')
+            isoInfo <- dplyr::inner_join(isoInfo, orfInfo, by = 'isoform_id')
 
             # merge
             combinedData <-
-                merge(combinedData, isoInfo, by = 'isoform_id')
+                dplyr::inner_join(combinedData, isoInfo, by = 'isoform_id')
         } else {
             rownames(combinedData) <- combinedData$isoform_id
             combinedData$isoform_id <- NULL
@@ -351,134 +467,323 @@ extractExpressionMatrix <- function(
     return(combinedData)
 }
 
-prepareCuffExample <- function() {
-    dir <- tempdir()
-    extdata <- system.file("extdata", package = "cummeRbund")
-    file.copy(file.path(extdata, dir(extdata)), dir)
+allPairwiseFeatures <- function(aNameVec1, forceNonOverlap = FALSE) {
+    aNameVec1 <- unique(as.character(aNameVec1))
 
-    cuffDB <-
-        cummeRbund::readCufflinks(
-            dir = dir,
-            gtfFile = system.file(
-                "extdata/chr1_snippet.gtf", package = "cummeRbund"
-            ),
-            genome = "hg19",
-            rebuild = TRUE
-        )
-    return(cuffDB)
+    # vectors to store result
+    var1 <- character()
+    var2 <- character()
+
+    ### Get comparisons
+    count <- 2
+    n <- length(aNameVec1)
+    for (i in 1:(n - 1)) {
+        for (j in count:n) {
+            var1 <- c(var1, aNameVec1[i])
+            var2 <- c(var2, aNameVec1[j])
+        }
+        count <- count + 1
+    }
+
+    myCombinations <-
+        data.frame(var1 = var1,
+                   var2 = var2,
+                   stringsAsFactors = FALSE)
+
+    return(myCombinations)
 }
 
+jaccardSimilarity <- function(x, y) {
+    length(intersect(x, y)) / length(union(x, y))
+}
 
-### Sum isoform RPKM to gene RPKM
+### Summmarize isoform exp to gene exp
 isoformToGeneExp <- function(
-    isoRepExpWithGeneId,
-    showProgress = TRUE,
+    isoformRepExpression,
+    isoformGeneAnnotation=NULL,
     quiet = FALSE
 ) {
-    if( !any( colnames(isoRepExpWithGeneId) %in% 'gene_id') ){
-        stop('The isoRepExpWithGeneId must have a gene_id columns')
+    ### Test input
+    if(TRUE) {
+        geneInfoInExp <- 'gene_id' %in% colnames(isoformRepExpression)
+        geneInfoSeperately <- !is.null(isoformGeneAnnotation)
+
+        nrSteps <- 2
+
+
+        if( !geneInfoInExp & !geneInfoSeperately) {
+            stop('The relationship between isoform_id and gene_id must be supplied. See documentation for more details.')
+        }
+        if( geneInfoInExp & geneInfoSeperately) {
+            if (!quiet) {
+                message(paste(
+                    'The relationship between isoform_id and gene_id supplied multiple times.',
+                    '\nThe info supplied to \'isoformGeneAnnotation\' will be used. See documentation for more details.'
+                ))
+            }
+        }
+
+        ### Make sure it is a data.frame
+        if( ! 'data.frame' %in% class(isoformRepExpression) ) {
+            isoformRepExpression <- as.data.frame(isoformRepExpression)
+        }
+
+        ### Handle if ids are supplied as row-ids
+        isoIdAsRowname <- ! 'isoform_id' %in% colnames(isoformRepExpression)
+        if(isoIdAsRowname) {
+            isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
+
+            if (!quiet) {
+                message('Used rownames as isoform_id in isoform expression matrix')
+            }
+        }
+
+        ### Extract annotation info
+        if( geneInfoSeperately ) {
+            if( 'GRanges' %in% class(isoformGeneAnnotation) ) {
+                isoAnnot <- unique(as.data.frame(mcols( isoformGeneAnnotation )[,c('gene_id','isoform_id')]))
+            } else if( 'data.frame' %in% class(isoformGeneAnnotation) ) {
+                isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
+            } else{
+                stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
+            }
+
+            ### Look into overlap
+            if( jaccardSimilarity( isoAnnot$isoform_id, isoformRepExpression$isoform_id ) != 1 ) {
+                stop('All isoforms stored in the expression matrix must be in the provided annotation and vice versa')
+            }
+        }
+
     }
-    if( any(is.na(isoRepExpWithGeneId$gene_id)) ){
-        stop('The gene_id column of isoRepExpWithGeneId cannot have any NAs')
+
+    ### Add gene id to isoform expression if nessesary
+    if(TRUE) {
+        if(geneInfoSeperately) {
+            isoformRepExpression$gene_id <-
+                isoformGeneAnnotation$gene_id[match(
+                    isoformRepExpression$isoform_id,
+                    isoformGeneAnnotation$isoform_id
+                )]
+        }
+        if( ! 'gene_id' %in% colnames(isoformRepExpression) ) {
+            stop('Somthing went wrong with the gene_id assignment - please contact developer with data to reproduce the problem')
+        }
+
+        if(any(is.na(isoformRepExpression$gene_id))) {
+            stop('gene_ids were annotated as NAs')
+        }
+
     }
 
-    ### Set up progress
-    if (showProgress &  !quiet) {
-        progressBar <- 'text'
-        progressBarLogic <- TRUE
-    } else {
-        progressBar <- 'none'
-        progressBarLogic <- FALSE
+    ### Calculate gene exp via tidyverse
+    if(TRUE) {
+        geneRepExpression <- isoformRepExpression %>%
+            dplyr::select(-isoform_id) %>%
+            dplyr::group_by(gene_id) %>%
+            dplyr::summarise_all(sum) %>%
+            as.data.frame()
     }
 
-    ### Devide based on nr isoforms
-    multiIsoGenes <- table(isoRepExpWithGeneId$gene_id)
-    multiIsoGenes <-
-        names(multiIsoGenes)[which(multiIsoGenes > 1)]
-
-    geneRepExpressionSingle   <-
-        isoRepExpWithGeneId[which(
-            !isoRepExpWithGeneId$gene_id %in% multiIsoGenes), ]
-    geneRepExpressionMultiple <-
-        isoRepExpWithGeneId[which(
-            isoRepExpWithGeneId$gene_id %in% multiIsoGenes), ]
-
-    ### Sum multi-iso expression to get gene expression
-    # via sapply - 10x faster than ddply
-    expCols <- which(
-        ! colnames(geneRepExpressionMultiple) %in% c('isoform_id','gene_id')
-    )
-    sampleNames <- colnames(geneRepExpressionMultiple)
-
-    # list to store result
-    geneRepExpressionList <- list()
-
-    # loop over each collumn
-    if (progressBarLogic) {
-        pb <-
-            txtProgressBar(
-                min = min(expCols),
-                max = max(expCols),
-                style = 3
-            )
+    ### If nesseary make final massage
+    if( isoIdAsRowname) {
+        ### Add rownames
+        rownames(geneRepExpression) <- geneRepExpression$gene_id
+        geneRepExpression$gene_id <- NULL
     }
 
-    for (i in expCols) {
-        # i <- 2
-        localName <- sampleNames[i]
+    ### Return
+    return(geneRepExpression)
+}
 
-        # sum up exp
-        expList <- split(geneRepExpressionMultiple[, i],
-                         f = geneRepExpressionMultiple$gene_id
+### Calculate isoform fractions
+isoformToIsoformFraction <- function(
+    isoformRepExpression,
+    geneRepExpression=NULL,
+    isoformGeneAnnotation=NULL,
+    quiet = FALSE
+) {
+    ### Test input
+    if(TRUE) {
+        geneSupplied <- !is.null(geneRepExpression)
+        geneInfoInExp <- 'gene_id' %in% colnames(isoformRepExpression)
+        geneInfoSeperately <- !is.null(isoformGeneAnnotation)
+
+        nrSteps <- 2+ geneSupplied
+
+
+        if( !geneInfoInExp & !geneInfoSeperately) {
+            stop('The relationship between isoform_id and gene_id must be supplied. See documentation for more details.')
+        }
+        if( geneInfoInExp & geneInfoSeperately) {
+            if (!quiet) {
+                message(paste(
+                    'The relationship between isoform_id and gene_id supplied multiple times.',
+                    '\nThe info supplied to \'isoformGeneAnnotation\' will be used. See documentation for more details.'
+                ))
+            }
+        }
+
+        ### Make sure it is a data.frame
+        if( ! 'data.frame' %in% class(isoformRepExpression) ) {
+            isoformRepExpression <- as.data.frame(isoformRepExpression)
+        }
+
+        ### Handle if ids are supplied as row-ids
+        isoIdAsRowname <- ! 'isoform_id' %in% colnames(isoformRepExpression)
+        if(isoIdAsRowname) {
+            isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
+
+            if (!quiet) {
+                message('Used rownames as isoform_id in isoform expression matrix')
+            }
+        }
+        if( geneSupplied ) {
+            geneIdAsRowname <- ! 'gene_id' %in% colnames(geneRepExpression)
+
+            if(geneIdAsRowname) {
+                geneRepExpression$gene_id <- rownames(geneRepExpression)
+
+                if (!quiet) {
+                    message('Used rownames as gene_id in gene expression matrix')
+                }
+            }
+        }
+
+
+
+        ### Extract annotation info
+        if( geneInfoSeperately ) {
+            if( 'GRanges' %in% class(isoformGeneAnnotation) ) {
+                isoAnnot <- unique(as.data.frame(mcols( isoformGeneAnnotation )[,c('gene_id','isoform_id')]))
+            } else if( 'data.frame' %in% class(isoformGeneAnnotation) ) {
+                isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
+            } else{
+                stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
+            }
+
+            ### Look into overlap
+            if( jaccardSimilarity( isoAnnot$isoform_id, isoformRepExpression$isoform_id ) != 1 ) {
+                stop('All isoforms stored in the expression matrix must be in the provided annotation and vice versa')
+            }
+            if(geneSupplied) {
+                if( jaccardSimilarity( isoAnnot$gene_id, geneRepExpression$gene_id ) != 1 ) {
+                    stop('All genes stored in the expression matrix must be in the provided annotation and vice versa')
+                }
+            }
+        }
+
+        if( geneSupplied & geneInfoInExp ) {
+            if( jaccardSimilarity( isoformRepExpression$gene_id, geneRepExpression$gene_id ) != 1 ) {
+                stop('All genes stored in the expression matrix must be in the provided annotation and vice versa')
+            }
+        }
+
+
+    }
+
+    ### Add gene id to isoform expression if nessesary
+    if(TRUE) {
+        if(geneInfoSeperately) {
+            isoformRepExpression$gene_id <-
+                isoformGeneAnnotation$gene_id[match(
+                    isoformRepExpression$isoform_id,
+                    isoformGeneAnnotation$isoform_id
+                )]
+        }
+        if( ! 'gene_id' %in% colnames(isoformRepExpression) ) {
+            stop('Somthing went wrong with the gene_id assignment - please contact developer with data to reproduce the problem')
+        }
+
+        if(any(is.na(isoformRepExpression$gene_id))) {
+            stop('gene_ids were annotated as NAs')
+        }
+
+    }
+
+    ### If nessesary calculate gene_exp
+    if( ! geneSupplied ) {
+        if (!quiet) {
+            message(paste(
+                'Step',1, 'of', 2+!geneSupplied ,'Calculating gene expression...'
+            ))
+        }
+
+        ### Sum to gene level
+        geneRepExpression <- isoformToGeneExp(
+            isoformRepExpression,
+            quiet = TRUE
         )
-        expDF <- data.frame(
-            geneExp = sapply(expList, sum),
-            row.names = names(expList),
-            stringsAsFactors = FALSE
+
+    }
+
+    ### Massage for IF calculation
+    if (!quiet) {
+        message(paste(
+            'Step',1+!geneSupplied, 'of', 2+!geneSupplied ,'Massaging isoform and gene expression...'
+        ))
+    }
+    if(TRUE) {
+        ### Make gene exp of same size as isoform exp
+        geneRepExpression <- dplyr::inner_join(
+            isoformRepExpression[,c('isoform_id','gene_id')],
+            geneRepExpression,
+            by='gene_id'
         )
-        colnames(expDF) <- localName
 
-        # add to list
-        geneRepExpressionList[[localName]] <- expDF
+        ### Isoform exp
+        rownames(isoformRepExpression) <- isoformRepExpression$isoform_id
+        isoformRepExpression$isoform_id <- NULL
+        isoformRepExpression$gene_id <- NULL
 
-        # update progress bar
-        if (progressBarLogic) {
-            setTxtProgressBar(pb = pb, value = i)
+        ### Gene exp
+        rownames(geneRepExpression) <- geneRepExpression$isoform_id
+        geneRepExpression$isoform_id <- NULL
+        geneRepExpression$gene_id <- NULL
+
+        ### Reorder
+        geneRepExpression <- geneRepExpression[
+            match(rownames(isoformRepExpression) , rownames(geneRepExpression)),
+            match(colnames(isoformRepExpression) , colnames(geneRepExpression))
+            ]
+    }
+
+    ### Calculate IFs
+    if (!quiet) {
+        message(paste(
+            'Step',2+!geneSupplied, 'of', 2+!geneSupplied ,'Calculating isoform fractions...'
+        ))
+    }
+    if(TRUE) {
+        ifRepExpression <- round( isoformRepExpression / geneRepExpression, digits = 4)
+
+        localMin <- min(ifRepExpression, na.rm = TRUE)
+        localMax <- max(ifRepExpression, na.rm = TRUE)
+
+        if( localMin < 0 | localMax > 1 ) {
+            if( geneSupplied ) {
+                stop('IF calculcation resulted in unexpected values - try not supplying gene expression data')
+            } else {
+                stop('Somthing went wrong with the IF calculcation. Please contact developers with reproducible example')
+            }
         }
     }
-    if (progressBarLogic) {
-        close(pb)
+
+    ### If nesseary make final massage
+    if( ! isoIdAsRowname) {
+        ### Add isoform id col
+        ifRepExpression$isoform_id <- rownames(ifRepExpression)
+        rownames(ifRepExpression) <- NULL
+
+        ### Reorder
+        ifRepExpression <- ifRepExpression[,c(
+            which( colnames(ifRepExpression) == 'isoform_id'),
+            which( colnames(ifRepExpression) != 'isoform_id')
+        )]
     }
 
-    # convert to matrix
-    geneRepExpressionMultiple <-
-        do.call(cbind, geneRepExpressionList)
-
-    # massage
-    geneRepExpressionMultiple$gene_id <-
-        rownames(geneRepExpressionMultiple)
-    rownames(geneRepExpressionMultiple) <- NULL
-    geneRepExpressionMultiple <-
-        geneRepExpressionMultiple[, c(
-            which(colnames(geneRepExpressionMultiple) == 'gene_id'),
-            which(colnames(geneRepExpressionMultiple) != 'gene_id')
-        )]
-
-    ### Combin single and multople
-    geneRepExpressionSingle$isoform_id <- NULL
-    geneRepExpression <-
-        rbind(geneRepExpressionSingle, geneRepExpressionMultiple)
-    geneRepExpression <-
-        geneRepExpression[sort.list(geneRepExpression$gene_id), ]
-
-    ### Massage
-    geneRepExpression <- geneRepExpression[,c(
-        which( colnames(geneRepExpression) == 'gene_id'),
-        which( colnames(geneRepExpression) != 'gene_id')
-    )]
-    rownames(geneRepExpression) <- NULL
-
-    return(geneRepExpression)
+    ### Return
+    if (!quiet) { message('Done') }
+    return(ifRepExpression)
 }
 
 
@@ -555,40 +860,6 @@ CDSSet <- function(cds) {
     return(x)
 }
 
-mfAllPairwiseFeatures <- function(aNameVec1) {
-    # convert to character
-    localNameVec1 <- as.character(aNameVec1)
-
-    selfcontained <- TRUE
-    between <- FALSE
-
-    if(length(localNameVec1) < 2 ) {
-        stop('Cannot make pairwise feautres with less than two elements')
-    }
-
-    # vectors to store result
-    tarLength <- (length(localNameVec1)* (length(localNameVec1)-1)) / 2
-    var1 <- character(length = tarLength)
-    var2 <- character(length = tarLength)
-
-    ### self contained
-    itteration <- 1
-    count <- 2
-    n <- length(localNameVec1)
-    for(i in 1:(n-1)) {
-        for(j in count:n) {
-            var1[itteration] <- localNameVec1[i]
-            var2[itteration] <- localNameVec1[j]
-
-            itteration <- itteration +1
-        }
-        count <- count +1
-    }
-
-    myCombinations <- data.frame(var1=var1, var2=var2, stringsAsFactors = F)
-
-    ### Correct back to numerif if they were that originally
-    if(is.numeric(aNameVec1)) {myCombinations$var1 <- as.numeric(myCombinations$var1)}
-
-    return(myCombinations)
+startCapitalLetter <- function(aVec) {
+    paste(toupper(substr(aVec, 1, 1)), substr(aVec, 2, nchar(aVec)), sep = "")
 }

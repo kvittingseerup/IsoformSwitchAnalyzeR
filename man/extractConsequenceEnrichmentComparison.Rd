@@ -15,7 +15,7 @@ extractConsequenceEnrichmentComparison(
     analysisOppositeConsequence=FALSE,
     plot=TRUE,
     localTheme = theme_bw(base_size = 14),
-    returnResult=FALSE
+    returnResult=TRUE
 )
 }
 
@@ -55,7 +55,10 @@ If \code{returnResult=TRUE} a data.frame with the statisitcal summary for each o
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+\itemize{
+    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+    \item{Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. bioRxiv (2018).}
+}
 }
 \author{
 Kristoffer Vitting-Seerup

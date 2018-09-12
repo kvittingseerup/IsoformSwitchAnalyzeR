@@ -57,6 +57,8 @@ Kristoffer Vitting-Seerup
 \seealso{
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{extractSequence}}\cr
+\code{\link{analyzePFAM}}\cr
+\code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

@@ -29,10 +29,16 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
 
     ### Based on which isoforms are left subset other features
     isoformsToKeep <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
+    allIsoformsAssociated <- unique(
+        switchAnalyzeRlist$exons$isoform_id[which(
+            switchAnalyzeRlist$exons$gene_id %in%
+                switchAnalyzeRlist$isoformFeatures$gene_id
+        )]
+    )
 
     # exons
     switchAnalyzeRlist$exons <- switchAnalyzeRlist$exons[which(
-        switchAnalyzeRlist$exons$isoform_id %in% isoformsToKeep
+        switchAnalyzeRlist$exons$isoform_id %in% allIsoformsAssociated
     ),]
 
     # conditions
@@ -52,12 +58,48 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
         )
     ),]
 
-    # rep count columns (rows are done below)
-    switchAnalyzeRlist$isoformCountMatrix <-
-        switchAnalyzeRlist$isoformCountMatrix[,which(
-            colnames(switchAnalyzeRlist$isoformCountMatrix) %in%
-                c('isoform_id', switchAnalyzeRlist$designMatrix$sampleID)
-        )]
+    # rep count columns
+    if( !is.null(switchAnalyzeRlist$isoformCountMatrix )) {
+        switchAnalyzeRlist$isoformCountMatrix <-
+            switchAnalyzeRlist$isoformCountMatrix[
+                which(
+                    switchAnalyzeRlist$isoformCountMatrix$isoform_id %in%
+                        allIsoformsAssociated
+                ),
+                which(
+                    colnames(switchAnalyzeRlist$isoformCountMatrix) %in%
+                        c('isoform_id', switchAnalyzeRlist$designMatrix$sampleID)
+                )
+            ]
+    }
+    # rep expression columns
+    if( !is.null(switchAnalyzeRlist$isoformRepExpression )) {
+        switchAnalyzeRlist$isoformRepExpression <-
+            switchAnalyzeRlist$isoformRepExpression[
+                which(
+                    switchAnalyzeRlist$isoformRepExpression$isoform_id %in%
+                        allIsoformsAssociated
+                ),
+                which(
+                    colnames(switchAnalyzeRlist$isoformRepExpression) %in%
+                        c('isoform_id', switchAnalyzeRlist$designMatrix$sampleID)
+                )
+            ]
+    }
+    # rep if columns
+    if( !is.null(switchAnalyzeRlist$isoformRepIF )) {
+        switchAnalyzeRlist$isoformRepIF <-
+            switchAnalyzeRlist$isoformRepIF[
+                which(
+                    switchAnalyzeRlist$isoformRepIF$isoform_id %in%
+                        allIsoformsAssociated
+                ),
+                which(
+                    colnames(switchAnalyzeRlist$isoformRepIF) %in%
+                        c('isoform_id', switchAnalyzeRlist$designMatrix$sampleID)
+                )
+            ]
+    }
 
     ### For standard analysis
     otherAnalysisPerformed <- setdiff(
@@ -65,16 +107,20 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
         c(
             'isoformFeatures','exons','conditions','sourceId','designMatrix',
             'isoformSwitchAnalysis','ntSequence','aaSequence',
-            'switchConsequence', 'isoformSwitchAnalysis'
+            'switchConsequence', 'isoformSwitchAnalysis',
+            # added to prevent wrong IF estimations after limma based test introduction
+            'isoformRepIF','isoformRepExpression','isoformCountMatrix'
         )
     )
-    for(localAnalysis in otherAnalysisPerformed) {
-        switchAnalyzeRlist[[ localAnalysis ]] <-
-            switchAnalyzeRlist[[ localAnalysis ]][
-                which(
-                    switchAnalyzeRlist[[ localAnalysis ]]$isoform_id %in%
-                        isoformsToKeep
-                ),]
+    if(length(otherAnalysisPerformed)) {
+        for(localAnalysis in otherAnalysisPerformed) {
+            switchAnalyzeRlist[[ localAnalysis ]] <-
+                switchAnalyzeRlist[[ localAnalysis ]][
+                    which(
+                        switchAnalyzeRlist[[ localAnalysis ]]$isoform_id %in%
+                            isoformsToKeep
+                    ),]
+        }
     }
 
     ### For the specialized analysis
@@ -122,7 +168,7 @@ summary.switchAnalyzeRlist <- function(object, ...) {
     analysisAdded <- setdiff(
         names(object),
         c('isoformFeatures','exons','conditions','sourceId',
-          'isoformSwitchAnalysis','designMatrix','isoformCountMatrix')
+          'isoformSwitchAnalysis','designMatrix','isoformCountMatrix','isoformRepExpression','isoformRepIF')
     )
 
     if( 'codingPotentialValue' %in% colnames(object$isoformFeatures) ) {
@@ -204,7 +250,8 @@ createSwitchAnalyzeRlist <- function(
     isoformFeatures,
     exons,
     designMatrix,
-    isoformCountMatrix,
+    isoformCountMatrix=NULL,
+    isoformRepExpression=NULL,
     sourceId
 ){
     ### Test input
@@ -298,23 +345,41 @@ createSwitchAnalyzeRlist <- function(
                 ))
             }
 
-            ### isoform expression
-            if( ! 'isoform_id' %in% colnames(isoformCountMatrix)) {
-                stop(paste(
-                    'The isoformCountMatrix object must',
-                    'contain an \'isoform_id\' collumn.'
-                ))}
+            ### Test supplied expression
+            if(TRUE) {
+                countsSuppled <- !is.null(isoformCountMatrix)
+                abundSuppled <- !is.null(isoformRepExpression)
 
+                if( !( countsSuppled | abundSuppled) ) {
+                    warning('If neither \'isoformCountMatrix\' nor \'isoformRepExpression\' are supplied IsoformSwitchAnalyzeR cannot test for isoform switches.')
+                }
+                if( !countsSuppled ) {
+                    warning('Note that when no count matrix were supplied testing via DRIMSeq is not possible (the other testing options still are possible)')
+                }
+
+                if( countsSuppled ) {
+                    if (!any(colnames(isoformCountMatrix) == 'isoform_id')) {
+                        stop(paste(
+                            'The data.frame passed to the \'isoformCountMatrix\'',
+                            'argument must contain a \'isoform_id\' column'
+                        ))
+                    }
+                }
+                if ( abundSuppled ) {
+                    if (!any(colnames(isoformRepExpression) == 'isoform_id')) {
+                        stop(paste(
+                            'The data.frame passed to the \'isoformCountMatrix\'',
+                            'argument must contain a \'isoform_id\' column'
+                        ))
+                    }
+                }
+            }
 
         }
 
         ### against each other
         if(TRUE) {
-            jaccardDistance <- function(x, y) {
-                length( intersect(x, y) ) / length( union(x, y) )
-            }
-
-            if( jaccardDistance(
+            if( jaccardSimilarity(
                 isoformFeatures$isoform_id, exons$isoform_id
             ) != 1) {
                 stop(paste(
@@ -322,7 +387,7 @@ createSwitchAnalyzeRlist <- function(
                     'and exons does not match'
                 ))
             }
-            if( jaccardDistance(
+            if( jaccardSimilarity(
                 c(isoformFeatures$condition_1, isoformFeatures$condition_2),
                 designMatrix$condition
             )!= 1) {
@@ -331,84 +396,208 @@ createSwitchAnalyzeRlist <- function(
                     'designMatrix does not match'
                 ))
             }
-            if( jaccardDistance(
-                isoformFeatures$isoform_id, isoformCountMatrix$isoform_id
-            ) != 1) {
-                stop(paste(
-                    'The isoform_id in isoformFeatures and',
-                    'isoformCountMatrix does not match'
-                ))
+
+
+            if(countsSuppled) {
+                if (!all(designMatrix$sampleID %in% colnames(isoformCountMatrix))) {
+                    stop(paste(
+                        'Each sample stored in \'designMatrix$sampleID\' must have',
+                        'a corresponding expression column in \'isoformCountMatrix\''
+                    ))
+                }
+            }
+            if ( abundSuppled ) {
+                if (!all(designMatrix$sampleID %in%
+                         colnames(isoformRepExpression))) {
+                    stop(paste(
+                        'Each sample stored in \'designMatrix$sampleID\' must',
+                        'have a corresponding expression column',
+                        'in \'isoformRepExpression\''
+                    ))
+                }
+            }
+            if( abundSuppled & countsSuppled ) {
+                if( !  identical( colnames(isoformCountMatrix) , colnames(isoformRepExpression)) ) {
+                    stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
+                }
+
+                if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
+                    stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
+                }
+            }
+        }
+
+        ### Isoforms supplied
+        if(TRUE) {
+            if( countsSuppled ) {
+                j1 <- jaccardSimilarity(
+                    isoformCountMatrix$isoform_id,
+                    isoformFeatures$isoform_id
+                )
+            } else {
+                j1 <- jaccardSimilarity(
+                    isoformRepExpression$isoform_id,
+                    isoformFeatures$isoform_id
+                )
             }
 
-            if( jaccardDistance(
-                isoformFeatures$isoform_id, isoformCountMatrix$isoform_id
-            ) != 1) {
-                stop(paste(
-                    'The isoform_id in isoformFeatures and',
-                    'isoformCountMatrix does not match'
-                ))
-            }
+            jcCutoff <- 0.95
+            if (j1 != 1 ) {
+                if( j1 < jcCutoff) {
+                    stop(
+                        paste(
+                            'The annotation (count matrix and isoform annotation)',
+                            'seems to be different (jacard similarity < 0.95).',
+                            'Either isforoms found in the annotation are',
+                            'not quantifed or vise versa.',
+                            sep=' '
+                        )
+                    )
+                }
+                if( j1 >= jcCutoff ) {
+                    warning(
+                        paste(
+                            'The annotation (count matrix and isoform annotation)',
+                            'contain differences in which isoforms are analyzed.',
+                            'specifically the annotation provided contain:',
+                            length(unique(isoformAnnotation$isoform_id)) - length(unique(isoformCountMatrix$isoform_id)),
+                            'more isoforms than the count matrix.',
+                            'Please make sure this is on purpouse since differences',
+                            'will cause inaccurate quantification and thereby skew all analysis.',
+                            'NB! All differences were removed from the final switchAnalyzeRlist!',
+                            sep=' '
+                        )
+                    )
 
-            if( jaccardDistance(
-                designMatrix$sampleID,
-                setdiff(colnames(isoformCountMatrix), 'isoform_id')
-            ) != 1) {
-                stop(paste(
-                    'The sample names in designMatrix and',
-                    'isoformCountMatrix does not match'
-                ))
+                    ### Reduce to those found in all
+                    if( countsSuppled ) {
+                        isoformsUsed <- intersect(
+                            isoformCountMatrix$isoform_id,
+                            isoformAnnotation$isoform_id
+                        )
+                    } else {
+                        isoformsUsed <- intersect(
+                            isoformRepExpression$isoform_id,
+                            isoformAnnotation$isoform_id
+                        )
+                    }
+
+                    isoformExonStructure <- isoformExonStructure[which(
+                        isoformExonStructure$isoform_id %in% isoformsUsed
+                    ), ]
+                    isoformAnnotation <-isoformAnnotation[which(
+                        isoformAnnotation$isoform_id    %in% isoformsUsed
+                    ), ]
+
+                    if( countsSuppled ) {
+                        isoformCountMatrix <-isoformCountMatrix[which(
+                            isoformCountMatrix$isoform_id    %in% isoformsUsed
+                        ), ]
+                    }
+                    if( abundSuppled ) {
+                        isoformRepExpression <-isoformRepExpression[which(
+                            isoformRepExpression$isoform_id    %in% isoformsUsed
+                        ), ]
+                    }
+
+                }
             }
+        }
+
+    }
+
+    ### Add refrence genes
+    if(TRUE) {
+        ### Helper functions
+        zeroHelper <- Vectorize(function(nrTimes) {
+            stringr::str_c( rep.int(x = 0, times= nrTimes ), collapse = '')
+        })
+        addZeroes <- function(aVec, n=8) {
+            localData <- data.frame(
+                id=aVec,
+                stringsAsFactors = FALSE
+            )
+            localData$nToAdd <- n - stringr::str_length(localData$id)
+            localData$zeeros <- zeroHelper(localData$nToAdd)
+            localData$combinedId <- stringr::str_c(
+                localData$zeeros,
+                localData$id
+            )
+            return(
+                localData$combinedId
+            )
+        }
+
+        ### reorder (nessesary for ref creation)
+        isoformFeatures <- isoformFeatures[order(
+            isoformFeatures$condition_1,
+            isoformFeatures$condition_2,
+            isoformFeatures$gene_id,
+            isoformFeatures$isoform_id
+        ),]
+
+        ### Make unique id per comparison
+        tmp <- stringr::str_c(
+            isoformFeatures$gene_id,
+            isoformFeatures$condition_1,
+            isoformFeatures$condition_2
+        )
+
+        ### Convert unique id to a number
+        isoformFeatures$gene_ref <- stringr::str_c(
+            'geneComp',
+            '_',
+            addZeroes(
+                as.integer(factor(tmp, levels=unique(tmp)))
+            )
+        )
+        isoformFeatures$iso_ref <- stringr::str_c(
+            'isoComp',
+            '_',
+            addZeroes( 1:nrow(isoformFeatures) )
+        )
+
+        ### Reorder
+        isoformFeatures <- isoformFeatures[,c(
+            which( colnames(isoformFeatures) == 'iso_ref'),
+            which( colnames(isoformFeatures) == 'gene_ref'),
+            which( ! colnames(isoformFeatures) %in% c('iso_ref','gene_ref'))
+        )]
+    }
+
+    ### Change to propper R names
+    if(TRUE) {
+        tmp <- designMatrix
+
+        for( i in 2:ncol(designMatrix) ) { # i <- 2
+            if( class(designMatrix[,i]) %in% c('character','factor') ) {
+                designMatrix[,i] <- makeProperNames( designMatrix[,i] )
+            }
+        }
+
+        if( ! identical(tmp, designMatrix) ) {
+            message('Please note that some condition names were changed due to names not suited for modeling in R.')
+
+            isoformFeatures$condition_1 <- makeProperNames( isoformFeatures$condition_1 )
+            isoformFeatures$condition_2 <- makeProperNames( isoformFeatures$condition_2 )
 
         }
 
     }
 
-    ### reorder (nessesary for ref creation)
-    isoformFeatures <- isoformFeatures[order(
-        isoformFeatures$condition_1,
-        isoformFeatures$condition_2,
-        isoformFeatures$gene_id,
-        isoformFeatures$isoform_id
-    ),]
+    ### Test full rank of design
+    if(TRUE) {
+        isFullRank <- testFullRank( designMatrix )
 
-    ### Add id to isoformFeatures
-    addZeroes <- function(aVec, n=8) {
-        sapply(aVec, function(aNumber) {
-            paste0(
-                paste( rep(x = 0, times= n - nchar(aNumber) ), collapse=''),
-                aNumber
+        if( ! isFullRank ) {
+            stop(
+                paste(
+                    'The supplied design matrix will result in a model matrix that is not full rank',
+                    '\nPlease make sure there are no co-linearities in the design'
+                )
             )
-        })
+        }
     }
-
-    tmp <- Rle(
-        paste0(
-            isoformFeatures$gene_id,
-            isoformFeatures$condition_1,
-            isoformFeatures$condition_2
-        )
-    )
-
-    isoformFeatures$gene_ref <- paste0(
-        'geneComp',
-        '_',
-        addZeroes(rep(
-            x = 1:length(tmp@lengths),
-            times = tmp@lengths
-        ))
-    )
-    isoformFeatures$iso_ref <- paste0(
-        'isoComp',
-        '_',
-        addZeroes( 1:nrow(isoformFeatures) )
-    )
-
-    ### Reorder
-    isoformFeatures <- isoformFeatures[,c(
-        which( colnames(isoformFeatures) == 'iso_ref'),
-        which( colnames(isoformFeatures) == 'gene_ref'),
-        which( ! colnames(isoformFeatures) %in% c('iso_ref','gene_ref'))
-    )]
 
     ### Calculate conditions
     nrRep <- table( designMatrix$condition)
@@ -428,10 +617,17 @@ createSwitchAnalyzeRlist <- function(
             exons=exons,
             conditions=nrRep,
             designMatrix=designMatrix,
-            isoformCountMatrix=isoformCountMatrix,
             sourceId=sourceId
         )
     )
+
+    ### Add quantification data
+    if( countsSuppled ) {
+        localSwitchList$isoformCountMatrix <- isoformCountMatrix[,c('isoform_id',designMatrix$sampleID)]
+    }
+    if( abundSuppled ) {
+        localSwitchList$isoformRepExpression <- isoformRepExpression[,c('isoform_id',designMatrix$sampleID)]
+    }
 
     ### Subset if nessesary
     if(length(genesToRemove)) {

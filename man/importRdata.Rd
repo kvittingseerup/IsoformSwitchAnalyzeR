@@ -8,7 +8,7 @@ Create SwitchAnalyzeRlist From Standard R Objects
 \description{
 A general-purpose interface to constructing a switchAnalyzeRlist from Standard R objects containing expression and annoatation information. The data needed for this function are
 \itemize{
-    \item{\code{1}: Normalized biological replicate isoform expression data}
+    \item{\code{1}: Normalized biological replicate isoform expression data, preferentially both counts and abundances but either will do.}
     \item{\code{2}: Isoform annotation (both genomic exon coordinates and which gene the isoform belongs to). This can also be supplied as the path to a GTF file where the information can be found.}
     \item{\code{3}: A design matrix indicating which samples belong to which condition}
 }
@@ -26,8 +26,10 @@ importRdata(
     addAnnotatedORFs=TRUE,
     onlyConsiderFullORF=FALSE,
     removeNonConvensionalChr=FALSE,
+    includeVersionIfAvailable=TRUE,
     PTCDistance=50,
     foldChangePseudoCount=0.01,
+    addIFmatrix= nrow(designMatrix) <= 20,
     showProgress=TRUE,
     quiet=FALSE
 )
@@ -35,9 +37,9 @@ importRdata(
 
 
 \arguments{
-\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) fragment counts. Must have a column called 'isoform_id' with the isoform_id that matches the isoform_id in \code{isoformExonAnnoation}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
+\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) fragment counts. Must have a column called 'isoform_id' with the isoform_id that matches the isoform_id column in \code{isoformExonAnnoation}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
 
-\item{isoformRepExpression}{ Optional but recommended: A data.frame with unfiltered normalized biological (not technical) replicate isoform expression. Ideal for supplying quantification measured in Transcripts Per Million (TxPM) or RPKM/FPKM. Must have a column called 'isoform_id' with the isoform_id. The name of the expression columns must match the sample names in the \code{designMatrix} argument. If not supplied RPKM values are calcualted from the count matrix and used instead.}
+\item{isoformRepExpression}{ Optional but highly recommended: A data.frame with unfiltered normalized biological (not technical) replicate isoform expression. Ideal for supplying quantification measured in Transcripts Per Million (TxPM) or RPKM/FPKM. Must have a column called 'isoform_id' that matches the isoform_id column in \code{isoformExonAnnoation}. The name of the expression columns must match the sample names in the \code{designMatrix} argument. If not supplied RPKM values are calcualted from the count matrix and used instead.}
 
 \item{designMatrix}{
 A data.frame with the information of which samples originate from which conditions. Must be a data.frame containing these two collums:
@@ -45,32 +47,38 @@ A data.frame with the information of which samples originate from which conditio
     \item{\code{Column 1}: called 'sampleID'. This column contains the sample names and must match the column names used in \code{isoformRepExpression}.}
     \item{\code{Column 2}: called 'condition'. This column indicates with a string which conditions the sample originate from. If sample 1-3 originate form the same condition they should all have the same string (for example 'ctrl', in this column).}
 }
-Additional columns can be used to describe other co-factors such as batch effects or patient ids (for paired sample analysis). Additional co-factors can only be analyzed with \code{isoformSwitchTestDRIMSeq}.
+Additional columns can be used to describe other co-factors such as batch effects or patient ids (for paired sample analysis). Additional co-factors can only be handled by \code{isoformSwitchTestDEXSeq} and \code{isoformSwitchTestDRIMSeq}.
 }
 
 \item{isoformExonAnnoation}{
 Can either be:
 \itemize{
-    \item{\code{1}: A string indicating the full path to the GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "/myAnnotation/myGenome/gersionQuantified.gtf")}
+    \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "/myAnnotation/myGenome/isoformsQuantified.gtf")}
     \item{\code{2}: A \code{GRange} object (see \code{?GRanges}) containing one entry per exon per isoform with the genomic coordinat of that isoform. This \code{GRange} should furthmore contain two meta data columns called 'isoform_id' and 'gene_id' indicating both which isoform the exon belongs to as well as which gene the isoform belongs to. The 'isoform_id' column must match the isoform ids used in the 'isoform_id' column of the \code{isoformRepExpression} data.frame. If possible we suggest that a third columns called 'gene_name' with the corresponding gene names is also added. If not supplied gene_name will be annotated as NA.}
 }
 }
 
 \item{comparisonsToMake}{
-A data.frame indicating which pairwise comparisons the switchAnalyzeRlist created should contain. The two columns, called 'condition_1' and 'condition_2' indicate which conditions should be compared and the strings indicated here must match the strings in the \code{designMatrix$condition} column. If not supplied all pairwise (unique nondirectional) comparisons of the conditions given in \code{designMatrix$condition} are created.
+A data.frame with two columns indicating which pairwise comparisons the switchAnalyzeRlist created should contain. The two columns, called 'condition_1' and 'condition_2' indicate which conditions should be compared and the strings indicated here must match the strings in the \code{designMatrix$condition} column. If not supplied all pairwise (unique nondirectional) comparisons of the conditions given in \code{designMatrix$condition} are created. If only a subset of the supplied data is used in the comparisons the nonused data is automatically removed.
 }
 
 \item{addAnnotatedORFs}{
 Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indicating whether the ORF from the GTF should be added to the \code{switchAnalyzeRlist}. This ORF is defined as the regions annotated  as 'CDS' in the 'type' column (column 3). Default is TRUE.
 }
 
-\item{onlyConsiderFullORF}{ A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annotated is defined as those that both have a annotated 'start_codon' codon in the 'type' column (column 3). This argument exists because these CDS regions are highly problematic and does not resemble true ORFs as >50\% of CDS without a stop_codon annotated contain multiple stop codons (see Vitting-Seerup et al 2017 - supplementary materials). This argument is only considered if onlyConsiderFullORF=TRUE. Default is FALSE.}
+\item{onlyConsiderFullORF}{ A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annotated is defined as those that both have a annotated 'start_codon' codon in the 'type' column (column 3). This argument exists because these CDS regions are highly problematic and does not resemble true ORFs as >50\% of CDS without a stop_codon annotated contain multiple stop codons (see Vitting-Seerup et al 2017 - supplementary materials). This argument is only considered if addAnnotatedORFs=TRUE. Default is FALSE.}
 
 \item{removeNonConvensionalChr}{ A logic indicating whether non-conventional chromosomes, here defined as chromosome names containing a '_'. These regions are typically used to annotate regions that cannot be assocaiated to a specific region (such as the human 'chr1_gl000191_random') or regions quite different due to different haplotypes (e.g. the 'chr6_cox_hap2'). This argument is only considered if a GTF file was supplied to \code{isoformExonAnnoation}. Default is FALSE.}
+
+\item{includeVersionIfAvailable}{ A logic indicateding whether to combined gene/transcript ids with their respective version numbers (GENCODE style) if the version numbers are in a seperate column (this functionality will not remove exsiting version numbering from ids if set to FALSE). Defalut is TRUE}
 
 \item{PTCDistance}{Only used if a GTF file is supplied to \code{isoformExonAnnoation} and \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
 
 \item{foldChangePseudoCount}{ A numeric indicating the pseudocount added to each of the average expression values before the log2 fold change is calculated. Done to prevent log2 fold changes of Inf or -Inf. Default is 0.01}
+
+\item{addIFmatrix}{
+A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE) or not (if FALSE). Keeping it will make testing with isoformSwitchTestDEXSeq faster but will also make the switchAnalyzeRlist larger - so it is a tradeoff for speed vs memmory. For most experimental setups we expect that keeping it will be the better solution. Default is TRUE if there are max 20 samples in the matrix.
+}
 
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.
@@ -121,41 +129,30 @@ Kristoffer Vitting-Seerup
 }
 
 \examples{
-### Construct data needed from example data in cummeRbund package
-### (The recomended way of analyzing Cufflinks/Cuffdiff datat is via importCufflinksCummeRbund()
-### This is jus an easy way to get some example data ).
-cuffDB <- prepareCuffExample()
-
-isoRepCount <- repCountMatrix(isoforms(cuffDB))
-isoRepCount$isoform_id <- rownames(isoRepCount)
-
-### Design matrix
-designMatrix <- cummeRbund::replicates(cuffDB)[,c('rep_name','sample_name')]
-colnames(designMatrix) <- c('sampleID','condition')
-
-localAnnotaion <- import(system.file("extdata/chr1_snippet.gtf", package="cummeRbund"))[,c('transcript_id','gene_id')]
-colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
-
 ### Please note
-# 1) The way of importing the GTF file in the example with
-#       "system.file('pathToFile', package="cummeRbund") is
-#       specialiced to access the sample data in the cummeRbund package
+# 1) The way of importing files in the following example with
+#       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+#       specialiced to access the sample data in the IsoformSwitchAnalyzeR package
 #       and not somhting you need to do - just supply the string e.g.
-#       "/myAnnotation/myGenome/gersionQuantified.gtf" to the import function
-# 2) importRdata also supports direct import of a GTF file - just supply the
-#       path to the isoformExonAnnoation argument
+#       "/myAnnotation/isoformsQuantified.gtf" to the functions
+# 2) importRdata directly supports import of a GTF file - just supply the
+#       path (e.g. "/myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 
+### Import quantifications
+salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))
 
-### Take a look at the data
-head(isoRepCount)
-head(designMatrix)
-head(localAnnotaion)
+### Make design matrix
+myDesign <- data.frame(
+    sampleID = colnames(salmonQuant$abundance)[-1],
+    condition = gsub('_.*', '', colnames(salmonQuant$abundance)[-1])
+)
 
 ### Create switchAnalyzeRlist
 aSwitchList <- importRdata(
-    isoformCountMatrix=isoRepCount,
-    designMatrix=designMatrix,
-    isoformExonAnnoation=localAnnotaion
+    isoformCountMatrix   = salmonQuant$counts,
+    isoformRepExpression = salmonQuant$abundance,
+    designMatrix         = myDesign,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
 )
 aSwitchList
 }

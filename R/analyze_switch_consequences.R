@@ -242,7 +242,7 @@ analyzeSwitchConsequences <- function(
 
         ### Extract pairs of isoforms passing the filters
         pairwiseIsoComparisonList <-
-            llply(
+            plyr::llply(
                 .data = localDataList,
                 .progress = 'none',
                 .fun = function(aDF) {
@@ -372,7 +372,7 @@ analyzeSwitchConsequences <- function(
         )
     }
     if (TRUE) {
-        consequencesOfIsoformSwitching <- dlply(
+        consequencesOfIsoformSwitching <- plyr::dlply(
             .data = pairwiseIsoComparisonUniq,
             .variables = 'comparison',
             .parallel = FALSE,
@@ -425,13 +425,13 @@ analyzeSwitchConsequences <- function(
             myListToDf(consequencesOfIsoformSwitching)
 
         ### Add the origin info
-        consequencesOfIsoformSwitchingDfcomplete <- merge(
+        consequencesOfIsoformSwitchingDfcomplete <- dplyr::inner_join(
             consequencesOfIsoformSwitchingDf,
             pairwiseIsoComparison,
             by = c('isoformUpregulated', 'isoformDownregulated')
         )
         ### Add additional information
-        consequencesOfIsoformSwitchingDfcomplete <- merge(
+        consequencesOfIsoformSwitchingDfcomplete <- dplyr::inner_join(
             consequencesOfIsoformSwitchingDfcomplete,
             switchAnalyzeRlist$isoformFeatures[match(
                 unique(consequencesOfIsoformSwitchingDfcomplete$gene_ref),
@@ -803,7 +803,7 @@ compareAnnotationOfTwoIsoforms <- function(
             ])
 
             transcriptData <-
-                merge(transcriptData,
+                dplyr::left_join(transcriptData,
                       orfData,
                       by = 'isoform_id',
                       all.x = TRUE)
@@ -1847,7 +1847,7 @@ compareAnnotationOfTwoIsoforms <- function(
                     domainTruncationStatus <-
                         unique(sapply(names(commonDomains), function(aDomain) {
                             localDomian <-
-                                ldply(
+                                plyr::ldply(
                                     domanDataSplit,
                                     .fun = function(x)
                                         x[which(x$hmm_name == aDomain), ]
@@ -2134,7 +2134,7 @@ extractConsequenceSummary <- function(
 
     ### summarize count
     myNumbers <-
-        ddply(
+        plyr::ddply(
             localSwitchConsequences,
             .variables = c(
                 'switchConsequence',
@@ -2389,7 +2389,7 @@ extractConsequenceEnrichment <- function(
         domain_length=c('Domain length gain','Domain length loss'),
         signal_peptide_identified=c('Signal peptide gain','Signal peptide loss')
     )
-    levelListDf <- ldply(levelList, function(x) data.frame(feature=x, stringsAsFactors = FALSE))
+    levelListDf <- plyr::ldply(levelList, function(x) data.frame(feature=x, stringsAsFactors = FALSE))
 
     ### Add consequence paris
     localConseq$conseqPair <- levelListDf$.id[match(localConseq$switchConsequence, levelListDf$feature)]
@@ -2436,7 +2436,7 @@ extractConsequenceEnrichment <- function(
 
 
     ### Summarize gain vs loss for each AStype in each condition
-    consequenceBalance <- ddply(
+    consequenceBalance <- plyr::ddply(
         .data = localConseq,
         .variables = c('condition_1','condition_2','conseqPair'),
         #.inform = TRUE,
@@ -2465,7 +2465,7 @@ extractConsequenceEnrichment <- function(
                 )
 
                 localRes <- data.frame(
-                    feature=paste0(
+                    feature=stringr::str_c(
                         localNumber$Var1[1],
                         ' (paired with ',
                         localNumber$Var1[2],
@@ -2523,7 +2523,7 @@ extractConsequenceEnrichment <- function(
                 x='Fraction of switches having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)',
                 y='Consequence of Isoform Switch\n(and the opposing consequence)') +
             localTheme +
-            scale_color_manual('Significant', values=c('black','red')) +
+            scale_color_manual('Significant', values=c('black','red'), drop=FALSE) +
             coord_cartesian(xlim=c(0,1))
 
         print(g1)
@@ -2550,7 +2550,7 @@ extractConsequenceEnrichmentComparison <- function(
     analysisOppositeConsequence=FALSE,
     plot=TRUE,
     localTheme = theme_bw(base_size = 14),
-    returnResult=FALSE
+    returnResult=TRUE
 ) {
     ### Extract splicing enrichment
     conseqCount <- extractConsequenceEnrichment(
@@ -2562,7 +2562,7 @@ extractConsequenceEnrichmentComparison <- function(
         plot = FALSE,
         returnResult = TRUE
     )
-    conseqCount$Comparison <- paste0(
+    conseqCount$Comparison <- stringr::str_c(
         conseqCount$condition_1,
         '\nvs\n',
         conseqCount$condition_2
@@ -2572,12 +2572,12 @@ extractConsequenceEnrichmentComparison <- function(
     conseqPairs <- split(as.character(unique(conseqCount$feature)), unique(conseqCount$feature))
 
     ### Make each pairwise comparison
-    myComparisons <- mfAllPairwiseFeatures( unique(conseqCount$Comparison) )
+    myComparisons <- allPairwiseFeatures( unique(conseqCount$Comparison) )
 
     ### Loop over each pariwise comparison
-    fisherRes <- ddply(myComparisons, c('var1','var2'), function(localComparison) { # localComparison <- myComparisons[1,]
+    fisherRes <- plyr::ddply(myComparisons, c('var1','var2'), function(localComparison) { # localComparison <- myComparisons[1,]
         ### Loop over each
-        localAsRes <- ldply(conseqPairs, .inform = T, function(localConseq) { # localConseq <- 'domains_identified'
+        localAsRes <- plyr::ldply(conseqPairs, .inform = TRUE, function(localConseq) { # localConseq <- 'domains_identified'
             ### Extract local data
             localSpliceCount1 <- conseqCount[which(
                 conseqCount$Comparison %in% c(localComparison$var1, localComparison$var2) &
@@ -2598,12 +2598,13 @@ extractConsequenceEnrichmentComparison <- function(
             fisherTestResult <- data.frame(odds_ratio=fisherResult$estimate, p_value=fisherResult$p.value, lowCI=fisherResult$conf.int[1], highCI=fisherResult$conf.int[2])
             rownames(fisherTestResult) <- NULL
 
-            localSpliceCount1$fisherPvalue <- fisherTestResult$p_value
+            localSpliceCount1$fisherOddsRatio <- fisherTestResult$odds_ratio
+            localSpliceCount1$fisherPvalue    <- fisherTestResult$p_value
 
             localSpliceCount1$pair <- 1:2
 
             return(
-                localSpliceCount1[,c('Comparison','propOfRelevantEvents','propCiLo','propCiHi','fisherPvalue','pair')]
+                localSpliceCount1[,c('Comparison','propOfRelevantEvents','propCiLo','propCiHi','fisherOddsRatio','fisherPvalue','pair')]
             )
         })
 
@@ -2625,8 +2626,8 @@ extractConsequenceEnrichmentComparison <- function(
     tmp$fisherQvalue <- p.adjust(tmp$fisherPvalue, method = 'fdr')
 
     fisherRes$fisherQvalue <- tmp$fisherQvalue[match(
-        paste0(fisherRes$var1, fisherRes$var2, fisherRes$consequence),
-        paste0(tmp$var1, tmp$var2, tmp$consequence)
+        stringr::str_c(fisherRes$var1, fisherRes$var2, fisherRes$consequence),
+        stringr::str_c(tmp$var1, tmp$var2, tmp$consequence)
     )]
     fisherRes$Significant <- fisherRes$fisherQvalue < alpha
 
@@ -2644,7 +2645,7 @@ extractConsequenceEnrichmentComparison <- function(
             facet_grid(comp~consequence, scales = 'free_y') +
             geom_vline(xintercept=0.5, linetype='dashed') +
             labs(x='Fraction of alternative splicing events being gains\n(compared to losses)\n(with 95% confidence interval)', y='Comparison') +
-            scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red')) +
+            scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red'), drop=FALSE) +
             localTheme +
             theme(strip.text.y = element_text(angle = 0)) +
             coord_cartesian(xlim=c(0,1))
@@ -2652,15 +2653,18 @@ extractConsequenceEnrichmentComparison <- function(
     }
 
     if(returnResult) {
-        fisherRes$pair <- paste0('propUp_comparison_', fisherRes$pair)
+        fisherRes$pair <- stringr::str_c('propUp_comparison_', fisherRes$pair)
         colnames(fisherRes)[which(colnames(fisherRes) == 'propOfRelevantEvents')] <- 'propUp'
 
         fisherRes2 <- reshape2::dcast(data = fisherRes, comp + consequence ~ pair, value.var=c('propUp'))
 
-        fisherRes2$fisherQvalue <- tmp$fisherQvalue[match(
-            paste0(fisherRes2$comp, fisherRes2$consequence),
-            paste0(tmp$comp, tmp$consequence)
-        )]
+        matchIndex <- match(
+            stringr::str_c(fisherRes2$comp, fisherRes2$consequence),
+            stringr::str_c(tmp$comp, tmp$consequence)
+        )
+        #fisherRes2$fisherOddsRatio <- tmp$fisherOddsRatio[matchIndex]
+        fisherRes2$fisherQvalue    <- tmp$fisherQvalue   [matchIndex]
+
         fisherRes2$Significant <- fisherRes2$fisherQvalue < alpha
         colnames(fisherRes2)[1] <- 'comparisonsCompared'
         fisherRes2$comparisonsCompared <- gsub('\\n', ' ', fisherRes2$comparisonsCompared)
@@ -2905,7 +2909,7 @@ extractConsequenceGenomeWide <- function(
     if (TRUE) {
         # melt categories
         isoDataMelt <-
-            melt(isoData,
+            reshape2::melt(isoData,
                  id.vars = c(
                      'iso_ref', 'isoform_id', 'comparison', 'IF1', 'IF2'
                  ))
@@ -2917,7 +2921,7 @@ extractConsequenceGenomeWide <- function(
             c('variable', 'value'), colnames(isoDataMelt)
         )] <- c('category', 'isoform_feature')
         isoDataMelt <-
-            melt(
+            reshape2::melt(
                 isoDataMelt,
                 id.vars = c(
                     'iso_ref',
@@ -2964,7 +2968,7 @@ extractConsequenceGenomeWide <- function(
     ### Calculate statistics
     if (TRUE) {
         mySigTest <-
-            ddply(
+            plyr::ddply(
                 isoDataMelt,
                 .variables = c('comparison', 'category', 'isoform_feature'),
                 .drop = TRUE,
@@ -2998,7 +3002,7 @@ extractConsequenceGenomeWide <- function(
 
 
         mySigTest <-
-            ddply(
+            plyr::ddply(
                 mySigTest,
                 .variables = 'category',
                 .fun = function(aDF) {
@@ -3110,6 +3114,7 @@ extractConsequenceGenomeWide <- function(
     }
 }
 
+# for backward compatability
 extractGenomeWideAnalysis <- function(
     switchAnalyzeRlist,
     featureToExtract = 'isoformUsage',

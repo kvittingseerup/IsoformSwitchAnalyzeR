@@ -29,7 +29,7 @@ switchPlotIsoExp(
     isoform_id = NULL,
     condition1 = NULL,
     condition2 = NULL,
-    IFcutoff=0,
+    IFcutoff = 0.05,
     addErrorbars = TRUE,
     confidenceIntervalErrorbars = TRUE,
     confidenceInterval = 0.95,
@@ -45,7 +45,7 @@ switchPlotIsoUsage(
     isoform_id = NULL,
     condition1 = NULL,
     condition2 = NULL,
-    IFcutoff=0,
+    IFcutoff = 0.05,
     addErrorbars = TRUE,
     confidenceIntervalErrorbars = TRUE,
     confidenceInterval = 0.95,
@@ -61,7 +61,7 @@ switchPlotIsoUsage(
   \item{isoform_id}{Vector of id indicating which isoforms (from the same gene) to plot. If not supplied 'gene' must be supplied.}
   \item{condition1}{First condition of the comparison to analyze. Must match 'condition_1' in the 'isoformFeatures' entry of the \code{switchAnalyzeRlist}. Only needed if more than one comparison is analyzed.}
   \item{condition2}{Second condition of the comparison to analyze.  Must match 'condition_2' in the 'isoformFeatures' entry of the \code{switchAnalyzeRlist}. Only needed if more than one comparison is analyzed.}
-  \item{IFcutoff}{The cutoff which the Isoform Fraction (IF) value (in at least one condition) must be larger than for a isoforms to be plotted. Default is 0 (which removes non-expressed isoforms).}
+  \item{IFcutoff}{The cutoff which the Isoform Fraction (IF) value (in at least one condition) must be larger than for a isoforms to be plotted. Default is 0.05 (which removes isoforms with minor contribution).}
   \item{addErrorbars}{A logic indicating whether error bars should be added to the expression plots to show uncertainty in estimates (recomended). Default is TRUE.}
   \item{confidenceIntervalErrorbars}{A logic indicating whether error bars should be given as confidence intervals (if TRUE)(recommended) or standard error of mean (if FALSE). Default is TRUE.}
   \item{confidenceInterval}{The confidence level used in the confidence intervals if confidenceIntervalErrorbars is enabled. Default is 0.95 corresponding to 95\% (recommended).}
@@ -81,7 +81,7 @@ Note that the bar indicating significance levels will only be shown if the analy
 \itemize{
     \item{\code{switchPlotGeneExp} : Generates a gene expression plot which also indicates whether the gene are differentially expressed between the two conditions}
     \item{\code{switchPlotIsoExp} : Generates a isoform expression plot which also indicates whether the isoforms are differentially expressed between the two conditions}
-    \item{\code{switchPlotIsoUsage} : Plots the changes in isoform usage (given by IF the values) along with the significance of the change in isoform usage of each isoform. Requires that the result of a differential isoform usage analysis have been performed (for example via \link{isoformSwitchTest}).}
+    \item{\code{switchPlotIsoUsage} : Plots the changes in isoform usage (given by IF the values) along with the significance of the change in isoform usage of each isoform. Requires that the result of a differential isoform usage analysis have been performed (for example via \link{isoformSwitchTestDEXSeq}).}
 }
 }
 
@@ -92,7 +92,8 @@ Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. C
 \author{Kristoffer Vitting-Seerup}
 
 \seealso{
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{switchPlotTranscript}}\cr
 \code{\link{switchPlot}}
 }

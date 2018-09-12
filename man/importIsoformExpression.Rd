@@ -2,22 +2,25 @@
 \alias{importIsoformExpression}
 
 \title{
-Import expression data from Kallisto, Salmon or RSEM into R.
+Import expression data from Kallisto, Salmon, RSEM or StringTie into R.
 }
 
 \description{
-A general-purpose import function which imports isoform expression data from Kallisto, Salmon or RSEM into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Importantly this import function also enables inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files.
+A general-purpose import function which imports isoform expression data from Kallisto, Salmon, RSEM or StringTie into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Importantly this import function also enables inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files.
 }
 
 \usage{
 importIsoformExpression(
     parentDir,
     calculateCountsFromAbundance=TRUE,
+    addIsofomIdAsColumn=TRUE,
     interLibNormTxPM=TRUE,
     normalizationMethod='TMM',
     pattern='',
     invertPattern=FALSE,
     ignore.case=FALSE,
+    ignoreAfterBar = TRUE,
+    readLength = NULL,
     showProgress = TRUE,
     quiet = FALSE
 )
@@ -26,10 +29,11 @@ importIsoformExpression(
 \arguments{
 \item{parentDir}{ Parrent directory where each quantified sample is in a sub-directory.}
 
-
 \item{calculateCountsFromAbundance}{A logic indicating whether to generate estimated counts using the estimated abundances. Recomended as it will incooperate the bias correction algorithms into the analysis. Default is TRUE.}
 
-\item{interLibNormTxPM}{A logic indicating whether to apply an inter-library normalization (via edgeR) to the imported abundances. Recomended as it allow comparison of abundances between samples. Default is TRUE.}
+\item{addIsofomIdAsColumn}{A logic indicating whether to add isoform id as a seperate column (nesseasry for use with isoformSwitchAnalyzeR) or not (resulting in a data.frame ready for many other functions for exploratory data analysis (EDA) or clustering). Default is TRUE.}
+
+\item{interLibNormTxPM}{A logic indicating whether to apply an inter-library normalization (via edgeR) to the imported abundances. Recomended as it allow better comparison of abundances between samples. Will not affect the returned counts - even if calculateCountsFromAbundance=TRUE. Default is TRUE.}
 
 \item{normalizationMethod}{A string indicating the method used for the inter-library normalization. Must be one of "TMM", "RLE", "upperquartile". See \code{?edgeR::calcNormFactors} for more details. Default is "TMM".}
 
@@ -39,6 +43,10 @@ importIsoformExpression(
 
 \item{ignore.case}{ if FALSE, the pattern matching is case sensitive and if TRUE, case is ignored during matching.}
 
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Usefyll for analysis of GENCODE data.}
+
+\item{readLength}{ Only nessesary when importing from StringTie. Must be the number of base pairs sequenced. e.g. if the data quantified is 75 bp paired ends the the user should supply \code{readLength=75}.}
+
 \item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.}
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
@@ -47,13 +55,15 @@ importIsoformExpression(
 \details{
 This function requires all data that should be imported is in a directory (as indicated by \code{parentDir}) where each quantified sample is in a seperate sub-directory.
 
-For Kallisto the bias estimation is enabled by adding '--bias' to the function call. For Salmon the bias estimation is enabled by adding '--seqBias' and '--gcBias' to the function call. For RSEM the bias estimation is enabled by adding '--estimate-rspd' to the function call.
+For Kallisto the bias estimation is enabled by adding '--bias' to the function call. For Salmon the bias estimation is enabled by adding '--seqBias' and '--gcBias' to the function call. For RSEM the bias estimation is enabled by adding '--estimate-rspd' to the function call. For Stringtie the bias corrections are always enabled (and cannot be turned off by the user).
 
 Inter library normalization is (almost always) nessesary due to small changes in the RNA composition between cells and is highly recommended for all analysis of RNAseq data. For more information please refere to the edgeR user guide.
 
-The inter-library normalization of TxPM values is performed as a three step process: First the effective counts are calculated from the abundances using the library specific effective isoform lengths. The effective counts are then suppled to edgeR which calculates the normalization factors nesseary. Lastly the calculated normalization factors are applied to the imported TxPM values.
+The inter-library normalization of FPKM/TxPM values is performed as a 3/4 step process: If \code{calculateCountsFromAbundance=TRUE} the effective counts are calculated from the abundances using the library specific effective isoform lengths, else the original counts are used. The count matrix is then subsetted to the isoforms expressed more than 1 TxPM/RPKM in more than one sample. The count matrix suppled to edgeR which calculates the normalization factors nesseary. Lastly the calculated normalization factors are applied to the imported FPKM/TxPM values.
 
-This function expexts the files produced by Kallisto/Salmon/RSEM to be called their default names (with possible costum prefix): Kallisto files are called 'abundance.tsv', Salmon files are called 'quant.sf' and RSEM files are called 'isoforms.results'.
+This function expects the files produced by Kallisto/Salmon/RSEM/StringTie to be called their default names (with possible costom prefix): Kallisto files are called 'abundance.tsv', Salmon files are called 'quant.sf', RSEM files are called 'isoforms.results' and StringTie files are called 't_data.ctab'.
+
+Importantly stringtie must be run with the -B option to produce the quantified file: An example could be: "stringtie -eB -G transcripts.gtf <source_file.bam>"
 }
 
 \value{
@@ -77,3 +87,20 @@ Kristoffer Vitting-Seerup
 \code{\link{preFilter}}
 }
 
+
+\examples{
+### Please note
+# The way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# specialiced to access the sample data in the IsoformSwitchAnalyzeR package
+# and not somhting you need to do - just supply the string e.g.
+# "/mySalmonQuantifications/" to the function
+
+### Import
+salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))
+
+names(salmonQuant)
+
+head(salmonQuant$abundance, 2)
+
+}

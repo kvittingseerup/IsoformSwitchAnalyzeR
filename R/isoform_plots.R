@@ -1121,7 +1121,7 @@ expressionAnalysisPlot <- function(
     isoform_id = NULL,
     condition1 = NULL,
     condition2 = NULL,
-    IFcutoff = 0,
+    IFcutoff = 0.05,
     addErrorbars = TRUE,
     confidenceIntervalErrorbars = TRUE,
     confidenceInterval = 0.95,
@@ -1850,7 +1850,7 @@ expressionAnalysisPlot <- function(
 
             ### Massage data
             isoExpression2 <-
-                melt(
+                reshape2::melt(
                     isoExpression[, c(
                         'isoform_id', 'iso_value_1', 'iso_value_2'
                     )],
@@ -1864,7 +1864,7 @@ expressionAnalysisPlot <- function(
             isoExpression2 <- isoExpression2[, -2]
 
             isoStderr <-
-                melt(
+                reshape2::melt(
                     isoExpression[, c(
                         'isoform_id', 'iso_stderr_1', 'iso_stderr_2'
                     )],
@@ -1917,7 +1917,7 @@ expressionAnalysisPlot <- function(
             sigDF$sigEval <- evalSig(sigDF$iso_q_value, alphas)
 
             sigDF2 <-
-                ddply(
+                plyr::ddply(
                     sigDF,
                     .variables = 'isoform_id',
                     .fun = function(aDF) {
@@ -2069,7 +2069,7 @@ expressionAnalysisPlot <- function(
 
             ### Massage data
             isoformUsage2 <-
-                melt(
+                reshape2::melt(
                     isoformUsage[, c('isoform_id', 'IF1', 'IF2')],
                     id.vars = 'isoform_id'
                 )
@@ -2090,7 +2090,7 @@ expressionAnalysisPlot <- function(
                         alphas = alphas)
 
             sigDF2 <-
-                ddply(
+                plyr::ddply(
                     sigDF,
                     .variables = 'isoform_id',
                     .fun = function(aDF) {
@@ -2184,7 +2184,7 @@ switchPlot <- function(
     isoform_id = NULL,
     condition1,
     condition2,
-    IFcutoff = 0,
+    IFcutoff = 0.05,
     rescaleTranscripts = TRUE,
     reverseMinus = TRUE,
     addErrorbars = TRUE,
@@ -2805,7 +2805,7 @@ switchPlotIsoExp <- function(
     isoform_id = NULL,
     condition1 = NULL,
     condition2 = NULL,
-    IFcutoff = 0,
+    IFcutoff = 0.05,
     addErrorbars = TRUE,
     confidenceIntervalErrorbars = TRUE,
     confidenceInterval = 0.95,
@@ -2840,7 +2840,7 @@ switchPlotIsoUsage <- function(
     isoform_id = NULL,
     condition1 = NULL,
     condition2 = NULL,
-    IFcutoff = 0,
+    IFcutoff = 0.05,
     addErrorbars = TRUE,
     confidenceIntervalErrorbars = TRUE,
     confidenceInterval = 0.95,

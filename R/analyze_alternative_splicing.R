@@ -1,10 +1,9 @@
-### Functions imported from spliceR by KVS 2018-03-06
+### Functions lifted from spliceR by KVS 2018-03-06
 if(TRUE) {
     ### C functions copied from R 1.9.0
 
     ### Auxillary spliceR functions
     if(TRUE) {
-        ########################
         ### Filter functions ###
         # Filter 1: only test genes with OK status (cufflinks specific)
         .filterOKGenes <- function(dataList, isoIndex) {
@@ -1617,7 +1616,7 @@ extractSplicingSummary <- function(
 
             ### Extract pairs of isoforms passing the filters
             pairwiseIsoComparisonList <-
-                llply(
+                plyr::llply(
                     .data = localDataList,
                     .progress = 'none',
                     .fun = function(aDF) {
@@ -1749,7 +1748,7 @@ extractSplicingSummary <- function(
             ),]
 
             ### Massage
-            m1 <- melt(localAS[,c(
+            m1 <- reshape2::melt(localAS[,c(
                 "isoform_id",
                 "ES_genomic_start",
                 "MEE_genomic_start",
@@ -1829,7 +1828,7 @@ extractSplicingSummary <- function(
 
     ### summarize count
     if(TRUE) {
-        myNumbers <- ddply(
+        myNumbers <- plyr::ddply(
             localConseq5,
             .variables = c(
                 'AStype',
@@ -2058,7 +2057,7 @@ extractSplicingEnrichment <- function(
 
         ### Extract pairs of isoforms passing the filters
         pairwiseIsoComparisonList <-
-            llply(
+            plyr::llply(
                 .data = localDataList,
                 .progress = 'none',
                 .fun = function(aDF) {
@@ -2190,7 +2189,7 @@ extractSplicingEnrichment <- function(
         ),]
 
         ### Massage
-        m1 <- melt(localAS[,c(
+        m1 <- reshape2::melt(localAS[,c(
             "isoform_id",
             "ES_genomic_start",
             "MEE_genomic_start",
@@ -2207,7 +2206,7 @@ extractSplicingEnrichment <- function(
             function(x) x[1]
         )
 
-        m2 <- melt(localAS[,c(
+        m2 <- reshape2::melt(localAS[,c(
             "isoform_id",
             "ES_genomic_end",
             "MEE_genomic_end",
@@ -2224,7 +2223,7 @@ extractSplicingEnrichment <- function(
             function(x) x[1]
         )
 
-        localAS <- merge(
+        localAS <- dplyr::inner_join(
             m1[,c('isoform_id','AStype','genomic_start')],
             m2[,c('isoform_id','AStype','genomic_end')],
             by=c('isoform_id','AStype')
@@ -2308,8 +2307,8 @@ extractSplicingEnrichment <- function(
         localConseq4$nrLoss <- 0
         for(i in seq_along(genomic_start_up)) { # i<-39
             # combine start and end of exons
-            localUp <- paste0(genomic_start_up[[i]]  , '_', genomic_end_up  [[i]])
-            localDn <- paste0(genomic_start_down[[i]], '_', genomic_end_down[[i]])
+            localUp <- stringr::str_c(genomic_start_up[[i]]  , '_', genomic_end_up  [[i]])
+            localDn <- stringr::str_c(genomic_start_down[[i]], '_', genomic_end_down[[i]])
 
             # remove coordinats from primary transcripts
             localUp <- localUp[which( localUp != '0_0')]
@@ -2331,7 +2330,7 @@ extractSplicingEnrichment <- function(
     }
 
     ### Summarize gain vs loss for each AStype in each condition
-    gainLossBalance <- ddply(
+    gainLossBalance <- plyr::ddply(
         .data = localConseq4,
         .variables = c('condition_1','condition_2','AStype'),
         .fun = function(aDF) { # aDF <- localConseq4[1:50,]
@@ -2375,7 +2374,7 @@ extractSplicingEnrichment <- function(
             sep='\n'
         )
 
-        myOrder <- ddply(
+        myOrder <- plyr::ddply(
             gainLossBalance,
             .variables = 'AStype',
             .fun = function(aDF) {
@@ -2400,7 +2399,7 @@ extractSplicingEnrichment <- function(
                 x='Fraction of Switches Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)',
                 y='Alternative Splicing Event\n(in isoform used more)') +
             localTheme +
-            scale_color_manual('Significant', values=c('black','red')) +
+            scale_color_manual('Significant', values=c('black','red'), drop=FALSE) +
             coord_cartesian(xlim=c(0,1))
 
         print(g1)
@@ -2429,7 +2428,7 @@ extractSplicingEnrichmentComparison <- function(
     onlySigIsoforms = FALSE,
     plot = TRUE,
     localTheme = theme_bw(base_size = 14),
-    returnResult=FALSE
+    returnResult=TRUE
 ) {
     ### Extract splicing enrichment
     splicingCount <- extractSplicingEnrichment(
@@ -2444,12 +2443,12 @@ extractSplicingEnrichmentComparison <- function(
     spliceTypes <- split(as.character(unique(splicingCount$AStype)), unique(splicingCount$AStype))
 
     ### Make each pairwise comparison
-    myComparisons <- mfAllPairwiseFeatures( unique(splicingCount$Comparison) )
+    myComparisons <- allPairwiseFeatures( unique(splicingCount$Comparison) )
 
     ### Loop over each pariwise comparison
-    fisherRes <- ddply(myComparisons, c('var1','var2'), function(localComparison) { # localComparison <- myComparisons[1,]
+    fisherRes <- plyr::ddply(myComparisons, c('var1','var2'), function(localComparison) { # localComparison <- myComparisons[1,]
         ### Loop over each
-        localAsRes <- ldply(spliceTypes, .inform = T, function(localSpliceType) { # localSpliceType <- 'MEE'
+        localAsRes <- plyr::ldply(spliceTypes, .inform = TRUE, function(localSpliceType) { # localSpliceType <- 'MEE'
             ### Extract local data
             localSpliceCount1 <- splicingCount[which(
                 splicingCount$Comparison %in% c(localComparison$var1, localComparison$var2) &
@@ -2497,8 +2496,8 @@ extractSplicingEnrichmentComparison <- function(
     tmp$fisherQvalue <- p.adjust(tmp$fisherPvalue, method = 'fdr')
 
     fisherRes$fisherQvalue <- tmp$fisherQvalue[match(
-        paste0(fisherRes$var1, fisherRes$var2, fisherRes$AStype),
-        paste0(tmp$var1, tmp$var2, tmp$AStype)
+        stringr::str_c(fisherRes$var1, fisherRes$var2, fisherRes$AStype),
+        stringr::str_c(tmp$var1, tmp$var2, tmp$AStype)
     )]
     fisherRes$Significant <- fisherRes$fisherQvalue < alpha
 
@@ -2514,7 +2513,7 @@ extractSplicingEnrichmentComparison <- function(
                 x='Fraction of Switches Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)',
                 y='Comparison'
             ) +
-            scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red')) +
+            scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red'), drop=FALSE) +
             localTheme +
             theme(strip.text.y = element_text(angle = 0)) +
             coord_cartesian(xlim=c(0,1))
@@ -2522,13 +2521,13 @@ extractSplicingEnrichmentComparison <- function(
     }
 
     if(returnResult) {
-        fisherRes$pair <- paste0('propUp_comparison_', fisherRes$pair)
+        fisherRes$pair <- stringr::str_c('propUp_comparison_', fisherRes$pair)
 
         fisherRes2 <- reshape2::dcast(data = fisherRes, comp + AStype ~ pair, value.var=c('propUp'))
 
         fisherRes2$fisherQvalue <- tmp$fisherQvalue[match(
-            paste0(fisherRes2$comp, fisherRes2$AStype),
-            paste0(tmp$comp, tmp$AStype)
+            stringr::str_c(fisherRes2$comp, fisherRes2$AStype),
+            stringr::str_c(tmp$comp, tmp$AStype)
         )]
         fisherRes2$Significant <- fisherRes2$fisherQvalue < alpha
         colnames(fisherRes2)[1] <- 'comparisonsCompared'
@@ -2655,7 +2654,7 @@ extractSplicingGenomeWide <- function(
             stop('No data left after filtering')
         }
 
-        isoData <- merge(
+        isoData <- dplyr::inner_join(
             isoData,
             switchAnalyzeRlist$AlternativeSplicingAnalysis[,c(
                 'isoform_id',
@@ -2671,7 +2670,7 @@ extractSplicingGenomeWide <- function(
     if (TRUE) {
         # melt categories
         isoDataMelt <-
-            melt(isoData,
+            reshape2::melt(isoData,
                  id.vars = c(
                      'iso_ref', 'isoform_id', 'comparison', 'IF1', 'IF2'
                  ))
@@ -2683,7 +2682,7 @@ extractSplicingGenomeWide <- function(
             c('variable', 'value'), colnames(isoDataMelt)
         )] <- c('category', 'isoform_feature')
         isoDataMelt <-
-            melt(
+            reshape2::melt(
                 isoDataMelt,
                 id.vars = c(
                     'iso_ref',
@@ -2710,7 +2709,7 @@ extractSplicingGenomeWide <- function(
     ### Calculate statistics
     if (TRUE) {
         mySigTest <-
-            ddply(
+            plyr::ddply(
                 isoDataMelt,
                 .variables = c('comparison', 'category', 'isoform_feature'),
                 .drop = TRUE,
@@ -2744,7 +2743,7 @@ extractSplicingGenomeWide <- function(
                 evalSig(x, alphas))
 
         mySigTest <-
-            ddply(
+            plyr::ddply(
                 mySigTest,
                 .variables = 'category',
                 .fun = function(aDF) {

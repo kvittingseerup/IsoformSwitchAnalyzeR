@@ -102,7 +102,8 @@ Kristoffer Vitting-Seerup
 \seealso{
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{preFilter}}\cr
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}
 }
@@ -113,7 +114,7 @@ data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList)
 
 # Perfom test
-exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList, dIFcutoff = 0.3) # high dIF cutoff for fast runtime
+exampleSwitchListAnalyzed <- isoformSwitchTestDEXSeq(exampleSwitchList, dIFcutoff = 0.3) # high dIF cutoff for fast runtime
 
 ### analyzeORF
 library(BSgenome.Hsapiens.UCSC.hg19)

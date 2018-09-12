@@ -48,7 +48,7 @@ A logical indicating whether the nucleotide sequnce of the transcripts should be
 A logical indicating whether the amino acid (AA) sequence of the annotated open reading frames (ORF) should be extracted (nessesary for pfam and SignalIP analysis). The ORF can be annotated with the \code{analyzeORF} function. Default is TRUE.
 }
   \item{filterAALength}{
-A logical indicating whether to filter on the resulting sequences based on their length. This option exist to allows for easier usage of the Pfam and SignalIP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be > 5 AA and < 6001 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is FALSE.
+A logical indicating whether to filter on the resulting sequences based on their length. This option exist to allows for easier usage of the Pfam and SignalIP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be > 5 AA and < 1000 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is FALSE.
 }
   \item{removeORFwithStop}{
   A logical indicating whether ORFs containing stop codons, definde as * when the ORF nucleotide sequences is translated to the amino acid seqeunce, should be A) removed from the ORF annotation in the switchAnalyzeRlist and B) removed from the sequences added to the switchAnalyzeRlist and/or writen to fasta files. This is only nessesary if you are analyzing quantified known annotated data where you supplied a GTF file to the import function. If you have used \code{analyzeORF} to identify ORFs this should not have an effect. This option will have no effect if no ORFs are found. Default is TRUE.
@@ -104,7 +104,8 @@ Kristoffer Vitting-Seerup
 
 \seealso{
 \code{\link{switchAnalyzeRlist}}\cr
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{analyzeORF}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzePFAM}}\cr
@@ -117,7 +118,7 @@ data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList)
 
 # Perfom test
-exampleSwitchListAnalyzed <- isoformSwitchTest(exampleSwitchList, dIFcutoff = 0.3) # high dIF cutoff for fast runtime
+exampleSwitchListAnalyzed <- isoformSwitchTestDEXSeq(exampleSwitchList, dIFcutoff = 0.3) # high dIF cutoff for fast runtime
 
 # analyzeORF
 library(BSgenome.Hsapiens.UCSC.hg19)

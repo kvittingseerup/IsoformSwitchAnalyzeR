@@ -4,7 +4,7 @@
 Import Transcripts from a GTF file into R
 }
 \description{
-Function for importing a GTF into R as a \code{switchAnalyzeRlist}. This approach is well suited if you just want to annotate a transcriptome and are not interested in expression. If you are interested in expression estimates it is easier to use \link{importRdata}.
+Function for importing a GTF (can be either gziped or unpacked) into R as a \code{switchAnalyzeRlist}. This approach is well suited if you just want to annotate a transcriptome and are not interested in expression. If you are interested in expression estimates it is easier to use \link{importRdata}.
 }
 \usage{
 importGTF(
@@ -12,18 +12,21 @@ importGTF(
     addAnnotatedORFs=TRUE,
     onlyConsiderFullORF=FALSE,
     removeNonConvensionalChr=FALSE,
+    includeVersionIfAvailable=TRUE,
     PTCDistance=50,
     quiet=FALSE
 )
 }
 \arguments{
-\item{pathToGTF}{ A string indicating the full path to the GTF that should be imported.}
+\item{pathToGTF}{ A string indicating the full path to the (gziped or unpacked) GTF that should be imported.}
 
 \item{addAnnotatedORFs}{ A logic indicating whether the ORF from the GTF should be added to the \code{switchAnalyzeRlist}. This ORF is defined as the regions annoated as 'CDS' in the 'type' collumn (collumn 3). Default is TRUE.}
 
 \item{onlyConsiderFullORF}{ A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annoated is defined as those that both have a annotated 'start_codon' and 'stop_codon' in the 'type' column (column 3). This argument is only considered if onlyConsiderFullORF=TRUE. Default is FALSE.}
 
 \item{removeNonConvensionalChr}{ A logic indicating whether non-conventional chromosomes, here defined as chromosome names containing a '_'. These regions are typically used to annotate regions that cannot be assocaiated to a specific region (such as the human 'chr1_gl000191_random') or regions quite different due to different haplotypes (e.g. the 'chr6_cox_hap2'). Default is FALSE.}
+
+\item{includeVersionIfAvailable}{ A logic indicateding whether to combined gene/transcript ids with their respective version numbers (GENCODE style) if the version numbers are in a seperate column - as is often the case with Ensemble data (this functionality will not remove exsiting version numbering from ids if set to FALSE). Defalut is TRUE}
 
 \item{PTCDistance}{ Only considered if \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
@@ -66,8 +69,8 @@ Kristoffer Vitting-Seerup
 \code{\link{preFilter}}
 }
 \examples{
-# Import gtf file from cummeRbund package
+# Import exampled gtf file
 
-aSwitchList <- importGTF(pathToGTF=system.file("extdata/chr1_snippet.gtf", package = "cummeRbund"))
+aSwitchList <- importGTF(pathToGTF=system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"))
 aSwitchList
 }

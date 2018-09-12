@@ -1,9 +1,8 @@
 isoformSwitchAnalysisPart1 <- function(
-    input,
+    switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
-    switchTestMethod = 'DRIMSeq',
-    calibratePvalues = TRUE,
+    switchTestMethod = 'DEXSeq',
     orfMethod = 'longest',
     genomeObject,
     cds = NULL,
@@ -12,42 +11,13 @@ isoformSwitchAnalysisPart1 <- function(
     overwriteORF = FALSE,
     quiet = FALSE
 ) {
-    nrAnalysis <- 4
+    nrAnalysis <- 3
 
     ### Identfy input type
-    if (TRUE) {
-        ### Import cuffdiff data
-        inputClass <- class(input)
-        if (inputClass == 'switchAnalyzeRlist') {
-            if (!quiet) {
-                message(paste(
-                    'Step 1 of',
-                    nrAnalysis,
-                    ': Massaging data...',
-                    sep = ' '
-                ))
-            }
-
-            switchAnalyzeRlist <- input
-        } else if (inputClass == 'CuffSet') {
-            if (!quiet) {
-                message(
-                    paste(
-                        'Step 1 of',
-                        nrAnalysis,
-                        ': Importing and massaging Cufflinks/Cuffdiff data...',
-                        sep = ' '
-                    )
-                )
-            }
-
-            switchAnalyzeRlist <-
-                importCufflinksCummeRbund(cuffDB = input, quiet = TRUE)
-        } else {
-            stop(
-                'Input is not recogniced - see ?isoformSwitchAnalysisPart1 for more details'
-            )
-        }
+    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+        stop(
+            'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+        )
     }
 
     ### Run preFilter
@@ -59,70 +29,75 @@ isoformSwitchAnalysisPart1 <- function(
         )
 
     ### Test isoform switches
-    if (switchTestMethod == 'DRIMSeq') {
-        if (!quiet) {
-            message(
-                paste(
-                    'Step 2 of',
-                    nrAnalysis,
-                    ': Detecting isoform switches (this may take a while)...',
-                    sep = ' '
+    if(TRUE) {
+        if (switchTestMethod == 'DEXSeq') {
+            if (!quiet) {
+                message(
+                    paste(
+                        'Step 1 of',
+                        nrAnalysis,
+                        ': Detecting isoform switches...',
+                        sep = ' '
+                    )
                 )
-            )
-        }
-        switchAnalyzeRlist <-
-            isoformSwitchTestDRIMSeq(
-                switchAnalyzeRlist,
-                reduceToSwitchingGenes = TRUE,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
-                quiet = TRUE
-            )
-
-    } else if (switchTestMethod == 'IsoformSwitchAnalyzeR') {
-        if (!quiet) {
-            message(paste(
-                'Step 2 of',
-                nrAnalysis,
-                ': Detecting isoform switches...',
-                sep = ' '
-            ))
-        }
-        switchAnalyzeRlist <-
-            isoformSwitchTest(
-                switchAnalyzeRlist = switchAnalyzeRlist,
-                reduceToSwitchingGenes = TRUE,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
-                calibratePvalues = calibratePvalues,
-                quiet = TRUE
-            )
-
-    } else if (switchTestMethod != 'none') {
-        if (!quiet) {
-            message(
-                paste(
-                    'Step 2 of',
-                    nrAnalysis,
-                    ': No isoform switch detection was performed...',
-                    sep = ' '
+            }
+            switchAnalyzeRlist <-
+                isoformSwitchTestDEXSeq(
+                    switchAnalyzeRlist,
+                    reduceToSwitchingGenes = TRUE,
+                    alpha = alpha,
+                    dIFcutoff = dIFcutoff,
+                    quiet = TRUE
                 )
+
+        } else if (switchTestMethod == 'DRIMSeq') {
+            if (!quiet) {
+                message(
+                    paste(
+                        'Step 1 of',
+                        nrAnalysis,
+                        ': Detecting isoform switches (this may take a while)...',
+                        sep = ' '
+                    )
+                )
+            }
+            switchAnalyzeRlist <-
+                isoformSwitchTestDRIMSeq(
+                    switchAnalyzeRlist,
+                    reduceToSwitchingGenes = TRUE,
+                    alpha = alpha,
+                    dIFcutoff = dIFcutoff,
+                    quiet = TRUE
+                )
+
+        } else if (switchTestMethod != 'none') {
+            if (!quiet) {
+                message(
+                    paste(
+                        'Step 1 of',
+                        nrAnalysis,
+                        ': No isoform switch detection was performed...',
+                        sep = ' '
+                    )
+                )
+            }
+            tmp <- 'doNothing'
+        } else {
+            stop(
+                'Something went wrong with the switch selection - please contact developer with reproducible example.'
             )
         }
-        tmp <- 'doNothing'
-    } else {
-        stop(
-            'Something went wrong with the switch selection - please contact developer with reproducible example.'
-        )
-    }
-    if (nrow(switchAnalyzeRlist$isoformSwitchAnalysis) == 0) {
-        stop('No isoform switches were identified with the current cutoffs.')
+
+
+        if (nrow(switchAnalyzeRlist$isoformSwitchAnalysis) == 0) {
+            stop('No isoform switches were identified with the current cutoffs.')
+        }
     }
 
     ### Predict ORF
     if (!quiet) {
         message(paste(
-            'Step 3 of',
+            'Step 2 of',
             nrAnalysis,
             ': Predicting open reading frames',
             sep = ' '
@@ -144,7 +119,7 @@ isoformSwitchAnalysisPart1 <- function(
     if (!quiet) {
         message(
             paste(
-                'Step 4 of',
+                'Step 3 of',
                 nrAnalysis,
                 ': Extracting (and outputting) sequences',
                 sep = ' '
@@ -174,14 +149,20 @@ isoformSwitchAnalysisPart1 <- function(
                 dIFcutoff = dIFcutoff
             )
         )
-        message(
-            paste(
-                'The nucleotide and amino acid sequences of these isoforms have been outputted',
-                'to the supplied directory enabling external analysis of protein domians (Pfam), coding potential (CPAT) or signal peptides (SignalIP).',
-                '\nSee ?analyzeCPAT, ?analyzePFAM or ?analyzeSignalIP (under details) for suggested ways of running these three tools.',
-                sep = ' '
+        if(outputSequences) {
+            message(
+                paste(
+                    'The nucleotide and amino acid sequences of these isoforms',
+                    'have been outputted to the supplied directory.',
+                    '\nThese sequences enabling external analysis of',
+                    'protein domians (Pfam), coding potential (CPAT) or',
+                    'signal peptides (SignalIP).',
+                    '\nSee ?analyzeCPAT, ?analyzePFAM or ?analyzeSignalIP (under details) for suggested ways of running these three tools.',
+                    sep = ' '
+                )
             )
-        )
+        }
+
     }
     return(switchAnalyzeRlist)
 }
@@ -210,6 +191,12 @@ isoformSwitchAnalysisPart2 <- function(
     outputPlots = TRUE,
     quiet = FALSE
 ) {
+    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+        stop(
+            'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+        )
+    }
+
     ### Test input
     if (TRUE) {
         if (!is.null(pathToCPATresultFile)) {
@@ -324,6 +311,9 @@ isoformSwitchAnalysisPart2 <- function(
         )
     analysisDone <- analysisDone + 1
 
+    ### Reduce annotation
+    #switchAnalyzeRlist <- removeAnnoationData(switchAnalyzeRlist)
+
     ### Make isoform switch plots
     if (outputPlots) {
         if (!quiet) {
@@ -437,11 +427,10 @@ isoformSwitchAnalysisPart2 <- function(
 }
 
 isoformSwitchAnalysisCombined <- function(
-    input,
+    switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
-    switchTestMethod = 'DRIMSeq',
-    calibratePvalues = TRUE,
+    switchTestMethod = 'DEXSeq',
     n = NA,
     pathToOutput = getwd(),
     overwriteORF = FALSE,
@@ -461,11 +450,10 @@ isoformSwitchAnalysisCombined <- function(
     }
     switchAnalyzeRlist <-
         isoformSwitchAnalysisPart1(
-            input = input,
+            switchAnalyzeRlist = switchAnalyzeRlist,
             alpha = alpha,
             dIFcutoff = dIFcutoff,
             switchTestMethod = switchTestMethod,
-            calibratePvalues = calibratePvalues,
             pathToOutput = pathToOutput,
             genomeObject = genomeObject,
             orfMethod = orfMethod,

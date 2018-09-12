@@ -14,7 +14,7 @@ switchPlot(
     isoform_id = NULL,
     condition1,
     condition2,
-    IFcutoff=0,
+    IFcutoff=0.05,
     rescaleTranscripts = TRUE,
     reverseMinus = TRUE,
     addErrorbars = TRUE,
@@ -47,7 +47,7 @@ Second condition of the comparison to analyze. Must match 'condition_2' in the '
 }
 
 \item{IFcutoff}{
-The cutoff used for the minimum contribution to gene expression (in at least one condition) for an isoforms must have to be plotted (measured as Isoform Fraction (IF) values). Default is 0 (which removes non-expressed isoforms).
+The cutoff used for the minimum contribution to gene expression (in at least one condition) for an isoforms must have to be plotted (measured as Isoform Fraction (IF) values). Default is 0.05 (which removes isoforms with minor contribution).
 }
 
   \item{rescaleTranscripts}{
@@ -91,7 +91,8 @@ Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. C
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{switchPlotTranscript}}\cr
 \code{\link{switchPlotGeneExp}}\cr
 \code{\link{switchPlotIsoExp}}\cr

@@ -10,11 +10,10 @@ Then isoform switches are identified, annotated with ORF and intron retion. Then
 }
 \usage{
 isoformSwitchAnalysisCombined(
-    input,
+    switchAnalyzeRlist,
     alpha=0.05,
     dIFcutoff = 0.1,
-    switchTestMethod='DRIMSeq',
-    calibratePvalues=TRUE,
+    switchTestMethod='DEXSeq',
     n=NA,
     pathToOutput=getwd(),
     overwriteORF=FALSE,
@@ -31,8 +30,8 @@ isoformSwitchAnalysisCombined(
 }
 
 \arguments{
-\item{input}{
-Either a \code{CuffSet} created by readCufflins() or a \code{switchAnalyzeRlist} object.
+    \item{switchAnalyzeRlist}{
+A \code{switchAnalyzeRlist}.
 }
   \item{alpha}{
 The cutoff which the (callibrated) fdr correct p-values must be smaller than for calling significant switches. Defualit is 0.05.
@@ -42,13 +41,11 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 }
 \item{switchTestMethod}{ A sting indicating which statistical method should be used for testing differential isoform usage. The following options are avilable:
         \itemize{
+            \item {\code{'DEXSeq'} : Uses DEXSeq to perform the statiscal test. See \link{isoformSwitchTestDEXSeq}. Default}
             \item {\code{'DRIMSeq'} : Uses the DRIMSeq package to perform the statiscal test. See \link{isoformSwitchTestDRIMSeq}. Default}
-            \item {\code{'IsoformSwitchAnalyzeR'} : Uses the statistical test implemented in IsoformSwitchAnalyzeR. See \link{isoformSwitchTest}.}
             \item {\code{'none'} : No statistical test is performed. Should only be used if a test have already been performed and should not be overwritten (e.g when importing cuffdiff data).}
         }
     }
-
-    \item{calibratePvalues}{Only applicable if \code{switchTestMethod='IsoformSwitchAnalyzeR'}.A logic indicating whether the p-values should be calibrated accordin to the methods in Ferguson et al (2014), this will only be done if the p-value distribution is very skewed (if the estimated sigma^2 values is < 0.9) as suggested by the authors. See details for more information. Defualt is TRUE.}
 
 \item{n}{
 The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each subfolder indicated by \code{splitConditions, splitFunctionalConsequences}. Use NA to create all. Default is NA (all).
@@ -97,9 +94,8 @@ A logic indicating whether all isoform switches as well as the summary of functi
 \details{
 This function performs the full Isoform Analysis Workflow by
 \enumerate{
-    \item If necessary import the data (see \link{importCufflinksCummeRbund})
     \item Remove non-expressed isoforms and single-isoform genes (see \link{preFilter})
-    \item predict swithces (only if switches is not already annotated, see \link{isoformSwitchTest})
+    \item predict swithces (only if switches is not already annotated, see \link{isoformSwitchTestDEXSeq})
     \item Analyzing the isoforms for open reading frames (ORFs, see \link{analyzeORF})
     \item Output fasta files containing the nucleotide and amino acid sequences which enables external sequence analysis with CPAT, Pfam and SignalP (see \link{extractSequence})
     \item Predict functional consequences of switching (see \link{analyzeSwitchConsequences})
@@ -127,7 +123,8 @@ Kristoffer Vitting-Seerup
 \code{\link{isoformSwitchAnalysisPart1}}\cr
 \code{\link{isoformSwitchAnalysisPart2}}\cr
 \code{\link{preFilter}}\cr
-\code{\link{isoformSwitchTest}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{analyzeORF}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{analyzeSwitchConsequences}}\cr
@@ -139,7 +136,7 @@ exampleSwitchList
 
 library(BSgenome.Hsapiens.UCSC.hg19)
 exampleSwitchListAnalyzed <- isoformSwitchAnalysisCombined(
-    input=exampleSwitchList,
+    switchAnalyzeRlist=exampleSwitchList,
     genomeObject = Hsapiens,
     dIFcutoff = 0.4,         # Set high for short runtime in example data
     outputSequences = FALSE, # keeps the function from outputting the fasta files from this example

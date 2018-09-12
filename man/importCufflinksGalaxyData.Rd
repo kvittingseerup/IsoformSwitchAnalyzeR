@@ -19,6 +19,7 @@ importCufflinksFiles(
     pathToReadGroups,
     pathToRunInfo,
     fixCufflinksAnnotationProblem=TRUE,
+    addIFmatrix = TRUE,
     quiet=FALSE
 )
 
@@ -56,8 +57,15 @@ A string indicating the path to the file "Run details" file (downloaded from fx 
   \item{fixCufflinksAnnotationProblem}{
 A logic indicating whether to fix the problem with Cufflinks gene symbol annotation. Please see the details for additional information. Default is TRUE.
 }
+
+\item{addIFmatrix}{
+A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE) or not (if FALSE). Keeping it will make testing with limma faster but will also make the switchAnalyzeRlist larger - so it is a tradeoff for speed vs memmory. For most experimental setups we expect that keeping it will be the better solution. Default is TRUE.
+}
+
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
 }
+
+
 \details{
 One problem with cufflinks is that it considers islands of overlapping transcripts - this means that sometimes multiple genes (defined by gene short name) as combined into one cufflinks gene (XLOC_XXXXXX) and this gene is quantified and tested for differential expression. Setting fixCufflinksAnnotationProblem to TRUE will make the import function modify the data so that false conclusions are not made in downstream analysis. More specificly this cause the function to re-calculate expression values, set gene standard error (of mean) to NA and the p-value and q-value of the differential expression analysis to 1 whereby false conclusions can be prevented.
 
@@ -74,7 +82,6 @@ Kristoffer Vitting-Seerup
 }
 \seealso{
 \code{\link{createSwitchAnalyzeRlist}}\cr
-\code{\link{importCufflinksCummeRbund}}\cr
 \code{\link{preFilter}}
 }
 \note{

@@ -117,6 +117,10 @@ analyzeCPAT <- function(
                 sep = '\t'
             )
 
+        if( nrow(myCPATresults) == 0) {
+            stop('No results were found in the result file')
+        }
+
         # check if it is web file
         if (ncol(myCPATresults) == 8) {
             temp <- myCPATresults$Sequence.Name
@@ -272,6 +276,17 @@ analyzePFAM <- function(
         stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
     }
 
+    # file
+    if (class(pathToPFAMresultFile) != 'character') {
+        stop(
+            'The \'pathToPFAMresultFile\' argument must be a string pointing to the PFAM result file'
+        )
+    }
+    if (!file.exists(pathToPFAMresultFile)) {
+        stop('The file \'pathToPFAMresultFile\' points to does not exist')
+    }
+
+
     ### Test wither headers are included
     temp <-
         read.table(
@@ -281,6 +296,9 @@ analyzePFAM <- function(
             header = FALSE,
             nrows = 1
         )
+    if (nrow(temp) == 0) {
+        stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
+    }
     if (grepl('^<seq|^seq', temp[1, 1])) {
         skipLine <- 1
     } else {
@@ -489,7 +507,7 @@ analyzePFAM <- function(
 
         # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
         myPfamResultDf <-
-            ddply(
+            plyr::ddply(
                 myPfamResult,
                 .progress = progressBar,
                 .variables = 'seq_id',
@@ -658,6 +676,17 @@ analyzeSignalP <- function(
         stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
     }
 
+    # file
+    if (class(pathToSignalPresultFile) != 'character') {
+        stop(
+            'The \'pathToSignalPresultFile\' argument must be a string pointing to the SignalP result file'
+        )
+    }
+    if (!file.exists(pathToSignalPresultFile)) {
+        stop('The file \'pathToSignalPresultFile\' points to does not exist')
+    }
+
+
     ### Obtain signalP result
     if (TRUE) {
         ### Read file
@@ -669,6 +698,10 @@ analyzeSignalP <- function(
                 fill = TRUE,
                 col.names = paste('V', 1:13, sep = '')
             )
+        if(nrow(singalPresults) == 0) {
+            stop('The result file seems to be empty')
+        }
+
         # extract summary
         singalPresults <-
             singalPresults[which(grepl(
@@ -758,7 +791,7 @@ analyzeSignalP <- function(
 
         # calculate genomic coordinat
         singalPresults <-
-            ddply(
+            plyr::ddply(
                 singalPresults,
                 .variables = 'transcript_id',
                 .fun = function(aDF) {

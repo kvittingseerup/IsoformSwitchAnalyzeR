@@ -1,576 +1,4 @@
-### Helper functions
-allPairwiseFeatures <- function(aNameVec1, forceNonOverlap = FALSE) {
-    aNameVec1 <- unique(as.character(aNameVec1))
-
-    # vectors to store result
-    var1 <- character()
-    var2 <- character()
-
-    ### Get comparisons
-    count <- 2
-    n <- length(aNameVec1)
-    for (i in 1:(n - 1)) {
-        for (j in count:n) {
-            var1 <- c(var1, aNameVec1[i])
-            var2 <- c(var2, aNameVec1[j])
-        }
-        count <- count + 1
-    }
-
-    myCombinations <-
-        data.frame(var1 = var1,
-                   var2 = var2,
-                   stringsAsFactors = FALSE)
-
-    return(myCombinations)
-}
-jaccardSimilarity <- function(x, y) {
-    length(intersect(x, y)) / length(union(x, y))
-}
-
 ### Acutal import functions
-importCufflinksCummeRbund <- function(
-    cuffDB,
-    fixCufflinksAnnotationProblem = TRUE,
-    addCufflinksSwichTest = TRUE,
-    quiet = FALSE
-) {
-    ### Test input
-    if (TRUE) {
-        if (class(cuffDB)      != 'CuffSet') {
-            stop(paste(
-                'The object supplied to \'cuffDB\' must be a \'CuffSet\'.',
-                'See ?cummeRbund::readCufflinks for more information'
-            ))
-        }
-        if (!is.logical(fixCufflinksAnnotationProblem)) {
-            stop(
-            "The \'fixCufflinksAnnotationProblem\' argument must be a logic."
-            )
-        }
-
-    }
-    if (!quiet) {
-        message("Reading cuffDB, isoforms...")
-    }
-
-    # Make gene and isoform pointers
-    cuffGenes 			<- cummeRbund::genes(cuffDB)
-    cuffIsoforms 		<- cummeRbund::isoforms(cuffDB)
-
-    ### Extract gene diff analysis
-    geneDiffanalysis     		<-
-        data.frame(cummeRbund::diffData(cuffGenes), stringsAsFactors = FALSE)
-    geneDiffanalysis <-
-        geneDiffanalysis[which(colnames(geneDiffanalysis) != 'test_stat')]
-    colnames(geneDiffanalysis) 	<-
-        c('gene_id', 'sample_1', 'sample_2' ,
-          unlist(lapply(
-              colnames(geneDiffanalysis[, -1:-3]),
-              function(x) {
-                  paste("gene_", x, sep = "")
-              }))
-        ) # add gene to the colnames so they can be destinquished from the isoform diff data
-
-    ### Extract isoform (and thereby also gene) annotation
-    isoformAnnotation <- data.frame(
-        cummeRbund::annotation(cuffIsoforms), stringsAsFactors = FALSE)
-
-    # Unique + removeal of colums is nessesary because of the new cummeRbund devel (where these colums are included and exon number thereby makes duplication of rows)
-    isoformAnnotation <-
-        unique(isoformAnnotation[, na.omit(match(
-            c(
-                'isoform_id',
-                'gene_id',
-                'gene_short_name',
-                'nearest_ref_id',
-                'class_code',
-                'TSS_group_id',
-                'CDS_id',
-                'length',
-                'locus'
-            ),
-            colnames(isoformAnnotation)
-        ))])
-
-    ### Extract isoform diff analysis
-    isoformDiffanalysis <- data.frame(
-        cummeRbund::diffData(cuffIsoforms),stringsAsFactors = FALSE)
-
-    isoformDiffanalysis <-
-        isoformDiffanalysis[, which(
-            colnames(isoformDiffanalysis) != 'test_stat'
-        )]
-    colnames(isoformDiffanalysis) 	<-
-        c('isoform_id', 'sample_1', 'sample_2' ,
-          unlist(lapply(colnames(isoformDiffanalysis[, -1:-3]), function(x)
-         {paste("iso_", x, sep = "")} ))) # add gene to the colnames so they can be destinquished from the gene diff data
-
-    ### Extract and add isoform stderr
-    # exract
-    isoStderr <- cummeRbund::fpkm(cuffIsoforms)[, c(
-            'isoform_id', 'sample_name', 'stdev'
-        )]
-    colnames(isoStderr)[which(colnames(isoStderr) == 'stdev')] <- 'iso_stderr'
-
-    # add
-    isoformDiffanalysis <-
-        merge(
-            isoformDiffanalysis,
-            isoStderr,
-            by.x = c('isoform_id', 'sample_2'),
-            by.y = c('isoform_id', 'sample_name')
-        )
-    colnames(isoformDiffanalysis)[which(
-        grepl('iso_stderr', colnames(isoformDiffanalysis)))] <- 'iso_stderr_2'
-
-    isoformDiffanalysis <-
-        merge(
-            isoformDiffanalysis,
-            isoStderr,
-            by.x = c('isoform_id', 'sample_1'),
-            by.y = c('isoform_id', 'sample_name')
-        )
-    colnames(isoformDiffanalysis)[ which(
-        grepl('iso_stderr$', colnames(isoformDiffanalysis), perl = TRUE)
-    )] <- c('iso_stderr_1')
-
-    ### add mean exp
-    meanIsoFpkm <- rowMeans(
-        cummeRbund::repFpkmMatrix(cuffIsoforms)
-    )
-    isoformDiffanalysis$iso_overall_mean <-
-        meanIsoFpkm[match(
-            isoformDiffanalysis$isoform_id,
-            names(meanIsoFpkm)
-        )]
-
-    # reorder
-    isoformDiffanalysis <-
-        isoformDiffanalysis[, c(
-            'isoform_id',
-            'sample_1',
-            'sample_2',
-            'iso_status',
-            'iso_overall_mean',
-            'iso_value_1',
-            'iso_value_2',
-            'iso_stderr_1',
-            'iso_stderr_2',
-            'iso_log2_fold_change',
-            'iso_p_value',
-            'iso_q_value',
-            'iso_significant'
-        )]
-
-    ### Extract and add gene stderr
-    # extract
-    geneStderr <-
-        fpkm(cuffGenes)[, c(c('gene_id', 'sample_name', 'stdev'))]
-    colnames(geneStderr)[which(colnames(geneStderr) == 'stdev')] <-
-        'gene_stderr'
-
-    # Add
-    geneDiffanalysis <-
-        merge(
-            geneDiffanalysis,
-            geneStderr,
-            by.x = c('gene_id', 'sample_2'),
-            by.y = c('gene_id', 'sample_name')
-        )
-    colnames(geneDiffanalysis)[which(
-        grepl('gene_stderr', colnames(geneDiffanalysis)))] <- 'gene_stderr_2'
-
-    geneDiffanalysis <-
-        merge(
-            geneDiffanalysis,
-            geneStderr,
-            by.x = c('gene_id', 'sample_1'),
-            by.y = c('gene_id', 'sample_name')
-        )
-    colnames(geneDiffanalysis)[which(
-        grepl('gene_stderr$', colnames(geneDiffanalysis), perl = TRUE)
-    )] <- c('gene_stderr_1')
-
-    ### add mean exp
-    meanGeneFpkm <- rowMeans(
-        cummeRbund::repFpkmMatrix(cuffGenes)
-    )
-    geneDiffanalysis$gene_overall_mean <-
-        meanGeneFpkm[match(
-            geneDiffanalysis$gene_id,
-            names(meanGeneFpkm)
-        )]
-
-    # reorder
-    geneDiffanalysis <-
-        geneDiffanalysis[, c(
-            'gene_id',
-            'sample_1',
-            'sample_2',
-            'gene_status',
-            'gene_overall_mean',
-            'gene_value_1',
-            'gene_value_2',
-            'gene_stderr_1',
-            'gene_stderr_2',
-            'gene_log2_fold_change',
-            'gene_p_value',
-            'gene_q_value',
-            'gene_significant'
-        )]
-
-    ## Merge isoform annotation and gene diff analysis
-    isoformData <-
-        merge(isoformAnnotation, geneDiffanalysis, by = 'gene_id')
-    ## Merge with isoform diff analysis
-    isoformData <-
-        merge(isoformData,
-              isoformDiffanalysis,
-              by = c('isoform_id', 'sample_1', 'sample_2'))
-
-    colnames(isoformData)[which(
-        colnames(isoformData) == 'gene_short_name'
-    )] <- 'gene_name'
-
-
-    ### Extract exon info
-    if (!quiet) {
-        message("Reading cuffDB, exons...")
-    }
-    isoformFeatureQuery		<-
-        paste(
-            "SELECT y.* FROM features y JOIN genes x on y.gene_id = x.gene_id ",
-              sep = ""
-        )
-    isoformFeatures			<-
-        data.frame(dbGetQuery(cuffDB@DB, isoformFeatureQuery),
-                   stringsAsFactors = FALSE)
-    isoformFeatures         <-
-        isoformFeatures[which(isoformFeatures$strand %in% c('+', '-')), ]
-    isoformFeatures         <-
-        isoformFeatures [which(isoformFeatures$type == 'exon'), ]
-
-    if (nrow(isoformFeatures) == 0) {
-        stop(
-            "No exon information extracted - this is moste likely because the cuffDB was not build with a GTF file."
-        )
-    }
-    # Another faster way of doing it would be to use the colums removed from isoformAnnotation, but this approach is not backwards compatible
-    # isoformFeatures <- isoformAnnotation[,c("seqnames", "start", "end", "strand", "isoform_id", "gene_id")]
-
-    ### Extract isoform replicate expression
-    isoRepExp <- repCountMatrix(cuffIsoforms)
-    isoRepExp$isoform_id <- rownames(isoRepExp)
-    rownames(isoRepExp) <- NULL
-    isoRepExp <-
-        isoRepExp[, c(ncol(isoRepExp), 1:(ncol(isoRepExp) - 1))]
-
-    ### Make sure both all data.frames only contain isoforms also found in the other data.frame
-    if (TRUE) {
-        myUnion     <-
-            unique(
-                c(
-                    isoformData$isoform_id,
-                    isoformFeatures$isoform_id,
-                    isoRepExp$isoform_id
-                )
-            )
-        myIntersect <- intersect(
-            intersect(isoformData$isoform_id, isoformFeatures$isoform_id),
-            isoRepExp$isoform_id
-        )
-
-        # If there are descripencies
-        if (length(myUnion) != length(myIntersect)) {
-            isoformData      <- isoformData[which(
-                isoformData$isoform_id %in% myIntersect
-            ),]
-            isoformFeatures  <- isoformFeatures[which(
-                isoformFeatures$isoform_id %in% myIntersect
-            ), ]
-            isoRepExp <- isoRepExp[which(
-                isoRepExp$isoform_id %in% myIntersect
-            ), ]
-
-            if (!quiet) {
-                message(
-                    paste(
-                        'There were discrepencies between the GTF and',
-                        'the expression analysis files. To solve this',
-                        abs(length(myUnion) - length(myIntersect)) ,
-                        'transcripts were removed.',
-                        sep = ' '
-                    )
-                )
-            }
-        }
-
-    }
-
-    ### Fix to correct for Cufflinks annotation problem where cufflinks
-    # assignes transcripts from several annotated genes to 1 cuffgene
-    if (fixCufflinksAnnotationProblem) {
-        if (!quiet) {
-            message("Analyzing cufflinks annotation problem...")
-        }
-
-        geneName <- unique(isoformData[, c('gene_id', 'gene_name')])
-        geneNameSplit <-
-            split(geneName$gene_name , f = geneName$gene_id)
-        # remove all unique
-        geneNameSplit <-
-            geneNameSplit[which(sapply(geneNameSplit, function(x)
-                length(unique(x))) > 1)]
-
-        if (length(geneNameSplit) > 0) {
-            # if there are any problems
-            if (!quiet) {
-                message("Fixing cufflinks annotation problem...")
-            }
-            #get indexes of those affected
-            geneNameIndexesData     <-
-                which(isoformData$gene_id %in% names(geneNameSplit))
-            geneNameIndexesFeatures <-
-                which(isoformFeatures$gene_id %in% names(geneNameSplit))
-            # combine names of cuffgenes and
-            isoformData$gene_id[geneNameIndexesData]            <-
-                paste(isoformData$gene_id[geneNameIndexesData]        ,
-                      isoformData$gene_name[geneNameIndexesData],
-                      sep = ':')
-            isoformFeatures$gene_id[geneNameIndexesFeatures]    <-
-                paste(isoformFeatures$gene_id[geneNameIndexesFeatures],
-                      isoformFeatures$gene_name[geneNameIndexesFeatures],
-                      sep = ':')
-
-            ## Correct gene expression levels and differntial analysis
-            problematicGenes <-
-                isoformData[geneNameIndexesData, c(
-                    'isoform_id',
-                    'gene_id',
-                    'sample_1',
-                    'sample_2',
-                    'gene_overall_mean',
-                    'gene_value_1',
-                    'gene_value_2',
-                    'gene_stderr_1',
-                    'gene_stderr_2',
-                    'gene_log2_fold_change',
-                    'gene_p_value',
-                    'gene_q_value',
-                    'gene_significant',
-                    'iso_status',
-                    'iso_overall_mean',
-                    'iso_value_1',
-                    'iso_value_2'
-                )]
-            problematicGenesSplit <-
-                split(problematicGenes, f = problematicGenes[, c('gene_id', 'sample_1', 'sample_2')], drop =
-                          TRUE)
-
-            correctedGenes <-
-                plyr::ldply(
-                    problematicGenesSplit,
-                    .fun = function(df) {
-                        # df <- problematicGenesSplit[[1]]
-                        df$gene_overall_mean <- sum(df$iso_overall_mean)
-                        df$gene_value_1 <- sum(df$iso_value_1)
-                        df$gene_value_2 <- sum(df$iso_value_2)
-                        df$gene_stderr_1 <- NA
-                        df$gene_stderr_2 <- NA
-                        df$gene_log2_fold_change <-
-                            log2((df$gene_value_2[2] + 0.0001) / (df$gene_value_1[1] + 0.0001))
-                        df$gene_p_value <- 1
-                        df$gene_q_value <- 1
-                        df$gene_significant <- 'no'
-                        df$iso_status <- 'NOTEST'
-                        return(df)
-                    }
-                )
-
-            # sort so genes end up being in correct order for overwriting
-            correctedGenes <-
-                correctedGenes[order(
-                    correctedGenes$isoform_id,
-                    correctedGenes$gene_id,
-                    correctedGenes$sample_1,
-                    correctedGenes$sample_2
-                ), -1] # -1 removes the index created by ldply
-            # overwrite problematic genes
-            isoformData[geneNameIndexesData, c(
-                'gene_id',
-                'sample_1',
-                'sample_2',
-                'gene_overall_mean',
-                'gene_value_1',
-                'gene_value_2',
-                'gene_stderr_1',
-                'gene_stderr_2',
-                'gene_log2_fold_change',
-                'gene_p_value',
-                'gene_q_value',
-                'gene_significant',
-                'iso_status',
-                'iso_overall_mean',
-                'iso_value_1',
-                'iso_value_2'
-            )] <- correctedGenes[, -1] # -1 removes the isoform id
-
-            if (!quiet) {
-                message(
-                    paste(
-                        "Cufflinks annotation problem was fixed for",
-                        length(geneNameSplit),
-                        "Cuff_genes",
-                        sep = ' '
-                    )
-                )
-            }
-        } else {
-            if (!quiet) {
-                message(
-                    "No instances of a Cufflinks annotation problem found - no changes were made"
-                )
-            }
-        }
-    }
-
-    ### Calculate IF values
-    isoformData$IF_overall <- isoformData$iso_overall_mean / isoformData$gene_overall_mean
-    isoformData$IF1 <-
-        isoformData$iso_value_1 / isoformData$gene_value_1
-    isoformData$IF2 <-
-        isoformData$iso_value_2 / isoformData$gene_value_2
-    isoformData$dIF <- isoformData$IF2 - isoformData$IF1
-
-
-    ### Add q-values
-    if (addCufflinksSwichTest) {
-        if (!quiet) {
-            message("Extracting analysis of alternative splicing...\n")
-        }
-
-        ### Extract cufflinks switch test
-        myCuffGeneSet <- suppressMessages(
-            cummeRbund::getGenes(cuffDB, featureNames(genes(cuffDB)))
-        )
-        cuffSplicing <- cummeRbund::diffData(
-            cummeRbund::splicing(myCuffGeneSet)
-        )
-
-        isoformData$isoform_switch_q_value <- NA
-
-        if (nrow(cuffSplicing)) {
-            isoformData$gene_switch_q_value <- cuffSplicing$q_value[match(
-                paste(
-                    isoformData$gene_id,
-                    isoformData$sample_1,
-                    isoformData$sample_2,
-                    sep = '_'
-                ),
-                paste(
-                    cuffSplicing$gene_id,
-                    cuffSplicing$sample_1,
-                    cuffSplicing$sample_2,
-                    sep = '_'
-                )
-            )]
-        } else {
-            isoformData$gene_switch_q_value <- NA
-        }
-    } else {
-        ### Add collumns for isoform switch analysis results
-        isoformData$isoform_switch_q_value <- NA
-        isoformData$gene_switch_q_value <- NA
-    }
-
-    if (!quiet) {
-        message("Making IsoformSwitchAanalyzeRlist...\n")
-    }
-
-    ### Reorder a bit
-    isoformData <- isoformData[, c(1, 4, 2:3, 5:ncol(isoformData))]
-    colnames(isoformData)[3:4] <- c('condition_1', 'condition_2')
-
-    # Create GRanges for exon features
-    exonFeatures <- GRanges(
-        seqnames = isoformFeatures$"seqnames",
-        strand = isoformFeatures$"strand",
-        ranges = IRanges(start = isoformFeatures$"start",
-                         end = isoformFeatures$"end"),
-        isoformFeatures[, c("isoform_id", "gene_id")]
-    )
-
-    ### Extract run info
-    # cufflinks version
-    cuffVersion <- cummeRbund::runInfo(cuffDB)$value[2]
-
-    ### Check cufflinks version
-    checkVersionFail <- function(versionVector, minVersionVector) {
-        for (i in seq_along(versionVector)) {
-            if (versionVector[i] > minVersionVector[i]) {
-                return(FALSE)
-            }
-            if (versionVector[i] < minVersionVector[i]) {
-                return(TRUE)
-            }
-        }
-        return(FALSE)
-    }
-
-    cuffVersionDeconstructed <-
-        as.integer(strsplit(cuffVersion, '\\.')[[1]])
-    if (checkVersionFail(cuffVersionDeconstructed, c(2, 2, 1))) {
-        warning(
-            paste(
-                'The version of cufflinks/cuffdiff you have used is outdated',
-                '. An error in the estimations of standard deviations was not',
-                'corrected untill cufflinks 2.2.1. Since this detection of',
-                'isoform switches using this R package relies',
-                'on this standard error estimat',
-                'we do not premit switch detection',
-                '(using the detectIsoformSwitches() ) with the data generated here.',
-                'If you want to use this R pacakge please',
-                'upgrade cufflinks/cuffdiff to version >=2.2.1 or newer and try again.',
-                sep = ' '
-            )
-        )
-    }
-
-    # replicate numbers
-    repInfo <- cummeRbund::replicates(cuffDB)
-    nrRep <- table(repInfo$sample_name)
-    nrRep <-
-        data.frame(
-            condition = names(nrRep),
-            nrReplicates = as.vector(nrRep),
-            row.names = NULL,
-            stringsAsFactors = FALSE
-        )
-
-    ### Design matrix
-    designMatrix <- repInfo[, c('rep_name', 'sample_name')]
-    colnames(designMatrix) <- c('sampleID', 'condition')
-
-    # Return SpliceRList
-    switchAnalyzeRlist <- createSwitchAnalyzeRlist(
-        isoformFeatures = isoformData,
-        exons = exonFeatures,
-        designMatrix = designMatrix,
-        isoformCountMatrix = isoRepExp,
-        sourceId = paste("cufflinks", cuffVersion , sep = '_')
-    )
-
-    if (addCufflinksSwichTest & nrow(cuffSplicing)) {
-        switchAnalyzeRlist$isoformSwitchAnalysis <- cuffSplicing
-    }
-
-    if (!quiet) {
-        message('Done')
-    }
-    return(switchAnalyzeRlist)
-}
-
 importCufflinksFiles <- function(
     pathToGTF,
     pathToGeneDEanalysis,
@@ -582,6 +10,7 @@ importCufflinksFiles <- function(
     pathToReadGroups,
     pathToRunInfo,
     fixCufflinksAnnotationProblem = TRUE,
+    addIFmatrix = TRUE,
     quiet = FALSE
 ) {
     ### Test that files exist
@@ -897,6 +326,13 @@ importCufflinksFiles <- function(
         if (!quiet) {
             message("Merging gene and isoform expression...")
         }
+        ### Design matrix
+        readGroup$sample_name <-
+            stringr::str_c(readGroup$condition, '_', readGroup$replicate_num)
+        designMatrix <- readGroup[, c('sample_name', 'condition')]
+        colnames(designMatrix) <- c('sampleID', 'condition')
+
+
         ### Massage data frames
         if (TRUE) {
             # gene
@@ -994,7 +430,7 @@ importCufflinksFiles <- function(
             )]
             isoRepFpkm2$isoform_id <- NULL
 
-            geneRepFpkm <- IsoformSwitchAnalyzeR::isoformToGeneExp(isoRepFpkm2, quiet = T)
+            geneRepFpkm <- isoformToGeneExp(isoRepFpkm2, quiet = TRUE)
 
             ### Calculate means
             rownames(isoRepFpkm) <- isoRepFpkm$isoform_id
@@ -1036,7 +472,7 @@ importCufflinksFiles <- function(
                 isoformAnnotation[, which(grepl(
                     'isoform_id|_FPKM', colnames(isoformAnnotation)
                 ))]
-            isoformFPKM <- melt(isoformFPKM, id.vars = 'isoform_id')
+            isoformFPKM <- reshape2::melt(isoformFPKM, id.vars = 'isoform_id')
             isoformFPKM$variable <-
                 gsub('_FPKM$', '', isoformFPKM$variable)
             colnames(isoformFPKM)[3] <- 'expression'
@@ -1047,13 +483,13 @@ importCufflinksFiles <- function(
                     colnames(isoformAnnotation)
                 ))]
             isoformFPKMciHi <-
-                melt(isoformFPKMciHi, id.vars = 'isoform_id')
+                reshape2::melt(isoformFPKMciHi, id.vars = 'isoform_id')
             isoformFPKMciHi$variable <-
                 gsub(highString, '', isoformFPKMciHi$variable)
             colnames(isoformFPKMciHi)[3] <- 'ci_hi'
             # stderr
             isoformFPKMcombined <-
-                merge(isoformFPKM,
+                dplyr::inner_join(isoformFPKM,
                       isoformFPKMciHi,
                       by = c('isoform_id', 'variable'))
             isoformFPKMcombined$iso_stderr <-
@@ -1082,7 +518,7 @@ importCufflinksFiles <- function(
             geneFPKM <- geneAnnotation[, which(grepl(
                     'tracking_id|_FPKM', colnames(geneAnnotation)
                 ))]
-            geneFPKM <- melt(geneFPKM, id.vars = 'tracking_id')
+            geneFPKM <- reshape2::melt(geneFPKM, id.vars = 'tracking_id')
             geneFPKM$variable <-
                 gsub('_FPKM$', '', geneFPKM$variable)
             colnames(geneFPKM)[3] <- 'expression'
@@ -1091,12 +527,12 @@ importCufflinksFiles <- function(
                     paste('tracking_id|', highString, sep = ''),
                     colnames(geneAnnotation)
                 ))]
-            geneFPKMciHi <- melt(geneFPKMciHi, id.vars = 'tracking_id')
+            geneFPKMciHi <- reshape2::melt(geneFPKMciHi, id.vars = 'tracking_id')
             geneFPKMciHi$variable <- gsub(highString, '', geneFPKMciHi$variable)
             colnames(geneFPKMciHi)[3] <- 'ci_hi'
             # stderr
             geneFPKMcombined <-
-                merge(geneFPKM,
+                dplyr::inner_join(geneFPKM,
                       geneFPKMciHi,
                       by = c('tracking_id', 'variable'))
             geneFPKMcombined$iso_stderr <-
@@ -1108,23 +544,33 @@ importCufflinksFiles <- function(
 
 
             ## Merge stderr with DE analysis
-            isoformDiffanalysis <-
-                merge(
-                    isoformDiffanalysis,
-                    isoformFPKMcombined,
-                    by.x = c('isoform_id', 'sample_2'),
-                    by.y = c('isoform_id', 'sample_name')
-                )
+            #isoformDiffanalysis <-
+            #    merge(
+            #        isoformDiffanalysis,
+            #        isoformFPKMcombined,
+            #        by.x = c('isoform_id', 'sample_2'),
+            #        by.y = c('isoform_id', 'sample_name')
+            #    )
+            isoformDiffanalysis <- suppressWarnings( dplyr::inner_join(
+                isoformDiffanalysis,
+                isoformFPKMcombined,
+                by=c("sample_2" = "sample_name", "isoform_id" = "isoform_id")
+            ) )
             colnames(isoformDiffanalysis)[which( grepl(
                 'iso_stderr', colnames(isoformDiffanalysis))
             )] <- 'iso_stderr_2'
 
-            isoformDiffanalysis <- merge(
-                    isoformDiffanalysis,
-                    isoformFPKMcombined,
-                    by.x = c('isoform_id', 'sample_1'),
-                    by.y = c('isoform_id', 'sample_name')
-                )
+            #isoformDiffanalysis <- merge(
+            #        isoformDiffanalysis,
+            #        isoformFPKMcombined,
+            #        by.x = c('isoform_id', 'sample_1'),
+            #        by.y = c('isoform_id', 'sample_name')
+            #    )
+            isoformDiffanalysis <- suppressWarnings( dplyr::inner_join(
+                isoformDiffanalysis,
+                isoformFPKMcombined,
+                by=c("sample_2" = "sample_name", "isoform_id" = "isoform_id")
+            ) )
             colnames(isoformDiffanalysis)[which(grepl(
                 'iso_stderr$',
                 colnames(isoformDiffanalysis),
@@ -1149,23 +595,33 @@ importCufflinksFiles <- function(
                 )]
 
             ### Extract and add gene stderr
-            geneDiffanalysis <-
-                merge(
-                    geneDiffanalysis,
-                    geneFPKMcombined,
-                    by.x = c('gene_id', 'sample_2'),
-                    by.y = c('gene_id', 'sample_name')
-                )
+            #geneDiffanalysis <-
+            #    merge(
+            #        geneDiffanalysis,
+            #        geneFPKMcombined,
+            #        by.x = c('gene_id', 'sample_2'),
+            #        by.y = c('gene_id', 'sample_name')
+            #    )
+            geneDiffanalysis <- suppressWarnings( dplyr::inner_join(
+                geneDiffanalysis,
+                geneFPKMcombined,
+                by=c("sample_2" = "sample_name", "gene_id" = "gene_id")
+            ) )
             colnames(geneDiffanalysis)[ which(grepl(
                 'gene_stderr', colnames(geneDiffanalysis)
             ))] <- 'gene_stderr_2'
 
-            geneDiffanalysis <- merge(
-                    geneDiffanalysis,
-                    geneFPKMcombined,
-                    by.x = c('gene_id', 'sample_1'),
-                    by.y = c('gene_id', 'sample_name')
-                )
+            #geneDiffanalysis <- merge(
+            #        geneDiffanalysis,
+            #        geneFPKMcombined,
+            #        by.x = c('gene_id', 'sample_1'),
+            #        by.y = c('gene_id', 'sample_name')
+            #    )
+            geneDiffanalysis <- suppressWarnings( dplyr::inner_join(
+                geneDiffanalysis,
+                geneFPKMcombined,
+                by=c("sample_1" = "sample_name", "gene_id" = "gene_id")
+            ) )
             colnames(geneDiffanalysis)[which(grepl(
                 'gene_stderr$',
                 colnames(geneDiffanalysis),
@@ -1195,11 +651,11 @@ importCufflinksFiles <- function(
         if (TRUE) {
             ### Meger gene DE and annotation data
             isoformData <-
-                merge(isoformAnnotation2, geneDiffanalysis, by = 'gene_id')
+                dplyr::inner_join(isoformAnnotation2, geneDiffanalysis, by = 'gene_id')
 
             ### Merge with iso DE
             isoformData <-
-                merge(
+                dplyr::inner_join(
                     isoformData,
                     isoformDiffanalysis,
                     by = c('isoform_id', 'sample_1', 'sample_2')
@@ -1213,7 +669,6 @@ importCufflinksFiles <- function(
         }
 
     }
-
 
     ### Obtain transcript structure information
     if (TRUE) {
@@ -1424,11 +879,39 @@ importCufflinksFiles <- function(
     }
 
     ### Calculate IF values
-    isoformData$IF_overall <- isoformData$iso_overall_mean / isoformData$gene_overall_mean
-    isoformData$IF1 <-
-        isoformData$iso_value_1 / isoformData$gene_value_1
-    isoformData$IF2 <-
-        isoformData$iso_value_2 / isoformData$gene_value_2
+    localAnnot <- unique(isoformData[,c('gene_id','isoform_id')])
+    ifMatrix <- isoformToIsoformFraction(
+        isoformRepExpression = isoRepFpkm,
+        isoformGeneAnnotation = localAnnot,
+        quiet = TRUE
+    )
+
+    ### Summarize IF
+    myMeanIF <- rowMeans(ifMatrix[,designMatrix$sampleID,drop=FALSE], na.rm = TRUE)
+    ifMeanDf <- plyr::ddply(
+        .data = designMatrix,
+        .variables = 'condition',
+        .fun = function(aDF) { # aDF <- switchAnalyzeRlist$designMatrix[1:2,]
+            tmp <- rowMeans(ifMatrix[,aDF$sampleID,drop=FALSE], na.rm = TRUE)
+            data.frame(
+                isoform_id=names(tmp),
+                mean=tmp,
+                stringsAsFactors = FALSE
+            )
+        }
+    )
+
+    isoformData$IF_overall <- myMeanIF[match(
+        isoformData$isoform_id, names(myMeanIF)
+    )]
+    isoformData$IF1 <- ifMeanDf$mean[match(
+        stringr::str_c(isoformData$isoform_id,isoformData$sample_1),
+        stringr::str_c(ifMeanDf$isoform_id, ifMeanDf$condition)
+    )]
+    isoformData$IF2 <- ifMeanDf$mean[match(
+        stringr::str_c(isoformData$isoform_id,isoformData$sample_2),
+        stringr::str_c(ifMeanDf$isoform_id, ifMeanDf$condition)
+    )]
     isoformData$dIF <- isoformData$IF2 - isoformData$IF1
 
     ### Add q-values
@@ -1457,8 +940,12 @@ importCufflinksFiles <- function(
     }
 
     ### Reorder a bit
-    isoformData <- isoformData[, c(1, 4, 2:3, 5:ncol(isoformData))]
-    colnames(isoformData)[3:4] <- c('condition_1', 'condition_2')
+    ofInterest <- c('isoform_id','gene_id','gene_name','sample_1','sample_2')
+    isoformData <- isoformData[, c(
+        match( ofInterest, colnames(isoformData)),
+        which( ! colnames(isoformData) %in% ofInterest)
+    )]
+    colnames(isoformData)[4:5] <- c('condition_1', 'condition_2')
 
     ### Extract run info
     # cufflinks version
@@ -1506,11 +993,13 @@ importCufflinksFiles <- function(
             stringsAsFactors = FALSE
         )
 
-    ### Design matrix
-    readGroup$sample_name <-
-        paste0(readGroup$condition, '_', readGroup$replicate_num)
-    designMatrix <- readGroup[, c('sample_name', 'condition')]
-    colnames(designMatrix) <- c('sampleID', 'condition')
+
+    isoRepFpkm$isoform_id <- rownames(isoRepFpkm)
+    rownames(isoRepFpkm) <- NULL
+    isoRepFpkm <- isoRepFpkm[,c(
+        which(colnames(isoRepFpkm) == 'isoform_id'),
+        which(colnames(isoRepFpkm) != 'isoform_id')
+    )]
 
     # Return SpliceRList
     switchAnalyzeRlist <- createSwitchAnalyzeRlist(
@@ -1518,11 +1007,23 @@ importCufflinksFiles <- function(
         exons = exonFeatures,
         designMatrix = designMatrix,
         isoformCountMatrix = isoRepExp2,
+        isoformRepExpression = isoRepFpkm,
         sourceId = paste("cufflinks", cuffVersion , sep = '_')
     )
 
     if (!is.null(pathToSplicingAnalysis) & nrow(cuffSplicing)) {
         switchAnalyzeRlist$isoformSwitchAnalysis <- cuffSplicing
+    }
+
+    if( addIFmatrix ) {
+        ifMatrix$isoform_id <- rownames(ifMatrix)
+        rownames(ifMatrix) <- NULL
+        ifMatrix <- ifMatrix[,c(
+            which(colnames(ifMatrix) == 'isoform_id'),
+            which(colnames(ifMatrix) != 'isoform_id')
+        )]
+
+        switchAnalyzeRlist$isoformRepIF <- ifMatrix
     }
 
     return(switchAnalyzeRlist)
@@ -1533,14 +1034,27 @@ importGTF <- function(
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
+    includeVersionIfAvailable=TRUE,
     PTCDistance = 50,
     quiet = FALSE
 ) {
+    ### Test files
+    if(TRUE) {
+        if( ! file.exists(pathToGTF) ) {
+            stop('The file does not appear to exist')
+        }
+
+        if( ! grepl('\\.gtf$|\\.gtf\\.gz$', pathToGTF, ignore.case = TRUE) ) {
+            warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
+        }
+    }
+
+
     # Read in from GTF file and create Rdata file for easy loading
     if (!quiet) {
         message('importing GTF (this may take a while)')
     }
-    mfGTF <- rtracklayer::import(pathToGTF)
+    mfGTF <- rtracklayer::import(pathToGTF, format='gtf')
 
     ### tjeck GTF
     if (!all(c('transcript_id', 'gene_id') %in% colnames(mfGTF@elementMetadata))) {
@@ -1572,6 +1086,24 @@ importGTF <- function(
         seqlevels(mfGTF) <- as.character(mfGTF@seqnames@values)
     }
 
+    ### Look into version numbering
+    if(includeVersionIfAvailable) {
+        if(any( colnames(mcols(mfGTF)) == 'gene_version' )) {
+            mfGTF$gene_id <- stringr::str_c(
+                mfGTF$gene_id,
+                '.',
+                mfGTF$gene_version
+            )
+        }
+        if(any( colnames(mcols(mfGTF)) == 'transcript_version' )) {
+            mfGTF$transcript_id <- stringr::str_c(
+                mfGTF$transcript_id,
+                '.',
+                mfGTF$transcript_version
+            )
+        }
+    }
+
     ### Make annoation
     if (!quiet) {
         message('converting GTF to switchAnalyzeRlist')
@@ -1595,7 +1127,7 @@ importGTF <- function(
         condition_1 = "plaseholder1",
         condition_2 = "plaseholder2",
         gene_name = myIso$gene_name,
-        class_code = NA,
+        class_code = '=',
         gene_overall_mean = 0,
         gene_value_1 = 0,
         gene_value_2 = 0,
@@ -1929,7 +1461,7 @@ importGTF <- function(
                     'PTC'
                 )
 
-            orfInfo <- merge(starInfo2, stopInfo2, by = 'isoform_id')
+            orfInfo <- dplyr::inner_join(starInfo2, stopInfo2, by = 'isoform_id')
             orfInfo$orfTransciptLength  <-
                 orfInfo$orfTransciptEnd - orfInfo$orfTransciptStart + 1
 
@@ -1951,7 +1483,7 @@ importGTF <- function(
 
             # make sure all ORFs are annotated (with NAs)
             orfInfo <-
-                merge(orfInfo,
+                dplyr::full_join(orfInfo,
                       unique(myIsoAnot[, 'isoform_id', drop = FALSE]),
                       by = 'isoform_id',
                       all = TRUE)
@@ -2067,11 +1599,14 @@ importGTF <- function(
 importIsoformExpression <- function(
     parentDir,
     calculateCountsFromAbundance=TRUE,
+    addIsofomIdAsColumn=TRUE,
     interLibNormTxPM=TRUE,
     normalizationMethod='TMM',
     pattern='',
     invertPattern=FALSE,
     ignore.case=FALSE,
+    ignoreAfterBar = TRUE,
+    readLength = NULL,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -2097,12 +1632,9 @@ importIsoformExpression <- function(
 
         ### data.frame with nesseary info
         supportedTypes <- data.frame(
-            orign          = c('Kallisto'       , 'Salmon'         , 'RSEM'),
-            fileName       = c('abundance.tsv'  , 'quant.sf'       , 'isoforms.results'),
-            id             = c('target_id'      , 'Name'           , 'transcript_id'),
-            countCol       = c('est_counts'     , 'NumReads'       , 'expected_count'),
-            tpmCol         = c('tpm'            , 'TPM'            , 'TPM'),
-            eLengthCol     = c('eff_length'     , 'EffectiveLength', 'effective_length'),
+            orign          = c('Kallisto'       , 'Salmon'         , 'RSEM'            , 'StringTie'  ),
+            fileName       = c('abundance.tsv'  , 'quant.sf'       , 'isoforms.results', 't_data.ctab'),
+            eLengthCol     = c('eff_length'     , 'EffectiveLength', 'effective_length', ''),
             stringsAsFactors = FALSE
         )
     }
@@ -2172,6 +1704,15 @@ importIsoformExpression <- function(
             message(paste('    The quantification algorithm used was:', dataAnalyed$orign, sep = ' '))
         }
 
+        if( dataAnalyed$orign == 'StringTie' & is.null(readLength)) {
+            stop(paste(
+                'When importing StringTie results the \'readLength\' argument',
+                'must be specified.\n',
+                'This argument must be set to the number of base pairs sequenced',
+                '(e.g. if the \n quantified data is 75 bp paired ends \'readLength\' should be set to 75.'
+            ))
+        }
+
     }
 
     ### Import files with txtimport
@@ -2180,93 +1721,125 @@ importIsoformExpression <- function(
             message('Step 2 of ', analysisCount, ': Reading data...')
         }
 
-        # make vector with paths
-        localFiles <- sapply(
-            dirList,
-            function(aDir) {
-                list.files(
-                    path = paste0( parentDir, '/', aDir, '/' ),
-                    pattern = paste0(dataAnalyed$fileName, '$'),
-                    full.names = TRUE
-                )
+        ### Make paths for tximport
+        if(TRUE) {
+            ### make vector with paths
+            localFiles <- sapply(
+                dirList,
+                function(aDir) {
+                    list.files(
+                        path = paste0( parentDir, '/', aDir, '/' ),
+                        pattern = paste0(dataAnalyed$fileName, '$'),
+                        full.names = TRUE
+                    )
 
+                }
+            )
+            names(localFiles) <- names(dirList)
+
+            ### Subset to those of interest
+            if( invertPattern ) {
+                localFiles <- localFiles[which(
+                    ! grepl(
+                        pattern = pattern,
+                        x = localFiles,
+                        ignore.case=ignore.case
+                    )
+                )]
+            } else {
+                localFiles <- localFiles[which(
+                    grepl(
+                        pattern = pattern,
+                        x = localFiles,
+                        ignore.case=ignore.case
+                    )
+                )]
             }
-        )
-        names(localFiles) <- names(dirList)
 
-        ### Subset to those of interest
-        if( invertPattern ) {
-            localFiles <- localFiles[which(
-                ! grepl(
-                    pattern = pattern,
-                    x = localFiles,
-                    ignore.case=ignore.case
+            if( length(localFiles) == 0 ) {
+                stop('No files were left after filtering via the \'pattern\' argument')
+            }
+
+            if (!quiet) {
+                message(
+                    paste0(
+                        '    Found ',
+                        length(localFiles),
+                        ' quantification file(s) of interest'
+                    )
                 )
-            )]
-        } else {
-            localFiles <- localFiles[which(
-                grepl(
-                    pattern = pattern,
-                    x = localFiles,
-                    ignore.case=ignore.case
-                )
-            )]
+            }
+
+
         }
 
         ### Use Txtimporter to import data
         if (!quiet) {
-            localDataList <- tximport(
+            localDataList <- tximport::tximport(
                 files = localFiles,
                 type = tolower(dataAnalyed$orign),
                 txOut = TRUE, # to get isoform expression
                 countsFromAbundance = ifelse(
                     test = calculateCountsFromAbundance,
-                    yes= 'lengthScaledTPM',
+                    yes= 'scaledTPM',
                     no='no'
-                )
+                ),
+                ignoreAfterBar = ignoreAfterBar,
+                readLength=readLength
             )
         } else {
             suppressMessages(
-                localDataList <- tximport(
+                localDataList <- tximport::tximport(
                     files = localFiles,
                     type = tolower(dataAnalyed$orign),
                     txOut = TRUE, # to get isoform expression
                     countsFromAbundance = ifelse(
                         test = calculateCountsFromAbundance,
-                        yes= 'lengthScaledTPM',
+                        yes= 'scaledTPM',
                         no='no'
                     )
-                )
+                ),
+                ignoreAfterBar = ignoreAfterBar,
+                readLength=readLength
             )
         }
 
     }
 
-    analysisDone <- 2
-
     ### Noralize TxPM values based on effective counts
     if(interLibNormTxPM) {
         if (!quiet) {
-            message('Step ', analysisDone, ' of ', analysisCount, ': Normalizing TxPM values via edgeR...')
+            message('Step 3 of 3: Normalizing FPKM/TxPM values via edgeR...')
         }
 
-        ### calclate new coints
-        newCounts <- localDataList$abundance * localDataList$length
+        if(calculateCountsFromAbundance) {
+            ### calclate new coints
+            newCounts <- localDataList$abundance * localDataList$length
 
-        ### Scale new to same total counts as org matrix
-        countsSum <- colSums(localDataList$counts)
-        newSum <- colSums(newCounts)
-        countsMat <- t(t(newCounts) * (countsSum/newSum))
+            ### Scale new to same total counts as org matrix
+            countsSum <- colSums(localDataList$counts)
+            newSum <- colSums(newCounts)
+            countsMat <- t(t(newCounts) * (countsSum/newSum))
+        } else {
+            countsMat <- localDataList$counts
+        }
+
+        ### Subset to expressed features
+        okIso <- rownames(localDataList$abundance)[which(
+            rowSums( localDataList$abundance > 1 ) > 1
+        )]
+        countsMat <- countsMat[which(rownames(countsMat) %in% okIso),]
+
 
         ### Calculate normalization factors
-        localDGE <- edgeR::DGEList(countsMat, remove.zeros = TRUE)
-        localDGE <- edgeR::calcNormFactors(localDGE, method = normalizationMethod)
+        localDGE <- suppressWarnings( edgeR::DGEList(countsMat, remove.zeros = TRUE) )
+        localDGE <- suppressWarnings( edgeR::calcNormFactors(localDGE, method = normalizationMethod) )
 
         ### Apply normalization factors
         localDataList$abundance <- t(t(localDataList$abundance) / localDGE$samples$norm.factors)
     }
 
-    ### Final masssageing
+    ### Massage data
     if(TRUE) {
         ### massage
         localDataList$abundance <- as.data.frame(localDataList$abundance)
@@ -2275,21 +1848,23 @@ importIsoformExpression <- function(
 
         localDataList$countsFromAbundance <- NULL
 
-        ### Add isoform id
-        localDataList <- lapply(localDataList, function(x) {
-            x$isoform_id <- rownames(x)
-            return(x)
-        })
+        ### Add isoform id as col
+        if(addIsofomIdAsColumn) {
+            localDataList <- lapply(localDataList, function(x) {
+                x$isoform_id <- rownames(x)
+                rownames(x) <- NULL
+                return(x)
+            })
 
-        ### Reorder
-        reorderCols <- function(x) {
-            x[,c( ncol(x), 1:(ncol(x)-1) )]
+            ### Reorder
+            reorderCols <- function(x) {
+                x[,c( ncol(x), 1:(ncol(x)-1) )]
+            }
+
+            localDataList$abundance <- reorderCols( localDataList$abundance)
+            localDataList$counts    <- reorderCols( localDataList$counts   )
+            localDataList$length    <- reorderCols( localDataList$length   )
         }
-
-        localDataList$abundance <- reorderCols( localDataList$abundance)
-        localDataList$counts    <- reorderCols( localDataList$counts   )
-        localDataList$length    <- reorderCols( localDataList$length   )
-
 
         ### Add options
         localDataList$importOptions <- list(
@@ -2307,7 +1882,7 @@ importIsoformExpression <- function(
 }
 
 importRdata <- function(
-    isoformCountMatrix,
+    isoformCountMatrix = NULL,
     isoformRepExpression = NULL,
     designMatrix,
     isoformExonAnnoation,
@@ -2315,8 +1890,10 @@ importRdata <- function(
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
+    includeVersionIfAvailable=TRUE,
     PTCDistance = 50,
     foldChangePseudoCount = 0.01,
+    addIFmatrix = nrow(designMatrix) <= 20,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -2329,20 +1906,51 @@ importRdata <- function(
         progressBarLogic <- FALSE
     }
 
-
     ### Test whether imput data fits together
     if (TRUE) {
+        ### Test supplied expression
+        if(TRUE) {
+            countsSuppled <- !is.null(isoformCountMatrix)
+            abundSuppled <- !is.null(isoformRepExpression)
+
+            if( !( countsSuppled | abundSuppled) ) {
+                stop('At least one of \'isoformCountMatrix\' or \'isoformRepExpression\' arguments must be used.')
+            }
+
+            if( abundSuppled ) {
+                extremeValues <- range( isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')], na.rm = TRUE )
+                if( max(extremeValues) < 30 ) {
+                    warning('The expression data supplied to \'isoformRepExpression\' seems very small - please double-check that it is NOT log-transformed')
+                }
+                if( min(extremeValues) < 0 ) {
+                    stop('The expression data supplied to \'isoformRepExpression\' contains negative values - please double-check that it is NOT log-transformed')
+                }
+
+            }
+
+            if( countsSuppled ) {
+                extremeValues <- range( isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')], na.rm = TRUE )
+                if( max(extremeValues) < 30 ) {
+                    warning('The count data supplied to \'isoformCountMatrix\' seems very small - please double-check that it is NOT log-transformed')
+                }
+                if( min(extremeValues) < 0 ) {
+                    stop('The count data supplied to \'isoformCountMatrix\' contains negative values - please double-check that it is NOT log-transformed')
+                }
+            }
+        }
+
         ### Contains the collums they should
         if (TRUE) {
             ### Colnames
-            if (!any(colnames(isoformCountMatrix) == 'isoform_id')) {
-                stop(paste(
-                    'The data.frame passed to the \'isoformCountMatrix\'',
-                    'argument must contain a \'isoform_id\' column'
-                ))
+            if( countsSuppled ) {
+                if (!any(colnames(isoformCountMatrix) == 'isoform_id')) {
+                    stop(paste(
+                        'The data.frame passed to the \'isoformCountMatrix\'',
+                        'argument must contain a \'isoform_id\' column'
+                    ))
+                }
             }
-
-            if (!is.null(isoformRepExpression)) {
+            if ( abundSuppled ) {
                 if (!any(colnames(isoformRepExpression) == 'isoform_id')) {
                     stop(paste(
                         'The data.frame passed to the \'isoformCountMatrix\'',
@@ -2361,6 +1969,34 @@ importRdata <- function(
             if (length(unique(designMatrix$condition)) < 2) {
                 stop('The supplied \'designMatrix\' only contains 1 condition')
             }
+            # test information content in design matrix
+            if( ncol(designMatrix) > 2 ) {
+                otherDesign <- designMatrix[,which(
+                    ! colnames(designMatrix) %in% c('sampleID', 'condition')
+                ),drop=FALSE]
+
+                nonInformaticColms <- which(
+                    apply(otherDesign, 2, function(x) {
+                        length(unique(x)) == 1
+                    })
+                )
+
+                if(length(nonInformaticColms)) {
+                    stop(
+                        paste(
+                            'In the designMatrix the following column(s): ',
+                            paste(names(nonInformaticColms), collapse = ', '),
+                            '\n Contain constant information. Columns apart from \'sampleID\' and \'condition\'\n',
+                            'must describe cofounding effects not if interest. See ?importRdata and\n',
+                            'vignette ("How to handle cofounding effects (including batches)" section) for more information.',
+                            sep=' '
+                        )
+                    )
+                }
+            }
+
+
+
             if (!is.null(comparisonsToMake)) {
                 if (!all(c('condition_1', 'condition_2') %in%
                          colnames(comparisonsToMake))) {
@@ -2372,13 +2008,17 @@ importRdata <- function(
                     ))
                 }
             }
+
+
+
+
+
         }
 
         ### Convert potential factors
         if (TRUE) {
             designMatrix$condition <- as.character(designMatrix$condition)
-            designMatrix$sampleID  <-
-                as.character(designMatrix$sampleID)
+            designMatrix$sampleID  <- as.character(designMatrix$sampleID)
 
             if (!is.null(comparisonsToMake)) {
                 comparisonsToMake$condition_1 <-
@@ -2395,15 +2035,17 @@ importRdata <- function(
                 as.character(isoformCountMatrix$isoform_id)
         }
 
-        ### Check if it fits togehter
+        ### Check supplied data fits togehter
         if (TRUE) {
-            if (!all(designMatrix$sampleID %in% colnames(isoformCountMatrix))) {
-                stop(paste(
-                    'Each sample stored in \'designMatrix$sampleID\' must have',
-                    'a corresponding expression column in \'isoformCountMatrix\''
-                ))
+            if(countsSuppled) {
+                if (!all(designMatrix$sampleID %in% colnames(isoformCountMatrix))) {
+                    stop(paste(
+                        'Each sample stored in \'designMatrix$sampleID\' must have',
+                        'a corresponding expression column in \'isoformCountMatrix\''
+                    ))
+                }
             }
-            if (!is.null(isoformRepExpression)) {
+            if ( abundSuppled ) {
                 if (!all(designMatrix$sampleID %in%
                          colnames(isoformRepExpression))) {
                     stop(paste(
@@ -2413,11 +2055,14 @@ importRdata <- function(
                     ))
                 }
             }
-            if (!all(designMatrix$sampleID %in% colnames(isoformCountMatrix))) {
-                stop(
-                    'Each sample stored in \'designMatrix$sampleID\' must have',
-                    'a corresponding expression column in \'isoformRepExpression\''
-                )
+            if( abundSuppled & countsSuppled ) {
+                if( !  identical( colnames(isoformCountMatrix) , colnames(isoformRepExpression)) ) {
+                    stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
+                }
+
+                if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
+                    stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
+                }
             }
 
             if (!is.null(comparisonsToMake)) {
@@ -2440,12 +2085,73 @@ importRdata <- function(
                     c('condition_1', 'condition_2')
             }
         }
+
+        ### Test complexity of setup
+        if(TRUE) {
+            nCond <- length(unique(designMatrix$condition))
+            n <- nrow(designMatrix)
+            if(  nCond/n > 2/3  ) {
+                warning(paste(
+                    'The experimental design seems to be of very low complexity - very few samples per replicate.',
+                    'Please check the supplied design matrixt to make sure no mistakes were made.'
+                ))
+            }
+
+            nComp <- nrow(comparisonsToMake)
+            if( nComp > 6 ) {
+                warning(paste0(
+                    'The number of comparisons (n=', nComp,') is unusually high.',
+                    '\n - If this intended please note that with a large number of comparisons IsoformSwitchAnalyzeR might use quite a lot of memmory (aka running on a small computer might be problematic).',
+                    '\n - If this was not intended please check the supplied design matrixt to make sure no mistakes were made.'
+                ))
+            }
+
+            ### Test for full rank
+
+
+        }
     }
 
-    ### Handle annotation imput
-    if (!quiet) {
-        message('Step 1 of 5: Obtaining annotation...')
+    ### Giver proper R names
+    if(TRUE) {
+        tmp <- designMatrix
+
+        for( i in 2:ncol(designMatrix) ) { # i <- 2
+            if( class(designMatrix[,i]) %in% c('character','factor') ) {
+                designMatrix[,i] <- makeProperNames( designMatrix[,i] )
+            }
+        }
+
+        if( ! identical(tmp, designMatrix) ) {
+            message('Please note that some condition names were changed due to names not suited for modeling in R.')
+        }
+
+        if( !is.null(comparisonsToMake) ) {
+            comparisonsToMake$condition_1 <- makeProperNames(
+                comparisonsToMake$condition_1
+            )
+            comparisonsToMake$condition_2 <- makeProperNames(
+                comparisonsToMake$condition_2
+            )
+        }
     }
+
+    ### Test full rank of design
+    if(TRUE) {
+        isFullRank <- testFullRank( designMatrix )
+
+        if( ! isFullRank ) {
+            stop(
+                paste(
+                    'The supplied design matrix will result in a model matrix that is not full rank',
+                    '\nPlease make sure there are no co-linearities in the design'
+                )
+            )
+        }
+    }
+
+    ### Handle annotation input
+    if (!quiet) { message('Step 1 of 5: Obtaining annotation...')}
     if (TRUE) {
         ### Import GTF is nessesary
         if (class(isoformExonAnnoation) == 'character') {
@@ -2457,29 +2163,29 @@ importRdata <- function(
                     'must be of length 1'
                 ))
             }
-            if (!grepl('gtf$', isoformExonAnnoation)) {
-                warning(paste(
-                    'The GTF file supplied to isoformExonAnnoation',
-                    'does not contain the suffix \'.gtf\''
-                ))
-            }
             if (!file.exists(isoformExonAnnoation)) {
                 stop(paste(
                     'The file paht supplied to isoformExonAnnoation',
-                    'points to a file that does not exists'
+                    'points to a \"file\" that does not exists'
                 ))
+            }
+            if( ! grepl('\\.gtf$|\\.gtf\\.gz$', isoformExonAnnoation, ignore.case = TRUE) ) {
+                warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
             }
 
             if (!quiet) {
-                message('importing GTF (this may take a while)')
+                message('    importing GTF (this may take a while)')
             }
-            gtfSwichList <- importGTF(
-                pathToGTF = isoformExonAnnoation,
-                addAnnotatedORFs = addAnnotatedORFs,
-                onlyConsiderFullORF = onlyConsiderFullORF,
-                PTCDistance = PTCDistance,
-                removeNonConvensionalChr = removeNonConvensionalChr,
-                quiet = TRUE
+            suppressWarnings(
+                gtfSwichList <- importGTF(
+                    pathToGTF = isoformExonAnnoation,
+                    addAnnotatedORFs = addAnnotatedORFs,
+                    onlyConsiderFullORF = onlyConsiderFullORF,
+                    includeVersionIfAvailable=includeVersionIfAvailable,
+                    PTCDistance = PTCDistance,
+                    removeNonConvensionalChr = removeNonConvensionalChr,
+                    quiet = TRUE
+                )
             )
 
             ### Extract wanted annotation files form the spliceR object
@@ -2494,6 +2200,17 @@ importRdata <- function(
 
             if (addAnnotatedORFs & gtfImported) {
                 isoORF <- gtfSwichList$orfAnalysis
+
+                if( all( is.na(isoORF$PTC)) ) {
+                    warning(
+                        paste(
+                            '   No CDS annotation was found in the GTF files meaning ORFs could not be annotated.\n',
+                            '    (But ORFs can still be predicted with the analyzeORF() function)'
+                        )
+                    )
+
+                    addAnnotatedORFs <- FALSE
+                }
             }
         } else {
             gtfImported <- FALSE
@@ -2502,6 +2219,36 @@ importRdata <- function(
             if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
                 stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
             }
+
+            ### Test for other than exons by annotation
+            if(any(  colnames(isoformExonAnnoation@elementMetadata) == 'type' )) {
+                stop(
+                    paste(
+                        'The \'type\' column of the data supplied to \'isoformExonAnnoation\'',
+                        'indicate there are multiple levels of data.',
+                        'Please fix this or provide a string with the path to the GTF file',
+                        '(then IsoformSwitchAnalyzeR will import the file as well).'
+                    )
+                )
+            }
+
+            ### Test for other than exons by overlap of transcript features
+            localExonList <- split(isoformExonAnnoation@ranges, isoformExonAnnoation$isoform_id)
+            localExonListReduced <- reduce(localExonList)
+            if(
+                any( sapply( width(localExonList), sum) != sapply( width(localExonListReduced), sum) )
+            ) {
+                stop(
+                    paste(
+                        'The data supplied to \'isoformExonAnnoation\' appears to be multi-leveled',
+                        '(Fx both containing exon and CDS information for transcripts - which a GTF file does).',
+                        'If your annotation data originate from a GTF file please supply a string',
+                        'indicating the path to the GTF file to the \'isoformExonAnnoation\' argument instead - then IsoformSwitchAnalyzeR will handle the multi-levels.'
+                    )
+                )
+            }
+
+
 
             ### Devide the data
             isoformExonStructure <-
@@ -2538,19 +2285,40 @@ importRdata <- function(
             ))
         }
 
-        j1 <- jaccardSimilarity(
-            isoformCountMatrix$isoform_id,
-            isoformAnnotation$isoform_id
-        )
+        ### Test overlap with expression data
+        if( countsSuppled ) {
+            j1 <- jaccardSimilarity(
+                isoformCountMatrix$isoform_id,
+                isoformAnnotation$isoform_id
+            )
+
+            expIso <- isoformCountMatrix$isoform_id
+        } else {
+            j1 <- jaccardSimilarity(
+                isoformRepExpression$isoform_id,
+                isoformAnnotation$isoform_id
+            )
+
+            expIso <- isoformRepExpression$isoform_id
+        }
+
         jcCutoff <- 0.95
         if (j1 != 1 ) {
             if( j1 < jcCutoff) {
                 stop(
                     paste(
-                        'The annotation (count matrix and isoform annotation)',
+                        '\nThe annotation and quantification (count/abundance matrix and isoform annotation)',
                         'seems to be different (jacard similarity < 0.95).',
-                        'Either isforoms found in the annotation are',
+                        '\nEither isforoms found in the annotation are',
                         'not quantifed or vise versa.',
+                        '\nSpecifically:\n',
+                        length(unique(expIso)), 'isoforms were quantified.\n',
+                        length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
+                        'Only', length(intersect(expIso, isoformAnnotation$isoform_id)), 'overlap.\n',
+                        '\nThis combination cannot be analyzed since it will',
+                        'cause discrepencies between quantification and annotation thereby skewing all analysis.\n',
+                        '\nPlease make sure they belong together and try again.',
+                        'For more info see the FAQ in the vignette.',
                         sep=' '
                     )
                 )
@@ -2558,22 +2326,35 @@ importRdata <- function(
             if( j1 >= jcCutoff ) {
                 warning(
                     paste(
-                        'The annotation (count matrix and isoform annotation)',
+                        '\nThe annotation and quantification (count/abundance matrix and isoform annotation)',
                         'contain differences in which isoforms are analyzed.',
-                        'specifically the annotation provided comtain:',
-                        length(unique(isoformAnnotation$isoform_id)) - length(unique(isoformCountMatrix$isoform_id)),
-                        'more isoforms than the count matrix.',
-                        'Please make sure this is on purpouse since differences',
-                        'will cause inaccurate quantification and thereby skew all analysis',
+
+                        '\nSpecifically:\n',
+                        length(unique(expIso)), 'isoforms were quantified.\n',
+                        length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
+
+                        'The annotation provided contain:',
+                        length(unique(isoformAnnotation$isoform_id)) - length(unique(expIso)),
+                        'more isoforms than the count matrix.\n',
+                        '\nPlease make sure this is on purpouse since differences',
+                        'will cause inaccurate quantification and thereby skew all analysis.\n',
+                        '\n!NB! All differences were removed from the final switchAnalyzeRlist!',
                         sep=' '
                     )
                 )
 
                 ### Reduce to those found in all
-                isoformsUsed <- intersect(
-                    isoformCountMatrix$isoform_id,
-                    isoformAnnotation$isoform_id
-                )
+                if( countsSuppled ) {
+                    isoformsUsed <- intersect(
+                        isoformCountMatrix$isoform_id,
+                        isoformAnnotation$isoform_id
+                    )
+                } else {
+                    isoformsUsed <- intersect(
+                        isoformRepExpression$isoform_id,
+                        isoformAnnotation$isoform_id
+                    )
+                }
 
                 isoformExonStructure <- isoformExonStructure[which(
                     isoformExonStructure$isoform_id %in% isoformsUsed
@@ -2582,14 +2363,22 @@ importRdata <- function(
                     isoformAnnotation$isoform_id    %in% isoformsUsed
                 ), ]
 
-                isoformCountMatrix <-isoformCountMatrix[which(
-                    isoformCountMatrix$isoform_id    %in% isoformsUsed
-                ), ]
+                if( countsSuppled ) {
+                    isoformCountMatrix <-isoformCountMatrix[which(
+                        isoformCountMatrix$isoform_id    %in% isoformsUsed
+                    ), ]
+                }
+                if( abundSuppled ) {
+                    isoformRepExpression <-isoformRepExpression[which(
+                        isoformRepExpression$isoform_id    %in% isoformsUsed
+                    ), ]
+                }
+
             }
         }
     }
 
-    ### Reduce to used data
+    ### Subset to data used
     if (TRUE) {
         designMatrix <-
             designMatrix[which(
@@ -2598,63 +2387,29 @@ importRdata <- function(
                     comparisonsToMake$condition_2
                 )
             ), ]
-        designMatrix$sampleID <- as.character(designMatrix$sampleID)
-        designMatrix$condition <-
-            as.character(designMatrix$condition)
 
-        if (!is.null(isoformRepExpression)) {
+        if( countsSuppled ) {
+            isoformCountMatrix <-
+                isoformCountMatrix[, which(
+                    colnames(isoformCountMatrix) %in%
+                        c('isoform_id', designMatrix$sampleID))]
+            isoformCountMatrix <-
+                isoformCountMatrix[,c(
+                    which(colnames(isoformCountMatrix) == 'isoform_id'),
+                    which(colnames(isoformCountMatrix) != 'isoform_id')
+                )]
+            rownames(isoformCountMatrix) <- NULL
+        }
+
+        if ( abundSuppled ) {
             isoformRepExpression <-
                 isoformRepExpression[, which(
                     colnames(isoformRepExpression) %in%
                         c('isoform_id', designMatrix$sampleID)
                 )]
-        }
-        isoformCountMatrix <-
-            isoformCountMatrix[, which(
-                colnames(isoformCountMatrix) %in%
-                    c('isoform_id', designMatrix$sampleID))]
-        isoformCountMatrix <-
-            isoformCountMatrix[,c(
-                which(colnames(isoformCountMatrix) == 'isoform_id'),
-                which(colnames(isoformCountMatrix) != 'isoform_id')
-            )]
-        rownames(isoformCountMatrix) <- NULL
-    }
-
-    ### If nessesary calculate RPKM values
-    if (!quiet) {
-        message('Step 2 of 5: Calculating gene expression...')
-    }
-    if (TRUE) {
-        if (is.null(isoformRepExpression)) {
-            ### Extract isoform lengths
-            isoformLengths <- sapply(
-                X = split(
-                    isoformExonStructure@ranges@width,
-                    f = isoformExonStructure$isoform_id
-                ),
-                FUN = sum
-            )
-
-            ### Calulate TPM
-            # convert to matrix
-            localCM <- isoformCountMatrix
-            rownames(localCM) <- localCM$isoform_id
-            localCM$isoform_id <- NULL
-            localCM <- as.matrix(localCM)
-
-            myTPM <- t(t(localCM) / colSums(localCM)) * 1e6
-
-            ### Calculate RPKM
-            isoformLengths <-
-                isoformLengths[match(rownames(myTPM), names(isoformLengths))]
 
             isoformRepExpression <-
-                as.data.frame(myTPM / (isoformLengths / 1e3))
-            isoformRepExpression$isoform_id <-
-                rownames(isoformRepExpression)
-            isoformRepExpression <-
-                isoformRepExpression[, c(
+                isoformRepExpression[,c(
                     which(colnames(isoformRepExpression) == 'isoform_id'),
                     which(colnames(isoformRepExpression) != 'isoform_id')
                 )]
@@ -2662,44 +2417,125 @@ importRdata <- function(
         }
     }
 
-    ### Remove isoforms not annoated
+    ### If nessesary calculate RPKM values
+    if (!quiet) { message('Step 2 of 5: Calculating gene expression and isoform fraction...') }
+    if ( ! abundSuppled ) {
+        ### Extract isoform lengths
+        isoformLengths <- sapply(
+            X = split(
+                isoformExonStructure@ranges@width,
+                f = isoformExonStructure$isoform_id
+            ),
+            FUN = sum
+        )
+
+        ### Calulate CPM
+        # convert to matrix
+        localCM <- isoformCountMatrix
+        rownames(localCM) <- localCM$isoform_id
+        localCM$isoform_id <- NULL
+        localCM <- as.matrix(localCM)
+
+        myCPM <- t(t(localCM) / colSums(localCM)) * 1e6
+
+        ### Calculate RPKM
+        isoformLengths <-
+            isoformLengths[match(rownames(myCPM), names(isoformLengths))]
+
+        isoformRepExpression <-
+            as.data.frame(myCPM / (isoformLengths / 1e3))
+
+        ### Massage
+        isoformRepExpression$isoform_id <-
+            rownames(isoformRepExpression)
+        isoformRepExpression <-
+            isoformRepExpression[, c(
+                which(colnames(isoformRepExpression) == 'isoform_id'),
+                which(colnames(isoformRepExpression) != 'isoform_id')
+            )]
+        rownames(isoformRepExpression) <- NULL
+    }
+
+    ### Remove isoforms not expressed
     if (TRUE) {
-        diffAnnot <-
-            setdiff(isoformRepExpression$isoform_id ,
-                    isoformAnnotation$isoform_id)
-        if (length(diffAnnot)) {
-            warning(
-                paste(
-                    'There were',
-                    length(diffAnnot),
-                    'isoforms whoes expression were measured',
-                    'but which were not annotated.',
-                    'These are included in the gene expression estimation',
-                    'but not in the final switchAnalyzeRlist',
-                    sep = ' '
-                )
+        if( countsSuppled ) {
+            okIsoforms <- intersect(
+                isoformRepExpression$isoform_id[which(
+                    rowSums(isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')]) > 0
+                )],
+                isoformCountMatrix$isoform_id[which(
+                    rowSums(isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')]) > 0
+                )]
             )
-            isoformRepExpression <-
-                isoformRepExpression[which(
-                    isoformRepExpression$isoform_id %in%
-                        isoformAnnotation$isoform_id), ]
+        } else {
+            okIsoforms <-isoformRepExpression$isoform_id[which(
+                rowSums(isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')]) > 0
+            )]
         }
+
+        nOk <- length(okIsoforms)
+        nTot <- nrow(isoformRepExpression)
+        if( nOk != nTot) {
+            if (!quiet) {
+                ### Message
+                message(
+                    paste(
+                        '    ',
+                        nTot - nOk,
+                        paste0( '( ', round( (nTot - nOk) / nTot *100, digits = 2),'%)'),
+                        'isoforms were removed since they were not expressed in any samples.'
+                    )
+                )
+
+                ### Subset expression
+                isoformRepExpression <- isoformRepExpression[which(
+                    isoformRepExpression$isoform_id %in% okIsoforms
+                ),]
+                if(countsSuppled) {
+                    isoformCountMatrix <- isoformCountMatrix[which(
+                        isoformCountMatrix$isoform_id %in% okIsoforms
+                    ),]
+                }
+
+                ### Annotation
+                isoformExonStructure <- isoformExonStructure[which( isoformExonStructure$isoform_id %in% okIsoforms),]
+                isoformAnnotation <- isoformAnnotation[which( isoformAnnotation$isoform_id %in% okIsoforms),]
+
+                if (addAnnotatedORFs & gtfImported) {
+                    isoORF <- isoORF[which( isoORF$isoform_id %in% okIsoforms),]
+                }
+            }
+
+        }
+
     }
 
     ### Sum to gene level gene expression - updated
     if(TRUE) {
         ### add gene_id
-        isoformRepExpression2 <- isoformRepExpression
-        isoformRepExpression2$gene_id <-
-            isoformAnnotation$gene_id[match(isoformRepExpression2$isoform_id,
+        isoformRepExpression$gene_id <-
+            isoformAnnotation$gene_id[match(isoformRepExpression$isoform_id,
                                             isoformAnnotation$isoform_id)]
 
         ### Sum to gene level
         geneRepExpression <- isoformToGeneExp(
-            isoformRepExpression2,
-            showProgress = showProgress,
-            quiet = quiet
+            isoformRepExpression,
+            quiet = TRUE
         )
+
+        ### Remove gene id
+        isoformRepExpression$gene_id <- NULL
+    }
+
+    ### Calculate IF rep matrix
+    if(TRUE) {
+        isoformRepIF <- isoformToIsoformFraction(
+            isoformRepExpression=isoformRepExpression,
+            geneRepExpression=geneRepExpression,
+            isoformGeneAnnotation=isoformAnnotation,
+            quiet = TRUE
+        )
+
     }
 
     ### in each condition analyzed get mean and standard error of gene and isoforms
@@ -2715,15 +2551,17 @@ importRdata <- function(
                 .progress = progressBar,
                 .fun = function(sampleVec) {
                     # sampleVec <- conditionList[[1]]
-                    ### Isoform
+                    ### Isoform and IF
                     isoIndex <-
                         which(colnames(isoformRepExpression) %in% sampleVec)
 
                     isoSummary <- data.frame(
-                        isoform_id = isoformRepExpression$isoform_id,
+                        isoform_id       = isoformRepExpression$isoform_id,
                         iso_overall_mean = rowMeans(isoformRepExpression[,designMatrix$sampleID]),
-                        iso_value = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
-                        iso_std = apply(isoformRepExpression[, isoIndex], 1, sd),
+                        iso_value        = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
+                        iso_std          = apply(   isoformRepExpression[, isoIndex], 1, sd),
+                        IF_overall       = rowMeans(isoformRepIF[,designMatrix$sampleID], na.rm = TRUE),
+                        IF               = rowMeans(isoformRepIF[, isoIndex, drop=FALSE], na.rm = TRUE),
                         stringsAsFactors = FALSE
                     )
                     isoSummary$iso_stderr <-
@@ -2747,9 +2585,9 @@ importRdata <- function(
 
                     ### Combine
                     combinedData <-
-                        merge(isoformAnnotation, geneSummary, by = 'gene_id')
+                        dplyr::inner_join(isoformAnnotation, geneSummary, by = 'gene_id')
                     combinedData <-
-                        merge(combinedData, isoSummary, by = 'isoform_id')
+                        dplyr::inner_join(combinedData, isoSummary, by = 'isoform_id')
                     ### return result
                     return(combinedData)
                 }
@@ -2772,12 +2610,7 @@ importRdata <- function(
                     cond1data <- conditionSummary[[aDF$condition_1]]
                     cond2data <- conditionSummary[[aDF$condition_2]]
 
-                    ### remove overall estimates from second condition
-                    cond2data$iso_overall_mean <- NULL
-                    cond2data$gene_overall_mean <- NULL
-
-
-                    # modify colnames
+                    ### modify colnames in condition 1
                     matchIndex <-
                         match(
                             c(
@@ -2790,7 +2623,9 @@ importRdata <- function(
                         )
                     colnames(cond1data)[matchIndex] <-
                         paste(colnames(cond1data)[matchIndex], '_1', sep = '')
+                    colnames(cond1data)[which( colnames(cond1data) == 'IF')] <- 'IF1'
 
+                    ### modify colnames in condition 2
                     matchIndex <-
                         match(
                             c(
@@ -2803,16 +2638,20 @@ importRdata <- function(
                         )
                     colnames(cond2data)[matchIndex] <-
                         paste(colnames(cond2data)[matchIndex], '_2', sep = '')
+                    colnames(cond2data)[which( colnames(cond2data) == 'IF')] <- 'IF2'
 
-                    combinedIso <- merge(cond1data,
-                                         cond2data[, c(
-                                             'isoform_id',
-                                             'gene_value_2',
-                                             'gene_stderr_2',
-                                             'iso_value_2',
-                                             'iso_stderr_2'
-                                         )],
-                                         by = 'isoform_id')
+                    combinedIso <- dplyr::inner_join(
+                        cond1data,
+                        cond2data[, c(
+                            'isoform_id',
+                            'gene_value_2',
+                            'gene_stderr_2',
+                            'iso_value_2',
+                            'iso_stderr_2',
+                            'IF2'
+                        )],
+                        by = 'isoform_id'
+                    )
 
                     ### Add comparison data
                     combinedIso$condition_1 <- aDF$condition_1
@@ -2835,11 +2674,6 @@ importRdata <- function(
         isoAnnot$iso_q_value  <- NA
 
         # Isoform fraction values
-        isoAnnot$IF_overall <- isoAnnot$iso_overall_mean / isoAnnot$gene_overall_mean
-        isoAnnot$IF1 <-
-            round(isoAnnot$iso_value_1 / isoAnnot$gene_value_1 , digits = 4)
-        isoAnnot$IF2 <-
-            round(isoAnnot$iso_value_2 / isoAnnot$gene_value_2 , digits = 4)
         isoAnnot$dIF <- isoAnnot$IF2 - isoAnnot$IF1
 
         # Swich values
@@ -2887,14 +2721,26 @@ importRdata <- function(
         message('Step 5 of 5: Making switchAnalyzeRlist object...')
     }
     if (TRUE) {
-        ### Create switchList
-        dfSwichList <- createSwitchAnalyzeRlist(
-            isoformFeatures = isoAnnot,
-            exons = isoformExonStructure,
-            designMatrix = designMatrix,
-            isoformCountMatrix = isoformCountMatrix,
-            sourceId = 'data.frames'
-        )
+        if( countsSuppled ) {
+            ### Create switchList
+            dfSwichList <- createSwitchAnalyzeRlist(
+                isoformFeatures = isoAnnot,
+                exons = isoformExonStructure,
+                designMatrix = designMatrix,
+                isoformCountMatrix = isoformCountMatrix,     # nessesary for drimseq
+                isoformRepExpression = isoformRepExpression, # nessesary for limma
+                sourceId = 'data.frames'
+            )
+        } else {
+            ### Create switchList
+            dfSwichList <- createSwitchAnalyzeRlist(
+                isoformFeatures = isoAnnot,
+                exons = isoformExonStructure,
+                designMatrix = designMatrix,
+                isoformRepExpression = isoformRepExpression, # nessesary for limma
+                sourceId = 'data.frames'
+            )
+        }
 
         ### Add orf if extracted
         if (addAnnotatedORFs & gtfImported) {
@@ -2908,6 +2754,12 @@ importRdata <- function(
 
             dfSwichList$orfAnalysis <- isoORF
         }
+
+        ### Add IF matrix if needed
+        if( addIFmatrix ) {
+            dfSwichList$isoformRepIF <- isoformRepIF[,c('isoform_id',designMatrix$sampleID)]
+        }
+
     }
 
     if (!quiet) {
@@ -2915,7 +2767,6 @@ importRdata <- function(
     }
     return(dfSwichList)
 }
-
 
 ### Prefilter
 preFilter <- function(

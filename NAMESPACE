@@ -1,6 +1,5 @@
 ### Import libraries functions
 import(methods)
-import(plyr)
 import(reshape2)
 import(Biostrings)
 import(IRanges)
@@ -8,20 +7,22 @@ import(GenomicRanges)
 import(gridExtra)
 import(BSgenome)
 import(RColorBrewer)
-import(cummeRbund)
 import(ggplot2)
 import(VennDiagram)
 import(DBI)
-import(DRIMSeq)
 import(tximport)
+import(DRIMSeq)
+import(DEXSeq)
+import(limma)
 
 ### Import compiled code
 useDynLib(IsoformSwitchAnalyzeR)
 
-### Import specific functions
+### Import specific functions from other packages
 importFrom("grDevices", "dev.off", "hcl", "pdf", "png")
 importFrom("graphics", "lines", "plot", "text", "title")
-importFrom("stats", "dnorm", "na.omit", "optim", "p.adjust", "pchisq", "pnorm", "pt", "qnorm", "qt", "setNames", "weighted.mean", "wilcox.test")
+importFrom("stats", "p.adjust", 'qnorm', "wilcox.test")
+importFrom("stats", "na.omit", "p.adjust", "setNames", "wilcox.test")
 importFrom("utils", "read.table", "setTxtProgressBar", "txtProgressBar")
 importFrom('GenomeInfoDb','seqlevels','seqlevels<-')
 importFrom('grid','grid.newpage')
@@ -34,13 +35,30 @@ importFrom("edgeR", "calcNormFactors")
 importFrom("stats", "prop.test")
 importFrom("futile.logger","flog.threshold")
 
-### Export functions from my R package
+importFrom('stats', 'fisher.test')
+importFrom('stats', 'fisher.test')
+importFrom('grid', 'plotViewport')
+importFrom('grid', 'grid.draw')
+importFrom('grid', 'popViewport')
+importFrom('limma', 'topTable')
+
+# plyr
+importFrom('plyr', 'ddply','ldply','llply','dlply')
+
+# tidyverse
+importFrom("dplyr","left_join")
+importFrom("dplyr","select")
+importFrom("dplyr","group_by")
+importFrom("dplyr","summarise_all")
+importFrom("stringr","str_c")
+importFrom("magrittr","%>%")
+
+### Export functions from IsoformSwitchAnalyzeR
 # Creating list
 export('createSwitchAnalyzeRlist')
 export('subsetSwitchAnalyzeRlist')
 
 # Import data
-export('importCufflinksCummeRbund')
 export('importCufflinksFiles')
 export('importGTF')
 export('importIsoformExpression')
@@ -49,12 +67,11 @@ export('preFilter')
 
 # Test isoform switches
 export('isoformSwitchTestDRIMSeq')
-export('isoformSwitchTest')
+export('isoformSwitchTestDEXSeq')
+
 export('extractSwitchSummary')
 export('extractSwitchOverlap')
 export('extractTopSwitches')
-export('extractCalibrationStatus')
-
 
 # Analyze functional potential
 export('CDSSet')
@@ -74,15 +91,13 @@ export('extractSplicingEnrichment')
 export('extractSplicingEnrichmentComparison')
 export('extractSplicingGenomeWide')
 
-
 # Switch consequences analysis
 export('analyzeSwitchConsequences')
 export('extractConsequenceSummary')
 export('extractConsequenceEnrichment')
 export('extractConsequenceEnrichmentComparison')
 export('extractConsequenceGenomeWide')
-export('extractGenomeWideAnalysis')
-
+export('extractGenomeWideAnalysis') # for backward compatability
 
 # Plotting
 export('switchPlotTranscript')
@@ -101,13 +116,12 @@ export('isoformSwitchAnalysisCombined')
 
 # other tools
 export('extractExpressionMatrix')
-export('prepareCuffExample')
 export('isoformToGeneExp')
+export('isoformToIsoformFraction')
+export('removeAnnoationData')
 
 ### Export classes
 exportClasses("switchAnalyzeRlist")
-#exportClasses("CDSSet")
-#exportClasses("SpliceRList")
 
 ### Overload generic functions to work with my classes
 S3method(dim,switchAnalyzeRlist)
@@ -117,5 +131,4 @@ S3method(head,switchAnalyzeRlist)
 S3method(tail,switchAnalyzeRlist)
 S3method(show,switchAnalyzeRlist)
 
-#S3method(subset,switchAnalyzeRlist)
 S3method(summary,switchAnalyzeRlist)

@@ -28,7 +28,7 @@ isoformSwitchAnalysisPart2(
 
 \arguments{
   \item{switchAnalyzeRlist}{
-A \code{switchAnalyzeRlist} object as produced by \link{createSwitchAnalyzeRlist}
+The \code{switchAnalyzeRlist} object as produced by \link{isoformSwitchAnalysisPart1}
 }
   \item{alpha}{
 The cutoff which the (callibrated) fdr correct p-values must be smaller than for calling significant switches. Defualit is 0.05.

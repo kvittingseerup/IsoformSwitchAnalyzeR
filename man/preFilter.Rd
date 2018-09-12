@@ -72,6 +72,8 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 The filtering works by first requiring that the average isoforms/genes expression/usage accross all samples is expressed above the cutoffs supplied, then the data is filtered for isoform classes and lastly for single-isoform genes.\cr
 
 Especially the filter for gene expression can be important since a fundamental problem with the IF values (calculated as <isoform_exp> / <gene_exp>) is when the gene expression is low it causes the IF measure to loose precision. This can easily be illustrated with the following example: Lets consider a gene with two isoforms which are expressed so they contribute to the gene expression with 73.3\% and 26.7\%, if we have 100 RNA-seq reads to describe these the problem is easy and we recapitulate the 73\%/27\% ratio. If we only have 10 reads the measurements get a little more inaccurate since the estimates now will be 70\% vs 30\%. If the gene is even lower expressed say 5 reads the estimates become 80\%/20\%. Therefore we want to filter out these genes.
+
+Please note that for the exon entry as well as any replicate matrix entry (counts, abundances or isoform fractions) all isoforms from genes where at least one isoform passed the filters are kept.
 }
 
 \value{
@@ -86,8 +88,8 @@ Kristoffer Vitting-Seerup
 
 \seealso{
 \code{\link{createSwitchAnalyzeRlist}}\cr
-\code{\link{importCufflinksCummeRbund}}\cr
-\code{\link{importCufflinksFiles}}
+\code{\link{importCufflinksFiles}}\cr
+\code{\link{importRdata}}
 }
 
 \examples{

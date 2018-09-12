@@ -65,7 +65,7 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 }
 
 \details{
-This wrapper for DRIMSeq utilizes all data to construct one linear model (one fit) on all the data (including the potential extra covariates/batch effects indicated in the \code{designMatrix} entry of the supplied \code{switchAnalyzeRlist}). From this unified model all the pairwise test are performed (aka each unique combiantion of condition_1 and condition_2 columns of the \code{isoformFeatures} entry of the supplied \code{switchAnalyzeRlist} are tested individually). This is only suitable if a certain overlap between conditions are expected which means if you are analyzing very different condtions it is probably better to remove particular comparisons or make two seperate analysis (eg. Brain vs Brain cancer vs liver vs liver cancer should probably be analyzed as two seperate switchAnalyzeRlists whereas WT vs KD1 vs KD2 should be one switchAnalyzeRlists). Note that this is not a problem if the test is performed with \code{isoformSwitchTest()}.
+This wrapper for DRIMSeq utilizes all data to construct one linear model (one fit) on all the data (including the potential extra covariates/batch effects indicated in the \code{designMatrix} entry of the supplied \code{switchAnalyzeRlist}). From this unified model all the pairwise test are performed (aka each unique combiantion of condition_1 and condition_2 columns of the \code{isoformFeatures} entry of the supplied \code{switchAnalyzeRlist} are tested individually). This is only suitable if a certain overlap between conditions are expected which means if you are analyzing very different condtions it is probably better to remove particular comparisons or make two seperate analysis (eg. Brain vs Brain cancer vs liver vs liver cancer should probably be analyzed as two seperate switchAnalyzeRlists whereas WT vs KD1 vs KD2 should be one switchAnalyzeRlists).
 
 The result of the testIntegration (see arugments and below) is only applied to the \code{isoformFeatures} entry of the \code{switchAnalyzeRlist}. The full DRIMSeq analysis is unmodified and added to the \code{isoformSwitchAnalysis} entry of the \code{switchAnalyzeRlist}.
 
@@ -123,6 +123,7 @@ Kristoffer Vitting-Seerup
 
 \seealso{
 \code{\link{preFilter}}\cr
+\code{\link{isoformSwitchTestDEXSeq}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{extractTopSwitches}}\cr
 \code{\link{dmPrecision}}\cr
@@ -132,39 +133,47 @@ Kristoffer Vitting-Seerup
 
 
 \examples{
-### Example data
-cuffDB <- prepareCuffExample()
-isoRepCount <- repCountMatrix(isoforms(cuffDB))
-isoRepCount$isoform_id <- rownames(isoRepCount)
+### Please note
+# 1) The way of importing files in the following example with
+#       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+#       specialiced to access the sample data in the IsoformSwitchAnalyzeR package
+#       and not somhting you need to do - just supply the string e.g.
+#       "/myAnnotation/isoformsQuantified.gtf" to the functions
+# 2) importRdata directly supports import of a GTF file - just supply the
+#       path (e.g. "/myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 
-designMatrix <- cummeRbund::replicates(cuffDB)[,c('rep_name','sample_name')]
-colnames(designMatrix) <- c('sampleID','condition')
+### Import quantifications
+salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))
 
-localAnnotaion <- import(system.file("extdata/chr1_snippet.gtf", package="cummeRbund"))[,c('transcript_id','gene_id')]
-colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
+### Make design matrix
+myDesign <- data.frame(
+    sampleID = colnames(salmonQuant$abundance)[-1],
+    condition = gsub('_.*', '', colnames(salmonQuant$abundance)[-1])
+)
 
-### Make swtichAnalayzeRlist
-switchAnalyzeRlist <- importRdata(
-    isoformCountMatrix=isoRepCount,
-    designMatrix=designMatrix,
-    isoformExonAnnoation=localAnnotaion
+### Create switchAnalyzeRlist
+aSwitchList <- importRdata(
+    isoformCountMatrix   = salmonQuant$counts,
+    isoformRepExpression = salmonQuant$abundance,
+    designMatrix         = myDesign,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
 )
 
 ### Filter with very strict cutoffs to enable short runtime
-switchAnalyzeRlistAnalyzed <- preFilter(
-    switchAnalyzeRlist = switchAnalyzeRlist,
+aSwitchListAnalyzed <- preFilter(
+    switchAnalyzeRlist = aSwitchList,
     isoformExpressionCutoff = 10,
     IFcutoff = 0.3,
     geneExpressionCutoff = 50
 )
-switchAnalyzeRlistAnalyzed <- subsetSwitchAnalyzeRlist(
-    switchAnalyzeRlistAnalyzed,
-    switchAnalyzeRlistAnalyzed$isoformFeatures$condition_1 == 'hESC'
+aSwitchListAnalyzed <- subsetSwitchAnalyzeRlist(
+    aSwitchListAnalyzed,
+    aSwitchListAnalyzed$isoformFeatures$condition_1 == 'hESC'
 )
 
 ### Test isoform swtiches
-switchAnalyzeRlistAnalyzed <- isoformSwitchTestDRIMSeq(switchAnalyzeRlistAnalyzed)
+aSwitchListAnalyzed <- isoformSwitchTestDRIMSeq(aSwitchListAnalyzed)
 
 # extract summary of number of switching features
-extractSwitchSummary(switchAnalyzeRlistAnalyzed)
+extractSwitchSummary(aSwitchListAnalyzed)
 }
