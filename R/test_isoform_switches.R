@@ -809,7 +809,7 @@ isoformSwitchTestDEXSeq <- function(
                             colnames(switchAnalyzeRlist$isoformCountMatrix) %in%
                                 c('isoform_id', designSubset$sampleID)
                         )
-                        ]
+                    ]
 
                     ### Massage for DEXSeq
                     localCount$gene_ref <- switchAnalyzeRlist$isoformFeatures$gene_ref[match(
@@ -883,15 +883,15 @@ isoformSwitchTestDEXSeq <- function(
 
                     ### Estimate parmeters
                     suppressMessages(
-                        dexList <- estimateSizeFactors(dexList)
+                        dexList <- DEXSeq::estimateSizeFactors(dexList)
                     )
                     suppressMessages(
-                        dexList <- estimateDispersions(dexList, quiet=TRUE)
+                        dexList <- DEXSeq::estimateDispersions(dexList, quiet=TRUE)
                     )
 
                     ### Test
                     suppressMessages(
-                        dexList <- nbinomLRT(dexList, reduced = basicFormula)
+                        dexList <- testForDEU(dexList, reducedModel = basicFormula)
                     )
                 }
 

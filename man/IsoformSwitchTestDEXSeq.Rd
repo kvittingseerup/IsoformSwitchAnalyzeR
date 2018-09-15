@@ -49,9 +49,11 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 }
 
 \details{
-This function uses DEXSeq to test for differential isoform usage using the repliace count matrix. This is done by for each pariwise comparison buyilding a model (building one combined model and testing each pariwise comparison from that is not supported by DEXSeq).
+This function uses DEXSeq to test for differential isoform usage using the replicate count matrix. This is done by for each pariwise comparison building and testing one model (building one combined model and testing each pariwise comparison from that is not supported by DEXSeq).
 
-This function also allows for removal of counfounding effects (stored as additional column(s) in the design matrix ( switchAnalyzeRlist$designMatrix )) by performing a batch correction on the isoform abundance matrix with limma::removeBatchEffect() and afterwards recalculate the IF matrix (if \code{correctForConfoundingFactors = TRUE}). This also offers the oppotunity to re-estimate effect sizes (IF and dIF values) from the confoundeing corrected thereby getting effect size estimates corrected for any confounding data (recomended). These new estimates will be used to overwrite existing IF and dIF estimates in the switchAnalyzeRlist if \code{overwriteIFvalues = TRUE}.
+isoformSwitchTestDEXSeq also allows for estimation of effect sizes (IF and dIF) corrected for counfounding effects (controled by \code{correctForConfoundingFactors = TRUE}) (recomended). Counfounding effects (stored as additional column(s) in the design matrix ( switchAnalyzeRlist$designMatrix )) is done by by performing a batch correction on the isoform abundance matrix with limma::removeBatchEffect() and afterwards recalculate the IF matrix and summarize the IF and dIF values. These new estimates can be added to the switchAnalyzeRlist (overwriting the existing values) by setting \code{overwriteIFvalues = TRUE}.
+
+Note that the actual testing via DEXSeq always will take confounding effects into account (a full model including all confounding effects are always made).
 }
 
 

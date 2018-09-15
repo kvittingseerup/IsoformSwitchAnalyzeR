@@ -302,7 +302,9 @@ To illustrate the data import lets use some Salmon data included in the IsoformS
 # each sample is a seperate sub-directory) to the function.
 
 ### Import quantifications
-salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))
+salmonQuant <- importIsoformExpression(
+    parentDir = system.file("extdata/",package="IsoformSwitchAnalyzeR")
+)
 ```
 
 Which results in a list containing both count and abundance estimates for each isoform:
@@ -402,7 +404,7 @@ exampleSwitchList <- isoformSwitchAnalysisPart1(
     switchAnalyzeRlist = exampleSwitchList,
     genomeObject = Hsapiens, # the reference to the human BS genome
     dIFcutoff = 0.3,         # Cutoff for finding switches - set high for short runtime in example data
-    # pathToOutput = 'path/to/where/ouput/should/be/
+    # pathToOutput = 'path/to/where/ouput/should/be/'
     outputSequences = FALSE # prevents outputting of the fasta files used for external sequence analysis
 )
 ```
@@ -417,7 +419,10 @@ Note that:
 The number of switching features is easily summarized as follows:
 
 ```{r}
-extractSwitchSummary(exampleSwitchList, dIFcutoff = 0.3) # supply the same cutoff to the summary function
+extractSwitchSummary(
+    exampleSwitchList,
+    dIFcutoff = 0.3 # supply the same cutoff to the summary function
+)
 ```
 
 <br />
