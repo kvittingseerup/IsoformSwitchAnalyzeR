@@ -1,3 +1,5 @@
+1.3.8: IsoformSwitchAnalyzeR 2018-09-15 ( minor )
+    - Update to importCufflinksFiles to make it faster and more robust.
 1.3.7: IsoformSwitchAnalyzeR 2018-09-15 ( minor )
     - isoformSwitchTestDEXSeq() was updated to use testForDEU instead of nbinomLRT as now reccomended by the authors.
 

@@ -62,65 +62,66 @@ importCufflinksFiles <- function(
         if (!quiet) {
             message("Loading genes and isoforms...")
         }
-        geneDiffanalysis     <-
-            read.table(
-                file = pathToGeneDEanalysis,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
-        isoformDiffanalysis  <-
-            read.table(
-                file = pathToIsoformDEanalysis,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
+        suppressMessages(
+            geneDiffanalysis     <-
+                read_tsv(
+                    file = pathToGeneDEanalysis,
+                    col_names = TRUE
+                )
+        )
+        suppressMessages(
+            isoformDiffanalysis  <-
+                read_tsv(
+                    file = pathToIsoformDEanalysis,
+                    col_names = TRUE
+                )
+        )
+        suppressMessages(
+            geneAnnotation       <-
+                read_tsv(
+                    file = pathToGeneFPKMtracking,
+                    col_names = TRUE
+                )
+        )
+        suppressMessages(
+            isoformAnnotation    <-
+                read_tsv(
+                    file = pathToIsoformFPKMtracking,
+                    col_names = TRUE
+                )
+        )
+        suppressMessages(
+            isoRepExp        <-
+                read.table(
+                    file = pathToIsoformReadGroupTracking,
+                    header = TRUE,
+                    sep='\t',
+                    stringsAsFactors = FALSE
+                )
+        )
+        suppressMessages(
+            cuffSplicing         <-
+                read_tsv(
+                    file = pathToSplicingAnalysis,
+                    col_names = TRUE
+                )
+        )
 
-        geneAnnotation       <-
-            read.table(
-                file = pathToGeneFPKMtracking,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
-        isoformAnnotation    <-
-            read.table(
-                file = pathToIsoformFPKMtracking,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
-        isoRepExp        <-
-            read.table(
-                file = pathToIsoformReadGroupTracking,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
-
-        cuffSplicing         <-
-            read.table(
-                file = pathToSplicingAnalysis,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
-
-        readGroup <-
-            read.table(
-                file = pathToReadGroups,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
-        runInfo   <-
-            read.table(
-                file = pathToRunInfo,
-                header = TRUE,
-                stringsAsFactors = FALSE,
-                sep = '\t'
-            )
+        suppressMessages(
+            readGroup <-
+                read.table(
+                    file = pathToReadGroups,
+                    sep='\t',
+                    h=T
+                )
+        )
+        suppressMessages(
+            runInfo   <-
+                read_tsv(
+                    file = pathToRunInfo,
+                    col_names = TRUE
+                )
+        )
     }
 
     ### "Test" that the data.files are what they are supposed to be
@@ -138,7 +139,7 @@ importCufflinksFiles <- function(
                     "status",
                     "value_1",
                     "value_2",
-                    "log2.fold_change.",
+                    "log2(fold_change)",
                     "test_stat",
                     "p_value",
                     "q_value",
@@ -164,23 +165,34 @@ importCufflinksFiles <- function(
                     "status",
                     "value_1",
                     "value_2",
-                    "log2.fold_change.",
+                    "log2(fold_change)",
                     "test_stat",
                     "p_value",
                     "q_value",
                     "significant"
                 )
             )
-        q2 <-
-            sum(grepl(
-                'TCONS', isoformDiffanalysis$test_id
-            )) != nrow(isoformDiffanalysis)
-        if (q1 | q2) {
+        if (q1) {
             stop(paste(
                 'The file supplied to isoformDiffanalysis does not appear to',
                 'be the result of the CuffDiff transcript expression analysis.'
             ))
         }
+
+        q2 <-
+            sum(grepl(
+                'TCONS', isoformDiffanalysis$test_id
+            )) != nrow(isoformDiffanalysis)
+        if (q2) {
+            warning(paste(
+                'It looks like you have NOT been doing transcript\n',
+                'reconstruction/assembly with Cufflinks/Cuffdiff.\n',
+                'If you have not reconstructed transcripts we receomend to use Kallisto or Salmon\n',
+                'to do the quantification instead - they are more accurate and have better biase correction methods.'
+            ))
+        }
+
+
 
         ### gene annoation
         q1 <-
@@ -196,11 +208,7 @@ importCufflinksFiles <- function(
                     "length"
                 )
             )
-        q2 <-
-            sum(grepl(
-                'XLOC', geneAnnotation$tracking_id
-            )) != nrow(geneAnnotation)
-        if (q1 | q2) {
+        if (q1) {
             stop(paste(
                 'The file supplied to geneAnnotation does not appear to be the',
                 'gene FPKM traccking of the CuffDiff gene FPKM trascking analysis.'
@@ -220,11 +228,7 @@ importCufflinksFiles <- function(
                     "length"
                 )
             )
-        q2 <-
-            sum(grepl(
-                'TCONS', isoformAnnotation$tracking_id
-            )) != nrow(isoformAnnotation)
-        if (q1 | q2) {
+        if (q1) {
             stop(paste(
                 'The file supplied to isoformAnnotation does not appear to be',
                 'the isoform FPKM tracking of the CuffDiff transcript analysis.'
@@ -238,9 +242,7 @@ importCufflinksFiles <- function(
                     "tracking_id", "condition", "replicate", "raw_frags"
                 )
             )
-        q2 <-
-            sum(grepl('TCONS', isoRepExp$tracking_id)) != nrow(isoRepExp)
-        if (q1 | q2) {
+        if (q1) {
             stop(paste(
                 'The file supplied to pathToIsoformCountTracking does not',
                 'appear to be the isoform count tracking of the CuffDiff',
@@ -261,16 +263,14 @@ importCufflinksFiles <- function(
                     "status",
                     "value_1",
                     "value_2",
-                    "sqrt.JS.",
+                    "sqrt(JS)",
                     "test_stat",
                     "p_value",
                     "q_value",
                     "significant"
                 )
             )
-        q2 <-
-            sum(grepl('TSS', cuffSplicing$test_id)) != nrow(cuffSplicing)
-        if (q1 | q2) {
+        if (q1) {
             stop(
                 'The file supplied to cuffSplicing does not appear to be the',
                 'result of the CuffDiff differential analysis of alternative splicing.'
@@ -331,7 +331,6 @@ importCufflinksFiles <- function(
             stringr::str_c(readGroup$condition, '_', readGroup$replicate_num)
         designMatrix <- readGroup[, c('sample_name', 'condition')]
         colnames(designMatrix) <- c('sampleID', 'condition')
-
 
         ### Massage data frames
         if (TRUE) {
@@ -646,6 +645,7 @@ importCufflinksFiles <- function(
                 )]
 
         }
+
 
         ### Merge data
         if (TRUE) {
