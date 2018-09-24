@@ -1,7 +1,7 @@
 Package: IsoformSwitchAnalyzeR
 Type: Package
 Title: An R package to Identify, Annotate and Visualize Alternative Splicing and Isoform Switches with Functional Consequences (from RNA-seq data)
-Version: 1.3.8
+Version: 1.3.9
 Author: Kristoffer Vitting-Seerup
 Maintainer: Kristoffer Vitting-Seerup <k.vitting.seerup@gmail.com>
 Description: IsoformSwitchAnalyzeR enables identification and analysis of alternative splicing and isoform switches with predicted functional consequences (such as gain/loss of protein domains etc) from quantification by Kallisto, Salmon, Cufflinks/Cuffdiff, RSEM etc.
@@ -9,9 +9,9 @@ URL: http://bioconductor.org/packages/IsoformSwitchAnalyzeR/
 BugReports: https://github.com/kvittingseerup/IsoformSwitchAnalyzeR/issues
 License: GPL (>= 2)
 Depends: R (>= 3.4), limma, DEXSeq, ggplot2
-Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings, IRanges, GenomicRanges, DRIMSeq, RColorBrewer, rtracklayer, VennDiagram, DBI, grDevices, graphics, stats, utils, GenomeInfoDb, grid, tximport (>= 1.7.1), edgeR, futile.logger, limma, stringr, dplyr, magrittr
+Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings, IRanges, GenomicRanges, DRIMSeq, RColorBrewer, rtracklayer, VennDiagram, DBI, grDevices, graphics, stats, utils, GenomeInfoDb, grid, tximport (>= 1.7.1), edgeR, futile.logger, limma, stringr, dplyr, magrittr, readr
 Suggests: knitr, BSgenome.Hsapiens.UCSC.hg19
 VignetteBuilder: knitr
 Collate: classes.R methods.R import_data.R test_isoform_switches.R analyze_ORF.R analyze_external_sequence_analysis.R analyze_switch_consequences.R isoform_plots.R plot_all_iso_switch.R high_level_functions.R tools.R analyze_alternative_splicing.R
-biocViews: GeneExpression, Transcription, AlternativeSplicing, DifferentialExpression, DifferentialSplicing, DifferentialTranscriptUsage, Visualization, StatisticalMethod, TranscriptomeVariant, BiomedicalInformatics, FunctionalGenomics, SystemsBiology, Transcriptomics, RNASeq, Annotation, FunctionalPrediction, GenePrediction, DataImport, MultipleComparison, BatchEffect
+biocViews: GeneExpression, Transcription, AlternativeSplicing, DifferentialExpression, DifferentialSplicing, Visualization, StatisticalMethod, TranscriptomeVariant, BiomedicalInformatics, FunctionalGenomics, SystemsBiology, Transcriptomics, RNASeq, Annotation, FunctionalPrediction, GenePrediction, DataImport, MultipleComparison, BatchEffect
 RoxygenNote: 6.0.1

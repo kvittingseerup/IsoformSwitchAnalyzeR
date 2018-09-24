@@ -52,6 +52,7 @@ importFrom("dplyr","group_by")
 importFrom("dplyr","summarise_all")
 importFrom("stringr","str_c")
 importFrom("magrittr","%>%")
+importFrom('readr', 'read_tsv')
 
 ### Export functions from IsoformSwitchAnalyzeR
 # Creating list

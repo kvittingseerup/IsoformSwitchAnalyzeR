@@ -64,28 +64,28 @@ importCufflinksFiles <- function(
         }
         suppressMessages(
             geneDiffanalysis     <-
-                read_tsv(
+                readr::read_tsv(
                     file = pathToGeneDEanalysis,
                     col_names = TRUE
                 )
         )
         suppressMessages(
             isoformDiffanalysis  <-
-                read_tsv(
+                readr::read_tsv(
                     file = pathToIsoformDEanalysis,
                     col_names = TRUE
                 )
         )
         suppressMessages(
             geneAnnotation       <-
-                read_tsv(
+                readr::read_tsv(
                     file = pathToGeneFPKMtracking,
                     col_names = TRUE
                 )
         )
         suppressMessages(
             isoformAnnotation    <-
-                read_tsv(
+                readr::read_tsv(
                     file = pathToIsoformFPKMtracking,
                     col_names = TRUE
                 )
@@ -101,7 +101,7 @@ importCufflinksFiles <- function(
         )
         suppressMessages(
             cuffSplicing         <-
-                read_tsv(
+                readr::read_tsv(
                     file = pathToSplicingAnalysis,
                     col_names = TRUE
                 )
@@ -112,12 +112,12 @@ importCufflinksFiles <- function(
                 read.table(
                     file = pathToReadGroups,
                     sep='\t',
-                    h=T
+                    header = TRUE
                 )
         )
         suppressMessages(
             runInfo   <-
-                read_tsv(
+                readr::read_tsv(
                     file = pathToRunInfo,
                     col_names = TRUE
                 )

@@ -1457,7 +1457,9 @@ Back to [Table of Content]
 
 <br />
 
+
 ### Other Tools in IsoformSwitchAnalyzeR
+
 Apart from the analysis presented above, IsoformSwitchAnalyzeR also contains a few other useful tools which will be presented in this section.
 
 The central visualization is the switch plot, created with _switchPlot()_ function as shown above. This plot is made from four subplots, which each can be created individualy using:
