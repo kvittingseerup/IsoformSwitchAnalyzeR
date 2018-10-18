@@ -27,9 +27,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 <!-- Abstract -->
 ## Abstract
-Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data (via tools such as Cufflinks, Kallisto and Salmon). These tools make it possible to analyzing alternative isoform usage, but unfortunatly this is rarely done. Thus, RNA-seq data is typically not used to its full potential. 
+Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data (via tools such as Cufflinks, StringTie, Kallisto and Salmon). These tools make it possible to analyzing alternative isoform usage, but unfortunatly this is rarely done meaning RNA-seq data is typically not used to its full potential. 
 
-To solve this problem we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR  facilitates integration of many sources of (predicted) annotation including features, including Open Reading Frame (ORF), protein domains (via Pfam), signal peptides (via SignalP), coding potential (via CPAT) and sensitivity to Non-sense Mediated Decay (NMD). The combination of identified isoform switches and their annotation also enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains or coding potential --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches, and summary statistics describing the genome-wide occurences of isoform switches, their consequences as well as the associated alternative splicing.
+To solve this problem we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR  facilitates integration of many sources of (predicted) annotation such as Open Reading Frame (ORF), protein domains (via Pfam), signal peptides (via SignalP), coding potential (via CPAT) and sensitivity to Non-sense Mediated Decay (NMD) etc. The combination of identified isoform switches and their annotation also enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains or coding potential --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches, and summary statistics describing the genome-wide occurences of isoform switches, their consequences as well as the associated alternative splicing.
 
 In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform resolution with a focus on isoform switching (with predicted consequences), thereby expanding the usability of RNA-seq data.
 
@@ -93,7 +93,9 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 
 [Frequently Asked Questions, Problems and Errors]
 
+- [What Quantification Tool(s) Should I Use?]
 - [How to handle cofounding effects (including batches)]
+- [What constitute an independent biological replicate?]
 - etc
 
 [Final Remarks]
@@ -225,11 +227,15 @@ Refrences:
 ## Quick Start
 ### Overview of Isoform Switch Workflow
 
-The idea behind IsoformSwitchAnalyzeR is to make it easy to do advanced post-analysis of full-length RNA-seq derived transcripts with a focus on finding, annotating and visualizing isoform switches with functional consequences. In the switch analysis workflow (see [Analyzing Alternative Splicing] for the alternative splicing workflow) IsoformSwitchAnalyzeR performs three high-level tasks:
+The idea behind IsoformSwitchAnalyzeR is to make it easy to do advanced post-analysis of full-length RNA-seq derived transcripts quantification with a focus on finding, annotating and visualizing isoform switches with functional consequences. Furthermore IsoformSwitchAnalyzeR also allows for analysis of alternative splicing. Here we will go though the isoform switch workflow. For the workflow of alternative splicing see [Analyzing Alternative Splicing]. If you want to know more about recomendations for bioinformatic tools which can perform the initial isoform quantifications please refere to [What Quantification Tool(s) Should I Use?].
+
+From the isoform quantifications IsoformSwitchAnalyzeR performs three high-level tasks:
 
 - Statistical identification of isoform switches.
 - Annotation of the transcripts involved in the isoform switches.
 - Visualization of predicted consequences of the isoform switches, for individual switches and globally.
+
+Please note that just like any other statistical tool IsoformSwitchAnalyzeR requires independent biological replicates (see [What constitute an independent biological replicate?]) and that [recent benchmarks](https://f1000research.com/articles/7-952/v2) highlights that at least three independent replicates are needed for good statistical performance - most tools have a hard time controling the False Discovery Rate (FDR) with only two replicates so extra caution is needed for interpreting results based on few replicates.
 
 A normal workflow for identification and analysis of isoform switches with functional consequences can be divided into two parts (also illustrated below in Figure 1).
 
@@ -320,7 +326,7 @@ Apart from the isoform quantification we need three additional pices of informat
 
 - The transcript structure of the isoforms (in genomic coordinats). This is typically stored in a GTF file - a file format directly supported by IsoformSwitchAnalyzeR (as described below).
 - The information about which isoforms belongs to the same gene (also in the GTF file)
-- A design matrix indicating which samples belong to which condition.
+- A design matrix indicating which of the independent biological replicates belong to which condition (and if there are other covariates that should be taking into account).
 
 The design matrix will have to be generated manually to ensure correct grouping:
 
@@ -813,7 +819,7 @@ Back to [Table of Content]
 ### Importing Data Into R
 IsoformSwitchAnalyzeR can analyze the output from any tool that quantifies (annoated and/or de-novo/guided deconvoluted) full-length isoforms. All it requires are the following four sets of data:
 
-* Isoform quantification (preferably both counts and abundance estimates (RPKM/FPKM/TPM)) in multiple samples from each condition (replicates are essential if differential isoform usage should be identified)
+* Isoform quantification (preferably both counts and abundance estimates (RPKM/FPKM/TPM)) in multiple samples from each condition (independent replicates are essential if differential isoform usage should be identified, see [What constitute an independent biological replicate?])
 * The genomic coordinates of the isoform exon structure.
 * Annotation of which isoform belongs to which gene.
 * A design matrix indicating which samples belong to which conditions.
@@ -830,10 +836,12 @@ To facilitate the usage of IsoformSwitchAnalyzeR, several dedicated wrappers for
 * [Importing Data from Cufflinks/Cuffdiff]
 * [Importing Data from other Full-length Transcript Assemblers]
 
+For recomendations of bioinformatic tools which can perform the quantifications please refere to [What Quantification Tool(s) Should I Use?]
+
 <br />
 
 #### Importing Data from Kallisto, Salmon, RSEM or StringTie
-While RSEM and StringTie are well-established and robust isoform quantification tool, a new generation of tools often refered to as pseudo/quasi-aligners, such as Salmon and Kallisto, are on the rise due to their speed and increased accuracy. We therefore support analysis of quantifications made with all four tools by allowing for easy import of the isoform replicate abundance via the _importIsoformExpression()_ function.
+While RSEM and StringTie are well-established and robust isoform quantification tool, a new generation of tools often refered to as pseudo/quasi-aligners, such as Salmon and Kallisto, are on the rise due to their speed and increased accuracy. All four tools are directly supported by allowing for easy import of the isoform replicate abundance via the _importIsoformExpression()_ function.
 
 This function is a easy-to-use wrapper for the tximport R package with extra functionalities. Using tximport, importIsoformExpression() allows the isoform counts to be estimated from the abundance estimates --- which is recomended as it will incorporate the bias correction performed by the tools into the switch identification. The _importIsoformExpression_ function can furthermore perform an inter-library normalization of the abundance estimates which is necessary for a fair comparison of libraries (for in-depth discussion of normalization and why it is needed, see section 2.7 of the [edgeR user guide](http://bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf)). The importIsoformExpression() function is used as follows: 
 
@@ -1877,15 +1885,39 @@ Back to [Table of Content]
 ## Frequently Asked Questions, Problems and Errors
 ### FAQ Table of Content
 
+- [What Quantification Tool(s) Should I Use?]
 - [How to handle cofounding effects (including batches)]
+- [What constitute an independent biological replicate?]
 - [Adding differential gene expression]
 - [The error "The annotation does not fit the expression data"]
-- [The error "The annotation (count matrix and isoform annotation) contain differences in which isoforms are analyzed...]
+- [The error "The annotation (count matrix and isoform annotation) contain differences in which isoforms are analyzed..."]
+- [The error "The supplied design matrix will result in a model matrix that is not full rank"]
+
+### What Quantification Tool(s) Should I Use?
+Please note that the following is a reflection of my personal convictions and should not be read as "the truth".
+
+Generally speaking there are two different ways to obtain transcript quantification which boils down to whether you trust the available transcript annotation or not (or think you RNA-seq data contains important additional isoforms not included in the available annotations).
+
+If you generally trust the transcript annotation, state-of-the-art quantifications can be obtained directly from the sequence files (FASTQ) via Salmon or Kallisto. These methods give much more accurate quantifications (and are a lot faster) than for example first mapping to the genome and afterwards quantifying with Cufflinks. You can find more information in the [Kallisto paper](http://www.nature.com/doifinder/10.1038/nbt.3519). For comparison you can find the Salmon paper [here](https://www.nature.com/articles/nmeth.4197) but please not the comparison in figure 1 is a special case. Under normal circumstances Kallisto and Salmon performs quite similarly and and choice is up to personal preference. IsoformSwitchAnalyzeR directly supports the quantifications of both tools (and more) via the importIsoformExpression() function - see [Importing Data Into R]. Kallisto can be downloaded from [here](https://pachterlab.github.io/kallisto/download) and the manual for running Kallisto can be found [here](http://pachterlab.github.io/kallisto/manual.html). Salmon can be downloaded from [here](https://github.com/COMBINE-lab/salmon/releases) and a manual for running Salmon can be found [here](https://salmon.readthedocs.io/en/latest/salmon.html).
+
+If you on the other hand do not have any annotation, or want to augment it, you need to do a transcript deconvolution. A transcript deconvolution can be described as a 4-step process:
+- First you map reads to the genome (with tools such as [STAR](http://labshare.cshl.edu/shares/gingeraslab/www-data/dobin/STAR/STAR.posix/doc/STARmanual.pdf), [HISAT2](https://ccb.jhu.edu/software/hisat2/manual.shtml) etc.).
+- Then you assemble transcripts (typically guided) with tools such as [Cufflinks](http://cole-trapnell-lab.github.io/cufflinks/manual/) or [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual). Please note that many other tools for solving this problem exists and new methods are still published regularly. Since the transcript assembly is the central step in the analysis, you probably want to read up on these tools yourself to make sure you use the better tools.
+- The third step is to merge the assembled transcripts from all individual Cufflinks/StringTie/other runs into one combined reference transcripome with tools such as [Cuffmerge](http://cole-trapnell-lab.github.io/cufflinks/cuffmerge/index.html), [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual) or [TACO](https://tacorna.github.io/).
+- In step 4 this combined transcriptome can be used to quantify all the original FASTQ files with [Cufflinks/CuffDiff](http://cole-trapnell-lab.github.io/cufflinks/manual/), [StringTie]((http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual)), [Salmon](https://salmon.readthedocs.io/en/latest/salmon.html) or [Kallisto](http://pachterlab.github.io/kallisto/manual.html).
+
+As an alternative, tools such as [Bayesembler](http://bioinformatics-centre.github.io/bayesembler/) performs step 2-4 jointly.
+
+You will need to figure out which combination of tools you choose on your own - but IsoformSwitchAnalyzeR can analyze the data from all of them. For more information see [Importing Data Into R]. 
+
+Back to [Table of Content]
+
+<br />
 
 ### How to handle cofounding effects (including batches)
-Cofounding effects is a collective description of all sources of variation not of interest for the the analysis you are doing. This can be anything from a batch effects (data/sample produced/analyzed at different locations, timepoints, personel etc) to an effect you are not interested in buch which migth influence the result (e.g. sex or age). Taking all this into account to avoide false positive of false negative results can easily be done when testing for isoform switches (or anything else really) when using tools based on linear models. 
+"Cofounding effect" is a common description of all sources of variation not of interest for the the analysis you are doing. This can be anything from a batch effects (data/sample produced/analyzed at different locations, timepoints, personel etc) to an effect you are not interested in but which migth influence the result (e.g. sex or age). Taking all this into account to avoide false positive of false negative results can easily be done when testing for isoform switches (or anything else really) when using tools based on linear models. 
 
-Naturally taking cofounding effects into account is also supported in IsoformSwitchAnalyzeR via the impkisoformSwitchTestDRIMSeq() and isoformSwitchTestDEXSeq() functions. Both these functions automatically takes additional counfounding effects into account if they have been annotated in the switchAnalyzeRlist.
+Naturally taking cofounding effects into account is also supported in IsoformSwitchAnalyzeR via the isoformSwitchTestDRIMSeq() and isoformSwitchTestDEXSeq() functions. Both these functions automatically takes additional counfounding effects into account if they have been annotated in the switchAnalyzeRlist. isoformSwitchTestDEXSeq() furthermroe also supports extract of batch corrected effect sizes (IF and dIFs).
 
 Counfounding effects should be annotated in 'designMatrix' used when creating the switchAnalyzeRList (via createSwitchAnalyzeRlist() or importRdata()). This is simply done by adding extra columns to the design matrix before creating the switchAnalyzeRlist:
 
@@ -1893,8 +1925,7 @@ So if the design matrix looked like:
 ```{r}
 myDesign <- data.frame(
     sampleID=1:6,
-    condition=c('wt','wt','wt','ko','ko','ko'), # KO is typically short for knock out,
-    stringsAsFactors = FALSE
+    condition=c('wt','wt','wt','ko','ko','ko') # WT = wildtype, KO = Knock out
 )
 
 myDesign
@@ -1902,14 +1933,36 @@ myDesign
 
 Adding a co-founder is simply done as follows:
 ```{r}
-myDesign$batch <- c(1,1,2,1,1,2)
+myDesign$batch <- factor(c('a','a','b','a','b','b'))
 myDesign
 ```
 
-Please note that cofounders can both be categorical (e.g. sex) and continous variables (e.g. age) while the conditions analyzed (as indicated by the "condition" column in the design matrix) must be categorical.
+Please note that cofounders can both be categorical (e.g. sex) (indicated by type character or factor) and continous variables (e.g. age) (indicated by numeric or integers) - both will be taken into account. Due to the differenti interpertation it is recomended to use strings/factors for categorical variables (aka not use 1 and 2 to indicate batch in the example above (instead of "a" and "b")). The the conditions analyzed (as indicated by the "condition" column in the design matrix) must however always be categorical (character or factor).
+
+Back to [Table of Content]
+
+<br />
+
+### What constitute an independent biological replicate?
+A very nice discussion, which I highly reccomend, can be found in [Vaux et al](http://dx.doi.org/10.1038/embor.2012.36).
+
+As a TL;DR here are a couple of guidelines:
+
+- Science can under NO circumstances be made from sample sizes of 1 (n=1). To call anything science proof that a result is reproducible is needed.
+- If all replicates were made at the same time no extrapolations can be made! Running an experiment in parallel does not result in independent samples - it is still only n=1. The experiment will need to be done multiple times. 
+- If all experiments were all done on the same cell line, extrapolation to anything other than that cell line cannot be made. The same actually goes for mouse strains.
+- If a knock-down is performed multiple different siRNA/shRNAs are needed (both to be independent and due to off target effects).
+- If a knock-out is created is not enough to only investigate a single cell line originating from single clone. Multiple independent clones are needed.
+- If you want to investigate a disease, analysing a single mouse or human is not enough - you would need data from multiple patients/mice to extrapolate to other humans/mice.
+
+All these replicates which does not allow for extrapolation would be termed independent replicates - and if you ask me the work replicate should never be allowed to be used without specifying whether it is independent or not.
+
+Back to [Table of Content]
+
+<br />
 
 ### Adding differential gene expression
-Gene differential expression is currently not build into IsoformSwitchAnalyzeR since there are so many other good tools to do this. Some frequently used tools are [edgeR](http://bioconductor.org/packages/edgeR/), [DESeq2](http://bioconductor.org/packages/DESeq2/), [limma](	http://bioconductor.org/packages/limma/) and [Sleuth](https://github.com/pachterlab/sleuth) (for Kallisto users). This list is not exhaustive but clearly shows the variety of well maintained tools out there. We do however support integration of the analysis and the result of a differential gene/transcript expression analysis will acutally be shown in the switchPlot() function if available. 
+Gene differential expression is currently not build into IsoformSwitchAnalyzeR since there are so many other good tools to do this. Some frequently used tools are [edgeR](http://bioconductor.org/packages/edgeR/), [DESeq2](http://bioconductor.org/packages/DESeq2/), [limma](	http://bioconductor.org/packages/limma/) and [Sleuth](https://github.com/pachterlab/sleuth) (for Kallisto users). This list is not exhaustive but clearly shows the variety of well maintained tools out there. For a recent review of these tool we refere you to [Love et al 2018](https://f1000research.com/articles/7-952/v3). No matter which tool you choose we support integration of the result by showing the result in the plot created by the switchPlot() function. 
 
 To add the result of a differential expression analysis all you need to do is overwrite the following columns:
 
@@ -1958,6 +2011,9 @@ We ask the user to make sure why this problem occurs in the user-specific settin
 
 Back to [Table of Content]
 <br />
+
+### The error "The supplied design matrix will result in a model matrix that is not full rank"
+If a desing matrix is not of full rank it simply means that one or more columns (or combinations of columns) in the design matrix describe the same thing. Imaging a case when you had two paramters describing the same person - say fingerprint and social security number. If you then try to estimate the effect of these factors you can have an infinite number of solutions by having them being opposites (-1 and 1, -2 and 2 etc) which means you cannot estimate a linear model. If you have problems with this the easies thing is to write a post about it on [http://support.bioconductor.org](http://support.bioconductor.org).
 
 ## Final Remarks
 With this vignette, we hope to provide a thorough introduction to IsoformSwitchAnalyzeR and give some examples of what IsoformSwitchAnalyzeR can be used for.

@@ -2023,13 +2023,6 @@ expressionAnalysisPlot <- function(
                     )
             }
 
-            if (logYaxis) {
-                g1 <- g1 + scale_y_log10() +
-                    coord_cartesian(ylim = c(ymin+1, yMax))
-            } else {
-                g1 <- g1 + coord_cartesian(ylim = c(ymin, yMax))
-            }
-
             g2 <- g2 +
                 scale_fill_manual(values = c('darkgrey', '#333333')) +
                 labs(x = 'Isoform', y = 'Isoform Expression') +

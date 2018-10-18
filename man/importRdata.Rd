@@ -37,9 +37,9 @@ importRdata(
 
 
 \arguments{
-\item{isoformCountMatrix}{ A data.frame with unfiltered biological (not technical) replicate isoform (estimated) fragment counts. Must have a column called 'isoform_id' with the isoform_id that matches the isoform_id column in \code{isoformExonAnnoation}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
+\item{isoformCountMatrix}{ A data.frame with unfiltered independent biological (aka not technical) replicate isoform (estimated) fragment counts (see FAQ in vignette for more detials). Must have a column called 'isoform_id' with the isoform_id that matches the isoform_id column in \code{isoformExonAnnoation}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated counts.}
 
-\item{isoformRepExpression}{ Optional but highly recommended: A data.frame with unfiltered normalized biological (not technical) replicate isoform expression. Ideal for supplying quantification measured in Transcripts Per Million (TxPM) or RPKM/FPKM. Must have a column called 'isoform_id' that matches the isoform_id column in \code{isoformExonAnnoation}. The name of the expression columns must match the sample names in the \code{designMatrix} argument. If not supplied RPKM values are calcualted from the count matrix and used instead.}
+\item{isoformRepExpression}{ Optional but highly recommended: A data.frame with unfiltered normalized independent biological (aka not technical) replicate isoform expression (see FAQ in vignette for more detials). Ideal for supplying quantification measured in Transcripts Per Million (TxPM) or RPKM/FPKM. Must have a column called 'isoform_id' that matches the isoform_id column in \code{isoformExonAnnoation}. The name of the expression columns must match the sample names in the \code{designMatrix} argument. If not supplied RPKM values are calcualted from the count matrix and used instead.}
 
 \item{designMatrix}{
 A data.frame with the information of which samples originate from which conditions. Must be a data.frame containing these two collums:

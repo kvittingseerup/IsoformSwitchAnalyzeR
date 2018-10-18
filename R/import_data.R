@@ -1797,10 +1797,10 @@ importIsoformExpression <- function(
                         test = calculateCountsFromAbundance,
                         yes= 'scaledTPM',
                         no='no'
-                    )
-                ),
-                ignoreAfterBar = ignoreAfterBar,
-                readLength=readLength
+                    ),
+                    ignoreAfterBar = ignoreAfterBar,
+                    readLength=readLength
+                )
             )
         }
 
@@ -1907,6 +1907,7 @@ importRdata <- function(
     }
 
     ### Test whether imput data fits together
+    if (!quiet) { message('Step 1 of 6: Checking data...')}
     if (TRUE) {
         ### Test supplied expression
         if(TRUE) {
@@ -1918,6 +1919,8 @@ importRdata <- function(
             }
 
             if( abundSuppled ) {
+                isoformRepExpression <- as.data.frame(isoformRepExpression)
+
                 extremeValues <- range( isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')], na.rm = TRUE )
                 if( max(extremeValues) < 30 ) {
                     warning('The expression data supplied to \'isoformRepExpression\' seems very small - please double-check that it is NOT log-transformed')
@@ -1929,6 +1932,8 @@ importRdata <- function(
             }
 
             if( countsSuppled ) {
+                isoformCountMatrix <- as.data.frame(isoformCountMatrix)
+
                 extremeValues <- range( isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')], na.rm = TRUE )
                 if( max(extremeValues) < 30 ) {
                     warning('The count data supplied to \'isoformCountMatrix\' seems very small - please double-check that it is NOT log-transformed')
@@ -1944,18 +1949,26 @@ importRdata <- function(
             ### Colnames
             if( countsSuppled ) {
                 if (!any(colnames(isoformCountMatrix) == 'isoform_id')) {
-                    stop(paste(
-                        'The data.frame passed to the \'isoformCountMatrix\'',
-                        'argument must contain a \'isoform_id\' column'
+                    #stop(paste(
+                    #    'The data.frame passed to the \'isoformCountMatrix\'',
+                    #    'argument must contain a \'isoform_id\' column'
+                    #))
+                    message(paste(
+                        '    Using row.names as \'isoform_id\' for \'isoformCountMatrix\'. If not suitable you must add them manually.'
                     ))
+                    isoformCountMatrix$isoform_id <- rownames(isoformCountMatrix)
                 }
             }
             if ( abundSuppled ) {
                 if (!any(colnames(isoformRepExpression) == 'isoform_id')) {
-                    stop(paste(
-                        'The data.frame passed to the \'isoformCountMatrix\'',
-                        'argument must contain a \'isoform_id\' column'
+                    #stop(paste(
+                    #    'The data.frame passed to the \'isoformRepExpression\'',
+                    #    'argument must contain a \'isoform_id\' column'
+                    #))
+                    message(paste(
+                        '    Using row.names as \'isoform_id\' for \'isoformRepExpression\'. If not suitable you must add them manually.'
                     ))
+                    isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
                 }
             }
 
@@ -1995,8 +2008,7 @@ importRdata <- function(
                 }
             }
 
-
-
+            # test comparisonsToMake
             if (!is.null(comparisonsToMake)) {
                 if (!all(c('condition_1', 'condition_2') %in%
                          colnames(comparisonsToMake))) {
@@ -2008,11 +2020,6 @@ importRdata <- function(
                     ))
                 }
             }
-
-
-
-
-
         }
 
         ### Convert potential factors
@@ -2031,8 +2038,10 @@ importRdata <- function(
                 isoformRepExpression$isoform_id <-
                     as.character(isoformRepExpression$isoform_id)
             }
-            isoformCountMatrix$isoform_id <-
-                as.character(isoformCountMatrix$isoform_id)
+            if (!is.null(isoformCountMatrix)) {
+                isoformCountMatrix$isoform_id <-
+                    as.character(isoformCountMatrix$isoform_id)
+            }
         }
 
         ### Check supplied data fits togehter
@@ -2151,7 +2160,7 @@ importRdata <- function(
     }
 
     ### Handle annotation input
-    if (!quiet) { message('Step 1 of 5: Obtaining annotation...')}
+    if (!quiet) { message('Step 2 of 6: Obtaining annotation...')}
     if (TRUE) {
         ### Import GTF is nessesary
         if (class(isoformExonAnnoation) == 'character') {
@@ -2226,8 +2235,9 @@ importRdata <- function(
                     paste(
                         'The \'type\' column of the data supplied to \'isoformExonAnnoation\'',
                         'indicate there are multiple levels of data.',
-                        'Please fix this or provide a string with the path to the GTF file',
-                        '(then IsoformSwitchAnalyzeR will import the file as well).'
+                        'Please fix this (providing only exon-level) or simply',
+                        '\nprovide a string with the path to the GTF file to the \'isoformExonAnnoation\' - ',
+                        'then IsoformSwitchAnalyzeR will import and massage the GTF file for you.'
                     )
                 )
             }
@@ -2418,7 +2428,7 @@ importRdata <- function(
     }
 
     ### If nessesary calculate RPKM values
-    if (!quiet) { message('Step 2 of 5: Calculating gene expression and isoform fraction...') }
+    if (!quiet) { message('Step 3 of 6: Calculating gene expression and isoform fraction...') }
     if ( ! abundSuppled ) {
         ### Extract isoform lengths
         isoformLengths <- sapply(
@@ -2540,7 +2550,7 @@ importRdata <- function(
 
     ### in each condition analyzed get mean and standard error of gene and isoforms
     if (!quiet) {
-        message('Step 3 of 5: Merging gene and isoform expression...')
+        message('Step 4 of 6: Merging gene and isoform expression...')
     }
     if (TRUE) {
         conditionList <-
@@ -2596,7 +2606,7 @@ importRdata <- function(
 
     ### Use comparisonsToMake to create the isoform comparisons
     if (!quiet) {
-        message('Step 4 of 5: Making comparisons...')
+        message('Step 5 of 6: Making comparisons...')
     }
     if (TRUE) {
         isoAnnot <-
@@ -2718,7 +2728,7 @@ importRdata <- function(
 
     ### Create the swichList
     if (!quiet) {
-        message('Step 5 of 5: Making switchAnalyzeRlist object...')
+        message('Step 6 of 6: Making switchAnalyzeRlist object...')
     }
     if (TRUE) {
         if( countsSuppled ) {

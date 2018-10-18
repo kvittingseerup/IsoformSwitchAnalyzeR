@@ -1,3 +1,16 @@
+1.3.10: IsoformSwitchAnalyzeR 2018-10-18 ( minor )
+    - A problem was fixed with the isoformSwitchTestDEXSeq() which could
+        cause continuous co-variables to interpreted as discrete co-variables.
+    - importRdata() was updated to be a bit more versetile with regards to accepting isoform_ids as row.names.
+    - Both isoformSwitchTestDRIMSeq() and isoformSwitchTestDRIMSeq() was updated so the the resulting
+        "isoformSwitchAnalysis" entry in the switchAnalyzeRlist also contains results with p-values set to NA. (NA filter removed).
+        Furthemore the interpretation of design matrixes with regards to continous or discrete variables was improved.
+    - The vignette was updated all around including the FAQ sections:
+        - "What Quantification Tool(s) Should I Use?"
+        - "What constitue an independent biological replicate?"
+    - An error message was corrected to give the rigth error
+    - various small updates
+
 1.3.9: IsoformSwitchAnalyzeR 2018-09-24 ( minor )
     - Update to namespace to fix 1.3.8 update of importCufflinksFiles
     - Update to vignette to fix header

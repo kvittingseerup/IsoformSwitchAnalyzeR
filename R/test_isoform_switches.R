@@ -17,6 +17,13 @@ isoformSwitchTestDRIMSeq <- function(
     showProgress = TRUE,
     quiet = FALSE
 ) {
+    message(paste(
+        'Please consider using isoformSwitchTestDEXSeq() instead.',
+        '\nThe DEXSeq implementation have been shown to superiour to DRIMSeq',
+        '\non all paramters (except runtime for large number of samples)',
+        '\nby Love et al 2018 (F1000) - results we can replicate.\n'
+    ))
+
     ### Test data
     if (TRUE) {
         ### Tjek arguments
@@ -94,7 +101,8 @@ isoformSwitchTestDRIMSeq <- function(
         if( ncol(localDesign) > 2 ) {
             for(i in 3:ncol(localDesign) ) { # i <- 4
                 if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-                    if( uniqueLength( localDesign[,i] ) * 2 < length(localDesign) ) {
+                    ### if there are at least two samples per "condition"
+                    if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
                         localDesign[,i] <- factor(localDesign[,i])
                     }
                 }
@@ -274,11 +282,11 @@ isoformSwitchTestDRIMSeq <- function(
         if (!quiet) {
             message('Step 6 of 6: Preparing output...')
         }
-        ### Remove NAs
-        resultOfPairwiseTest <-
-            resultOfPairwiseTest[which(
-                !is.na(resultOfPairwiseTest$adj_pvalue.iso)
-            ), ]
+        ### Remove NAs - outcommented 9th Octiber 2018 by KVS
+        # resultOfPairwiseTest <-
+        #     resultOfPairwiseTest[which(
+        #         !is.na(resultOfPairwiseTest$adj_pvalue.iso)
+        #     ), ]
 
         ### Replace with refrence ids
         resultOfPairwiseTest$iso_ref <-
@@ -636,7 +644,7 @@ isoformSwitchTestDEXSeq <- function(
                 if( ncol(localDesign) > 2 ) {
                     for(i in 3:ncol(localDesign) ) { # i <- 4
                         if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-                            if( uniqueLength( localDesign[,i] ) * 2 < length(localDesign) ) {
+                            if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
                                 localDesign[,i] <- factor(localDesign[,i])
                             }
                         } else {
@@ -757,7 +765,7 @@ isoformSwitchTestDEXSeq <- function(
                 expectedTime <- plyr::ddply(
                     .data = comaprisonsToMake,
                     .variables = c('condition_1','condition_2'),
-                    .progress = progressBar,
+                    .progress = 'none',
                     .fun = function(aComp) { # aComp <- comaprisonsToMake[1,]
                         sampleOverview <- switchAnalyzeRlist$conditions[which(
                             switchAnalyzeRlist$conditions$condition %in% unlist(aComp)
@@ -836,7 +844,7 @@ isoformSwitchTestDEXSeq <- function(
                     if( ncol(designSubset) > 2 ) {
                         for(i in 3:ncol(designSubset) ) { # i <- 4
                             if( class(designSubset[,i]) %in% c('numeric', 'integer') ) {
-                                if( uniqueLength( designSubset[,i] ) * 2 < length(designSubset) ) {
+                                if( uniqueLength( designSubset[,i] ) * 2 <= length(designSubset[,i]) ) {
                                     designSubset[,i] <- factor(designSubset[,i])
                                 }
                             } else {
@@ -901,7 +909,7 @@ isoformSwitchTestDEXSeq <- function(
                         DEXSeqResults(dexList, independentFiltering=FALSE)
                     )
                     dexRes <- dexRes[,c('groupID','featureID','pvalue','padj')] # fdr corrected
-                    dexRes <- dexRes[which( !is.na(dexRes$pvalue)),]
+                    #dexRes <- dexRes[which( !is.na(dexRes$pvalue)),] # outcommented 9th october 2018 by KVS
                     rownames(dexRes) <- NULL
 
                     colnames(dexRes)[1:2] <- c('gene_ref','iso_ref')
@@ -1195,10 +1203,19 @@ extractSwitchSummary <- function(
         }
     }
 
+    ### Add levels
+    dataDF$comparison <- paste(dataDF$condition_1, dataDF$condition_2, sep = ' vs ')
+    dataDF$comparison <- factor(
+        x = dataDF$comparison,
+        levels = backUpDf$Comparison
+    )
+
     ### Summarize pr comparison
-    dataList <-
-        split(dataDF,
-              f = paste(dataDF$condition_1, dataDF$condition_2, sep = ' vs '))
+    dataList <- split(
+        dataDF,
+        f = dataDF$comparison,
+        drop = FALSE
+    )
 
     if (length(dataList) > 1 | includeCombined) {
         dataList$combined <- dataDF
