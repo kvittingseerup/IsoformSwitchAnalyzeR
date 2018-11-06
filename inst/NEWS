@@ -1,3 +1,8 @@
+1.5.1: IsoformSwitchAnalyzeR 2018-11-05 ( MAJOR )
+    - An error was fixed which caused isoformSwitchTestDEXSeq() to only return the first condition if multiple were compared.
+    - The run-time estimate for isoformSwitchTestDEXSeq was improved based on samples in the range from 2v2 - 20v20.
+    - Version bump due to move into Bioconductor 3.9 devel branch.
+
 1.3.10: IsoformSwitchAnalyzeR 2018-10-18 ( minor )
     - A problem was fixed with the isoformSwitchTestDEXSeq() which could
         cause continuous co-variables to interpreted as discrete co-variables.

@@ -775,7 +775,7 @@ isoformSwitchTestDEXSeq <- function(
                             samples=sum(sampleOverview$nrReplicates)
                         )
 
-                        localExp$min <- 10^(1.78340190 + (0.04996058 * localExp$samples)) / 60 # min
+                        localExp$min <- 10^(1.63152968 + (0.04740975 * localExp$samples)) / 60 # min
 
                         return(localExp)
                     }
@@ -819,13 +819,23 @@ isoformSwitchTestDEXSeq <- function(
                         )
                     ]
 
+                    ### Extract corresponding annotation
+                    localAnnot <- switchAnalyzeRlist$isoformFeatures[
+                        which(
+                            switchAnalyzeRlist$isoformFeatures$condition_1 == aComp$condition_1 &
+                            switchAnalyzeRlist$isoformFeatures$condition_2 == aComp$condition_2
+                        ),
+                        c('isoform_id','iso_ref','gene_ref')
+                    ]
+
+
                     ### Massage for DEXSeq
-                    localCount$gene_ref <- switchAnalyzeRlist$isoformFeatures$gene_ref[match(
-                        localCount$isoform_id, switchAnalyzeRlist$isoformFeatures$isoform_id
+                    localCount$gene_ref <- localAnnot$gene_ref[match(
+                        localCount$isoform_id, localAnnot$isoform_id
                     )]
 
-                    localCount$iso_ref <- switchAnalyzeRlist$isoformFeatures$iso_ref[match(
-                        localCount$isoform_id, switchAnalyzeRlist$isoformFeatures$isoform_id
+                    localCount$iso_ref <- localAnnot$iso_ref[match(
+                        localCount$isoform_id, localAnnot$isoform_id
                     )]
 
 
@@ -878,6 +888,7 @@ isoformSwitchTestDEXSeq <- function(
 
                 ### Test with DEXSeq
                 if(TRUE) {
+                    ### Create data object
                     suppressMessages(
                         dexList <- DEXSeqDataSet(
                             countData  = round(localCount[,which( ! colnames(localCount) %in% c('gene_ref','iso_ref'))]),      # cannot handle non-integers
