@@ -7,8 +7,16 @@ To solve these problems we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyze
 
 # Installation 
 
-We recommend installing the latest version of IsoformSwitchAnalyzeR from Bioconductor (where instructions also can be found):
+We _highly_ recommend installing the latest version of IsoformSwitchAnalyzeR from Bioconductor (where instructions also can be found):
 https://bioconductor.org/packages/devel/bioc/html/IsoformSwitchAnalyzeR.html 
+
+Alternatively IsoformSwitchAnalyzeR can be installed from github by running the following in an R terminal:
+
+```
+if (!requireNamespace("devtools", quietly = TRUE))
+    install.packages("devtools")
+devtools::install_github("IsoformSwitchAnalyzeR", version = "3.9")
+```
 
 
 # Vignette
