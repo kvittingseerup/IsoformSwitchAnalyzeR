@@ -7,8 +7,7 @@ To solve these problems we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyze
 
 # Installation 
 
-We *highly* recommend installing the latest version of IsoformSwitchAnalyzeR from [Bioconductor](https://bioconductor.org/packages/devel/bioc/html/IsoformSwitchAnalyzeR.html):
-
+We *highly* recommend installing the latest version of  [IsoformSwitchAnalyzeR](https://bioconductor.org/packages/devel/bioc/html/IsoformSwitchAnalyzeR.html) from Bioconductor.
 
 This can be done by running the following in an R terminal:
 ```
@@ -33,5 +32,4 @@ The vignette contains a lot of information on how to use IsoformSwitchAnalyzeR a
 browseVignettes("IsoformSwitchAnalyzeR")
 ```
 
-Alternatively, it can be accessed online (through Bioconductor) here:
-https://bioconductor.org/packages/devel/bioc/vignettes/IsoformSwitchAnalyzeR/inst/doc/IsoformSwitchAnalyzeR.html 
+Alternatively, it can be accessed online (through Bioconductor) [here](https://bioconductor.org/packages/devel/bioc/vignettes/IsoformSwitchAnalyzeR/inst/doc/IsoformSwitchAnalyzeR.html)
