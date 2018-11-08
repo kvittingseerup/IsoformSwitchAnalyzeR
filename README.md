@@ -21,7 +21,7 @@ Alternatively IsoformSwitchAnalyzeR can be installed from github by running the 
 ```
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
-devtools::install_github("IsoformSwitchAnalyzeR", build_vignettes = TRUE)
+devtools::install_github("kvittingseerup/IsoformSwitchAnalyzeR", build_vignettes = TRUE)
 ```
 
 
