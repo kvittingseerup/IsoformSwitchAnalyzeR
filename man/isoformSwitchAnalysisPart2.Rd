@@ -15,6 +15,7 @@ isoformSwitchAnalysisPart2(
     codingCutoff,
     removeNoncodinORFs,
     pathToCPATresultFile=NULL,
+    pathToCPC2resultFile = NULL,
     pathToPFAMresultFile=NULL,
     pathToSignalPresultFile=NULL,
     consequencesToAnalyze=c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified'),
@@ -40,7 +41,11 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each subfolder indicated by \code{splitConditions, splitFunctionalConsequences}. Use NA to create all. Default is NA (all).
 }
   \item{codingCutoff}{
-Numeric indicating the cutoff used by CPAT for distinguishing between coding and non-coding transcripts. The cutoff is dependent on species analyzed. Our analysis suggest that the optimal cutoff for overlapping coding and noncoding isoforms are 0.725 for human and 0.721 for mouse - HOWEVER the suggested cutoffs from the CPAT article (see references) derived by comparing known genes to random non-coding regions of the genome is 0.364 for human and 0.44 for mouse.
+Numeric indicating the cutoff used by CPAT/CPC2 for distinguishing between coding and non-coding transcripts.
+\enumerate{
+    \item For CPAT: The cutoff is dependent on species analyzed. Our analysis suggest that the optimal cutoff for overlapping coding and noncoding isoforms are 0.725 for human and 0.721 for mouse - HOWEVER the suggested cutoffs from the CPAT article (see references) derived by comparing known genes to random non-coding regions of the genome is 0.364 for human and 0.44 for mouse. No default is used.
+    \item For CPC2: The cutoff suggested is 0.5 for all species and will default to that if not supplied
+}
 }
 
  \item{removeNoncodinORFs}{
@@ -50,6 +55,10 @@ A logic indicating wether to remove ORF information from the isoforms which the 
   \item{pathToCPATresultFile}{
 Path to the CPAT result file. If the webserver is used please dowload the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file.
 }
+\item{pathToCPC2resultFile}{
+Path to the CPC2 result file. If the webserver is used please dowload the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file.
+}
+
   \item{pathToPFAMresultFile}{
   Path to the PFAM result file. If the webserver is used you need to copy paste the result part of the mail you get into a empty plain text document (notepad, sublimetext TextEdit or similar (aka not word)) and save that to a file. This file is then used as input to the function.
 }
@@ -78,7 +87,7 @@ A logic indicating whether all isoform switches as well as the summary of functi
 \details{
 This function performs the second part of a Isoform Analysis Workflow by:
 \enumerate{
-    \item Adding external sequence analysis (see \link{analyzeCPAT}, \link{analyzePFAM} and \link{analyzeSignalP})
+    \item Adding external sequence analysis (see \link{analyzeCPAT}, \link{analyzeCPC2}, \link{analyzePFAM} and \link{analyzeSignalP})
     \item Predict functional consequences of switching (see \link{analyzeSwitchConsequences})
     \item Output Isoform Switch Consequence plots for all genes where there is a significant isoform switch (see \link{switchPlot})
     \item Output a visualization of general consequences of isoform switches.
@@ -119,7 +128,7 @@ exampleSwitchListAnalyzed <- isoformSwitchAnalysisPart2(
     pathToCPATresultFile     = system.file("extdata/cpat_results.txt", package = "IsoformSwitchAnalyzeR"),
     pathToPFAMresultFile     = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
     pathToSignalPresultFile  = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR"),
-    codingCutoff             = 0.364,
+    codingCutoff             = 0.725,
     removeNoncodinORFs       = TRUE,  # Because ORF was predicted de novo
     outputPlots              = FALSE  # keeps the function from outputting the plots from this example
 )

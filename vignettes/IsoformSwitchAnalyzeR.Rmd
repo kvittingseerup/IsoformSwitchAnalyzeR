@@ -29,7 +29,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ## Abstract
 Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data (via tools such as Cufflinks, StringTie, Kallisto and Salmon). These tools make it possible to analyzing alternative isoform usage, but unfortunatly this is rarely done meaning RNA-seq data is typically not used to its full potential. 
 
-To solve this problem we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR  facilitates integration of many sources of (predicted) annotation such as Open Reading Frame (ORF), protein domains (via Pfam), signal peptides (via SignalP), coding potential (via CPAT) and sensitivity to Non-sense Mediated Decay (NMD) etc. The combination of identified isoform switches and their annotation also enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains or coding potential --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches, and summary statistics describing the genome-wide occurences of isoform switches, their consequences as well as the associated alternative splicing.
+To solve this problem we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR  facilitates integration of many sources of (predicted) annotation such as Open Reading Frame (ORF), protein domains (via Pfam), signal peptides (via SignalP), coding potential (via CPAT or CPC2) and sensitivity to Non-sense Mediated Decay (NMD) etc. The combination of identified isoform switches and their annotation also enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains or coding potential --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches, and summary statistics describing the genome-wide occurences of isoform switches, their consequences as well as the associated alternative splicing.
 
 In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform resolution with a focus on isoform switching (with predicted consequences), thereby expanding the usability of RNA-seq data.
 
@@ -127,7 +127,7 @@ IsoformSwitchAnalyzeR is an easy-to-use R package that enables the user to impor
 
 IsoformSwitchAnalyzeR facilitates identification of isoform switches via newly developed statistical methods that tests each individual isoform for differential usage and thereby identifies the exact isoforms involved in an isoform switch.
 
-Since we know the exon structure of the full-length isoform, IsoformSwitchAnalyzeR can extract the underlying nucleotide sequence from a reference genome. This enables integration with the Coding Potential Assessment Tool (CPAT) which predicts the coding potential of an isoform and can  be used to increase accuracy of ORF predictions. By combining the CDS/ORF isoform positions with the nucleotide sequence, we can  extract the most likely amino acid sequence of the CDS/ORF. The amino acid sequence enables integration of analysis of protein domains (via Pfam) and signal peptides (via SignalP) --- both supported by IsoformSwitchAnalyzeR. Lastly, since the structures of all expressed isoforms from a given gene are known, one can also annotate alternative splicing - including retentions - a functionality also implemented in IsoformSwitchAnalyzeR.
+Since we know the exon structure of the full-length isoform, IsoformSwitchAnalyzeR can extract the underlying nucleotide sequence from a reference genome. This enables integration with the tools for assing coding potential of an isoform (both the CPAT and CPC2 tools are supported) which can be used to increase accuracy of ORF predictions. By combining the CDS/ORF isoform positions with the nucleotide sequence, we can  extract the most likely amino acid sequence of the CDS/ORF. The amino acid sequence enables integration of analysis of protein domains (via Pfam) and signal peptides (via SignalP) --- both supported by IsoformSwitchAnalyzeR. Lastly, since the structures of all expressed isoforms from a given gene are known, one can also annotate alternative splicing - including retentions - a functionality also implemented in IsoformSwitchAnalyzeR.
 
 Thus, in summary, IsoformSwitchAnalyzeR enables annotation of isoforms with intron retention, ORF, NMD sensitivity, coding potential, protein domains and signal peptides (and many more), resulting in the ability to predict important functional consequences of isoform switches.
 
@@ -145,10 +145,12 @@ Back to [Table of Content].
 
 <!-- Installation -->
 ### Installation
-IsoformSwitchAnalyzeR is part of the Bioconductor repository and community which means it is distributed with, and dependent on, Bioconductor. Installation of IsoformSwitchAnalyzeR is easy and can be done from within the R terminal. If it is the first time you use Bioconductor, simply copy-paste the following into an R session to install the basic Bioconductor packages:
+IsoformSwitchAnalyzeR is part of the Bioconductor repository and community which means it is distributed with, and dependent on, Bioconductor. Installation of IsoformSwitchAnalyzeR is easy and can be done from within the R terminal. If it is the first time you use Bioconductor (or dont know if you have used it), simply copy-paste the following into an R session to install the basic Bioconductor packages (will only done if you don't already have them):
 
-    install.packages("BiocManager")
-    BiocManager::install()
+    if (!requireNamespace("BiocManager", quietly = TRUE)){
+        install.packages("BiocManager")
+        BiocManager::install()
+    }
 
 If you already have installed Bioconductor, running these two commands will check whether updates for installed packages are available.
 
@@ -162,9 +164,12 @@ This will install the IsoformSwitchAnalyzeR package as well as other R packages 
 
 <br />
 
-If you need to install from the developmental branch of Bioconductor it is nesseary to explicitely specify that. Please note that this is for advanced uses and should not be done unless you have good reason to. Installation from the developmental branch can be done by copy/pasting:
+If you need to install the developmental version of IsoformSwitchAnalyzeR this can be done from the github. Please note that this is for advanced uses and should not be done unless you have good reason to. Installation from the github can be done by copy/pasting the following into R:
 
-    BiocManager::install("IsoformSwitchAnalyzeR", version = "devel")
+    if (!requireNamespace("devtools", quietly = TRUE)) {
+        install.packages("devtools")
+    }
+    devtools::install_github("kvittingseerup/IsoformSwitchAnalyzeR", build_vignettes = TRUE)
 
 <br />
 
@@ -197,6 +202,7 @@ If you are using the
 - **Prediction of open reading frames (ORF) analysis** : Please cite reference _1_ and _4_.
 - **Prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity** : Please cite refrence _1_, _4_, _5_ and _6_.
 - **CPAT** : Please cite reference _7_.
+- **CPC2** : Please cite reference _14_.
 - **Pfam** : Please cite reference _8_.
 - **SignalP** : Please cite reference _9_.
 - **Prediction of consequences** please cite reference _1_.
@@ -221,6 +227,7 @@ Refrences:
 11. _Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)_
 12. _Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)_
 13. _Anders et al. **Detecting differential usage of exons from RNA-seq data**. Genome Research (2012)_
+14. _Kang et al. **CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features**. Nucleic Acids Res (2017)_
 
 <br />
 
@@ -243,9 +250,11 @@ A normal workflow for identification and analysis of isoform switches with funct
 
 **Part 1) Extract Isoform Switches and Their Sequences.** This part includes importing the data into R, identifying isoform switches, annotating those switches with open reading frames (ORF) and extracting the nucleotide and amino acid (peptide) sequences. The latter step enables the usage of external sequence analysis tools such as
 
-* CPAT : The Coding-Potential Assessment Tool, which can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
-* Pfam : Prediction of protein domains, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
-* SignalP : Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
+- Tools for Coding Potential Analysis:
+    + CPC2 : The Coding Calculator 2, which can be run either locally or via their [webserver](http://cpc2.cbi.pku.edu.cn/batch.php).
+    + CPAT : The Coding-Potential Assessment Tool, which can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
+- Pfam : Prediction of protein domains, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
+- SignalP : Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
 
 All of the above steps are performed by the high-level function:
 
@@ -433,7 +442,7 @@ extractSwitchSummary(
 
 <br />
 
-In a typical workflow the user would here have to use produced fasta files to perfrom the external analysis tools (Pfam (protein domains), SignalP (signal peptides), CPAT (coding potential)). For more information on how to run those tools refere to [Advice for Running External Sequence Analysis Tools]. To illustrate the workflow we will here use the result of running those tools on the example data wich we have also included in our R package.
+In a typical workflow the user would here have to use produced fasta files to perfrom the external analysis tools (Pfam (protein domains), SignalP (signal peptides), CPAT or CPC2 (coding potential, please note they perform similar analysis so it is only nessesary to run one of them)). For more information on how to run those tools refere to [Advice for Running External Sequence Analysis Tools]. To illustrate the workflow we will here use the result of running those tools on the example data wich we have also included in our R package.
 
 <br />
 
@@ -693,7 +702,9 @@ This corresponds to running the following functions in sequential order (just li
 
 ```
 ### Add annotation
-mySwitchList <- analyzeCPAT( mySwitchList )
+mySwitchList <- analyzeCPAT( mySwitchList ) # OR
+mySwitchList <- analyzeCPC2( mySwitchList )
+
 mySwitchList <- analyzePFAM( mySwitchList )
 mySwitchList <- analyzeSignalP( mySwitchList )
 mySwitchList <- analyzeAlternativeSplicing( mySwitchList )
@@ -843,7 +854,7 @@ For recomendations of bioinformatic tools which can perform the quantifications 
 #### Importing Data from Kallisto, Salmon, RSEM or StringTie
 While RSEM and StringTie are well-established and robust isoform quantification tool, a new generation of tools often refered to as pseudo/quasi-aligners, such as Salmon and Kallisto, are on the rise due to their speed and increased accuracy. All four tools are directly supported by allowing for easy import of the isoform replicate abundance via the _importIsoformExpression()_ function.
 
-This function is a easy-to-use wrapper for the tximport R package with extra functionalities. Using tximport, importIsoformExpression() allows the isoform counts to be estimated from the abundance estimates --- which is recomended as it will incorporate the bias correction performed by the tools into the switch identification. The _importIsoformExpression_ function can furthermore perform an inter-library normalization of the abundance estimates which is necessary for a fair comparison of libraries (for in-depth discussion of normalization and why it is needed, see section 2.7 of the [edgeR user guide](http://bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf)). The importIsoformExpression() function is used as follows: 
+This function is a easy-to-use wrapper for the tximport R package with extra functionalities. Using tximport (with countsFromAbundance='scaledTPM'), importIsoformExpression() allows the isoform counts to be estimated from the abundance estimates --- which is recomended as it will incorporate the bias correction performed by the tools into the switch identification. The _importIsoformExpression_ function can furthermore perform an inter-library normalization of the abundance estimates which is necessary for a fair comparison of libraries (for in-depth discussion of normalization and why it is needed, see section 2.7 of the [edgeR user guide](http://bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf)). The importIsoformExpression() function is used as follows: 
 
 ```{r}
 ### Please note
@@ -1162,14 +1173,14 @@ If you performed (guided) de-novo isoform reconstruction (isoform deconvolution)
 
 This function utilizes the genomic coordinates of each transcript to extract the transcript nucleotide sequence from a reference genome (supplied via the _genomeObject_ argument). In _analyzeORF_ four different methods for predicting the ORF are implemented, suitable for different purposes and circumstances. The four methods are:
 
-1. The 'longest' method. This method identifies the longest ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence. This approach is what the CPAT tool uses in its analysis of coding potential. This is the default as it is the most common use case and has the highest accuracy in benchmarks against known annotated ORFs (>90% accuracy against GENCODE data, Vitting-Seerup et al 2017).
+1. The 'longest' method. This method identifies the longest ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence. This approach is what the CPC2 and CPAT tool uses in its analysis of coding potential. This is the default as it is the most common use case and has the highest accuracy in benchmarks against known annotated ORFs (>90% accuracy against GENCODE data, Vitting-Seerup et al 2017).
 2. The 'mostUpstream' method. This method identifies the most upstream ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence.
 3. The 'longestAnnotated' method. This method identifies the longest ORF downstream of an annotated translation start site. It requires known translation start sites are supplied to the _cds_ argument.
 4. The 'mostUpstreamAnnoated' method. This method identifies ORF downstream of the most upstream overlapping annotated translation start site. It requires known translation start sites are supplied to the _cds_ argument.
 
 One important argument is the _minORFlength_, which will ensure that only ORFs longer than _minORFlength_ nucleotides are annotated. Besides predicting the ORF, information about the most likely stop codon also allows for prediction of Pre-mature Termination Codon (PTC) and thereby sensitivity to degradation via the Nonsense Mediated Decay (NMD) pathway. This analysis is also implemented in the _analyzeORF()_ function and is controlled by the _PTCDistance_ argument.
 
-Note that the ORF prediction can be integrated with both the CPAT results (via the _removeNoncodinORFs_ parameter, see ?analyzeCPAT) as well as Pfam results (see [Augmenting ORF Predictions with Pfam Results])
+Note that the ORF prediction can be integrated with both the CPC2/CPAT results (via the _removeNoncodinORFs_ parameter, see ?analyzeCPAT or ?analyzeCPC2) as well as Pfam results (see [Augmenting ORF Predictions with Pfam Results])
 
 The _analyzeORF()_ function can be used as follows:
 
@@ -1227,15 +1238,17 @@ Back to [Table of Content]
 ### Advice for Running External Sequence Analysis Tools
 The two fasta files that are the output by _extractSequence()_ (if writeToFile=TRUE) can be used as input, to amongst, others:
 
-* CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
+* CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/). This is an alternative to CPC2.
+* CPC2 : The Coding Potential Calculator 2 which is a tool for predicting whether an isoform is coding or not. CPC2 can be run either locally or via their [webserver](http://cpc2.cbi.pku.edu.cn/batch.php). This is an alternative to CPAT.
 * Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
 * SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
 
-These three tools are the ones currently supported, but if you have additional ideas please do not hesitate to contact us as described in [How To Get Help].
+Please note that CPAT and CPC2 performs the same type of analysis so it is only nessesary to run one of them. These four tools are the ones currently supported, but if you have additional ideas please do not hesitate to contact us as described in [How To Get Help].
 
 We suggest that the external sequence analysis tools are run as follows:
 
 * CPAT : Use default parameters and the nucleotide fasta file (_nt.fasta). If the [webserver](http://lilab.research.bcm.edu/cpat/) was used, download the tab-delimited result file (available at the bottom of the result page). If a stand-alone version was used, just supply the path to the result file. 
+* CPC2 : Use default paramters and if required select the most similar species. If the [webser](\url{http://cpc2.cbi.pku.edu.cn/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" botton). If a stand-alone version was just just supply the path to the result file.
 * Pfam : Use default parameters and the amino acid fasta file (_AA.fasta). If the [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan) is used you need to copy/paste the result part of the mail you receive into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to a plain text (txt) file. The path to that file should be supplied. If a stand-alone version was used, just supply the path to the result file. A more detailed walkthrough is found under details in the documentation of the \code{analyzePFAM()} function (?analyzePFAM).
 * SignalP : Use the amino acid fasta file (_AA.fasta). When using a stand-alone version, SignalP should be run with the '-f summary' option. If using the [webserver](http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "standard" under "Output format" and "No graphics" under "Graphics output". When using the web-server, the results (everything between the two hoizontal lines) should be copy/pasted into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to plain text (txt) file. This file is then used as input to the function. If a stand-alone version was used, just supply the path to the summary result file.
 
@@ -1244,11 +1257,15 @@ Back to [Table of Content]
 <br />
 
 ### Importing External Sequence Analysis
-After the external sequence analysis with CPAT, Pfam, and SignalP have been performed (please remember to cite as describe in [What To Cite]), the results can be extracted and incooperated in the switchAnalyzeRlist via (respectively)
+After the external sequence analysis with CPC2/CPAT, Pfam, and SignalP have been performed (please remember to cite as describe in [What To Cite]), the results can be extracted and incooperated in the switchAnalyzeRlist via (respectively)
 
-    analyzeCPAT()
+    analyzeCPAT() # OR
+    analyzeCPC2()
     analyzePFAM()
     analyzeSignalP()
+
+Please note that CPC2 and CPAT performs the same type of analysis so only one of them is nessesary.
+
 
 The functions are used as:
 
@@ -1257,33 +1274,42 @@ The functions are used as:
 data("exampleSwitchListIntermediary")
 exampleSwitchListIntermediary
 
+### Add CPAT analysis
+exampleSwitchListAnalyzed <- analyzeCPAT(
+    switchAnalyzeRlist   = exampleSwitchListIntermediary,
+    pathToCPATresultFile = system.file("extdata/cpat_results.txt", package = "IsoformSwitchAnalyzeR"),
+    codingCutoff         = 0.725, # the coding potential cutoff we suggested for human
+    removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
+)
+
+### Add CPC2 analysis
+exampleSwitchListAnalyzed <- analyzeCPC2(
+    switchAnalyzeRlist   = exampleSwitchListIntermediary,
+    pathToCPC2resultFile = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
+    codingCutoff         = 0.725, # the coding potential cutoff we suggested for human
+    removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
+)
+
 ### Add PFAM analysis
 exampleSwitchListAnalyzed <- analyzePFAM(
-    switchAnalyzeRlist   = exampleSwitchListIntermediary,
+    switchAnalyzeRlist   = exampleSwitchListAnalyzed,
     pathToPFAMresultFile = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
     showProgress=FALSE
-    )
+)
 
 ### Add SignalP analysis
 exampleSwitchListAnalyzed <- analyzeSignalP(
     switchAnalyzeRlist       = exampleSwitchListAnalyzed,
     pathToSignalPresultFile = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR")
-    )
+)
     
-### Add CPAT analysis
-exampleSwitchListAnalyzed <- analyzeCPAT(
-    switchAnalyzeRlist   = exampleSwitchListAnalyzed,
-    pathToCPATresultFile = system.file("extdata/cpat_results.txt", package = "IsoformSwitchAnalyzeR"),
-    codingCutoff         = 0.725, # the coding potential cutoff we suggested for human
-    removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
-    )
 
 exampleSwitchListAnalyzed
 ```
 
 Here, the _pathTo\<tool\_name>resultFile_ points to the result files constructed as suggested in [Advice for Running External Sequence Analysis Tools] and in the detailed documentation of each of the individual functions. The part of the examples using system.file() is not nesseary when using your own data - just supply the path as a string (e.g. "/myFiles/myCPATresults.txt")
 
-Of particular interest is the _removeNoncodinORFs_ argument in _analyzeCPAT()_ since it allows integration of the CPAT and ORF analyses by removing ORFs from isoforms not predicted to be coding by CPAT. This can be particularly useful if isoforms and ORFs have been predicted de novo (both guided or non-guided). Note that if enabled (by setting to TRUE), it will effect all downstream analyses and plots as both analysis of protein domains and signal peptides require that ORFs are annotated (e.g. _analyzeSwitchConsequences_ will not consider the domains (potentially) found by Pfam if the ORFs have been removed).
+Of particular interest is the _removeNoncodinORFs_ argument in _analyzeCPAT()_ and _analyzeCPC2()_ since it allows integration of the ORF analysis with the CPAT/CPC2 analyses by removing ORFs from isoforms not predicted to be coding by CPAT/CPC2. This can be particularly useful if isoforms and ORFs have been predicted de novo (both guided or non-guided). Note that if enabled (by setting to TRUE), it will effect all downstream analyses and plots as both analysis of protein domains and signal peptides require that ORFs are annotated (e.g. _analyzeSwitchConsequences_ will not consider the domains (potentially) found by Pfam if the ORFs have been removed).
 
 
 Back to [Table of Content]
@@ -1667,9 +1693,9 @@ Back to [Table of Content]
 
 ## Other workflows
 ### Augmenting ORF Predictions with Pfam Results
-The workflow described here is an extension of the workflow enabled in the _analyzeCPAT()_ function via the "removeNoncodinORFs" argument which if TRUE removes ORF information from the isoforms where the CPAT analysis classifies them as non-coding. Here we will "rescue" the ORF of isoforms predicted to be noncoding by CPAT but which have a predicted protein domain. This workflow is an alternative approach to setting "removeNoncodinORFs=TRUE" and should be used instead of that option.
+The workflow described here is an extension of the workflow enabled in the _analyzeCPAT()_ function via the "removeNoncodinORFs" argument which if TRUE removes ORF information from the isoforms where the CPAT analysis classifies them as non-coding. Please note this can be done exactly the same way if coding potential were analyzed with _analyzeCPC2()_. Here we will "rescue" the ORF of isoforms predicted to be noncoding by CPAT/CPC2 but which have a predicted protein domain. This workflow is an alternative approach to setting "removeNoncodinORFs=TRUE" and should be used instead of that option.
 
-Note that this is only recommended if ORFs were predicted (i.e. not imported from a GTF file). After this procedure, isoforms with ORFs will be isoforms with an ORF longer than _minORFlength_ (if specified in _analyzeORF_) which are predicted to be coding by CPAT **OR** have a predicted protein domain (by Pfam).
+Note that this is only recommended if ORFs were predicted (i.e. not imported from a GTF file). After this procedure, isoforms with ORFs will be isoforms with an ORF longer than _minORFlength_ (if specified in _analyzeORF_) which are predicted to be coding by CPAT/CPC2 **OR** have a predicted protein domain (by Pfam).
 
 Since the ORF information is stored in the 'orfAnalysis' analysis entry of the switchList we can remove it (by replacing it with NAs) as follows:
 
@@ -1750,7 +1776,7 @@ Back to [Table of Content]
 <br />
 
 ### Adding Uncertain Category to Coding Potential Predictions
-There has been considerable debate about whether the default parameters for the codingPotential calculated for CPAT are too lenient (too low). This will always be a problem when having a single cutoff. One possible solution is to introduce an "unknown" class with medium size coding potential which we can then disregard.
+There has been considerable debate about whether the default parameters for the codingPotential calculated for CPAT are too lenient (too low). Although CPC2 is a more recent tool the same problem is pressent. In fact this will always be a problem when having a single cutoff on a coding potential value. One possible solution is to introduce an "unknown" class with medium size coding potential which we can then disregard.
 
 Let's start by looking at the distribution of coding potential values.
 
@@ -1898,7 +1924,7 @@ Please note that the following is a reflection of my personal convictions and sh
 
 Generally speaking there are two different ways to obtain transcript quantification which boils down to whether you trust the available transcript annotation or not (or think you RNA-seq data contains important additional isoforms not included in the available annotations).
 
-If you generally trust the transcript annotation, state-of-the-art quantifications can be obtained directly from the sequence files (FASTQ) via Salmon or Kallisto. These methods give much more accurate quantifications (and are a lot faster) than for example first mapping to the genome and afterwards quantifying with Cufflinks. You can find more information in the [Kallisto paper](http://www.nature.com/doifinder/10.1038/nbt.3519). For comparison you can find the Salmon paper [here](https://www.nature.com/articles/nmeth.4197) but please not the comparison in figure 1 is a special case. Under normal circumstances Kallisto and Salmon performs quite similarly and and choice is up to personal preference. IsoformSwitchAnalyzeR directly supports the quantifications of both tools (and more) via the importIsoformExpression() function - see [Importing Data Into R]. Kallisto can be downloaded from [here](https://pachterlab.github.io/kallisto/download) and the manual for running Kallisto can be found [here](http://pachterlab.github.io/kallisto/manual.html). Salmon can be downloaded from [here](https://github.com/COMBINE-lab/salmon/releases) and a manual for running Salmon can be found [here](https://salmon.readthedocs.io/en/latest/salmon.html).
+If you generally trust the transcript annotation, state-of-the-art quantifications can be obtained directly from the sequence files (FASTQ) via Salmon or Kallisto. These methods give much more accurate quantifications (and are a lot faster) than for example first mapping to the genome and afterwards quantifying with Cufflinks. You can find more information in the [Kallisto paper](http://www.nature.com/doifinder/10.1038/nbt.3519). For comparison here is the link to the [Salmon paper](https://www.nature.com/articles/nmeth.4197) but please not the comparison in figure 1 is a special case. Under normal circumstances Kallisto and Salmon performs quite similarly and and choice is up to personal preference. IsoformSwitchAnalyzeR directly supports the quantifications of both tools (and more) via the importIsoformExpression() function - see [Importing Data Into R]. Kallisto can be downloaded from [here](https://pachterlab.github.io/kallisto/download) and the manual for running Kallisto can be found [here](http://pachterlab.github.io/kallisto/manual.html). Salmon can be downloaded from [here](https://github.com/COMBINE-lab/salmon/releases) and a manual for running Salmon can be found [here](https://salmon.readthedocs.io/en/latest/salmon.html).
 
 If you on the other hand do not have any annotation, or want to augment it, you need to do a transcript deconvolution. A transcript deconvolution can be described as a 4-step process:
 - First you map reads to the genome (with tools such as [STAR](http://labshare.cshl.edu/shares/gingeraslab/www-data/dobin/STAR/STAR.posix/doc/STARmanual.pdf), [HISAT2](https://ccb.jhu.edu/software/hisat2/manual.shtml) etc.).
@@ -1988,14 +2014,14 @@ Currently we have documented this problem from three different sources:
 
 The two fasta files (cdna + ncrna) then needs to be concatenated into one fasta file. This concatenated file (almost perfectly) match the large GTF file. This also mean that you will have to use the concatenated fasta file as a basis for building the Salmon/Kallisto/RSEM index.
 
-Please note that since [GENCODE genes](http://gencodegenes.org/) is a parsing of Ensemble data their files might be easier to use. Simply use the "Comprehensive gene annotation" GTF file along with the "Transcript sequences" fasta file - these match.
+Please note that since [GENCODE genes](http://gencodegenes.org/) is a parsing of Ensemble data their files might be easier to use. Simply use the "Comprehensive gene annotation" GTF file from the "CHR" regions along with the "Transcript sequences" fasta file (also from CHR regions) - these match.
 
 
 **Source 2**: The GTF and FASTQ file used to quantify with Kallisto/Salmon/RSEM/StringTie contain non-overlapping isoforms which in some cases are due to version numbering being pressent or not. We have found this when using data downloaded from Ensembl. Three possible solutions are:
 
 - Update to the lastest IsoformSwitchAnalyzeR version which better handles this.
-- Use files from [GENCODE genes](http://gencodegenes.org/) instead. Simply use the "Comprehensive gene annotation" GTF file along with the "Transcript sequences" fasta file - these match.
-- Use a tool to generate the fastq file from the GTF file of interest. This can be done with tool such as the gffread tool included in both [Cufflinks/Cuffdiff](http://cole-trapnell-lab.github.io/cufflinks/file_formats/#the-gffread-utility) and [Stringtie](http://ccb.jhu.edu/software/stringtie/gff.shtml#gffread)
+- Use files from [GENCODE genes](http://gencodegenes.org/) instead. Simply use the "Comprehensive gene annotation" GTF from the "CHR" regions file along with the "Transcript sequences" fasta file (also from "CHR" regions) - these match.
+- Use a tool to generate the fastq file from the GTF file of interest. This can be done with tool such as the [gffread tool](github.com/gpertea/gffread)). This tool is also included in distribution of both [Cufflinks/Cuffdiff](http://cole-trapnell-lab.github.io/cufflinks/file_formats/#the-gffread-utility) and [Stringtie](http://ccb.jhu.edu/software/stringtie/gff.shtml#gffread)
 
 **Source 3**: When using RSEM for the quantificaitons some older versions of tximport could cause this problm. To fix this problem you need to update the underlying package tximport. This can be done by copy/pasting this command into R:
 

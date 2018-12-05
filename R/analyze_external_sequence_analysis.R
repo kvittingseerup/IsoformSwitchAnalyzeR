@@ -260,6 +260,193 @@ analyzeCPAT <- function(
     return(switchAnalyzeRlist)
 }
 
+analyzeCPC2 <- function(
+    switchAnalyzeRlist,
+    pathToCPC2resultFile,
+    codingCutoff = 0.5,
+    removeNoncodinORFs,
+    quiet = FALSE
+) {
+    ### Check input
+    if (TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+
+        # file
+        if (class(pathToCPC2resultFile) != 'character') {
+            stop(
+                'The \'pathToCPC2resultFile\' argument must be a string pointing to the CPC2 result file'
+            )
+        }
+        if (!file.exists(pathToCPC2resultFile)) {
+            stop('The file \'pathToCPC2resultFile\' points to does not exist')
+        }
+
+        # codingCutoff
+        if (length(codingCutoff) != 1 |
+            class(codingCutoff) != 'numeric') {
+            stop('The \'codingCutoff\' argument must be a numeric of length 1 ')
+        }
+        if (!codingCutoff >= 0 &
+            codingCutoff <= 1) {
+            stop('The \'codingCutoff\' argument must be a numeric in the inverval [0,1]')
+        }
+
+        if (missing(removeNoncodinORFs)) {
+            stop('The \'removeNoncodinORFs\' argument must be supplied')
+        }
+        if (!is.logical(removeNoncodinORFs)) {
+            stop('The \'removeNoncodinORFs\' argument must be a logical (TRUE or FALSE)')
+        }
+    }
+
+    ### Read file
+    if (TRUE) {
+        ### read in file
+        myCPCresults <-
+            read.table(
+                file = pathToCPC2resultFile,
+                stringsAsFactors = FALSE,
+                header = TRUE,
+                comment.char = '',
+                sep = '\t'
+            )
+
+        if( nrow(myCPCresults) == 0) {
+            stop('No results were found in the result file')
+        }
+
+        # check if it is web file
+        if (ncol(myCPCresults) == 7) {
+            colsToMatch <- c(
+                "X.ID",
+                "peptide_length",
+                "Fickett_score",
+                "pI",
+                "ORF_integrity",
+                "coding_probability",
+                'label'
+            )
+
+            if (!all(
+                colsToMatch == colnames(myCPCresults)
+            )) {
+                stop(
+                    'There seems to be a problem with the CPC2 result file. Please check it is the rigth file and try again'
+                )
+            }
+
+        } else if (ncol(myCPCresults) == 8) {
+            colsToMatch <- c(
+                "X.ID",
+                'transcript_length',
+                "peptide_length",
+                "Fickett_score",
+                "pI",
+                "ORF_integrity",
+                "coding_probability",
+                'label'
+            )
+
+            if (!all(
+                colsToMatch == colnames(myCPCresults)
+            )) {
+                stop(
+                    'There seems to be a problem with the CPC2 result file. Please check it is the rigth file and try again'
+                )
+            }
+
+        } else {
+            stop(
+                'There seems to be a problem with the CPC2 result file. Please check it is the rigth file and try again'
+            )
+        }
+        # rename to match non-web file
+        colnames(myCPCresults)[1] <- 'id'
+
+
+        ### Massage
+        # check ids
+        if (!any(
+            tolower(myCPCresults$id) %in%
+            tolower(switchAnalyzeRlist$isoformFeatures$isoform_id)
+        )) {
+            stop(
+                'The transcript ids in the file pointed to by the \'pathToCPC2resultFile\' argument does not match the transcripts stored in the supplied switchAnalyzeRlist'
+            )
+        }
+
+        ### Overwirte with correct cased names
+        myCPCresults$id <-
+            switchAnalyzeRlist$isoformFeatures$isoform_id[match(
+                tolower(myCPCresults$id),
+                tolower(switchAnalyzeRlist$isoformFeatures$isoform_id)
+            )]
+
+        ### subset
+        myCPCresults <-
+            myCPCresults[which(
+                myCPCresults$id %in%
+                    switchAnalyzeRlist$isoformFeatures$isoform_id
+            ), ]
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        matchVector <-
+            match(switchAnalyzeRlist$isoformFeatures$isoform_id,
+                  myCPCresults$id)
+
+        switchAnalyzeRlist$isoformFeatures$codingPotentialValue <-
+            myCPCresults$coding_probability[matchVector]
+        switchAnalyzeRlist$isoformFeatures$codingPotential      <-
+            myCPCresults$coding_probability[matchVector] >= codingCutoff
+
+
+        n <- length(unique(myCPCresults$id))
+        p <-
+            round(n / length(
+                unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
+            ) * 100, digits = 2)
+
+        if (!quiet) {
+            message(paste(
+                'Added coding potential to ',
+                n,
+                ' (',
+                p,
+                '%) transcripts',
+                sep = ''
+            ))
+        }
+    }
+
+    if (removeNoncodinORFs &
+        !is.null(switchAnalyzeRlist$orfAnalysis)) {
+        ### Extract coding isoforms
+        nonCodingIsoforms <-
+            unique(switchAnalyzeRlist$isoformFeatures$isoform_id[which(
+                ! switchAnalyzeRlist$isoformFeatures$codingPotential
+            )])
+
+        ### Replace noncoding isoforms
+        switchAnalyzeRlist$orfAnalysis[which(
+            switchAnalyzeRlist$orfAnalysis$isoform_id %in% nonCodingIsoforms),
+            2:ncol(switchAnalyzeRlist$orfAnalysis)
+            ] <- NA
+
+        ### Overwrite PTC
+        switchAnalyzeRlist$isoformFeatures$PTC[which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                nonCodingIsoforms
+        )] <- NA
+    }
+
+    return(switchAnalyzeRlist)
+}
 
 analyzePFAM <- function(
     switchAnalyzeRlist,

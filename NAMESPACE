@@ -81,6 +81,7 @@ export('extractSequence')
 export('analyzeORF')
 
 export('analyzeCPAT')
+export('analyzeCPC2')
 export('analyzePFAM')
 export('analyzeSignalP')
 

@@ -55,7 +55,7 @@ importIsoformExpression(
 \details{
 This function requires all data that should be imported is in a directory (as indicated by \code{parentDir}) where each quantified sample is in a seperate sub-directory.
 
-The actual import of data is done with tximport using "scaledTPM" to extract counts.
+The actual import of data is done with tximport using "countsFromAbundance='scaledTPM'" to extract counts.
 
 For Kallisto the bias estimation is enabled by adding '--bias' to the function call. For Salmon the bias estimation is enabled by adding '--seqBias' and '--gcBias' to the function call. For RSEM the bias estimation is enabled by adding '--estimate-rspd' to the function call. For Stringtie the bias corrections are always enabled (and cannot be turned off by the user).
 

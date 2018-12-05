@@ -5,7 +5,7 @@
 Import Result of External Sequence Analysis
 }
 \description{
-Allows for easy integration of the result of COAT (external sequence analysis of coding potential) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' of the \code{analyzeCPAT} argument we recomend using \code{analyzeCPAT} before \code{analyzePFAM} and \code{analyzeSignalP} if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the result of CPAT (external sequence analysis of coding potential) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' option we recomend using \code{analyzeCPAT} before \code{analyzePFAM} and \code{analyzeSignalP} if you have predicted the ORFs with \code{analyzeORF}. This is an alternative to analyzing CPC2 results with \code{analyzeCPC2}.
 }
 \usage{
 analyzeCPAT(
@@ -48,6 +48,7 @@ Kristoffer Vitting-Seerup
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
+\code{\link{analyzeCPC2}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }

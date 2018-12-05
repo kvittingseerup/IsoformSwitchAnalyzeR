@@ -175,6 +175,7 @@ isoformSwitchAnalysisPart2 <- function(
     codingCutoff,
     removeNoncodinORFs,
     pathToCPATresultFile = NULL,
+    pathToCPC2resultFile = NULL,
     pathToPFAMresultFile = NULL,
     pathToSignalPresultFile = NULL,
     consequencesToAnalyze = c(
@@ -199,6 +200,16 @@ isoformSwitchAnalysisPart2 <- function(
 
     ### Test input
     if (TRUE) {
+        if (!is.null(pathToCPATresultFile) & !is.null(pathToCPC2resultFile) ) {
+            stop(
+                paste(
+                    'Since CPC2 and CPAT performs the same type of analysis results should only be suppled to ONE of the \'pathToCPATresultFile\' and \'pathToCPC2resultFile\' arguments.',
+                    sep = ' '
+                )
+            )
+        }
+
+
         if (!is.null(pathToCPATresultFile)) {
             if (is.na(codingCutoff)) {
                 stop(
@@ -211,6 +222,13 @@ isoformSwitchAnalysisPart2 <- function(
                 )
             }
         }
+
+        if (!is.null(pathToCPC2resultFile)) {
+            if (is.na(codingCutoff)) {
+                codingCutoff <- 0.5
+            }
+        }
+
     }
 
     nrAnalysis <-
@@ -238,6 +256,16 @@ isoformSwitchAnalysisPart2 <- function(
             analyzeCPAT(
                 switchAnalyzeRlist = switchAnalyzeRlist,
                 pathToCPATresultFile = pathToCPATresultFile,
+                codingCutoff = codingCutoff,
+                removeNoncodinORFs = removeNoncodinORFs,
+                quiet = TRUE
+            )
+    }
+    if (!is.null(pathToCPC2resultFile)) {
+        switchAnalyzeRlist <-
+            analyzeCPC2(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                pathToCPC2resultFile = pathToCPC2resultFile,
                 codingCutoff = codingCutoff,
                 removeNoncodinORFs = removeNoncodinORFs,
                 quiet = TRUE
