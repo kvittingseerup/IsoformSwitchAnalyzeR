@@ -854,6 +854,12 @@ importCufflinksFiles <- function(
                 'iso_value_2'
             )] <- correctedGenes[, -1] # -1 removes the isoform id
 
+
+            ### Add to exons
+            exonFeatures$gene_id <- isoformData$gene_id[match(
+                exonFeatures$isoform_id, isoformData$isoform_id
+            )]
+
             if (!quiet) {
                 message(
                     paste(
@@ -946,42 +952,11 @@ importCufflinksFiles <- function(
         which( ! colnames(isoformData) %in% ofInterest)
     )]
     colnames(isoformData)[4:5] <- c('condition_1', 'condition_2')
+    isoformData <- as.data.frame(isoformData)
 
     ### Extract run info
     # cufflinks version
     cuffVersion <- runInfo$value[2]
-
-    ### Check cufflinks version
-    checkVersionFail <- function(versionVector, minVersionVector) {
-        for (i in seq_along(versionVector)) {
-            if (versionVector[i] > minVersionVector[i]) {
-                return(FALSE)
-            }
-            if (versionVector[i] < minVersionVector[i]) {
-                return(TRUE)
-            }
-        }
-        return(FALSE)
-    }
-
-    cuffVersionDeconstructed <-
-        as.integer(strsplit(cuffVersion, '\\.')[[1]])
-    if (checkVersionFail(cuffVersionDeconstructed, c(2, 2, 1))) {
-        warning(
-            paste(
-                'The version of cufflinks/cuffdiff you have used is outdated',
-                '. An error in the estimations of standard deviations was not',
-                'corrected untill cufflinks 2.2.1. Since this detection of',
-                'isoform switches using this R package relies',
-                'on this standard error estimat',
-                'we do not premit switch detection',
-                '(using the detectIsoformSwitches() ) with the data generated here.',
-                'If you want to use this R pacakge please',
-                'upgrade cufflinks/cuffdiff to version >=2.2.1 or newer and try again.',
-                sep = ' '
-            )
-        )
-    }
 
     # replicate numbers
     nrRep <- table(readGroup$condition)
@@ -1012,7 +987,7 @@ importCufflinksFiles <- function(
     )
 
     if (!is.null(pathToSplicingAnalysis) & nrow(cuffSplicing)) {
-        switchAnalyzeRlist$isoformSwitchAnalysis <- cuffSplicing
+        switchAnalyzeRlist$isoformSwitchAnalysis <- as.data.frame(cuffSplicing)
     }
 
     if( addIFmatrix ) {

@@ -89,8 +89,15 @@ Note that since there was an error in Cufflinks/Cuffdiff's estimation of standar
 }
 
 \examples{
+### Please note
+# The way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# specialiced to access the sample data in the IsoformSwitchAnalyzeR package
+# and not somhting you need to do - just supply the string e.g.
+# "/myAnnotation/isoformsQuantified.gtf" to the functions
+
 ### Use the files from the cummeRbund example data
-testSwitchList <- importCufflinksFiles(
+aSwitchList <- importCufflinksFiles(
     pathToGTF                      = system.file('extdata/chr1_snippet.gtf',             package = "cummeRbund"),
     pathToGeneDEanalysis           = system.file('extdata/gene_exp.diff',                package = "cummeRbund"),
     pathToIsoformDEanalysis        = system.file('extdata/isoform_exp.diff',             package = "cummeRbund"),
@@ -103,6 +110,22 @@ testSwitchList <- importCufflinksFiles(
     fixCufflinksAnnotationProblem=TRUE,
     quiet=TRUE
 )
-testSwitchList
+
+### Filter with very strict cutoffs to enable short runtime
+aSwitchListAnalyzed <- preFilter(
+    switchAnalyzeRlist = aSwitchList,
+    isoformExpressionCutoff = 10,
+    IFcutoff = 0.3,
+    geneExpressionCutoff = 50
+)
+
+### Test isoform swtiches
+aSwitchListAnalyzed <- isoformSwitchTestDEXSeq(
+    aSwitchListAnalyzed
+)
+
+# extract summary of number of switching features
+extractSwitchSummary(aSwitchListAnalyzed)
+
 }
 

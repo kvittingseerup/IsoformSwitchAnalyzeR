@@ -1,3 +1,6 @@
+1.5.3: IsoformSwitchAnalyzeR 2018-12-11 ( minor )
+    - Updates importCufflinksFiles() ensure full compatability.
+
 1.5.2: IsoformSwitchAnalyzeR 2018-12-05 ( minor )
     - IsoformSwitchAnalyzeR now also supports coding potential assessment via CPC2 through the analyzeCPC2() function. See vignette for more information.
     - Various upates to vignette
