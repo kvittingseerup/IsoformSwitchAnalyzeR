@@ -1,108 +1,3 @@
-### Helper functions
-# Helper function to devide GRanges exons
-cutGRanges <- function(
-    aGRange,
-    cutValues
-) {
-    ### To do
-    # optimize - this is the "bottle neck"
-
-    aGRange <- aGRange[, 0] # remove meta data columns
-    #aGRangeDF <- as.data.frame(ranges(aGRange)) # as data.frame
-
-    # cunvert cut values to a range obeject to intersect
-    cutValues <- sort(cutValues, decreasing = FALSE)
-    cutGRanges <- IRanges(start = cutValues, end = cutValues)
-
-    # find overlaps
-    overlaps <-
-        findOverlaps(query = ranges(aGRange), subject = cutGRanges)
-    overlapsDf <- as.data.frame(overlaps)
-
-    ### Loop over exons that needs cutting and devide them
-    newExonList <- list()
-    exonsWithOverlaps <- unique(overlapsDf$queryHits)
-    for (i in 1:length(exonsWithOverlaps)) {
-        localGRange <-  aGRange[exonsWithOverlaps[i] , ]
-
-        correspondingCutValues <-
-            start(cutGRanges)[overlapsDf$subjectHits[which(
-                overlapsDf$queryHits == exonsWithOverlaps[i]
-            )]]
-
-        valuesOfExon <-
-            c(start(localGRange),
-              correspondingCutValues,
-              end(localGRange))
-
-        newExonList[[i]] <-
-            data.frame(
-                stat = valuesOfExon[1:(length(valuesOfExon) - 1)],
-                end = valuesOfExon[2:(length(valuesOfExon))]
-            )
-
-    }
-    newExonDf <- do.call(rbind, newExonList)
-    newExonGRange <-
-        GRanges(
-            seqnames = seqnames(aGRange)[1],
-            ranges = IRanges(newExonDf$stat, newExonDf$end),
-            strand = strand(aGRange)[1]
-        )
-
-    ### Combine with the exons that did not need cutting
-    exonsWIthoutOverlap <-
-        aGRange[which(!1:length(aGRange) %in% overlapsDf$queryHits), ]
-    combinedGRanges <- sort(c(newExonGRange, exonsWIthoutOverlap))
-
-    return(combinedGRanges)
-}
-
-determineTranscriptClass <- function(
-    ptc,
-    coding
-) {
-    ### When both information is advailable transcript class PTC > Coding > non-coding
-    if (!is.null(ptc) & !is.null(coding)) {
-        if (!is.na(ptc)) {
-            if (ptc) {
-                return('NMD Sensitive')
-            }
-        }
-        if (!is.na(coding)) {
-            if (coding) {
-                return('Coding')
-            }
-        }
-        return('Non-coding')
-    }
-
-    ### When only PTC information is advailable
-    if (!is.null(ptc) &  is.null(coding)) {
-        if (!is.na(ptc)) {
-            if (ptc) {
-                return('NMD Sensitive')
-            }
-        }
-        return('NMD Insensitive')
-    }
-
-    ### When only Coding information is advailable
-    if (is.null(ptc) &  !is.null(coding)) {
-        if (!is.na(coding)) {
-            if (coding) {
-                return('Coding')
-            }
-        }
-        return('Non-coding')
-    }
-
-    ### If neither information is advailable
-    if (is.null(ptc) &  is.null(coding)) {
-        return('Transcripts')
-    }
-}
-
 switchPlotTranscript <- function(
     switchAnalyzeRlist = NULL,
     gene = NULL,
@@ -111,6 +6,7 @@ switchPlotTranscript <- function(
     plotXaxis = !rescaleTranscripts,
     reverseMinus = TRUE,
     ifMultipleIdenticalAnnotation = 'summarize',
+    annotationImportance = c('signal_peptide','protein_domain','idr'),
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -146,10 +42,14 @@ switchPlotTranscript <- function(
         if (!is.logical(plot)) {
             stop('The \'plot\' argument must be either be TRUE or FALSE')
         }
-        if (!ifMultipleIdenticalAnnotation %in% c('summarize', 'number')) {
+        if (!ifMultipleIdenticalAnnotation %in% c('summarize', 'number','ignore')) {
             stop(
-                'the argument \'ifMultipleIdenticalAnnotation\' must be either \'summarize\' or \'number\' - please see documentation for details'
+                'the argument \'ifMultipleIdenticalAnnotation\' must be either \'summarize\', \'number\' or \'ignore\' - please see documentation for details'
             )
+        }
+        okImportance <- c('signal_peptide','protein_domain','idr')
+        if( ! all( okImportance %in% intersect(okImportance, annotationImportance)) ) {
+            stop('The \'annotationImportance\' must specify the order of all features annotated and only that')
         }
 
         if (optimizeForCombinedPlot) {
@@ -181,6 +81,16 @@ switchPlotTranscript <- function(
             }
         } else {
             inclDomainAnalysis <- FALSE
+        }
+
+        if (!is.null(switchAnalyzeRlist$idrAnalysis)) {
+            inclIdrAnalysis <- TRUE
+            if (!inclORF) {
+                warning('Cannot plot annoated IDR when no ORF are annoated')
+                inclIdrAnalysis <- FALSE
+            }
+        } else {
+            inclIdrAnalysis <- FALSE
         }
 
         if (!is.null(switchAnalyzeRlist$signalPeptideAnalysis)) {
@@ -340,218 +250,452 @@ switchPlotTranscript <- function(
     ### Extract the isoform data
     if (TRUE) {
         ### Extract iso annoation
-        columnsToExtract <-
-            c(
-                'isoform_id',
-                'gene_id',
-                'gene_name',
-                'codingPotential',
-                'PTC',
-                'class_code'
-            )
-        columnsToExtract <-
-            na.omit(match(
-                columnsToExtract,
-                colnames(switchAnalyzeRlist$isoformFeatures)
-            ))
-        rowsToExtract <-
-            which(switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoform_id)
+        if(TRUE) {
+            columnsToExtract <-
+                c(
+                    'isoform_id',
+                    'gene_id',
+                    'gene_name',
+                    'codingPotential',
+                    'PTC',
+                    'class_code'
+                )
+            columnsToExtract <-
+                na.omit(match(
+                    columnsToExtract,
+                    colnames(switchAnalyzeRlist$isoformFeatures)
+                ))
+            rowsToExtract <-
+                which(switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoform_id)
 
-        isoInfo <-
-            unique(switchAnalyzeRlist$isoformFeatures[
-                rowsToExtract,
-                columnsToExtract
-        ])
+            isoInfo <-
+                unique(switchAnalyzeRlist$isoformFeatures[
+                    rowsToExtract,
+                    columnsToExtract
+            ])
 
-        ### Extract ORF info
-        columnsToExtract <-
-            c('isoform_id', 'orfStartGenomic', 'orfEndGenomic')
-        columnsToExtract <-
-            na.omit(match(
-                columnsToExtract,
-                colnames(switchAnalyzeRlist$orfAnalysis)
-            ))
-        rowsToExtract <-
-            which(switchAnalyzeRlist$orfAnalysis$isoform_id %in% isoform_id)
+            ### Extract ORF info
+            columnsToExtract <-
+                c('isoform_id', 'orfStartGenomic', 'orfEndGenomic','wasTrimmed', 'trimmedStartGenomic')
+            columnsToExtract <-
+                na.omit(match(
+                    columnsToExtract,
+                    colnames(switchAnalyzeRlist$orfAnalysis)
+                ))
+            rowsToExtract <-
+                which(switchAnalyzeRlist$orfAnalysis$isoform_id %in% isoform_id)
 
-        orfInfo <-
-            switchAnalyzeRlist$orfAnalysis[rowsToExtract, columnsToExtract]
-        if(nrow(orfInfo) == 0) {
-            warning(
-                 paste(
-                     'There might somthing wrong with the switchAnalyzeRlist',
-                     '- there are no ORF annoation matching the isoforms of interest:',
-                     paste(isoform_id, collapse = ', '),
-                     '. These isoforoms will be plotted as non-coding.',
-                     sep=' '
-                 )
-            )
+            orfInfo <-
+                switchAnalyzeRlist$orfAnalysis[rowsToExtract, columnsToExtract]
 
-            ### Add NAs manually
-            isoInfo$orfStartGenomic <- NA
-            isoInfo$orfEndGenomic <- NA
+            if(nrow(orfInfo) == 0) {
+                warning(
+                     paste(
+                         'There might somthing wrong with the switchAnalyzeRlist',
+                         '- there are no ORF annoation matching the isoforms of interest:',
+                         paste(isoform_id, collapse = ', '),
+                         '. These isoforoms will be plotted as non-coding.',
+                         sep=' '
+                     )
+                )
 
-        } else {
-            ### Combine
-            isoInfo <- merge(isoInfo, orfInfo, by = 'isoform_id')
+                ### Add NAs manually
+                isoInfo$orfStartGenomic <- NA
+                isoInfo$orfEndGenomic <- NA
+                isoInfo$wasTrimmed <- FALSE
+                isoInfo$trimmedStartGenomic <- NA
+
+            } else {
+                inclTrimmedIsoforms <- FALSE
+                if( 'wasTrimmed' %in% colnames(orfInfo) ) {
+                    if(any( orfInfo$wasTrimmed, na.rm = TRUE) ) {
+                        inclTrimmedIsoforms <- TRUE
+                    }
+                }
+
+                ### Combine
+                isoInfo <- merge(isoInfo, orfInfo, by = 'isoform_id')
+            }
+
+            if (length(unique(isoInfo$gene_id)) > 1) {
+                stop(
+                    'The isoforms supplied originates from more than one gene - a feature currently not supported. Please revise accordingly'
+                )
+            }
+            geneName <- paste(unique(isoInfo$gene_name), collapse = ',')
 
         }
-
-
-
-        if (length(unique(isoInfo$gene_id)) > 1) {
-            stop(
-                'The isoforms supplied originates from more than one gene - a feature currently not supported. Please revise accordingly'
-            )
-        }
-        geneName <- paste(unique(isoInfo$gene_name), collapse = ',')
 
         ### Exon data
-        exonInfo <-
-            switchAnalyzeRlist$exons[which(
-                switchAnalyzeRlist$exons$isoform_id %in% isoform_id
-            ), ]
-        if (!length(exonInfo)) {
-            stop(
-                'It seems like there is no exon information advailable for the gene/transcripts supplied. Please update to the latest version of IsoformSwitchAnalyzeR and try again (re-import the data). If the problem persist contact the developer'
-            )
-        }
-        exonInfoSplit <- split(exonInfo, exonInfo$isoform_id)
+        if(TRUE) {
+            exonInfo <-
+                switchAnalyzeRlist$exons[which(
+                    switchAnalyzeRlist$exons$isoform_id %in% isoform_id
+                ), ]
+            if (!length(exonInfo)) {
+                stop(
+                    'It seems like there is no exon information advailable for the gene/transcripts supplied. Please update to the latest version of IsoformSwitchAnalyzeR and try again (re-import the data). If the problem persist contact the developer'
+                )
+            }
+            exonInfoSplit <- split(exonInfo, exonInfo$isoform_id)
 
-        chrName <- as.character(seqnames(exonInfo)[1])
+            chrName <- as.character(seqnames(exonInfo)[1])
+        }
 
         ### ORF data
-        if (inclORF) {
-            orfStart <-
-                lapply(split(isoInfo$orfStartGenomic,  isoInfo$isoform_id),
-                       unique)
-            orfEnd   <-
-                lapply(split(isoInfo$orfEndGenomic, isoInfo$isoform_id),
-                       unique)
-        } else {
-            orfStart <- split(rep(NA, length(isoform_id)), isoform_id)
-            orfEnd   <-
-                split(rep(NA, length(isoform_id)), isoform_id)
+        if(TRUE) {
+            if (inclORF) {
+                orfStart <-
+                    lapply(split(isoInfo$orfStartGenomic,  isoInfo$isoform_id),
+                           unique)
+                orfEnd   <-
+                    lapply(split(isoInfo$orfEndGenomic, isoInfo$isoform_id),
+                           unique)
+            } else {
+                orfStart <- split(rep(NA, length(isoform_id)), isoform_id)
+                orfEnd   <-
+                    split(rep(NA, length(isoform_id)), isoform_id)
+            }
         }
 
         ### Transcript type
-        if (inclCodingPotential) {
-            isCoding <-
-                lapply(split(isoInfo$codingPotential, isoInfo$isoform_id),
-                       unique)
-        }
-        if (inclPTC) {
-            isPTC    <- lapply(split(isoInfo$PTC, isoInfo$isoform_id), unique)
+        if(TRUE) {
+            if (inclCodingPotential) {
+                isCoding <-
+                    lapply(split(isoInfo$codingPotential, isoInfo$isoform_id),
+                           unique)
+            }
+            if (inclPTC) {
+                isPTC    <- lapply(split(isoInfo$PTC, isoInfo$isoform_id), unique)
+            }
         }
 
-        ### Domain data
-        if (inclDomainAnalysis) {
-            if (any(
-                isoInfo$isoform_id %in%
-                switchAnalyzeRlist$domainAnalysis$isoform_id
-            )) {
-                DomainAnalysis <-
-                    switchAnalyzeRlist$domainAnalysis[which(
-                        switchAnalyzeRlist$domainAnalysis$isoform_id %in%
-                            isoInfo$isoform_id
-                    ), ]
-                DomainAnalysis$isoform_id <-
-                    factor(DomainAnalysis$isoform_id,
-                           levels = unique(isoInfo$isoform_id))
+        ### Extract basis annoation data
+        if(TRUE) {
+            ### Make list with annotation
+            annotationList <- list()
 
-                domainStart <-
-                    split(
-                        DomainAnalysis$pfamStartGenomic,
-                        DomainAnalysis$isoform_id,
-                        drop = FALSE
+            ### Domain data
+            if (inclDomainAnalysis) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$domainAnalysis$isoform_id
+                )) {
+                    DomainAnalysis <-
+                        switchAnalyzeRlist$domainAnalysis[which(
+                            switchAnalyzeRlist$domainAnalysis$isoform_id %in%
+                                isoInfo$isoform_id
+                        ), ]
+                    DomainAnalysis$isoform_id <-
+                        factor(DomainAnalysis$isoform_id,
+                               levels = unique(isoInfo$isoform_id))
+                    DomainAnalysis$id <- 1:nrow(DomainAnalysis)
+
+
+                    annotationList$protein_domain <- DomainAnalysis[,c('isoform_id','pfamStartGenomic','pfamEndGenomic','hmm_name','id')]
+                }
+
+            }
+
+            if (inclIdrAnalysis) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$idrAnalysis$isoform_id
+                )) {
+                    idrAnalysis <-
+                        switchAnalyzeRlist$idrAnalysis[which(
+                            switchAnalyzeRlist$idrAnalysis$isoform_id %in%
+                                isoInfo$isoform_id
+                        ), ]
+                    idrAnalysis$isoform_id <-
+                        factor(idrAnalysis$isoform_id,
+                               levels = unique(isoInfo$isoform_id))
+
+                    idrAnalysis$idrName <- 'IDR'
+                    idrAnalysis$id <- 1:nrow(idrAnalysis)
+
+
+                    annotationList$idr <- idrAnalysis[,c('isoform_id','idrStartGenomic','idrEndGenomic','id')]
+
+                }
+            }
+
+            if (inclSignalPAnalysis) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$signalPeptideAnalysis$isoform_id
+                )) {
+                    signalPanalysis <-
+                        switchAnalyzeRlist$signalPeptideAnalysis[which(
+                            switchAnalyzeRlist$signalPeptideAnalysis$isoform_id %in%
+                                isoInfo$isoform_id
+                        ), ]
+                    signalPanalysis$genomicClevageAfter <-
+                        unlist(signalPanalysis$genomicClevageAfter)
+
+                    ### Signal P region
+                    signalPdata <- isoInfo[,c('isoform_id','orfStartGenomic')]
+                    colnames(signalPdata)[2] <- 'spStartGenomic'
+                    signalPdata$spEndGenomic <- signalPanalysis$genomicClevageAfter[match(
+                        signalPdata$isoform_id, signalPanalysis$isoform_id
+                    )]
+                    signalPdata$id <- signalPdata$isoform_id
+
+                    signalPanalysis$isoform_id <-
+                        factor(signalPanalysis$isoform_id,
+                               levels = unique(isoInfo$isoform_id))
+
+                   annotationList$signal_peptide <- signalPdata
+                }
+            }
+        }
+
+        # Remove overlapping annotations according to annotationImportance
+        if(TRUE) {
+            ### Filter
+            annotationList <- lapply(annotationList, function(x) {
+                x[which(
+                    apply(x[,c(2,3)],1, function(x) !any(is.na(x)))
+                ),]
+            })
+            annotationList <- annotationList[which(sapply(annotationList, nrow) > 0)]
+
+            if(length(annotationList) > 1) {
+                ### Reorder after importance
+                annotationImportance <- annotationImportance[which(
+                    annotationImportance %in% names(annotationList)
+                )]
+                annotationList <- annotationList[match(
+                    annotationImportance , names(annotationList)
+                )]
+
+
+                ### Make ranges
+                isMinus <- as.integer( all( annotationList[[1]][,2] > annotationList[[1]][,3]) )
+                annotationListGR <- lapply(annotationList, function(x){
+                    GRanges(
+                        x$isoform_id,
+                        IRanges(
+                            x[,2 + isMinus],
+                            x[,3 - isMinus]
+                        ),
+                        id=x$id
                     )
-                domainEnd   <-
-                    split(DomainAnalysis$pfamEndGenomic,
-                          DomainAnalysis$isoform_id,
-                          drop = FALSE)
-                domainName  <-
-                    split(DomainAnalysis$hmm_name,
-                          DomainAnalysis$isoform_id,
-                          drop = FALSE)
+                })
 
-                ### Handle if there are any none-unique domain names:
-                if (ifMultipleIdenticalAnnotation == 'number') {
-                    domainName <- lapply(domainName, function(aVec) {
-                        duplicatedIndex <- which(duplicated(aVec))
-                        if (length(duplicatedIndex)) {
-                            aVec[duplicatedIndex] <-
-                                paste(aVec[duplicatedIndex],
-                                      1:length(duplicatedIndex),
-                                      sep = '.')
-                        }
-                        return(aVec)
-                    })
-                } else if (ifMultipleIdenticalAnnotation == 'summarize') {
-                    domainName <- lapply(domainName, function(aVec) {
-                        nameTable <- as.data.frame(
-                            table(aVec),
-                            stringsAsFactors = FALSE
+                ### Remover overlap starting from the back
+                for(i in length(annotationListGR):2) { # i <- 2
+                    annotationListGR[[i]] <- annotationListGR[[i]][which(
+                        ! overlapsAny( annotationListGR[[i]] , annotationListGR[[i-1]])
+                    )]
+                }
+
+                ### Remove annotation
+                if( 'protein_domain' %in% names(annotationListGR) ) {
+                    DomainAnalysis <- DomainAnalysis[which(
+                        DomainAnalysis$id %in% annotationListGR$protein_domain$id
+                    ),]
+                }
+                if( 'idr' %in% names(annotationListGR) ) {
+                    idrAnalysis <- idrAnalysis[which(
+                        idrAnalysis$id %in% annotationListGR$idr$id
+                    ),]
+                }
+                if( 'signal_peptide' %in% names(annotationListGR) ) {
+                    signalPanalysis <- signalPanalysis[which(
+                        signalPanalysis$isoform_id %in% annotationListGR$signal_peptide$id
+                    ),]
+                }
+            }
+
+
+        }
+
+        ### Domain sites
+        if(TRUE) {
+            if (inclDomainAnalysis) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$domainAnalysis$isoform_id
+                )) {
+                    domainStart <-
+                        split(
+                            DomainAnalysis$pfamStartGenomic,
+                            DomainAnalysis$isoform_id,
+                            drop = FALSE
                         )
+                    domainEnd   <-
+                        split(DomainAnalysis$pfamEndGenomic,
+                              DomainAnalysis$isoform_id,
+                              drop = FALSE)
+                    domainName  <-
+                        split(DomainAnalysis$hmm_name,
+                              DomainAnalysis$isoform_id,
+                              drop = FALSE)
 
-                        # only modify those with mutiple instances
-                        nameTable$newName <- nameTable$aVec
-                        modifyIndex <- which(nameTable$Freq > 1)
-                        nameTable$newName[modifyIndex] <-
-                            paste(nameTable$aVec[modifyIndex],
-                                  ' (',
-                                  nameTable$Freq[modifyIndex],
-                                  ')',
-                                  sep = '')
+                    ### Handle if there are any none-unique domain names:
+                    if (ifMultipleIdenticalAnnotation == 'number') {
+                        domainName <- lapply(domainName, function(aVec) {
+                            duplicatedIndex <- which(duplicated(aVec))
+                            if (length(duplicatedIndex)) {
+                                aVec[duplicatedIndex] <-
+                                    paste(aVec[duplicatedIndex],
+                                          1:length(duplicatedIndex),
+                                          sep = '.')
+                            }
+                            return(aVec)
+                        })
+                    } else if (ifMultipleIdenticalAnnotation == 'summarize') {
+                        domainName <- lapply(domainName, function(aVec) {
+                            nameTable <- as.data.frame(
+                                table(aVec),
+                                stringsAsFactors = FALSE
+                            )
 
-                        newVec <-
-                            nameTable$newName[match(aVec, nameTable$aVec)]
-                    })
+                            # only modify those with mutiple instances
+                            nameTable$newName <- nameTable$aVec
+                            modifyIndex <- which(nameTable$Freq > 1)
+                            nameTable$newName[modifyIndex] <-
+                                paste(nameTable$aVec[modifyIndex],
+                                      ' (x',
+                                      nameTable$Freq[modifyIndex],
+                                      ')',
+                                      sep = '')
+
+                            newVec <-
+                                nameTable$newName[match(aVec, nameTable$aVec)]
+                        })
+                    } else if (ifMultipleIdenticalAnnotation != 'ignore') {
+                        stop(
+                            'An error occured with ifMultipleIdenticalAnnotation - please contact developers with reproducible example'
+                        )
+                    }
                 } else {
-                    stop(
-                        'An error occured with ifMultipleIdenticalAnnotation - please contact developers with reproducible example'
-                    )
+                    domainStart <- NULL # By setting them to null they are ignore from hereon out
+                    domainEnd   <- NULL
                 }
             } else {
-                domainStart <-
-                    NULL # By setting them to null they are ignore from hereon out
+                domainStart <- NULL # By setting them to null they are ignore from hereon out
                 domainEnd   <- NULL
             }
-        } else {
-            domainStart <-
-                NULL # By setting them to null they are ignore from hereon out
-            domainEnd   <- NULL
         }
+
+        ### IDR Sites
+        if(TRUE) {
+            if (inclIdrAnalysis) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$idrAnalysis$isoform_id
+                )) {
+                    idrStart <-
+                        split(
+                            idrAnalysis$idrStartGenomic,
+                            idrAnalysis$isoform_id,
+                            drop = FALSE
+                        )
+                    idrEnd   <-
+                        split(idrAnalysis$idrEndGenomic,
+                              idrAnalysis$isoform_id,
+                              drop = FALSE)
+                    idrName  <-
+                        split(idrAnalysis$idrName,
+                              idrAnalysis$isoform_id,
+                              drop = FALSE)
+
+                    ### Handle if there are any none-unique domain names
+                    if(TRUE) {
+                        if (ifMultipleIdenticalAnnotation == 'number') {
+                            idrName <- lapply(idrName, function(aVec) {
+                                duplicatedIndex <- which(duplicated(aVec))
+                                if (length(duplicatedIndex)) {
+                                    aVec[duplicatedIndex] <-
+                                        paste(aVec[duplicatedIndex],
+                                              1:length(duplicatedIndex),
+                                              sep = '.')
+                                }
+                                return(aVec)
+                            })
+                        } else if (ifMultipleIdenticalAnnotation == 'summarize') {
+                            idrName <- lapply(idrName, function(aVec) {
+                                nameTable <- as.data.frame(
+                                    table(aVec),
+                                    stringsAsFactors = FALSE
+                                )
+
+                                # only modify those with mutiple instances
+                                nameTable$newName <- nameTable$aVec
+                                modifyIndex <- which(nameTable$Freq > 1)
+                                nameTable$newName[modifyIndex] <-
+                                    paste(nameTable$aVec[modifyIndex],
+                                          ' (x',
+                                          nameTable$Freq[modifyIndex],
+                                          ')',
+                                          sep = '')
+
+                                newVec <-
+                                    nameTable$newName[match(aVec, nameTable$aVec)]
+                            })
+                        } else if (ifMultipleIdenticalAnnotation != 'ignore') {
+                            stop(
+                                'An error occured with ifMultipleIdenticalAnnotation - please contact developers with reproducible example'
+                            )
+                        }
+                    }
+                } else {
+                    idrStart <- NULL # By setting them to null they are ignore from hereon out
+                    idrEnd   <- NULL
+                }
+            } else {
+                idrStart <- NULL # By setting them to null they are ignore from hereon out
+                idrEnd   <- NULL
+            }
+        }
+
         ### Signal peptide data
-        if (inclSignalPAnalysis) {
-            if (any(
-                isoInfo$isoform_id %in%
-                switchAnalyzeRlist$signalPeptideAnalysis$isoform_id
-            )) {
-                signalPanalysis <-
-                    switchAnalyzeRlist$signalPeptideAnalysis[which(
-                        switchAnalyzeRlist$signalPeptideAnalysis$isoform_id %in%
-                            isoInfo$isoform_id
-                    ), ]
-                signalPanalysis$genomicClevageAfter <-
-                    unlist(signalPanalysis$genomicClevageAfter)
-
-                signalPanalysis$isoform_id <-
-                    factor(signalPanalysis$isoform_id,
-                           levels = unique(isoInfo$isoform_id))
-
-                cleaveageAfter <-
-                    split(
-                        signalPanalysis$genomicClevageAfter,
-                        signalPanalysis$isoform_id,
-                        drop = FALSE
-                    )
+        if(TRUE) {
+            if (inclSignalPAnalysis) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$signalPeptideAnalysis$isoform_id
+                )) {
+                    cleaveageAfter <-
+                        split(
+                            signalPanalysis$genomicClevageAfter,
+                            signalPanalysis$isoform_id,
+                            drop = FALSE
+                        )
+                } else {
+                    cleaveageAfter <-
+                        NULL # By setting them to null they are ignore from hereon out
+                }
             } else {
                 cleaveageAfter <-
                     NULL # By setting them to null they are ignore from hereon out
             }
-        } else {
-            cleaveageAfter <-
-                NULL # By setting them to null they are ignore from hereon out
+        }
+
+        ### Trimmed sites
+        if(TRUE) {
+            if( inclTrimmedIsoforms ) {
+                trimmedInfo <- orfInfo[,c('isoform_id','trimmedStartGenomic','orfEndGenomic')]
+                trimmedInfo$orfEndGenomic[which(is.na(trimmedInfo$trimmedStartGenomic))] <- NA
+                trimmedInfo$name <- NA
+
+                trimmedStart <-
+                    split(
+                        trimmedInfo$trimmedStartGenomic,
+                        trimmedInfo$isoform_id,
+                        drop = FALSE
+                    )
+                trimmedEnd   <-
+                    split(trimmedInfo$orfEndGenomic,
+                          trimmedInfo$isoform_id,
+                          drop = FALSE)
+            } else {
+                trimmedStart <- NULL # By setting them to null they are ignore from hereon out
+                trimmedEnd   <- NULL
+            }
+
         }
 
     }
@@ -572,6 +716,14 @@ switchPlotTranscript <- function(
             domainStart   [[transcriptName]]
         localDomainEnd          <-
             domainEnd     [[transcriptName]] - 1
+        localIdrStart        <-
+            idrStart      [[transcriptName]]
+        localIdrEnd          <-
+            idrEnd        [[transcriptName]] - 1
+        localtrimmedStart    <-
+            trimmedStart  [[transcriptName]]
+        localtrimmedEnd      <-
+            trimmedEnd    [[transcriptName]] - 1
         localPepticeCleaveage   <-
             cleaveageAfter[[transcriptName]]
 
@@ -582,6 +734,10 @@ switchPlotTranscript <- function(
                     localOrfEnd,
                     localDomainStart,
                     localDomainEnd,
+                    localIdrStart,
+                    localIdrEnd,
+                    localtrimmedStart,
+                    localtrimmedEnd,
                     localPepticeCleaveage
                 )
             ) # NULLs are just removed
@@ -626,6 +782,21 @@ switchPlotTranscript <- function(
                 }
             }
         }
+        # IDR
+        if (length(localIdrStart)) {
+            for (j in 1:length(localIdrStart)) {
+                coordinatPair <- c(localIdrStart[j], localIdrEnd[j])
+                if( all( !is.na(coordinatPair)) ) {
+                    domainRange <-
+                        IRanges(min(coordinatPair), max(coordinatPair))
+                    localExonsDevided$Domain[queryHits(findOverlaps(
+                        subject = domainRange,
+                        query = ranges(localExonsDevided),
+                        type = 'within'
+                    ))] <- idrName[[transcriptName]][j]
+                }
+            }
+        }
         # signal peptide
         if (length(localPepticeCleaveage)) {
             coordinatPair <- c(localOrfStart, localPepticeCleaveage)
@@ -639,6 +810,22 @@ switchPlotTranscript <- function(
                 ))] <- 'Signal Peptide'
             }
         }
+        # trimmed
+        if (length(localtrimmedStart)) {
+            for (j in 1:length(localtrimmedStart)) {
+                coordinatPair <- c(localtrimmedStart[j], localtrimmedEnd[j])
+                if( all( !is.na(coordinatPair)) ) {
+                    domainRange <-
+                        IRanges(min(coordinatPair), max(coordinatPair))
+                    localExonsDevided$Domain[queryHits(findOverlaps(
+                        subject = domainRange,
+                        query = ranges(localExonsDevided),
+                        type = 'within'
+                    ))] <- 'Not Analyzed'
+                }
+            }
+        }
+
 
         # convert to df
         localExonsDf <- as.data.frame(localExonsDevided)
@@ -666,7 +853,7 @@ switchPlotTranscript <- function(
     }
     myTranscriptPlotData <- do.call(rbind, myTranscriptPlotDataList)
 
-    ### Correct names
+    ### Correct names                   !!! where Tx Names are changed !!!!
     if (TRUE) {
         ### correct transcript names
         # Create name annotation (this can be omitted when ggplots astetics mapping against type works)
@@ -924,28 +1111,66 @@ switchPlotTranscript <- function(
     if(TRUE) {
         domainsFound <-
             unique(myTranscriptPlotData$Domain [which(
-                myTranscriptPlotData$Domain != ' transcript'
+                ! myTranscriptPlotData$Domain %in% c(' transcript', "Not Analyzed")
             )])
-        if (length(domainsFound) == 0) {
-            domainsColor <- NULL
-        } else if (length(domainsFound) < 3) {
-            domainsColor <-
-                RColorBrewer::brewer.pal(
-                    n = 3,
-                    name = 'Dark2'
-                )[2:(length(domainsFound) + 1)]
-        } else if (length(domainsFound) > 12) {
-            gg_color_hue <- function(n) {
-                hues <- seq(15, 375, length = n + 1)
-                hcl(h = hues,
-                    l = 65,
-                    c = 100)[1:n]
+
+        ### Reorder
+        domainsFound <- sort(domainsFound)
+        domainsFound <- domainsFound[c(
+            which( domainsFound == "Signal Peptide"),
+            which( domainsFound != "Signal Peptide")
+        )]
+
+        ### Get colors
+        if(TRUE) {
+            if (length(domainsFound) == 0) {
+                domainsColor <- NULL
+            } else if (length(domainsFound) < 3) {
+                domainsColor <-
+                    RColorBrewer::brewer.pal(
+                        n = 3,
+                        name = 'Dark2'
+                    )[2:(length(domainsFound) + 1)]
+            } else if (length(domainsFound) > 12) {
+                gg_color_hue <- function(n) {
+                    hues <- seq(15, 375, length = n + 1)
+                    hcl(h = hues,
+                        l = 65,
+                        c = 100)[1:n]
+                }
+                domainsColor <- gg_color_hue(length(domainsFound))
+            } else {
+                domainsColor <-
+                    RColorBrewer::brewer.pal(n = length(domainsFound), name = 'Paired')
             }
-            domainsColor <- gg_color_hue(length(domainsFound))
-        } else {
-            domainsColor <-
-                RColorBrewer::brewer.pal(n = length(domainsFound), name = 'Paired')
         }
+
+        ### Fix order
+        if( "Not Analyzed" %in% myTranscriptPlotData$Domain ) {
+        domainsFound <- c(domainsFound, "Not Analyzed")
+
+            correspondingColors <- c(
+                "#161616", # for ' transcript'
+                domainsColor,
+                '#595959' # For "not analyzed"
+            )
+
+            ### Move "not analyzed" color to its corresponding position
+            apperanceInData <- sort(unique(myTranscriptPlotData$Domain))
+
+            moveToIndex <- which(sort(apperanceInData) == "Not Analyzed")
+            correspondingColors <- c(
+                correspondingColors[1:(moveToIndex-1)],
+                correspondingColors[length(correspondingColors)],
+                correspondingColors[(moveToIndex):(length(correspondingColors)-1)]
+            )
+        } else {
+            correspondingColors <- c(
+                "#161616", # for ' transcript'
+                domainsColor
+            )
+        }
+
     }
 
     if (optimizeForCombinedPlot) {
@@ -1079,7 +1304,7 @@ switchPlotTranscript <- function(
                   )) + # boxes that constitute transcript
         scale_fill_manual(
             breaks = domainsFound,
-            values = c("#333333", domainsColor)
+            values = correspondingColors
         ) + # Correct domian color code so transcripts are black and not shown
         scale_y_continuous(breaks = idData$idNr, labels = idData$transcript) + # change index numbers back to names
         localTheme + theme(strip.text.y = element_text(angle = 0)) + # change theme and rotate facette labes (ensures readability even though frew are pressent)

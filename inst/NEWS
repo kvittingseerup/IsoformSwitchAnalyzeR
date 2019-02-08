@@ -1,3 +1,102 @@
+1.5.4: IsoformSwitchAnalyzeR 2019-XX-XX ( MAJOR )
+    Summary: IsoformSwitchAnalyzeR now:
+        1) Supports analysis of Intrinsically Disordered Regions (IDR)
+        2) Have much better handling of multiple annoation files making it easy to use Ensemble annotation
+                (via a combination of isoform id handling and annoation filtering).
+        3) Supports import and propagation of a isoform nucleotide fasta file(s) making it
+                much easier to work with non-model organismes (and makes the workflow much faster for all organismes)
+        4) Better supports the strict limitations on some of the websers
+                used for external analysis to maximise what analysis can be done.
+        5) Documenation and vignette were updated to reflect these changes.
+
+    !NB! Potentially backward compatability breaking changes were made !NB!
+
+    - To enable robust, uniform and flexible isoform_id handling updates where made to
+        importRdata(), importIsoformExpression() and importGTF(). Specifically:
+         - The "includeVersionIfAvailable" argument is removed (always done behind
+                the scenes but not user configurable (all main annotation types have it)).
+        - We apologize for any inconvenience.
+
+    !NB! End of Potentially backward compatability breaking changes !NB!
+
+    - To further facilitate the isoform_id handling and Ensemble data usage:
+         - To handle different source names importRdata(), importIsoformExpression() and
+            importGTF() functions now (in addition to "ignoreAfterBar") all have the
+            "ignoreAfterSpace" and "ignoreAfterPeriod" arguments. The "ignoreAfterPeriod"
+            replaces (and changes the meaning of) "includeVersionIfAvailable" and "removeIsoformVersion" as indicated above
+        - To handle differences in Ensemble source files importRdata() and
+            importGTF() have all been extended with the "removeTECgenes" argument which removes genes marked
+            as "To be Experimentally Confirmed". The default is TRUE aka to remove them which is in line
+            with Gencode recomendations (TEC are not in Gencode annotations).
+            more info about TEC at https://www.gencodegenes.org/pages/biotypes.html
+        - The importGTF and importRdata() now also import gene and isoform (bio)types if stored in the GTF file.
+        - The 'removeNonConvensionalChr' argument of both importRdata() and importGTF() was
+            updated to also remove chromosomes containing a period ('.').
+
+    - IsoformSwitchAnalyzeR now supports analysis of Intrinsically Disordered Regions (IDR) via
+        the external sequence analysis tool NetSurfP-2 (prediction made based on the from amino
+        acide fasta file). To faciliate this the following updates were made:
+            - The analyzeNetSurfP2() function was introduced to import and integrate the result in the switchAnalyzeRlist
+                Example data was updated accordingly
+            - analyzeSwitchConsequences(), extractConsequenceEnrichment() and
+                extractConsequenceEnrichmentComparison() was updated to also handle IDR data
+            - switchPlotTranscript() was updated to
+                - Handle overlapping annotation via the "annotationImportance" argument
+                - The color legend is now sorted alphabetically except for signal
+                    peptide which is always first and un-annotated regions are shown last.
+                - When using the ifMultipleIdenticalAnnotation = "summarize" option (default) the
+                    number of domains is now indcated by (x4) instead of (4) (when four domains are found)
+                - The ifMultipleIdenticalAnnotation argument now also have a 'ignore' option (not recomended).
+
+    - IsoformSwitchAnalyzeR now makes import, propergation and export of the biological sequences a lot easier. Specifically:
+            - importRdata() now supports
+                - import of the isoform nuclotide (DNA) fasta file (via the isoformNtFasta
+                    argument) which will be added to the switchAnalyzeRlist and thereby propegated.
+                - Saves the IF replicate matrix by default.
+                - Propergate factor level info from the condition
+                    column of the design matrix in the creation of the switchAnalyzeRlist
+                    to ensure correct comparison is made.
+            - analyzeORF() was updated to:
+                - use transcript nucleotide sequences already stored in the switchAnalyzeRlist (e.g. imported by importRdata())
+                - if nessesary save the transcript nucleotide
+                    sequnces used to make the ORF predictions (prevents double import).
+            - extractSequence() now:
+                - Use sequences already stored in the switchAnalyzeRlist (e.g. from importRdata() or
+                    analyzeORF().
+                - Can split the amino acid sequences into multiple FASTA files to
+                    enable direct usea on many of the websides supported. This is
+                    controled by the new maxIsoformsInFastaFile paramter.
+            - Since sequences imported from a fasta file and those extracted from a BSgenome might not
+                be completely identical the removeAnnoationData() function was removed from the package.
+
+    - To support the incrisingly strict limiatations on some webtools batch uploades
+        (primarly EBI's pfam but also SignalP) which have on both limitations on i) max AA sequence length and ii) max number of
+        sequences which can sumitted at the same time, the following updates were made:
+            - extractSequence() now:
+                    1) Supports multi-fasta output (so multiple runs can be submitted to the web-servers (omitting the max number of sequences))
+                    2) Supports trimming the AA sequences the max lenght allowed (currently 1000) (allowing analysis of at least some parts of the protein).
+            - To support results based on the multi-fasta output of extractSequence() both
+                analyzePFAM and analyzeSignalP was updated to support importing of results distributed into mutiple files.
+            - To ensure the trimming of AA sequences did not affect downstream analysis:
+                    1) analyzeSwitchConsequences() was updated to ignore regions
+                        trimmed away in either of the isoforms compared (only if acutally trimmed by extractSequence())
+                    2) The switchPlot and switchPlotTranscript now annotates if parts of
+                        a ORF was not analyzed  (only if acutally trimmed by extractSequence()).
+            - Our tests suggest one find 5% fewer switch consequences when the sequences are trimmed - but unless
+                EBI reconsideres their limitations this cannot fixed.
+
+    - importIsoformExpression() got a workover. It now:
+            Handles failed library quantification.
+            Performs a more suitable inter-library normalization directly from the abundance matrix.
+
+    - The preFilter() function now also allows for filtering on gene_biotype (imported from GTF)
+
+    - Various other usability updates
+    - Various maintainance updates
+    - Various documentation updates
+    - Various changes preparing for future updates.
+
+
 1.5.3: IsoformSwitchAnalyzeR 2018-12-11 ( minor )
     - Updates importCufflinksFiles() ensure full compatability.
 

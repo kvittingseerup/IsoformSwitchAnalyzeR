@@ -15,6 +15,7 @@ analyzeSwitchConsequences(
         'ORF_seq_similarity',
         'NMD_status',
         'domains_identified',
+        'IDR_identified',
         'signal_peptide_identified'
     ),
     alpha=0.05,
@@ -71,6 +72,8 @@ Note that sometimes we find complex switches meaning that many isoforms passes a
 
 For sequences similarity analysis the two compared sequences are (globally) aligned to one another and the Jacard similarity (JCsim) is calculated. Here JCsim is defined as the length of the alligned regions (omitting gaps) devided by the total combined uniuqe sequence length: JCsim = (length of alligned region w.o gaps) / ( (length of sequence a) + (length of sequence b) - (length of alligned region w.o gaps) ). The pairwise alignment is done with \code{pairwiseAlignment{Biostrings}} as a Needleman-Wunsch global alignment which is guaranteed to find the optimal global alignment. The pairwise alignment is done with end gap penalties for the full sequences alignments ('isoform_seq_similarity' and 'ORF_seq_similarity') and without gap penalties for the alignment of sub-sequence ('5_utr_seq_similarity' and '3_utr_seq_similarity') by specifying type='global' and type='overlap' respectively.
 
+If AA sequences were trimmed in the process of exporting the fasta files when using \code{extractSequence} the regions not analyzed in both isoforms will be ignored.
+
 The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 \itemize{
     \item \code{all} : Test transcripts for any of the differences described below. Please note that jointly the analysis below covers all transcript feature meaning that they should be different. Furthermore note that 'class_code' will only be included if the switchAnalyzeRlist was made from Cufflinks/Cuffdiff output.
@@ -109,11 +112,13 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 
     \item \code{NMD_status} : Test transcripts for differences in sensitivity to Nonsense Mediated Decay (NMD). Requires that both the isoforms have been annotated with PTC either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{importPFAManalysis} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{domain_length} : Test transcripts for differences in the length of domians identified in both isoforms enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not trunkate the protein domain. The length difference, measureed in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff} .Requires that \code{importPFAManalysis} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{domain_length} : Test transcripts for differences in the length of domians identified in both isoforms enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not trunkate the protein domain. The length difference, measureed in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff} .Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis. Requires that \code{importPFAManalysis} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist (and are thereby also affected by \code{removeNoncodinORFs=TRUE} in \code{analyzeCPAT}).
+    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist (and are thereby also affected by \code{removeNoncodinORFs=TRUE} in \code{analyzeCPAT}).
+
+\item \code{IDR_identified} : Test for differences in isoform IDRs. Specifically the two isoforms are tested for IDRs which do not overlap in genomic coordinats. Requires that \code{analyzeNetSurfP2} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
     \item \code{signal_peptide_identified} : Test transcripts for differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{analyzeORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist (and are thereby also affected by \code{removeNoncodinORFs=TRUE} in \code{analyzeCPAT}).
 }

@@ -16,6 +16,7 @@ switchPlotTranscript(
     plotXaxis = !rescaleTranscripts,
     reverseMinus = TRUE,
     ifMultipleIdenticalAnnotation = "summarize",
+    annotationImportance = c('signal_peptide','protein_domain','idr'),
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -52,7 +53,11 @@ A logic indicating whether isoforms on minus strand should be inverted so they a
 }
 
   \item{ifMultipleIdenticalAnnotation}{
-This argument determines how to visually handle if multiple instances of the same domain is found, the options are A) \'summarize\' which will assign one color to all the domains (and adding the number of domains in a bracket in the legend). B) \'number\' which will add a number to each domain and give each domain a seperate color. Default is \'summarize\'.
+This argument determines how to visually handle if multiple instances of the same domain is found, the options are A) \'summarize\' which will assign one color to all the domains (and adding the number of domains in a bracket in the legend). B) \'number\' which will add a number to each domain and give each domain a seperate color. Default is \'summarize\'. C) \'ignore\' which will cause IsoformSwitchAnalyzeR to just plot all of them in the same color but without highlighting differences in numbers.
+}
+
+  \item{annotationImportance}{
+Since some of the annotation collected potentially overlap (mainly protein domains and IDR) but only one can be visualized this argument controls the importance of the respective annotations. Must be a vector of strings indicating the order of the annotations in decreasing importance. All annotation must be mentioned even if they have not been analyzed. Default is c('signal_peptide','protein_domain','idr') which means that if an IDR and a protein domain overlap the protein domain will be visualized.
 }
 
   \item{rectHegith}{

@@ -7,6 +7,7 @@ analyzeSwitchConsequences <- function(
         'ORF_seq_similarity',
         'NMD_status',
         'domains_identified',
+        'IDR_identified',
         'signal_peptide_identified'
     ),
     alpha = 0.05,
@@ -80,7 +81,10 @@ analyzeSwitchConsequences <- function(
             'domain_length',
 
             # SignalIP
-            'signal_peptide_identified'
+            'signal_peptide_identified',
+
+            # espritz
+            'IDR_identified'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -141,7 +145,7 @@ analyzeSwitchConsequences <- function(
                 colnames(switchAnalyzeRlist$isoformFeatures))
             {
                 stop(
-                    'To test differences in coding_potential, the result of the CPAT analysis must be advailable. Please run addCPATanalysis() and try again'
+                    'To test differences in coding_potential, the result of the CPAT analysis must be advailable. Please run analyzeCPAT() or analyzeCPC2 and try again.'
                 )
             }
         }
@@ -154,29 +158,36 @@ analyzeSwitchConsequences <- function(
         )) {
             if (is.null(switchAnalyzeRlist$domainAnalysis)) {
                 stop(
-                    'To test differences in protein domains, the result of the Pfam analysis must be advailable. Please run addPFAManalysis() and try again'
+                    'To test differences in protein domains, the result of the Pfam analysis must be advailable. Please run analyzePFAM() and try again.'
                 )
             }
         }
         if ('signal_peptide_identified'  %in% consequencesToAnalyze) {
             if (is.null(switchAnalyzeRlist$signalPeptideAnalysis)) {
                 stop(
-                    'To test differences in signal peptides, the result of the SignalP analysis must be advailable. Please run addSignalIPanalysis() and try again'
+                    'To test differences in signal peptides, the result of the SignalP analysis must be advailable. Please run analyzeSignalP() and try again.'
+                )
+            }
+        }
+        if ('IDR_identified'  %in% consequencesToAnalyze) {
+            if (is.null(switchAnalyzeRlist$idrAnalysis)) {
+                stop(
+                    'To test differences in IDR, the result of the Espritx analysis must be advailable. Please run analyzeEspritz() and try again,'
                 )
             }
         }
 
         if (!is.numeric(ntCutoff)) {
-            stop('The ntCutoff arugment must be an numeric')
+            stop('The \'ntCutoff\' arugment must be an numeric')
         }
         if (ntCutoff <= 0) {
-            stop('The ntCutoff arugment must be an numeric > 0')
+            stop('The \'ntCutoff\' arugment must be an numeric > 0')
         }
 
         if (!is.null(ntFracCutoff)) {
             if (ntFracCutoff <= 0 | ntFracCutoff > 1) {
                 stop(
-                    'The ntFracCutoff arugment must be a numeric in the interval (0,1]. Use NULL to disable.'
+                    'The \'ntFracCutoff\' arugment must be a numeric in the interval (0,1]. Use NULL to disable.'
                 )
             }
         }
@@ -212,10 +223,11 @@ analyzeSwitchConsequences <- function(
     }
 
     ### Subset to relevant data
-    if (!quiet) {
-        message('Step 1 of 4: Extracting genes with isoform switches...')
-    }
     if (TRUE) {
+        if (!quiet) {
+            message('Step 1 of 4: Extracting genes with isoform switches...')
+        }
+
         localData <- switchAnalyzeRlist$isoformFeatures[which(
             switchAnalyzeRlist$isoformFeatures$gene_switch_q_value < alpha &
                 abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
@@ -361,17 +373,18 @@ analyzeSwitchConsequences <- function(
     }
 
     ### Loop over all the the resulting genes and do a all pairwise comparison between up and down.
-    if (!quiet) {
-        message(
-            paste(
-                'Step 2 of 4: Analyzing',
-                nrow(pairwiseIsoComparisonUniq),
-                'pairwise isoforms comparisons...',
-                sep = ' '
-            )
-        )
-    }
     if (TRUE) {
+        if (!quiet) {
+            message(
+                paste(
+                    'Step 2 of 4: Analyzing',
+                    nrow(pairwiseIsoComparisonUniq),
+                    'pairwise isoforms comparisons...',
+                    sep = ' '
+                )
+            )
+        }
+
         consequencesOfIsoformSwitching <- plyr::dlply(
             .data = pairwiseIsoComparisonUniq,
             .variables = 'comparison',
@@ -379,7 +392,7 @@ analyzeSwitchConsequences <- function(
             .inform = TRUE,
             .progress = progressBar,
             .fun = function(aDF) {
-                # aDF <- pairwiseIsoComparisonUniq[1,]
+                # aDF <- pairwiseIsoComparisonUniq[77,]
                 compareAnnotationOfTwoIsoforms(
                     switchAnalyzeRlist    = minimumSwitchList,
                     consequencesToAnalyze = consequencesToAnalyze,
@@ -413,13 +426,13 @@ analyzeSwitchConsequences <- function(
     }
 
     ### Massage result
-    if (!quiet) {
-        message(paste(
-            'Step 3 of 4: Massaging isoforms comparisons results...',
-            sep = ' '
-        ))
-    }
     if (TRUE) {
+        if (!quiet) {
+            message(paste(
+                'Step 3 of 4: Massaging isoforms comparisons results...',
+                sep = ' '
+            ))
+        }
         ### Convert from list to df
         consequencesOfIsoformSwitchingDf <-
             myListToDf(consequencesOfIsoformSwitching)
@@ -476,10 +489,10 @@ analyzeSwitchConsequences <- function(
     }
 
     ### Add result to switchAnalyzeRlist
-    if (!quiet) {
-        message('Step 4 of 4: Preparing output...')
-    }
     if (TRUE) {
+        if (!quiet) {
+            message('Step 4 of 4: Preparing output...')
+        }
         ### Add full analysis
         switchAnalyzeRlist$switchConsequence <-
             consequencesOfIsoformSwitchingDfcomplete
@@ -595,7 +608,9 @@ compareAnnotationOfTwoIsoforms <- function(
             'genomic_domain_position',
             'domain_length',
             # SignalIP
-            'signal_peptide_identified'
+            'signal_peptide_identified',
+            # espritz
+            'IDR_identified'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -780,7 +795,8 @@ compareAnnotationOfTwoIsoforms <- function(
                 'domains_identified',
                 'genomic_domain_position',
                 'domain_length',
-                'signal_peptide_identified'
+                'signal_peptide_identified',
+                'IDR_identified'
             ) %in% consequencesToAnalyze
         )) {
             columnsToExtract2 <-
@@ -847,6 +863,32 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
+        ### If nessesary extract data to remove
+        onPlusStrand <- as.character(strand(exonData)[1]) == '+'
+        if( 'wasTrimmed' %in% colnames(switchAnalyzeRlist$orfAnalysis) ) {
+
+            if(onPlusStrand) {
+                localTrimmed <- switchAnalyzeRlist$orfAnalysis[
+                    which(switchAnalyzeRlist$orfAnalysis$isoform_id %in% isoformsToAnalyze),
+                    c('isoform_id','wasTrimmed','trimmedStartGenomic','orfEndGenomic')
+                ]
+            } else {
+                localTrimmed <- switchAnalyzeRlist$orfAnalysis[
+                    which(switchAnalyzeRlist$orfAnalysis$isoform_id %in% isoformsToAnalyze),
+                    c('isoform_id','wasTrimmed','trimmedStartGenomic','orfStartGenomic')
+                    ]
+                colnames(localTrimmed) <- c('isoform_id','wasTrimmed','trimmedStartGenomic','orfEndGenomic')
+            }
+
+            if(any(localTrimmed$wasTrimmed, na.rm = TRUE)) {
+                localTrimmed <- localTrimmed[which(
+                    localTrimmed$wasTrimmed
+                ),]
+
+                regionToOmmit <- GenomicRanges::reduce(IRanges(localTrimmed$trimmedStartGenomic, localTrimmed$orfEndGenomic))
+            }
+        }
+
         ### domain data
         if (any(
             c(
@@ -871,6 +913,28 @@ compareAnnotationOfTwoIsoforms <- function(
                     'orf_aa_end'
                 )], f = domanData$isoform_id)
 
+            ### Remove those overlapping trimmed regions
+            if( exists('regionToOmmit') ) {
+                domanDataSplit <- lapply(domanDataSplit, function(aSet) { # aSet <- domanDataSplit[[2]]
+                    if( onPlusStrand ) {
+                        aSet[which(
+                            ! overlapsAny(
+                                IRanges(aSet$pfamStartGenomic, aSet$pfamEndGenomic),
+                                regionToOmmit
+                            )
+                        ),]
+                    } else {
+                        aSet[which(
+                            ! overlapsAny(
+                                IRanges(aSet$pfamEndGenomic, aSet$pfamStartGenomic),
+                                regionToOmmit
+                            )
+                        ),]
+                    }
+
+                })
+            }
+
             # overwrite if no ORF is detected
             isNAnames <-
                 transcriptData$isoform_id[which(
@@ -880,6 +944,55 @@ compareAnnotationOfTwoIsoforms <- function(
                 isNAindex <- which(names(domanDataSplit) %in% isNAnames)
                 domanDataSplit[isNAindex] <-
                     lapply(domanDataSplit[isNAindex], function(aDF) {
+                        aDF[0, ]
+                    })
+            }
+        }
+
+        if ( 'IDR_identified' %in% consequencesToAnalyze ) {
+            idrData <-
+                switchAnalyzeRlist$idrAnalysis[which(
+                    switchAnalyzeRlist$idrAnalysis$isoform_id %in%
+                        isoformsToAnalyze
+                ), ]
+            idrData$isoform_id <-
+                factor(idrData$isoform_id, levels = isoformsToAnalyze)
+            idrDataSplit <-
+                split(idrData[, c(
+                    'idrStartGenomic',
+                    'idrEndGenomic'
+                )], f = idrData$isoform_id)
+
+            ### Remove those overlapping trimmed regions
+            if( exists('regionToOmmit') ) {
+                idrDataSplit <- lapply(idrDataSplit, function(aSet) { # aSet <- idrDataSplit[[2]]
+                    if( onPlusStrand ) {
+                        aSet[which(
+                            ! overlapsAny(
+                                IRanges(aSet$idrStartGenomic, aSet$idrEndGenomic),
+                                regionToOmmit
+                            )
+                        ),]
+                    } else {
+                        aSet[which(
+                            ! overlapsAny(
+                                IRanges(aSet$idrEndGenomic, aSet$idrStartGenomic),
+                                regionToOmmit
+                            )
+                        ),]
+                    }
+                })
+            }
+
+            ### overwrite if no ORF is detected
+            isNAnames <-
+                transcriptData$isoform_id[which(
+                    is.na(transcriptData$orfTransciptLength)
+                )]
+            if (length(isNAnames)) {
+                isNAindex <- which(names(idrDataSplit) %in% isNAnames)
+                idrDataSplit[isNAindex] <-
+                    lapply(idrDataSplit[isNAindex], function(aDF) {
                         aDF[0, ]
                     })
             }
@@ -896,6 +1009,20 @@ compareAnnotationOfTwoIsoforms <- function(
                 factor(peptideData$isoform_id, levels = isoformsToAnalyze)
             peptideDataSplit <-
                 split(peptideData, f = peptideData$isoform_id)
+
+
+            ### Remove those overlapping trimmed regions
+            if( exists('regionToOmmit') ) {
+                peptideDataSplit <- lapply(peptideDataSplit, function(aSet) { # aSet <- peptideDataSplit[[2]]
+                    aSet[which(
+                        ! overlapsAny(
+                            IRanges(aSet$genomicClevageAfter, aSet$genomicClevageAfter),
+                            regionToOmmit
+                        )
+                    ),]
+                })
+            }
+
 
             # overwrite if no ORF is detected
             isNAnames <-
@@ -1915,6 +2042,84 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
+        if ('IDR_identified'            %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+
+                nIdr <- sapply(idrDataSplit, nrow)
+                if( all(nIdr) ) {
+                    idrRanges <- lapply(
+                        idrDataSplit,
+                        function(x) {
+                            if( x$idrStartGenomic[1] < x$idrEndGenomic[1]) {
+                                IRanges(
+                                    start = x$idrStartGenomic,
+                                    end   = x$idrEndGenomic
+                                )
+                            } else {
+                                IRanges(
+                                    start = x$idrEndGenomic,
+                                    end   = x$idrStartGenomic
+                                )
+                            }
+
+                        }
+                    )
+
+                    ### Calculate overlap
+                    overlap1 <- overlapsAny(idrRanges[[1]], idrRanges[[2]])
+                    overlap2 <- overlapsAny(idrRanges[[2]], idrRanges[[1]])
+                    #overlap1 <- grangesFracOverlap(idrRanges[[1]], idrRanges[[2]])$fracOverlap >= maxIdrFracOverlap
+                    #overlap2 <- grangesFracOverlap(idrRanges[[2]], idrRanges[[1]])$fracOverlap >= maxIdrFracOverlap
+
+                } else if( nIdr[1] == 0 & nIdr[2] == 0 ) {
+                    overlap1 <- NA
+                    overlap2 <- NA
+                } else if( nIdr[1] == 0 ) {
+                    overlap1 <- TRUE
+                    overlap2 <- FALSE
+                } else {
+                    overlap1 <- FALSE
+                    overlap2 <- TRUE
+                }
+
+                ### Test overlap
+                differentIdr <- any( c(
+                    ! overlap1,
+                    ! overlap2
+                ), na.rm = TRUE)
+
+                # make repport
+                localIndex <-
+                    which(isoComparison$featureCompared == 'IDR_identified')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentIdr
+
+                if (differentIdr & addDescription) {
+
+                    if( any(!overlap1) & any(!overlap2) ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'IDR switch'
+                    } else {
+                        if( any(!overlap1) ) {
+                            theDiff <- 1
+                        } else {
+                            theDiff <- 2
+                        }
+
+                        upHasMoreIDR <- names(idrDataSplit)[theDiff] == upIso
+
+                        if (upHasMoreIDR) {
+                            isoComparison$switchConsequence[localIndex] <-
+                                'IDR gain'
+                        } else {
+                            isoComparison$switchConsequence[localIndex] <-
+                                'IDR loss'
+                        }
+                    }
+                }
+            }
+        }
+
         if ('signal_peptide_identified' %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
                 nrSignalPeptides <- sapply(peptideDataSplit, nrow)
@@ -1952,7 +2157,9 @@ compareAnnotationOfTwoIsoforms <- function(
 
     if (onlyRepportDifferent) {
         isoComparison <-
-            isoComparison[which(isoComparison$isoformsDifferent), ]
+            isoComparison[which(
+                isoComparison$isoformsDifferent
+        ),]
     }
 
     return(isoComparison)
@@ -2043,7 +2250,7 @@ extractConsequenceSummary <- function(
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
             stop(
-                'The argument(s) supplied to \'typeOfconsequence\' are not accepted. Please see ?summarizeSwitchConsequences under details for description of which strings are allowed.'
+                'The argument(s) supplied to \'typeOfconsequence\' are not accepted. Please see ?analyzeSwitchConsequences under details for description of which strings are allowed.'
             )
         }
 
@@ -2066,14 +2273,6 @@ extractConsequenceSummary <- function(
         }
 
 
-    }
-
-    startCapitalLetter <- function(aVec) {
-        paste(
-            toupper( substr(aVec, 1, 1) ),
-            substr(aVec, 2, nchar(aVec)),
-            sep = ""
-        )
     }
 
     ### Massage for plotting
@@ -2386,6 +2585,7 @@ extractConsequenceEnrichment <- function(
         NMD_status=c('NMD sensitive','NMD insensitive'),
         coding_potential=c('Transcript is coding','Transcript is Noncoding'),
         domains_identified=c('Domain gain','Domain loss'),
+        IDR_identified = c('IDR gain','IDR loss'),
         domain_length=c('Domain length gain','Domain length loss'),
         signal_peptide_identified=c('Signal peptide gain','Signal peptide loss')
     )

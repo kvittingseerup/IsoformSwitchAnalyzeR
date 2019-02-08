@@ -9,7 +9,7 @@ Predicts the most likely Open Reading Frame (ORF) and the NMD sensitivity of the
 \usage{
 analyzeORF(
     switchAnalyzeRlist,
-    genomeObject,
+    genomeObject = NULL,
     minORFlength=100,
     orfMethod = "longest",
     cds = NULL,
@@ -24,7 +24,7 @@ analyzeORF(
 \arguments{
   \item{switchAnalyzeRlist}{ A \code{switchAnalyzeRlist} object. n}
 
-  \item{genomeObject}{ A \code{BSgenome} object uses as refrence genome (fx 'Hsapiens' for Homo sapiens).}
+  \item{genomeObject}{ A \code{BSgenome} object uses as refrence genome (fx 'Hsapiens' for Homo sapiens). Only nesseary if transcript sequences were not already added (via the 'isoformNtFasta' argument in \code{importRdata()}).}
 
   \item{minORFlength}{ The minimum size (in nucleotides) an ORF must be to be considered (and reported). Please note that we recommend using CPAT to predict coding potential instead of this cutoff - it is simply implemented as a pre-filter, see \link{analyzeCPAT}. Default is 100 nucleotides, which >97.5\% of Gencode coding isoforms in both human and mouse have.}
 
@@ -70,7 +70,8 @@ The gencode refrence annoation used here are GencodeV19, GencodeV24, GencodeM1 a
 A \code{switchAnalyzeRlist} where:
 \itemize{
     \item{\code{1}: A collumns called \code{PTC} indicating the NMD sensitivity have been added to the \code{isoformFeatures} entry of the switchAnalyzeRlist.}
-    \item{\code{2}: A \code{data.frame} containing the details of the ORF analysis have been added to the switchAnalyzeRlist under the name 'orfAnalysis'.}
+    \item{\code{2}: The transcript nucleotide sequence for all analyzed isoforms (in the form of a \code{DNAStringSet} object) have been added to the switchAnalyzeRlist in the \code{ntSequence} entry.}
+    \item{\code{3}: A \code{data.frame} containing the details of the ORF analysis have been added to the switchAnalyzeRlist under the name 'orfAnalysis'.}
 }
 The data.frame added have one row pr isoform and contains 11 columns:
 \itemize{

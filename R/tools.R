@@ -131,33 +131,6 @@ makeMinimumSwitchList <- function(
 }
 
 
-removeAnnoationData <- function(
-    switchAnalyzeRlist,
-    removeBioSeq = TRUE,
-    removeQuantData = TRUE
-) {
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
-        stop(
-            'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
-        )
-    }
-
-    ### Remove expression
-    if( removeQuantData ) {
-        switchAnalyzeRlist$isoformCountMatrix <- NULL
-        switchAnalyzeRlist$isoformRepExpression <- NULL
-        switchAnalyzeRlist$isoformRepIF <- NULL
-    }
-
-    ### Remove biological sequences
-    if( removeBioSeq ) {
-        switchAnalyzeRlist$ntSequence <- NULL
-        switchAnalyzeRlist$aaSequence <- NULL
-    }
-
-    return(switchAnalyzeRlist)
-}
-
 ### A faster but less dymanic version of do.call(rbind, x)
 myListToDf <- function(
     aList, # List with data.frames to concatenate
@@ -468,7 +441,12 @@ extractExpressionMatrix <- function(
 }
 
 allPairwiseFeatures <- function(aNameVec1, forceNonOverlap = FALSE) {
-    aNameVec1 <- unique(as.character(aNameVec1))
+    if( is(aNameVec1, 'factor') ) {
+        aNameVec1 <- levels(aNameVec1)
+    } else {
+        aNameVec1 <- sort(unique(as.character(aNameVec1)))
+    }
+
 
     # vectors to store result
     var1 <- character()
@@ -862,4 +840,239 @@ CDSSet <- function(cds) {
 
 startCapitalLetter <- function(aVec) {
     paste(toupper(substr(aVec, 1, 1)), substr(aVec, 2, nchar(aVec)), sep = "")
+}
+
+fixNames <- function(
+    nameVec,
+    ignoreAfterBar,
+    ignoreAfterSpace,
+    ignoreAfterPeriod
+) {
+    splitPattern <- character()
+
+    if(
+        ignoreAfterBar &
+        any( grepl('\\|', nameVec) )
+    ) {
+        splitPattern <- c(splitPattern, '\\|')
+    }
+
+    if(
+        ignoreAfterSpace &
+        any( grepl(' ', nameVec) )
+    ) {
+        splitPattern <- c(splitPattern, ' ')
+    }
+
+    if(
+        ignoreAfterPeriod &
+        any( grepl('\\.', nameVec) )
+    ) {
+        splitPattern <- c(splitPattern, '\\.')
+    }
+
+    if(length(splitPattern)) {
+        splitString <- paste0(splitPattern, collapse = '|')
+
+        newNameVec <-
+            nameVec %>%
+            str_split(pattern = splitString) %>%
+            sapply(function(x) x[1])
+
+        ### Compare old and new ids to ensure no NEW duplications were made
+        if(
+            any( duplicated(nameVec) != duplicated(newNameVec) )
+        ) {
+            stop('The application of the ignoreAfter<Character> arguments would cause IDs to be non-unique (not allowed).')
+        }
+
+        return(newNameVec)
+    } else {
+        return(nameVec)
+    }
+}
+
+convertCoordinatsTranscriptToGenomic <- function(
+    transcriptCoordinats,   # A data.frame containing the transcript coordinats
+    exonStructure           # A data.frame with the genomic coordinats of the transcript exons
+) {
+    if (exonStructure$strand[1] == '+') {
+        # Calculate exon cumSums (because they "translate" the genomic coordinats to transcript coordinats )
+        exonCumsum      <- cumsum(c(0,      exonStructure$width))
+
+        # Calculate wich exon the start and stop codons are in
+        cdsStartExonIndex   <-
+            max(which(transcriptCoordinats$start >  exonCumsum))
+        cdsEndExonIndex     <-
+            max(which(transcriptCoordinats$end   >  exonCumsum))
+        # Calcualte genomic position of the ORF
+        cdsStartGenomic <-
+            exonStructure$start[cdsStartExonIndex]  +
+            (transcriptCoordinats$start - exonCumsum[cdsStartExonIndex]  - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
+        cdsEndGenomic   <-
+            exonStructure$start[cdsEndExonIndex]    +
+            (transcriptCoordinats$end   - exonCumsum[cdsEndExonIndex]  - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
+
+    }
+    if (exonStructure$strand[1] == '-') {
+        # Calculate exon cumSums (because they "translate" the genomic coordinats to transcript coordinats )
+        exonRevCumsum   <- cumsum(c(0, rev(exonStructure$width)))
+
+        # Calculate wich exon the start and stop codons are in
+        cdsStartExonIndex   <-
+            max(which(transcriptCoordinats$start >  exonRevCumsum))
+        cdsEndExonIndex     <-
+            max(which(transcriptCoordinats$end   >  exonRevCumsum))
+
+        # create a vector to translate indexes to reverse (needed when exon coordinats are extracted)
+        reversIndexes <- nrow(exonStructure):1
+
+        # Calcualte genomic position of the ORF (end and start are switched in order to return them so start < end (default of all formating))
+        cdsStartGenomic <-
+            exonStructure$end[reversIndexes[cdsStartExonIndex]]  -
+            (transcriptCoordinats$start - exonRevCumsum[cdsStartExonIndex] - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
+        cdsEndGenomic   <-
+            exonStructure$end[reversIndexes[cdsEndExonIndex]]  -
+            (transcriptCoordinats$end   - exonRevCumsum[cdsEndExonIndex] - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
+    }
+
+    return(
+        data.frame(
+            pfamStarExon = cdsStartExonIndex,
+            pfamEndExon = cdsEndExonIndex,
+            pfamStartGenomic = cdsStartGenomic,
+            pfamEndGenomic = cdsEndGenomic
+        )
+    )
+
+}
+
+grangesFracOverlap <- function(gr1, gr2) {
+    # gr1 <- idrRanges[[2]]
+    # gr2 <- idrRanges[[1]]
+
+    hits <- findOverlaps(query = gr1, subject = gr2)
+    if(length(hits)) {
+        myIntersect <- pintersect(
+            gr1[queryHits(hits)],
+            gr2[subjectHits(hits)]
+        )
+
+        percentOverlap <- width(myIntersect) / min(c(
+            width(gr1[queryHits(hits)]),
+            width(gr2[subjectHits(hits)])
+        ))
+
+        myDf <- as.data.frame(gr1)
+
+        myDf$fracOverlap <- 0
+        myDf$fracOverlap[queryHits(hits)] <- percentOverlap
+    } else {
+        myDf <- as.data.frame(gr1)
+        myDf$fracOverlap <- 0
+    }
+    return(myDf)
+}
+
+cutGRanges <- function(
+    aGRange,
+    cutValues
+) {
+    ### To do
+    # optimize - this is the "bottle neck"
+
+    aGRange <- aGRange[, 0] # remove meta data columns
+    #aGRangeDF <- as.data.frame(ranges(aGRange)) # as data.frame
+
+    # cunvert cut values to a range obeject to intersect
+    cutValues <- sort(cutValues, decreasing = FALSE)
+    cutGRanges <- IRanges(start = cutValues, end = cutValues)
+
+    # find overlaps
+    overlaps <-
+        findOverlaps(query = ranges(aGRange), subject = cutGRanges)
+    overlapsDf <- as.data.frame(overlaps)
+
+    ### Loop over exons that needs cutting and devide them
+    newExonList <- list()
+    exonsWithOverlaps <- unique(overlapsDf$queryHits)
+    for (i in 1:length(exonsWithOverlaps)) {
+        localGRange <-  aGRange[exonsWithOverlaps[i] , ]
+
+        correspondingCutValues <-
+            start(cutGRanges)[overlapsDf$subjectHits[which(
+                overlapsDf$queryHits == exonsWithOverlaps[i]
+            )]]
+
+        valuesOfExon <-
+            c(start(localGRange),
+              correspondingCutValues,
+              end(localGRange))
+
+        newExonList[[i]] <-
+            data.frame(
+                stat = valuesOfExon[1:(length(valuesOfExon) - 1)],
+                end = valuesOfExon[2:(length(valuesOfExon))]
+            )
+
+    }
+    newExonDf <- do.call(rbind, newExonList)
+    newExonGRange <-
+        GRanges(
+            seqnames = seqnames(aGRange)[1],
+            ranges = IRanges(newExonDf$stat, newExonDf$end),
+            strand = strand(aGRange)[1]
+        )
+
+    ### Combine with the exons that did not need cutting
+    exonsWIthoutOverlap <-
+        aGRange[which(!1:length(aGRange) %in% overlapsDf$queryHits), ]
+    combinedGRanges <- sort(c(newExonGRange, exonsWIthoutOverlap))
+
+    return(combinedGRanges)
+}
+
+determineTranscriptClass <- function(
+    ptc,
+    coding
+) {
+    ### When both information is advailable transcript class PTC > Coding > non-coding
+    if (!is.null(ptc) & !is.null(coding)) {
+        if (!is.na(ptc)) {
+            if (ptc) {
+                return('NMD Sensitive')
+            }
+        }
+        if (!is.na(coding)) {
+            if (coding) {
+                return('Coding')
+            }
+        }
+        return('Non-coding')
+    }
+
+    ### When only PTC information is advailable
+    if (!is.null(ptc) &  is.null(coding)) {
+        if (!is.na(ptc)) {
+            if (ptc) {
+                return('NMD Sensitive')
+            }
+        }
+        return('NMD Insensitive')
+    }
+
+    ### When only Coding information is advailable
+    if (is.null(ptc) &  !is.null(coding)) {
+        if (!is.na(coding)) {
+            if (coding) {
+                return('Coding')
+            }
+        }
+        return('Non-coding')
+    }
+
+    ### If neither information is advailable
+    if (is.null(ptc) &  is.null(coding)) {
+        return('Transcripts')
+    }
 }

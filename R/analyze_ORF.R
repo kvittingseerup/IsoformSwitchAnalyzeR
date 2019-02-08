@@ -81,7 +81,7 @@ getCDS <- function(
 
 analyzeORF <- function(
     switchAnalyzeRlist,
-    genomeObject,
+    genomeObject = NULL,
     minORFlength = 100,
     orfMethod = 'longest',
     cds = NULL,
@@ -100,8 +100,12 @@ analyzeORF <- function(
                 'must be a \'switchAnalyzeRlist\''
             ))
         }
-        if (class(genomeObject) != 'BSgenome') {
-            stop('The genomeObject argument must be a BSgenome')
+
+        ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
+        if( ! ntAlreadyInSwitchList ) {
+            if (class(genomeObject) != 'BSgenome') {
+                stop('The genomeObject argument must be a BSgenome')
+            }
         }
 
         # method choice
@@ -341,35 +345,42 @@ analyzeORF <- function(
         )
     }
     if (TRUE) {
-        tmpSwitchAnalyzeRlist <- switchAnalyzeRlist
+        if( ntAlreadyInSwitchList ) {
+            transcriptSequencesDNAstring <- switchAnalyzeRlist$ntSequence
 
-        ### Subset to those analyzed (if annoation is used)
-        if (useAnnoated) {
-            tmpSwitchAnalyzeRlist$isoform_feature <-
-                tmpSwitchAnalyzeRlist$isoform_feature[which(
-                    tmpSwitchAnalyzeRlist$isoform_feature$isoform_id %in%
-                        overlappingAnnotStart2$isoform_id
-                ),]
-            tmpSwitchAnalyzeRlist$exons <-
-                tmpSwitchAnalyzeRlist$exons[which(
-                    tmpSwitchAnalyzeRlist$exons$isoform_id %in%
-                        overlappingAnnotStart2$isoform_id
-                ),]
+        } else {
+            tmpSwitchAnalyzeRlist <- switchAnalyzeRlist
+
+            ### Subset to those analyzed (if annoation is used)
+            if (useAnnoated) {
+                tmpSwitchAnalyzeRlist$isoform_feature <-
+                    tmpSwitchAnalyzeRlist$isoform_feature[which(
+                        tmpSwitchAnalyzeRlist$isoform_feature$isoform_id %in%
+                            overlappingAnnotStart2$isoform_id
+                    ),]
+                tmpSwitchAnalyzeRlist$exons <-
+                    tmpSwitchAnalyzeRlist$exons[which(
+                        tmpSwitchAnalyzeRlist$exons$isoform_id %in%
+                            overlappingAnnotStart2$isoform_id
+                    ),]
+            }
+
+            transcriptSequencesDNAstring <-
+                suppressMessages(
+                    extractSequence(
+                        switchAnalyzeRlist = tmpSwitchAnalyzeRlist,
+                        genomeObject = genomeObject,
+                        onlySwitchingGenes = FALSE,
+                        extractNTseq = TRUE,
+                        extractAAseq = FALSE,
+                        filterAALength = FALSE,
+                        addToSwitchAnalyzeRlist = TRUE,
+                        writeToFile = FALSE,
+                        quiet = TRUE
+                    )$ntSequence
+                )
+
         }
-
-        transcriptSequencesDNAstring <-
-            suppressMessages(
-                extractSequence(
-                    switchAnalyzeRlist = tmpSwitchAnalyzeRlist,
-                    genomeObject = genomeObject,
-                    onlySwitchingGenes = FALSE,
-                    extractNTseq = TRUE,
-                    extractAAseq = FALSE,
-                    filterAALength = FALSE,
-                    addToSwitchAnalyzeRlist = TRUE,
-                    writeToFile = FALSE
-                )$ntSequence
-            )
 
         nrStepsPerformed <- nrStepsPerformed + 1
     }
@@ -579,6 +590,12 @@ analyzeORF <- function(
             myResultDf$PTC [match(switchAnalyzeRlist$isoformFeatures$isoform_id,
                                   myResultDf$isoform_id)]
 
+        ### Add NT sequences
+        switchAnalyzeRlist$ntSequence <- transcriptSequencesDNAstring[which(
+            names(transcriptSequencesDNAstring) %in%
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+        )]
+
         if (!quiet) {
             message(
                 sum(myResultDf$orfStartGenomic != -1, na.rm = TRUE) ,
@@ -596,20 +613,33 @@ analyzeORF <- function(
 
 extractSequence <- function(
     switchAnalyzeRlist,
-    genomeObject,
+    genomeObject = NULL,
     onlySwitchingGenes = TRUE,
     alpha = 0.05,
     dIFcutoff = 0.1,
     extractNTseq = TRUE,
     extractAAseq = TRUE,
     filterAALength = FALSE,
+    alsoSplitFastaFile = FALSE,
     removeORFwithStop = TRUE,
     addToSwitchAnalyzeRlist = TRUE,
     writeToFile = TRUE,
     pathToOutput = getwd(),
     outputPrefix = 'isoformSwitchAnalyzeR_isoform',
+    forceReExtraction = FALSE,
     quiet = FALSE
 ) {
+    ### Determine sequence status
+    if(TRUE) {
+        ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
+        aaAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$aaSequence)
+
+        if(forceReExtraction) {
+            ntAlreadyInSwitchList <- FALSE
+            aaAlreadyInSwitchList <- FALSE
+        }
+    }
+
     ### Check input
     if (TRUE) {
         # Test input data class
@@ -618,8 +648,10 @@ extractSequence <- function(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
         }
-        if (class(genomeObject) != 'BSgenome') {
-            stop('The genomeObject argument must be a BSgenome')
+        if( ! ntAlreadyInSwitchList ) {
+            if (class(genomeObject) != 'BSgenome') {
+                stop('The genomeObject argument must be a BSgenome')
+            }
         }
 
         # Test what to extract
@@ -670,13 +702,25 @@ extractSequence <- function(
             stop('The dIFcutoff must be in the interval [0,1].')
         }
 
+        if( !is.logical(alsoSplitFastaFile) ){
+            stop('The \'alsoSplitFastaFile\' argument must be either TRUE or FALSE')
+        }
+        if( alsoSplitFastaFile ) {
+            if( ! filterAALength ) {
+                warning('Since you are using the alsoSplitFastaFile you probably also want to use the \'filterAALength\' option.')
+            }
+        }
+
+        if( !is.logical(forceReExtraction)) {
+            stop('\'forceReExtraction\' must be either TRUE or FALSE')
+        }
+
         nrAnalysisToMake <- 2 + as.integer(extractAAseq)
         startOfAnalysis <- 1
     }
 
     ### Extract NT sequence (needed for AA extraction so always nessesary)
     if (TRUE) {
-        ### Extract exon GRanges
         if (!quiet) {
             message(
                 paste(
@@ -689,172 +733,177 @@ extractSequence <- function(
                 )
             )
         }
-
-        if (onlySwitchingGenes) {
-            # extract switching gene names
-
-            isoResTest <-
-                any(!is.na(
-                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-                ))
-            if (isoResTest) {
-                switchingGenes <-
-                    unique(switchAnalyzeRlist$isoformFeatures$gene_id [which(
-                        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
-                            alpha &
-                            abs(switchAnalyzeRlist$isoformFeatures$dIF) >
-                            dIFcutoff
-                    )])
-            } else {
-                switchingGenes <-
-                    unique(switchAnalyzeRlist$isoformFeatures$gene_id [which(
-                        switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <
-                            alpha     &
-                            abs(switchAnalyzeRlist$isoformFeatures$dIF) >
-                            dIFcutoff
-                    )])
-            }
-
-            if (length(switchingGenes) == 0) {
-                stop(
-                    'No switching genes were found. Pleasae turn off \'onlySwitchingGenes\' and try again.'
-                )
-            }
-            switchingIsoforms <-
-                unique(switchAnalyzeRlist$isoformFeatures$isoform_id[which(
-                    switchAnalyzeRlist$isoformFeatures$gene_id %in%
-                        switchingGenes
-                )])
-
-            # only extract transcript info for the switching genes
-            myExonGranges <-
-                switchAnalyzeRlist$exons[which(
-                    switchAnalyzeRlist$exons$isoform_id %in% switchingIsoforms
-                ),]
+        if( ntAlreadyInSwitchList ) {
+            transcriptSequencesDNAstring <- switchAnalyzeRlist$ntSequence
         } else {
-            myExonGranges <- switchAnalyzeRlist$exons[which(
-                switchAnalyzeRlist$exons$isoform_id %in%
-                    switchAnalyzeRlist$isoformFeatures$isoform_id
-            ),]
-        }
+            ### Extract exon GRanges
+            if (onlySwitchingGenes) {
+                # extract switching gene names
 
-        myExonGranges <-
-            myExonGranges[which(
-                as.character(myExonGranges@strand) %in% c('+', '-')
-            ) , ]
+                isoResTest <-
+                    any(!is.na(
+                        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+                    ))
+                if (isoResTest) {
+                    switchingGenes <-
+                        unique(switchAnalyzeRlist$isoformFeatures$gene_id [which(
+                            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
+                                alpha &
+                                abs(switchAnalyzeRlist$isoformFeatures$dIF) >
+                                dIFcutoff
+                        )])
+                } else {
+                    switchingGenes <-
+                        unique(switchAnalyzeRlist$isoformFeatures$gene_id [which(
+                            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <
+                                alpha     &
+                                abs(switchAnalyzeRlist$isoformFeatures$dIF) >
+                                dIFcutoff
+                        )])
+                }
 
-        # update grange levels (migth be nessesary if it is a subset)
-        seqlevels(myExonGranges) <-
-            unique( as.character(seqnames(myExonGranges)@values) ) # nessesary to make sure seqlevels not pressented in the input data casuses problems - if presented with a subset for example
+                if (length(switchingGenes) == 0) {
+                    stop(
+                        'No switching genes were found. Pleasae turn off \'onlySwitchingGenes\' and try again.'
+                    )
+                }
+                switchingIsoforms <-
+                    unique(switchAnalyzeRlist$isoformFeatures$isoform_id[which(
+                        switchAnalyzeRlist$isoformFeatures$gene_id %in%
+                            switchingGenes
+                    )])
 
-
-        ### Check whether isoform annotation and genome fits together
-        genomeSeqs <- seqnames(genomeObject)
-        grSeqs <- seqlevels(myExonGranges)
-
-        # check overlap
-        chrOverlap <- intersect(grSeqs, genomeSeqs)
-
-        if (length(chrOverlap) == 0) {
-            ### Try correct chr names of GRanges
-            if (any(!grepl('^chr', seqlevels(myExonGranges)))) {
-                # Correct all chromosomes
-                seqlevels(myExonGranges) <-
-                    unique(paste("chr", seqnames(myExonGranges), sep = ""))
-                # Correct Mitochondria
-                seqlevels(myExonGranges) <-
-                    sub('chrMT', 'chrM', seqlevels(myExonGranges))
-
-                # check overlap again
-                grSeqs <- seqlevels(myExonGranges)
-                chrOverlap <- intersect(grSeqs, genomeSeqs)
-
-                # Correct chr names genome
-            } else if (any(!grepl('^chr', genomeSeqs))) {
-                # Correct all chromosomes
-                seqnames(genomeObject) <-
-                    paste("chr", seqnames(genomeObject), sep = "")
-                # Correct Mitochondria
-                seqnames(genomeObject) <-
-                    sub('chrMT', 'chrM', seqnames(genomeObject))
-
-                # check overlap again
-                genomeSeqs <- seqnames(genomeObject)
-                chrOverlap <- intersect(grSeqs, genomeSeqs)
-
+                # only extract transcript info for the switching genes
+                myExonGranges <-
+                    switchAnalyzeRlist$exons[which(
+                        switchAnalyzeRlist$exons$isoform_id %in% switchingIsoforms
+                    ),]
+            } else {
+                myExonGranges <- switchAnalyzeRlist$exons[which(
+                    switchAnalyzeRlist$exons$isoform_id %in%
+                        switchAnalyzeRlist$isoformFeatures$isoform_id
+                ),]
             }
+
+            myExonGranges <-
+                myExonGranges[which(
+                    as.character(myExonGranges@strand) %in% c('+', '-')
+                ) , ]
+
+            # update grange levels (migth be nessesary if it is a subset)
+            seqlevels(myExonGranges) <-
+                unique( as.character(seqnames(myExonGranges)@values) ) # nessesary to make sure seqlevels not pressented in the input data casuses problems - if presented with a subset for example
+
+
+            ### Check whether isoform annotation and genome fits together
+            genomeSeqs <- seqnames(genomeObject)
+            grSeqs <- seqlevels(myExonGranges)
+
+            # check overlap
+            chrOverlap <- intersect(grSeqs, genomeSeqs)
 
             if (length(chrOverlap) == 0) {
-                stop(
-                    'The genome supplied to genomeObject have no seqnames in common with the genes in the switchAnalyzeRlist'
-                )
+                ### Try correct chr names of GRanges
+                if (any(!grepl('^chr', seqlevels(myExonGranges)))) {
+                    # Correct all chromosomes
+                    seqlevels(myExonGranges) <-
+                        unique(paste("chr", seqnames(myExonGranges), sep = ""))
+                    # Correct Mitochondria
+                    seqlevels(myExonGranges) <-
+                        sub('chrMT', 'chrM', seqlevels(myExonGranges))
+
+                    # check overlap again
+                    grSeqs <- seqlevels(myExonGranges)
+                    chrOverlap <- intersect(grSeqs, genomeSeqs)
+
+                    # Correct chr names genome
+                } else if (any(!grepl('^chr', genomeSeqs))) {
+                    # Correct all chromosomes
+                    seqnames(genomeObject) <-
+                        paste("chr", seqnames(genomeObject), sep = "")
+                    # Correct Mitochondria
+                    seqnames(genomeObject) <-
+                        sub('chrMT', 'chrM', seqnames(genomeObject))
+
+                    # check overlap again
+                    genomeSeqs <- seqnames(genomeObject)
+                    chrOverlap <- intersect(grSeqs, genomeSeqs)
+
+                }
+
+                if (length(chrOverlap) == 0) {
+                    stop(
+                        'The genome supplied to genomeObject have no seqnames in common with the genes in the switchAnalyzeRlist'
+                    )
+                }
             }
-        }
 
-        ### remove those transcripts that does not have a corresponding chromosme
-        notOverlappingIndex <- which(!grSeqs %in% genomeSeqs)
-        if (length(notOverlappingIndex)) {
-            toRemove <-
-                which(seqnames(myExonGranges) %in% grSeqs[notOverlappingIndex])
+            ### remove those transcripts that does not have a corresponding chromosme
+            notOverlappingIndex <- which(!grSeqs %in% genomeSeqs)
+            if (length(notOverlappingIndex)) {
+                toRemove <-
+                    which(seqnames(myExonGranges) %in% grSeqs[notOverlappingIndex])
 
-            if (length(toRemove)) {
-                nrTranscripts <-
-                    length(unique(myExonGranges$isoform_id[toRemove]))
-                warning(
-                    paste(
-                        nrTranscripts,
-                        'transcripts was removed due to them being annotated to chromosomes not found in the refrence genome object',
-                        sep = ' '
+                if (length(toRemove)) {
+                    nrTranscripts <-
+                        length(unique(myExonGranges$isoform_id[toRemove]))
+                    warning(
+                        paste(
+                            nrTranscripts,
+                            'transcripts was removed due to them being annotated to chromosomes not found in the refrence genome object',
+                            sep = ' '
+                        )
+                    )
+
+                    myExonGranges <- myExonGranges[-toRemove , ]
+                }
+            }
+
+            # extract exon sequence and split into transcripts
+            myExonSequences <- getSeq(genomeObject, myExonGranges)
+            names(myExonSequences) <- myExonGranges$isoform_id
+
+            ### In a strand specific manner combine exon sequenes (strand specific is nessesry because they should be reversed - else they are combined in the '+' order)
+            myStrandData <-
+                unique(
+                    data.frame(
+                        isoform_id = myExonGranges$isoform_id,
+                        strand = as.character(myExonGranges@strand),
+                        stringsAsFactors = FALSE
                     )
                 )
+            plusStrandTransripts <-
+                myStrandData$isoform_id[which(myStrandData$strand == '+')]
+            minusStrandTransripts <-
+                myStrandData$isoform_id[which(myStrandData$strand == '-')]
 
-                myExonGranges <- myExonGranges[-toRemove , ]
-            }
+            # Collaps exons of plus strand transcripts
+            myPlusExonSequences <-
+                myExonSequences[which(
+                    names(myExonSequences) %in% plusStrandTransripts
+                ), ]
+            myPlusExonSequences <-
+                split(myPlusExonSequences, f = names(myPlusExonSequences))
+            myPlusExonSequences <-
+                lapply(myPlusExonSequences, unlist) # does not work in the R package
+
+            # Collaps exons of minus strand transcripts
+            myMinusExonSequences <-
+                myExonSequences[which(
+                    names(myExonSequences) %in% minusStrandTransripts
+                ), ]
+            myMinusExonSequences <- rev(myMinusExonSequences)
+            myMinusExonSequences <-
+                split(myMinusExonSequences, f = names(myMinusExonSequences))
+            myMinusExonSequences <- lapply(myMinusExonSequences, unlist)
+
+            # combine strands
+            transcriptSequencesDNAstring <-
+                DNAStringSet(c(myPlusExonSequences, myMinusExonSequences))
+
+            startOfAnalysis <- startOfAnalysis + 1
         }
 
-        # extract exon sequence and split into transcripts
-        myExonSequences <- getSeq(genomeObject, myExonGranges)
-        names(myExonSequences) <- myExonGranges$isoform_id
-
-        ### In a strand specific manner combine exon sequenes (strand specific is nessesry because they should be reversed - else they are combined in the '+' order)
-        myStrandData <-
-            unique(
-                data.frame(
-                    isoform_id = myExonGranges$isoform_id,
-                    strand = as.character(myExonGranges@strand),
-                    stringsAsFactors = FALSE
-                )
-            )
-        plusStrandTransripts <-
-            myStrandData$isoform_id[which(myStrandData$strand == '+')]
-        minusStrandTransripts <-
-            myStrandData$isoform_id[which(myStrandData$strand == '-')]
-
-        # Collaps exons of plus strand transcripts
-        myPlusExonSequences <-
-            myExonSequences[which(
-                names(myExonSequences) %in% plusStrandTransripts
-            ), ]
-        myPlusExonSequences <-
-            split(myPlusExonSequences, f = names(myPlusExonSequences))
-        myPlusExonSequences <-
-            lapply(myPlusExonSequences, unlist) # does not work in the R package
-
-        # Collaps exons of minus strand transcripts
-        myMinusExonSequences <-
-            myExonSequences[which(
-                names(myExonSequences) %in% minusStrandTransripts
-            ), ]
-        myMinusExonSequences <- rev(myMinusExonSequences)
-        myMinusExonSequences <-
-            split(myMinusExonSequences, f = names(myMinusExonSequences))
-        myMinusExonSequences <- lapply(myMinusExonSequences, unlist)
-
-        # combine strands
-        transcriptSequencesDNAstring <-
-            DNAStringSet(c(myPlusExonSequences, myMinusExonSequences))
-
-        startOfAnalysis <- startOfAnalysis + 1
     }
 
     ### Extract protein sequence of the identified ORFs
@@ -871,145 +920,153 @@ extractSequence <- function(
                 )
             )
         }
-
-        ### Extract switchAnalyzeRlist ORF annotation and filter for those I need
-        switchORFannotation <-
-            unique(data.frame(switchAnalyzeRlist$orfAnalysis[, c(
-                'isoform_id',
-                "orfTransciptStart",
-                'orfTransciptEnd',
-                "orfTransciptLength",
-                "PTC"
-            )]))
-        switchORFannotation <-
-            switchORFannotation[which(!is.na(switchORFannotation$PTC)), ]
-        switchORFannotation <-
-            switchORFannotation[which(
-                switchORFannotation$isoform_id %in%
-                    names(transcriptSequencesDNAstring)), ]
-        switchORFannotation <-
-            switchORFannotation[which(
-                switchORFannotation$orfTransciptStart != 0
-            ), ]
-
-        ### Reorder transcript sequences
-        transcriptSequencesDNAstringInData <-
-            transcriptSequencesDNAstring[na.omit(match(
-                x = switchORFannotation$isoform_id,
-                table = names(transcriptSequencesDNAstring)
-            )), ]
-        if (!all(
-            names(transcriptSequencesDNAstringInData) ==
-            switchORFannotation$isoform_id
-        )) {
-            stop('Somthing went wrong in sequence extraction - contract developer')
-        }
-
-        ### Test whether the annotation agrees
-        switchORFannotation$lengthOK <-
-            switchORFannotation$orfTransciptEnd <=
-            width(transcriptSequencesDNAstringInData)[match(
-                switchORFannotation$isoform_id,
-                names(transcriptSequencesDNAstringInData)
-            )]
-        if (any(!switchORFannotation$lengthOK)) {
-            warning(
-                paste(
-                    'There were',
-                    sum(!switchORFannotation$lengthOK),
-                    'cases where the annotated ORF were longer than the exons annoated - these cases will be ommitted'
-                )
-            )
-
-            # Subset data
+        if( aaAlreadyInSwitchList ) {
+            transcriptORFaaSeq <- switchAnalyzeRlist$aaSequence
+        } else {
+            ### Extract switchAnalyzeRlist ORF annotation and filter for those I need
             switchORFannotation <-
-                switchORFannotation[which(switchORFannotation$lengthOK), ]
+                unique(data.frame(switchAnalyzeRlist$orfAnalysis[, c(
+                    'isoform_id',
+                    "orfTransciptStart",
+                    'orfTransciptEnd',
+                    "orfTransciptLength",
+                    "PTC"
+                )]))
+            switchORFannotation <-
+                switchORFannotation[which(!is.na(switchORFannotation$PTC)), ]
+            switchORFannotation <-
+                switchORFannotation[which(
+                    switchORFannotation$isoform_id %in%
+                        names(transcriptSequencesDNAstring)), ]
+            switchORFannotation <-
+                switchORFannotation[which(
+                    switchORFannotation$orfTransciptStart != 0
+                ), ]
+
+            ### Reorder transcript sequences
             transcriptSequencesDNAstringInData <-
-                transcriptSequencesDNAstringInData[na.omit(match(
+                transcriptSequencesDNAstring[na.omit(match(
                     x = switchORFannotation$isoform_id,
-                    table = names(transcriptSequencesDNAstringInData)
+                    table = names(transcriptSequencesDNAstring)
                 )), ]
-        }
-
-        ### Get corresponding protein sequence
-        # Use the predicted ORF coordinats to extract the nt sequence of the ORF
-        transcriptORFntSeq <-
-            subseq(
-                transcriptSequencesDNAstringInData,
-                start = switchORFannotation$orfTransciptStart,
-                width = switchORFannotation$orfTransciptLength
-            )
-
-        # translate ORF nucleotide to aa sequence
-        transcriptORFaaSeq <-
-            suppressWarnings(
-                translate(x = transcriptORFntSeq, if.fuzzy.codon = 'solve')
-            ) # supress warning is nessesary because isoformSwitchAnalyzeR allows ORFs to exceed the transcript - which are by default ignored and just gives a warning
-
-        ### Check ORFs for stop codons
-        stopData <- data.frame(
-            isoform_id = names(transcriptORFaaSeq),
-            stopCodon = vcountPattern(pattern = '*', transcriptORFaaSeq),
-            stringsAsFactors = FALSE
-        )
-        stopDataToRemove <- stopData[which(stopData$stopCodon > 0), ]
-
-        if (nrow(stopDataToRemove)) {
-            if (removeORFwithStop) {
-                warning(
-                    paste(
-                        'There were',
-                        nrow(stopDataToRemove),
-                        'isoforms where the amino acid sequence had a stop codon before the annotated stop codon. These was be removed.',
-                        sep = ' '
-                    )
-                )
-
-                ### Remove PTC annotation
-                switchAnalyzeRlist$isoformFeatures$PTC[which(
-                    switchAnalyzeRlist$isoformFeatures$isoform_id %in% stopDataToRemove$isoform_id
-                )] <- NA
-
-                ### Remove ORF annoation
-                switchAnalyzeRlist$orfAnalysis[which(
-                    switchAnalyzeRlist$orfAnalysis$isoform_id %in% stopDataToRemove$isoform_id
-                ), 2:ncol(switchAnalyzeRlist$orfAnalysis)] <- NA
-
-                ### Remove sequence
-                transcriptORFaaSeq <-
-                    transcriptORFaaSeq[which(!names(transcriptORFaaSeq) %in% stopDataToRemove$isoform_id)]
-
-            } else {
-                warning(
-                    paste(
-                        'There were',
-                        nrow(stopDataToRemove),
-                        'isoforms where the amino acid sequence had a stop codon before the annotated stop codon. These was NOT removed in accodance with the \'removeORFwithStop\' argument.',
-                        sep = ' '
-                    )
-                )
+            if (!all(
+                names(transcriptSequencesDNAstringInData) ==
+                switchORFannotation$isoform_id
+            )) {
+                stop('Somthing went wrong in sequence extraction - contract developer')
             }
+
+            ### Test whether the annotation agrees
+            switchORFannotation$lengthOK <-
+                switchORFannotation$orfTransciptEnd <=
+                width(transcriptSequencesDNAstringInData)[match(
+                    switchORFannotation$isoform_id,
+                    names(transcriptSequencesDNAstringInData)
+                )]
+            if (any(!switchORFannotation$lengthOK)) {
+                warning(
+                    paste(
+                        'There were',
+                        sum(!switchORFannotation$lengthOK),
+                        'cases where the annotated ORF were longer than the exons annoated - these cases will be ommitted'
+                    )
+                )
+
+                # Subset data
+                switchORFannotation <-
+                    switchORFannotation[which(switchORFannotation$lengthOK), ]
+                transcriptSequencesDNAstringInData <-
+                    transcriptSequencesDNAstringInData[na.omit(match(
+                        x = switchORFannotation$isoform_id,
+                        table = names(transcriptSequencesDNAstringInData)
+                    )), ]
+            }
+
+            ### Get corresponding protein sequence
+            # Use the predicted ORF coordinats to extract the nt sequence of the ORF
+            transcriptORFntSeq <-
+                XVector::subseq(
+                    transcriptSequencesDNAstringInData,
+                    start = switchORFannotation$orfTransciptStart,
+                    width = switchORFannotation$orfTransciptLength
+                )
+
+            # translate ORF nucleotide to aa sequence
+            transcriptORFaaSeq <-
+                suppressWarnings(
+                    Biostrings::translate(x = transcriptORFntSeq, if.fuzzy.codon = 'solve')
+                ) # supress warning is nessesary because isoformSwitchAnalyzeR allows ORFs to exceed the transcript - which are by default ignored and just gives a warning
+
+            ### Check ORFs for stop codons
+            stopData <- data.frame(
+                isoform_id = names(transcriptORFaaSeq),
+                stopCodon = Biostrings::vcountPattern(pattern = '*', transcriptORFaaSeq),
+                stringsAsFactors = FALSE
+            )
+            stopDataToRemove <- stopData[which(stopData$stopCodon > 0), ]
+
+            if (nrow(stopDataToRemove)) {
+                if (removeORFwithStop) {
+                    warning(
+                        paste(
+                            'There were',
+                            nrow(stopDataToRemove),
+                            'isoforms where the amino acid sequence had a stop codon before the annotated stop codon. These was be removed.',
+                            sep = ' '
+                        )
+                    )
+
+                    ### Remove PTC annotation
+                    switchAnalyzeRlist$isoformFeatures$PTC[which(
+                        switchAnalyzeRlist$isoformFeatures$isoform_id %in% stopDataToRemove$isoform_id
+                    )] <- NA
+
+                    ### Remove ORF annoation
+                    switchAnalyzeRlist$orfAnalysis[which(
+                        switchAnalyzeRlist$orfAnalysis$isoform_id %in% stopDataToRemove$isoform_id
+                    ), 2:ncol(switchAnalyzeRlist$orfAnalysis)] <- NA
+
+                    ### Remove sequence
+                    transcriptORFaaSeq <-
+                        transcriptORFaaSeq[which(!names(transcriptORFaaSeq) %in% stopDataToRemove$isoform_id)]
+
+                } else {
+                    warning(
+                        paste(
+                            'There were',
+                            nrow(stopDataToRemove),
+                            'isoforms where the amino acid sequence had a stop codon before the annotated stop codon. These was NOT removed in accodance with the \'removeORFwithStop\' argument.',
+                            sep = ' '
+                        )
+                    )
+                }
+            }
+
+
+            startOfAnalysis <- startOfAnalysis + 1
+
         }
 
 
-        startOfAnalysis <- startOfAnalysis + 1
     }
+
 
     ### If enabled make fasta file(s)
-    if (!quiet) {
-        message(
-            paste(
-                "Step",
-                startOfAnalysis ,
-                "of",
-                nrAnalysisToMake,
-                ": Preparing output...",
-                sep = " "
-            )
-        )
-    }
-
+    seqWasTrimmed <- FALSE
     if (writeToFile) {
+        if (!quiet) {
+            message(
+                paste(
+                    "Step",
+                    startOfAnalysis ,
+                    "of",
+                    nrAnalysisToMake,
+                    ": Preparing output...",
+                    sep = " "
+                )
+            )
+        }
+
         ### add / if directory
         if (file.exists(pathToOutput)) {
             pathToOutput <- paste(pathToOutput, '/', sep = '')
@@ -1033,34 +1090,185 @@ extractSequence <- function(
 
         # Amino Acids
         if (extractAAseq) {
+
             if (filterAALength) {
+                ### Filter lengths
+
+                switchORFannotation$aaLength <- width(transcriptORFaaSeq)
+                switchORFannotation$toBeTrimmed <- switchORFannotation$aaLength > 1000
+
+
+                ### Make new lengths
+                switchORFannotation$newAAlength <- switchORFannotation$aaLength
+                switchORFannotation$newAAlength[which(
+                    switchORFannotation$toBeTrimmed
+                )] <- 1000   # <- EBI's current limmit
+
+                ### Annotate
+                if(any( switchORFannotation$toBeTrimmed )) {
+                    seqWasTrimmed <- TRUE
+
+
+                    trimmedCases <- switchORFannotation[which(
+                        switchORFannotation$toBeTrimmed
+                    ),]
+
+                    ### Calculate genomic positions of trimmed regions
+                    if(TRUE) {
+                        trimmedCases$trimmedTranscriptStart <-
+                            (1001  * 3 - 2) + trimmedCases$orfTransciptStart - 1
+                        trimmedCases$trimmedTranscriptEnd <- trimmedCases$orfTransciptEnd
+
+                        ### convert from transcript to genomic coordinats
+                        # extract exon data
+                        myExons <-
+                            as.data.frame(switchAnalyzeRlist$exons[which(
+                                switchAnalyzeRlist$exons$isoform_id %in% trimmedCases$isoform_id
+                            ), ])
+                        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+                        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
+                        trimmedCases <-
+                            plyr::ddply(
+                                trimmedCases[,c('isoform_id','newAAlength','trimmedTranscriptStart','trimmedTranscriptEnd')],
+                                .progress = 'none',
+                                .variables = 'isoform_id',
+                                .fun = function(aDF) {
+                                    # aDF <- trimmedCases[1,]
+
+                                    transcriptId <- aDF$isoform_id[1]
+                                    localExons <-
+                                        as.data.frame(myExonsSplit[[transcriptId]])
+
+                                    # extract domain allignement
+                                    localORFalignment <- aDF
+                                    colnames(localORFalignment)[match(
+                                        x = c('trimmedTranscriptStart', 'trimmedTranscriptEnd'),
+                                        table = colnames(localORFalignment)
+                                    )] <- c('start', 'end')
+
+                                    # loop over domain alignment (migh be several)
+                                    orfPosList <- list()
+                                    for (j in 1:nrow(localORFalignment)) {
+                                        domainInfo <-
+                                            convertCoordinatsTranscriptToGenomic(
+                                                transcriptCoordinats =  localORFalignment[j, ],
+                                                exonStructure = localExons
+                                            )
+
+                                        orfPosList[[as.character(j)]] <- domainInfo
+
+                                    }
+                                    orfPosDf <- do.call(rbind, orfPosList)
+
+                                    return(cbind(aDF, orfPosDf))
+                                }
+                            )
+
+                    }
+
+                }
+
+                ### Trim
+                transcriptORFaaSeq2 <- XVector::subseq(
+                    transcriptORFaaSeq,
+                    start = 1,
+                    width = switchORFannotation$newAAlength
+                )
+
                 transcriptORFaaSeq2 <-
-                    transcriptORFaaSeq[which(
-                        width(transcriptORFaaSeq) >= 6 &
-                        width(transcriptORFaaSeq) <= 1000 # Update to new
+                    transcriptORFaaSeq2[which(
+                        width(transcriptORFaaSeq2) >= 6
                     )]
+
+                message(
+                    paste(
+                        'The \'filterAALength\' argument:\n',
+                        'Removed :',
+                        length(transcriptORFaaSeq) - length(transcriptORFaaSeq2),
+                        'isoforms.\n',
+                        'Trimmed :',
+                        sum(switchORFannotation$toBeTrimmed),
+                        'isoforms (to only contain the first 1000 AA)',
+                        sep=' '
+                    )
+                )
             } else {
                 transcriptORFaaSeq2 <- transcriptORFaaSeq
             }
-            writeXStringSet(
-                transcriptORFaaSeq2,
-                filepath = paste(
-                    pathToOutput,
-                    outputPrefix,
-                    '_AA.fasta',
-                    sep = ''
-                ),
-                format = 'fasta'
-            )
+
+            if( alsoSplitFastaFile ) {
+                ### Make index
+                l <- length(transcriptORFaaSeq2)
+                indexVec <- unique( c( seq(
+                    from = 1,
+                    to = l,
+                    by = 500 -1 # Max in PFAM Jan 2019
+                ), l))
+
+                indexDf <- data.frame(
+                    start = indexVec[-length(indexVec)],
+                    end = indexVec[-1]
+                )
+                n <- nrow(indexDf)
+                indexDf$file <- paste0('_subset_', 1:n,'_of_',n)
+
+                ### loop over index and make files
+                tmp <- plyr::ddply(indexDf, .variables = 'file', .fun = function(aDF) { # aDF <- indexDf[1,]
+                    writeXStringSet(
+                        transcriptORFaaSeq2[ aDF$start:aDF$end ],
+                        filepath = paste(
+                            pathToOutput,
+                            outputPrefix,
+                            '_AA',
+                            aDF$file,
+                            '.fasta',
+                            sep = ''
+                        ),
+                        format = 'fasta'
+                    )
+                })
+                message(paste(
+                    'The \'alsoSplitFastaFile\' caused',
+                    nrow(indexDf),
+                    'fasta files, each with a subset of the data, to be created (each named X of Y).'
+                ))
+
+                ### ALso write full
+                writeXStringSet(
+                    transcriptORFaaSeq2,
+                    filepath = paste(
+                        pathToOutput,
+                        outputPrefix,
+                        '_AA_complete.fasta',
+                        sep = ''
+                    ),
+                    format = 'fasta'
+                )
+            } else {
+                ### Write full
+                writeXStringSet(
+                    transcriptORFaaSeq2,
+                    filepath = paste(
+                        pathToOutput,
+                        outputPrefix,
+                        '_AA.fasta',
+                        sep = ''
+                    ),
+                    format = 'fasta'
+                )
+            }
+
+
+
         }
     }
-
 
     if (!quiet) {
         message('Done')
     }
 
-    ### Return result
+    ### Add sequences
     if (addToSwitchAnalyzeRlist) {
         if (extractNTseq) {
             switchAnalyzeRlist$ntSequence <- transcriptSequencesDNAstring
@@ -1068,8 +1276,31 @@ extractSequence <- function(
         if (extractAAseq) {
             switchAnalyzeRlist$aaSequence <- transcriptORFaaSeq
         }
-        return(switchAnalyzeRlist)
+
     }
+
+    ### Add run info
+    if( TRUE ) {
+        if( is.null(switchAnalyzeRlist$runInfo) ) {
+            switchAnalyzeRlist$runInfo <- list()
+        }
+
+        if(seqWasTrimmed) {
+            switchAnalyzeRlist$orfAnalysis$wasTrimmed <- switchORFannotation$toBeTrimmed[match(
+                switchAnalyzeRlist$orfAnalysis$isoform_id, switchORFannotation$isoform_id
+            )]
+
+            switchAnalyzeRlist$orfAnalysis$trimmedStartGenomic <- trimmedCases$pfamStartGenomic[match(
+                switchAnalyzeRlist$orfAnalysis$isoform_id, trimmedCases$isoform_id
+            )]
+        }
+
+        switchAnalyzeRlist$runInfo$extractSequence <- list(
+            filterAALength = seqWasTrimmed
+        )
+
+    }
+    return(switchAnalyzeRlist)
 }
 
 

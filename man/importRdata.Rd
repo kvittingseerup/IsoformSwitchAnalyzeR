@@ -22,14 +22,18 @@ importRdata(
     isoformRepExpression,
     designMatrix,
     isoformExonAnnoation,
+    isoformNtFasta = NULL,
     comparisonsToMake=NULL,
     addAnnotatedORFs=TRUE,
     onlyConsiderFullORF=FALSE,
     removeNonConvensionalChr=FALSE,
-    includeVersionIfAvailable=TRUE,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
+    removeTECgenes = TRUE,
     PTCDistance=50,
     foldChangePseudoCount=0.01,
-    addIFmatrix= nrow(designMatrix) <= 20,
+    addIFmatrix= TRUE,
     showProgress=TRUE,
     quiet=FALSE
 )
@@ -58,6 +62,10 @@ Can either be:
 }
 }
 
+\item{isoformNtFasta}{
+A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucloetide (genomic) sequence of all isoforms quantified. This is usefull for: 1) people working with non-model organisms where extracting the sequnce from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index).
+}
+
 \item{comparisonsToMake}{
 A data.frame with two columns indicating which pairwise comparisons the switchAnalyzeRlist created should contain. The two columns, called 'condition_1' and 'condition_2' indicate which conditions should be compared and the strings indicated here must match the strings in the \code{designMatrix$condition} column. If not supplied all pairwise (unique nondirectional) comparisons of the conditions given in \code{designMatrix$condition} are created. If only a subset of the supplied data is used in the comparisons the nonused data is automatically removed.
 }
@@ -68,16 +76,23 @@ Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indi
 
 \item{onlyConsiderFullORF}{ A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annotated is defined as those that both have a annotated 'start_codon' codon in the 'type' column (column 3). This argument exists because these CDS regions are highly problematic and does not resemble true ORFs as >50\% of CDS without a stop_codon annotated contain multiple stop codons (see Vitting-Seerup et al 2017 - supplementary materials). This argument is only considered if addAnnotatedORFs=TRUE. Default is FALSE.}
 
-\item{removeNonConvensionalChr}{ A logic indicating whether non-conventional chromosomes, here defined as chromosome names containing a '_'. These regions are typically used to annotate regions that cannot be assocaiated to a specific region (such as the human 'chr1_gl000191_random') or regions quite different due to different haplotypes (e.g. the 'chr6_cox_hap2'). This argument is only considered if a GTF file was supplied to \code{isoformExonAnnoation}. Default is FALSE.}
+\item{removeNonConvensionalChr}{A logic indicating whether non-conventional chromosomes, here defined as chromosome names containing either a '_' or a period ('.'). These regions are typically used to annotate regions that cannot be assocaiated to a specific region (such as the human 'chr1_gl000191_random') or regions quite different due to different haplotypes (e.g. the 'chr6_cox_hap2'). Default is FALSE.}
 
-\item{includeVersionIfAvailable}{ A logic indicateding whether to combined gene/transcript ids with their respective version numbers (GENCODE style) if the version numbers are in a seperate column (this functionality will not remove exsiting version numbering from ids if set to FALSE). Defalut is TRUE}
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Usefull for analysis of GENCODE data. Default is TRUE.}
+
+\item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Usefull for analysis of gffutils generated GTF files. Default is TRUE.}
+
+\item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first periot ("."). Should be used with care. Default is FALSE.}
+
+\item{removeTECgenes}{A logic indicating whether to remove genes marked as "To be Experimentally Confirmed" (if annotation is available). The default is TRUE aka to remove them which is in line
+with Gencode recomendations (TEC are not in gencode annotations). For more info about TEC see \url{https://www.gencodegenes.org/pages/biotypes.html}.}
 
 \item{PTCDistance}{Only used if a GTF file is supplied to \code{isoformExonAnnoation} and \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
 
 \item{foldChangePseudoCount}{ A numeric indicating the pseudocount added to each of the average expression values before the log2 fold change is calculated. Done to prevent log2 fold changes of Inf or -Inf. Default is 0.01}
 
 \item{addIFmatrix}{
-A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE) or not (if FALSE). Keeping it will make testing with isoformSwitchTestDEXSeq faster but will also make the switchAnalyzeRlist larger - so it is a tradeoff for speed vs memmory. For most experimental setups we expect that keeping it will be the better solution. Default is TRUE if there are max 20 samples in the matrix.
+A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE) or not (if FALSE). Keeping it will make testing with isoformSwitchTestDEXSeq faster but will also make the switchAnalyzeRlist larger - so it is a tradeoff for speed vs memmory. For most experimental setups we expect that keeping it will be the better solution. Default is TRUE.
 }
 
 \item{showProgress}{
@@ -152,7 +167,8 @@ aSwitchList <- importRdata(
     isoformCountMatrix   = salmonQuant$counts,
     isoformRepExpression = salmonQuant$abundance,
     designMatrix         = myDesign,
-    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"),
+    isoformNtFasta       = system.file("extdata/example_isoform_nt.fasta.gz", package="IsoformSwitchAnalyzeR")
 )
 aSwitchList
 }

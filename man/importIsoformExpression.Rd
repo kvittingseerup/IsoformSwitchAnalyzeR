@@ -20,6 +20,8 @@ importIsoformExpression(
     invertPattern=FALSE,
     ignore.case=FALSE,
     ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     readLength = NULL,
     showProgress = TRUE,
     quiet = FALSE
@@ -43,7 +45,11 @@ importIsoformExpression(
 
 \item{ignore.case}{ if FALSE, the pattern matching is case sensitive and if TRUE, case is ignored during matching.}
 
-\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Usefyll for analysis of GENCODE data.}
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Usefull for analysis of GENCODE data. Default is TRUE.}
+
+\item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Usefull for analysis of gffutils generated GTF files. Default is TRUE.}
+
+\item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first periot ("."). Should be used with care. Default is FALSE.}
 
 \item{readLength}{ Only nessesary when importing from StringTie. Must be the number of base pairs sequenced. e.g. if the data quantified is 75 bp paired ends the the user should supply \code{readLength=75}.}
 

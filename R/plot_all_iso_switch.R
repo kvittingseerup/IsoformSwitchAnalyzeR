@@ -292,7 +292,7 @@ switchPlotTopSwitches <- function(
 
         ### split by comparison and sort
         localDataRanked <-
-            ddply(
+            plyr::ddply(
                 .data = localData,
                 .progress = 'none',
                 .parallel = FALSE,
@@ -363,7 +363,7 @@ switchPlotTopSwitches <- function(
             ))
         }
 
-        myDump <- ddply(
+        myDump <- plyr::ddply(
             .data = localDataRanked,
             .variables = c('gene_id', 'comparison'),
             .drop = TRUE,
@@ -434,3 +434,4 @@ switchPlotTopSwitches <- function(
         ))
     }
 }
+

@@ -17,8 +17,8 @@ isoformSwitchTestDRIMSeq <- function(
     showProgress = TRUE,
     quiet = FALSE
 ) {
-    message(paste(
-        'Please consider using isoformSwitchTestDEXSeq() instead.',
+    warning(paste(
+        'Youc might want to consider using isoformSwitchTestDEXSeq() instead.',
         '\nThe DEXSeq implementation have been shown to superiour to DRIMSeq',
         '\non all paramters (except runtime for large number of samples)',
         '\nby Love et al 2018 (F1000) - results we can replicate.\n'

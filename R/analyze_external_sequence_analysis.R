@@ -1,65 +1,7 @@
 ##############################
 ### Import and add external analysis
 
-# Helper function
-convertCoordinatsTranscriptToGenomic <- function(
-    transcriptCoordinats,   # A data.frame containing the transcript coordinats
-    exonStructure           # A data.frame with the genomic coordinats of the transcript exons
-) {
-    if (exonStructure$strand[1] == '+') {
-        # Calculate exon cumSums (because they "translate" the genomic coordinats to transcript coordinats )
-        exonCumsum      <- cumsum(c(0,      exonStructure$width))
-
-        # Calculate wich exon the start and stop codons are in
-        cdsStartExonIndex   <-
-            max(which(transcriptCoordinats$start >  exonCumsum))
-        cdsEndExonIndex     <-
-            max(which(transcriptCoordinats$end   >  exonCumsum))
-        # Calcualte genomic position of the ORF
-        cdsStartGenomic <-
-            exonStructure$start[cdsStartExonIndex]  +
-            (transcriptCoordinats$start - exonCumsum[cdsStartExonIndex]  - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
-        cdsEndGenomic   <-
-            exonStructure$start[cdsEndExonIndex]    +
-            (transcriptCoordinats$end   - exonCumsum[cdsEndExonIndex]  - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
-
-    }
-    if (exonStructure$strand[1] == '-') {
-        # Calculate exon cumSums (because they "translate" the genomic coordinats to transcript coordinats )
-        exonRevCumsum   <- cumsum(c(0, rev(exonStructure$width)))
-
-        # Calculate wich exon the start and stop codons are in
-        cdsStartExonIndex   <-
-            max(which(transcriptCoordinats$start >  exonRevCumsum))
-        cdsEndExonIndex     <-
-            max(which(transcriptCoordinats$end   >  exonRevCumsum))
-
-        # create a vector to translate indexes to reverse (needed when exon coordinats are extracted)
-        reversIndexes <- nrow(exonStructure):1
-
-        # Calcualte genomic position of the ORF (end and start are switched in order to return them so start < end (default of all formating))
-        cdsStartGenomic <-
-            exonStructure$end[reversIndexes[cdsStartExonIndex]]  -
-            (transcriptCoordinats$start - exonRevCumsum[cdsStartExonIndex] - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
-        cdsEndGenomic   <-
-            exonStructure$end[reversIndexes[cdsEndExonIndex]]  -
-            (transcriptCoordinats$end   - exonRevCumsum[cdsEndExonIndex] - 1) # -1 because both intervals are inclusive [a;b] (meaning the start postition will be counted twice)
-    }
-
-    return(
-        data.frame(
-            pfamStarExon = cdsStartExonIndex,
-            pfamEndExon = cdsEndExonIndex,
-            pfamStartGenomic = cdsStartGenomic,
-            pfamEndGenomic = cdsEndGenomic
-        )
-    )
-
-}
-
-
 ### Actural functions
-
 analyzeCPAT <- function(
     switchAnalyzeRlist,
     pathToCPATresultFile,
@@ -454,112 +396,130 @@ analyzePFAM <- function(
     showProgress = TRUE,
     quiet = FALSE
 ) {
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
-        stop(
-            'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
-        )
-    }
-    if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-        stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+    ### Test input
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+            stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+        }
+
+        # file
+        if (class(pathToPFAMresultFile) != 'character') {
+            stop(
+                'The \'pathToPFAMresultFile\' argument must be a string pointing to the PFAM result file(s)'
+            )
+        }
+        if ( ! all(sapply(pathToPFAMresultFile, file.exists)) ) {
+            stop('The file(s) \'pathToPFAMresultFile\' points to does not exist')
+        }
     }
 
-    # file
-    if (class(pathToPFAMresultFile) != 'character') {
-        stop(
-            'The \'pathToPFAMresultFile\' argument must be a string pointing to the PFAM result file'
-        )
-    }
-    if (!file.exists(pathToPFAMresultFile)) {
-        stop('The file \'pathToPFAMresultFile\' points to does not exist')
-    }
-
-
-    ### Test wither headers are included
-    temp <-
-        read.table(
-            file = pathToPFAMresultFile,
-            stringsAsFactors = FALSE,
-            fill = TRUE,
-            header = FALSE,
-            nrows = 1
-        )
-    if (nrow(temp) == 0) {
-        stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
-    }
-    if (grepl('^<seq|^seq', temp[1, 1])) {
-        skipLine <- 1
+    if (showProgress & !quiet) {
+        progressBar <- 'text'
     } else {
-        skipLine <- 0
+        progressBar <- 'none'
     }
 
-    ### read in pfam resut result
-    myPfamResult <-
-        read.table(
-            file = pathToPFAMresultFile,
-            stringsAsFactors = FALSE,
-            fill = TRUE,
-            header = FALSE,
-            col.names = 1:16,
-            skip = skipLine
-        )
-    if (nrow(myPfamResult) == 0) {
-        stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
-    }
+    ### Import result data
+    if(TRUE) {
+        ### Test wither headers are included
+        temp <-
+            read.table(
+                file = pathToPFAMresultFile[1],
+                stringsAsFactors = FALSE,
+                fill = TRUE,
+                header = FALSE,
+                nrows = 1
+            )
+        if (nrow(temp) == 0) {
+            stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
+        }
+        if (grepl('^<seq|^seq', temp[1, 1])) {
+            skipLine <- 1
+        } else {
+            skipLine <- 0
+        }
 
-    ### Identify which type of PFAM file is supplied
-    # Colnames for pfam result
-    oldColnames <-
-        c(
-            'seq_id',
-            'alignment_start',
-            'alignment_end',
-            'envelope_start',
-            'envelope_end',
-            'hmm_acc',
-            'hmm_name',
-            'type',
-            'hmm_start',
-            'hmm_end',
-            'hmm_length',
-            'bit_score',
-            'E_value',
-            'significant',
-            'clan',
-            'residue'
-        )
-    newColNames <-
-        c(
-            'seq_id',
-            'alignment_start',
-            'alignment_end',
-            'envelope_start',
-            'envelope_end',
-            'hmm_acc',
-            'hmm_name',
-            'hmm_start',
-            'hmm_end',
-            'hmm_length',
-            'bit_score',
-            'Individual_E_value',
-            'Conditional_E_value',
-            'significant',
-            'outcompeted',
-            'clan'
-        )
+        myPfamResult <- do.call(rbind, plyr::llply(
+            pathToPFAMresultFile,
+            .fun = function(
+                aFile
+            ) {
+                read.table(
+                    file = aFile,
+                    stringsAsFactors = FALSE,
+                    fill = TRUE,
+                    header = FALSE,
+                    col.names = 1:16,
+                    skip = skipLine
+                )
+            }
+        ))
 
-    ### Old style
-    if (class(myPfamResult$X8) == 'character') {
-        colnames(myPfamResult) <- oldColnames
-        myPfamResult$residue[which(myPfamResult$residue == '')] <-
-            NA
+        ### read in pfam resut result
+        if (nrow(myPfamResult) == 0) {
+            stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
+        }
 
-        ### New style
-    } else if (class(myPfamResult$X8) == 'integer') {
-        colnames(myPfamResult) <- newColNames
-        myPfamResult$clan[which(myPfamResult$clan == '')] <- NA
+        ### Identify which type of PFAM file is supplied
+        # Colnames for pfam result
+        oldColnames <-
+            c(
+                'seq_id',
+                'alignment_start',
+                'alignment_end',
+                'envelope_start',
+                'envelope_end',
+                'hmm_acc',
+                'hmm_name',
+                'type',
+                'hmm_start',
+                'hmm_end',
+                'hmm_length',
+                'bit_score',
+                'E_value',
+                'significant',
+                'clan',
+                'residue'
+            )
+        newColNames <-
+            c(
+                'seq_id',
+                'alignment_start',
+                'alignment_end',
+                'envelope_start',
+                'envelope_end',
+                'hmm_acc',
+                'hmm_name',
+                'hmm_start',
+                'hmm_end',
+                'hmm_length',
+                'bit_score',
+                'Individual_E_value',
+                'Conditional_E_value',
+                'significant',
+                'outcompeted',
+                'clan'
+            )
 
-    } else {
-        stop('The file supplied is not recogniced as a pfam output.')
+        ### Old style
+        if (class(myPfamResult$X8) == 'character') {
+            colnames(myPfamResult) <- oldColnames
+            myPfamResult$residue[which(myPfamResult$residue == '')] <-
+                NA
+
+            ### New style
+        } else if (class(myPfamResult$X8) == 'integer') {
+            colnames(myPfamResult) <- newColNames
+            myPfamResult$clan[which(myPfamResult$clan == '')] <- NA
+
+        } else {
+            stop('The file(s) supplied is not recogniced as a pfam output.')
+        }
     }
 
     ### Sanity check that it is a PFAM result file
@@ -594,12 +554,6 @@ analyzePFAM <- function(
                     !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
                 )]
         ), ]
-    }
-
-    if (showProgress & !quiet) {
-        progressBar <- 'text'
-    } else {
-        progressBar <- 'none'
     }
 
     ### Fill in blanks if active residues are included
@@ -853,7 +807,6 @@ analyzePFAM <- function(
     return(switchAnalyzeRlist)
 }
 
-
 analyzeSignalP <- function(
     switchAnalyzeRlist,
     pathToSignalPresultFile,
@@ -866,27 +819,32 @@ analyzeSignalP <- function(
     # file
     if (class(pathToSignalPresultFile) != 'character') {
         stop(
-            'The \'pathToSignalPresultFile\' argument must be a string pointing to the SignalP result file'
+            'The \'pathToSignalPresultFile\' argument must be a string pointing to the SignalP result file(s)'
         )
     }
-    if (!file.exists(pathToSignalPresultFile)) {
-        stop('The file \'pathToSignalPresultFile\' points to does not exist')
+    if ( ! all(sapply(pathToSignalPresultFile, file.exists)) ) {
+        stop('The file(s) \'pathToSignalPresultFile\' points to does not exist')
     }
 
 
     ### Obtain signalP result
     if (TRUE) {
-        ### Read file
-        singalPresults <-
-            read.table(
-                pathToSignalPresultFile,
-                header = FALSE,
-                stringsAsFactors = FALSE,
-                fill = TRUE,
-                col.names = paste('V', 1:13, sep = '')
-            )
+        singalPresults <- do.call(rbind, plyr::llply(
+            pathToSignalPresultFile,
+            .fun = function(
+                aFile
+            ) {
+                read.table(
+                    aFile,
+                    header = FALSE,
+                    stringsAsFactors = FALSE,
+                    fill = TRUE,
+                    col.names = paste('V', 1:13, sep = '')
+                )
+            }
+        ))
         if(nrow(singalPresults) == 0) {
-            stop('The result file seems to be empty')
+            stop('The result file(s) seems to be empty')
         }
 
         # extract summary
@@ -911,7 +869,7 @@ analyzeSignalP <- function(
 
             if (!all(t1, t2, t3, t4, t5, t6)) {
                 stop(
-                    'The file pointed to by \'pathToSignalPresultFile\' is not a SignalIP summary file'
+                    'The file(s) pointed to by \'pathToSignalPresultFile\' is not a SignalIP summary file'
                 )
             }
         }
@@ -1053,3 +1011,260 @@ analyzeSignalP <- function(
 
     return(switchAnalyzeRlist)
 }
+
+analyzeNetSurfP2 <- function(
+    switchAnalyzeRlist,
+    pathToNetSurfP2resultFile,
+    smoothingWindowSize = 5,
+    probabilityCutoff = 0.5,
+    minIdrSize = 30,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Test input
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+            stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+        }
+
+        # file
+        if (class(pathToNetSurfP2resultFile) != 'character') {
+            stop(
+                'The \'pathToNetSurfP2resultFile\' argument must be a string pointing to the PFAM result file'
+            )
+        }
+        if (!file.exists(pathToNetSurfP2resultFile)) {
+            stop('The file \'pathToNetSurfP2resultFile\' points to does not exist')
+        }
+
+        if( smoothingWindowSize %% 2 != 1 | !is(smoothingWindowSize, 'numeric') ) {
+            stop('The \'smoothingWindowSize\' argument must be an odd integer')
+        }
+    }
+
+    if (showProgress & !quiet) {
+        progressBar <- 'text'
+    } else {
+        progressBar <- 'none'
+    }
+
+    ### Read result file
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 1 of 3: Reading results into R...')
+        }
+
+        ### Read in file
+        suppressWarnings(
+            netSurf <- read_csv(
+                file = pathToNetSurfP2resultFile,
+                col_names = TRUE,
+                col_types = cols_only(
+                    id = col_character(),
+                    n = col_integer(),
+                    disorder = col_double()
+                ),
+                progress = showProgress & !quiet
+            )
+        )
+        #netSurf <- read_csv(pathToNetSurfP2resultFile, progress = showProgress & !quiet)
+        #netSurf <- netSurf[,c('id','n','disorder')]
+
+
+
+        ### Sanity check
+        if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
+            stop('The \'pathToEspritzResultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
+        }
+
+        ### Subset to relecant features
+        netSurf <- netSurf[which(
+            netSurf$id %in%
+                switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                    !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                )]
+        ),]
+
+    }
+
+    ### Reduce to those with IDR
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 2 of 3: Analyzing data to extract IDRs...')
+        }
+        netSurf$idDis <- as.integer( netSurf$disorder > probabilityCutoff )
+
+
+        disRle <- RleList(
+            split(round(netSurf$disorder, digits = 3), netSurf$id)
+        )
+
+        ### Apply spliding window
+        disRle <- runmean(disRle, k=smoothingWindowSize, endrule = 'drop')
+        nRemovedByDrop <- (smoothingWindowSize-1) / 2
+
+        ### Convert to binary
+        disRle <- disRle > probabilityCutoff
+
+        ### Loop over and extract result
+        disRes <- plyr::ldply(disRle, .progress = progressBar, function(localRle) {
+            ### Extract start and stop
+            rleDf <- data.frame(
+                classification=localRle@values,
+                length=localRle@lengths,
+                orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
+            )
+            rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
+
+            ### Subset to disordered of length X
+            rleDf <- rleDf[which(
+                rleDf$classification &
+                    rleDf$length >= minIdrSize
+            ),]
+
+            rleDf$classification <- NULL
+
+            return(rleDf)
+        })
+        colnames(disRes)[1] <- 'isoform_id'
+
+        disRes <- disRes[,c('isoform_id','orf_aa_start','orf_aa_end','length')]
+
+    }
+
+    ### Convert from AA coordinats to transcript and genomic coordinats
+    if (TRUE) {
+        if (!quiet) {
+            message('Step 3 of 3: Converting AA coordinats to transcript and genomic coordinats...')
+        }
+
+        ### convert from codons to transcript position
+        orfStartDF <-
+            unique(
+                switchAnalyzeRlist$orfAnalysis[
+                    which( !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+                    c('isoform_id', 'orfTransciptStart')
+                    ]
+            )
+        disRes$transcriptStart <-
+            (disRes$orf_aa_start  * 3 - 2) +
+            orfStartDF[
+                match(
+                    x = disRes$isoform_id,
+                    table = orfStartDF$isoform_id
+                ),
+                2] - 1
+        disRes$transcriptEnd <-
+            (disRes$orf_aa_end * 3) +
+            orfStartDF[
+                match(
+                    x = disRes$isoform_id,
+                    table = orfStartDF$isoform_id
+                ),
+                2] - 1
+
+        ### convert from transcript to genomic coordinats
+        # extract exon data
+        myExons <-
+            as.data.frame(switchAnalyzeRlist$exons[which(
+                switchAnalyzeRlist$exons$isoform_id %in% disRes$isoform_id
+            ), ])
+        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
+        disResDf <-
+            plyr::ddply(
+                disRes,
+                .progress = progressBar,
+                .variables = 'isoform_id',
+                .fun = function(aDF) {
+                    # aDF <- disRes[which(disRes$isoform_id == 'uc001isa.1'),]
+
+                    transcriptId <- aDF$isoform_id[1]
+                    localExons <-
+                        as.data.frame(myExonsSplit[[transcriptId]])
+
+                    # extract domain allignement
+                    localORFalignment <- aDF
+                    colnames(localORFalignment)[match(
+                        x = c('transcriptStart', 'transcriptEnd'),
+                        table = colnames(localORFalignment)
+                    )] <- c('start', 'end')
+
+                    # loop over domain alignment (migh be several)
+                    orfPosList <- list()
+                    for (j in 1:nrow(localORFalignment)) {
+                        domainInfo <-
+                            convertCoordinatsTranscriptToGenomic(
+                                transcriptCoordinats =  localORFalignment[j, ],
+                                exonStructure = localExons
+                            )
+
+                        orfPosList[[as.character(j)]] <- domainInfo
+
+                    }
+                    orfPosDf <- do.call(rbind, orfPosList)
+
+                    return(cbind(aDF, orfPosDf))
+                }
+            )
+
+        colnames(disResDf) <- gsub(
+            'pfam',
+            'idr',
+            colnames(disResDf)
+        )
+
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        # sort
+        disResDf <-
+            disResDf[order(
+                disResDf$isoform_id,
+                disResDf$transcriptStart
+            ), ]
+
+        # add the pfam results to the switchAnalyzeRlist object
+        switchAnalyzeRlist$idrAnalysis <- disResDf
+
+        # add indication to transcriptDf
+        switchAnalyzeRlist$isoformFeatures$idr_identified <- 'no'
+        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+        )] <- NA # sets NA for those not analyzed
+
+        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                disResDf$isoform_id
+        )] <- 'yes'
+    }
+
+    n <- length(unique(disResDf$isoform_id))
+    p <-
+        round(n / length(unique(
+            switchAnalyzeRlist$isoformFeatures$isoform_id
+        )) * 100, digits = 2)
+
+    if (!quiet) {
+        message(paste(
+            'Added IDR information to ',
+            n,
+            ' (',
+            p,
+            '%) transcripts',
+            sep = ''
+        ))
+    }
+    return(switchAnalyzeRlist)
+}
+
+
+
+

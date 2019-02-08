@@ -23,8 +23,9 @@ importFrom("grDevices", "dev.off", "hcl", "pdf", "png")
 importFrom("graphics", "lines", "plot", "text", "title")
 importFrom("stats", "p.adjust", 'qnorm', "wilcox.test")
 importFrom("stats", "na.omit", "p.adjust", "setNames", "wilcox.test")
-importFrom("utils", "read.table", "setTxtProgressBar", "txtProgressBar")
+importFrom("utils", "read.table", "setTxtProgressBar", "txtProgressBar", "untar")
 importFrom('GenomeInfoDb','seqlevels','seqlevels<-')
+importFrom('XVector','subseq')
 importFrom('grid','grid.newpage')
 importFrom('grid','pushViewport')
 importFrom('grid','viewport')
@@ -34,6 +35,7 @@ importFrom("stats", "as.formula", "model.matrix")
 importFrom("edgeR", "calcNormFactors")
 importFrom("stats", "prop.test")
 importFrom("futile.logger","flog.threshold")
+importFrom("stringr", "str_split")
 
 importFrom('stats', 'fisher.test')
 importFrom('stats', 'fisher.test')
@@ -52,7 +54,8 @@ importFrom("dplyr","group_by")
 importFrom("dplyr","summarise_all")
 importFrom("stringr","str_c")
 importFrom("magrittr","%>%")
-importFrom('readr', 'read_tsv')
+importFrom('readr', 'read_tsv', 'read_csv','cols_only','col_character','col_integer','col_double')
+
 
 ### Export functions from IsoformSwitchAnalyzeR
 # Creating list
@@ -84,6 +87,7 @@ export('analyzeCPAT')
 export('analyzeCPC2')
 export('analyzePFAM')
 export('analyzeSignalP')
+export('analyzeNetSurfP2')
 
 # Splicing analysis
 export('analyzeAlternativeSplicing')
@@ -120,7 +124,6 @@ export('isoformSwitchAnalysisCombined')
 export('extractExpressionMatrix')
 export('isoformToGeneExp')
 export('isoformToIsoformFraction')
-export('removeAnnoationData')
 
 ### Export classes
 exportClasses("switchAnalyzeRlist")

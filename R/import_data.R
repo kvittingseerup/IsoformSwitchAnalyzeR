@@ -1006,10 +1006,15 @@ importCufflinksFiles <- function(
 
 importGTF <- function(
     pathToGTF,
+    isoformNtFasta = NULL,
+    extractAaSeq = FALSE,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
-    includeVersionIfAvailable=TRUE,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
+    removeTECgenes = TRUE,
     PTCDistance = 50,
     quiet = FALSE
 ) {
@@ -1022,8 +1027,23 @@ importGTF <- function(
         if( ! grepl('\\.gtf$|\\.gtf\\.gz$', pathToGTF, ignore.case = TRUE) ) {
             warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
         }
-    }
 
+        ### Test NT input
+        if(TRUE) {
+            if( !is.null( isoformNtFasta )) {
+                if( !is.character( isoformNtFasta)) {
+                    stop('The \'isoformNtFasta\' argument must be a charachter string.')
+                }
+
+                if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
+                    stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
+                }
+                if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
+                    stop('The file pointed to via the \'isoformNtFasta\' argument does not seem to be a fasta file...')
+                }
+            }
+        }
+    }
 
     # Read in from GTF file and create Rdata file for easy loading
     if (!quiet) {
@@ -1031,7 +1051,7 @@ importGTF <- function(
     }
     mfGTF <- rtracklayer::import(pathToGTF, format='gtf')
 
-    ### tjeck GTF
+    ### Check GTF
     if (!all(c('transcript_id', 'gene_id') %in% colnames(mfGTF@elementMetadata))) {
         collumnsMissing <- paste(
             c('transcript_id', 'gene_id')[which(
@@ -1051,7 +1071,8 @@ importGTF <- function(
 
     ### Reduce if nessesary
     if (removeNonConvensionalChr) {
-        mfGTF <- mfGTF[which(!grepl('_', as.character(mfGTF@seqnames))), ]
+        mfGTF <- mfGTF[which( ! grepl('_'  , as.character(mfGTF@seqnames))), ]
+        mfGTF <- mfGTF[which( ! grepl('\\.', as.character(mfGTF@seqnames))), ]
 
         if (length(mfGTF) == 0) {
             stop('No exons were left after filtering',
@@ -1061,8 +1082,20 @@ importGTF <- function(
         seqlevels(mfGTF) <- as.character(mfGTF@seqnames@values)
     }
 
-    ### Look into version numbering
-    if(includeVersionIfAvailable) {
+    if( removeTECgenes ) {
+        ### Ensembl
+        if( 'gene_biotype' %in% colnames(mcols(mfGTF)) ) {
+            mfGTF <- mfGTF[which(mfGTF$gene_biotype != 'TEC'),]
+        }
+
+        ### Gencode
+        if( 'gene_type' %in% colnames(mcols(mfGTF)) ) {
+            mfGTF <- mfGTF[which(mfGTF$gene_type != 'TEC'),]
+        }
+    }
+
+    ### Potentially add version numbering
+    if( TRUE ) {
         if(any( colnames(mcols(mfGTF)) == 'gene_version' )) {
             mfGTF$gene_id <- stringr::str_c(
                 mfGTF$gene_id,
@@ -1079,54 +1112,92 @@ importGTF <- function(
         }
     }
 
+    ### Fix names
+    if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+
+        mfGTF$transcript_id <- fixNames(
+            nameVec = mfGTF$transcript_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+        )
+
+    }
+
     ### Make annoation
-    if (!quiet) {
-        message('converting GTF to switchAnalyzeRlist')
+    if(TRUE) {
+        if (!quiet) {
+            message('converting GTF to switchAnalyzeRlist')
+        }
+        exonAnoationIndex <- which(mfGTF$type == 'exon')
+
+        colsToExtract <- c(
+            'transcript_id', 'gene_id', 'gene_name',
+            'gene_type','gene_biotype',     # respectively gencode and ensembl gene type col
+            'transcript_biotype','transcript_type'
+        )
+        myIso <-
+            as.data.frame(unique(mfGTF@elementMetadata[
+                exonAnoationIndex,
+                na.omit(match(colsToExtract, colnames(mfGTF@elementMetadata)))]
+            ))
+
+        ### Handle columns not extracted
+        if (is.null(myIso$gene_name)) {
+            myIso$gene_name <- NA
+        }
+
+        ### Handle columns with multiple options
+        geneTypeCol <- which(colnames(myIso) %in% c('gene_type','gene_biotype'))
+        if( length(geneTypeCol) == 0 ) {
+            myIso$geneType <- NA
+        } else {
+            myIso$geneType <- myIso[,geneTypeCol]
+        }
+
+        isoTypeCol <- which(colnames(myIso) %in% c('transcript_biotype','transcript_type'))
+        if( length(geneTypeCol) == 0 ) {
+            myIso$isoType <- NA
+        } else {
+            myIso$isoType <- myIso[,isoTypeCol]
+        }
+
+        ### Make annotation
+        myIsoAnot <- data.frame(
+            isoform_id = myIso$transcript_id,
+            gene_id = myIso$gene_id,
+            condition_1 = "plaseholder1",
+            condition_2 = "plaseholder2",
+            gene_name = myIso$gene_name,
+            gene_biotype = myIso$geneType,
+            iso_biotype = myIso$isoType,
+            class_code = '=',
+            gene_overall_mean = 0,
+            gene_value_1 = 0,
+            gene_value_2 = 0,
+            gene_stderr_1 = NA,
+            gene_stderr_2 = NA,
+            gene_log2_fold_change = 0,
+            gene_p_value = 1,
+            gene_q_value = 1,
+            iso_overall_mean = 0,
+            iso_value_1 = 0,
+            iso_value_2 = 0,
+            iso_stderr_1 = NA,
+            iso_stderr_2 = NA,
+            iso_log2_fold_change = 0,
+            iso_p_value = 1,
+            iso_q_value = 1,
+            IF_overall = NA,
+            IF1 = NA,
+            IF2 = NA,
+            dIF = NA,
+            isoform_switch_q_value = NA,
+            gene_switch_q_value = NA,
+            stringsAsFactors = FALSE
+        )
+
     }
-    exonAnoationIndex <- which(mfGTF$type == 'exon')
-
-    colsToExtract <- c('transcript_id', 'gene_id', 'gene_name')
-    myIso <-
-        as.data.frame(unique(mfGTF@elementMetadata[
-            exonAnoationIndex,
-            na.omit(match(colsToExtract, colnames(mfGTF@elementMetadata)))]
-        ))
-
-    if (is.null(myIso$gene_name)) {
-        myIso$gene_name <- NA
-    }
-
-    myIsoAnot <- data.frame(
-        isoform_id = myIso$transcript_id,
-        gene_id = myIso$gene_id,
-        condition_1 = "plaseholder1",
-        condition_2 = "plaseholder2",
-        gene_name = myIso$gene_name,
-        class_code = '=',
-        gene_overall_mean = 0,
-        gene_value_1 = 0,
-        gene_value_2 = 0,
-        gene_stderr_1 = NA,
-        gene_stderr_2 = NA,
-        gene_log2_fold_change = 0,
-        gene_p_value = 1,
-        gene_q_value = 1,
-        iso_overall_mean = 0,
-        iso_value_1 = 0,
-        iso_value_2 = 0,
-        iso_stderr_1 = NA,
-        iso_stderr_2 = NA,
-        iso_log2_fold_change = 0,
-        iso_p_value = 1,
-        iso_q_value = 1,
-        IF_overall = NA,
-        IF1 = NA,
-        IF2 = NA,
-        dIF = NA,
-        isoform_switch_q_value = NA,
-        gene_switch_q_value = NA,
-        stringsAsFactors = FALSE
-    )
 
     ### Add CDS annoation from GTF file inc convertion to transcript coordinats
     if (addAnnotatedORFs) {
@@ -1492,6 +1563,84 @@ importGTF <- function(
 
     }
 
+    ### Handle sequence input
+    if(TRUE) {
+        addIsoformNt <- FALSE
+
+        if( !is.null(isoformNtFasta) ) {
+            isoformNtSeq <- do.call(
+                c,
+                lapply(isoformNtFasta, function(aFile) {
+                    Biostrings::readDNAStringSet(
+                        filepath = isoformNtFasta, format = 'fasta'
+                    )
+                })
+            )
+
+            if(!is(isoformNtSeq, "DNAStringSet")) {
+                stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
+            }
+
+            ### Fix names
+            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+
+                names(isoformNtSeq) <- fixNames(
+                    nameVec = names(isoformNtSeq),
+                    ignoreAfterBar = ignoreAfterBar,
+                    ignoreAfterSpace = ignoreAfterSpace,
+                    ignoreAfterPeriod = ignoreAfterPeriod
+                )
+            }
+
+            ### Subset to annotated isoforms
+            isoformNtSeq <- isoformNtSeq[which(
+                names(isoformNtSeq) %in% myIsoAnot$isoform_id
+            )]
+
+            ### Remove potential name duplication
+            isoformNtSeq <- isoformNtSeq[which(
+                ! duplicated(names(isoformNtSeq))
+            )]
+
+            if( ! all(myIsoAnot$isoform_id %in% names(isoformNtSeq)) ) {
+                warning(
+                    paste(
+                        'The fasta file supplied to \'isoformNtFasta\' does not contain the',
+                        'nucleotide (DNA) sequence for all isoforms annotated and will not be added',
+                        '\nSpecifically:\n',
+                        length(unique(myIsoAnot$isoform_id)), 'isoforms were annotated in the GTF\n',
+                        length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
+                        'Only', length(intersect(names(isoformNtSeq), myIsoAnot$isoform_id)), 'overlap.\n',
+                        length(setdiff(unique(myIsoAnot$isoform_id), names(isoformNtSeq))), 'annoated isoforms isoforms had no corresponding nucleotide sequence\n',
+
+                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
+                        '1) The files do not fit together (different databases, versions etc)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+                        '    3 Examples from GTF are :',
+                        paste0( sample(unique(myIsoAnot$isoform_id), 3), collapse = ', '),'\n',
+                        '    3 Examples of isoform sequence are  :',
+                        paste0( sample(names(isoformNtSeq), 3), collapse = ', '),'\n',
+
+
+                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+                        '1) The files do not fit together (different databases versions)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
+                        'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
+                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n\n',
+                        sep = ' '
+                    )
+                )
+            } else {
+                addIsoformNt <- TRUE
+            }
+        }
+    }
+
     # Create exon_features grange
     myExons <-
         sort(mfGTF[exonAnoationIndex , c('transcript_id', 'gene_id')])
@@ -1567,6 +1716,25 @@ importGTF <- function(
             ,]
     }
 
+    ### Add nucleotide sequence
+    if(addIsoformNt) {
+        localSwichList$ntSequence <- isoformNtSeq[which(
+            names(isoformNtSeq) %in% localSwichList$isoformFeatures$isoform_id
+        )]
+
+        if(addAnnotatedORFs & extractAaSeq) {
+            localSwichList <- extractSequence(
+                switchAnalyzeRlist = localSwichList,
+                onlySwitchingGenes = FALSE,
+                writeToFile = FALSE,
+                extractNTseq = TRUE,
+                extractAAseq = TRUE,
+                addToSwitchAnalyzeRlist = TRUE
+            )
+        }
+    }
+
+
     # Return SpliceRList
     return(localSwichList)
 }
@@ -1581,6 +1749,8 @@ importIsoformExpression <- function(
     invertPattern=FALSE,
     ignore.case=FALSE,
     ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     readLength = NULL,
     showProgress = TRUE,
     quiet = FALSE
@@ -1778,7 +1948,29 @@ importIsoformExpression <- function(
                 )
             )
         }
+    }
 
+    ### test for failed libraies
+    if(TRUE) {
+        allZero <- apply(localDataList$abundance, 2, function(x) sum(x) == 0)
+        if(any(allZero)) {
+            toRemove <- names(allZero)[which(allZero)]
+            warning(
+                paste(
+                    'Some quantifications appared to not have worked (zero reads mapped).',
+                    '\nThe following libraries were therefore removed:',
+                    paste(toRemove, collapse = ', ')
+                )
+            )
+
+            localDataList$abundance <- localDataList$abundance[,which(!allZero)]
+            localDataList$counts <- localDataList$counts[,which(!allZero)]
+            localDataList$length <- localDataList$length[,which(!allZero)]
+
+            if( ncol(localDataList$abundance) == 0 ) {
+                stop('No libraries left after failed quantifications were removed.')
+            }
+        }
     }
 
     ### Noralize TxPM values based on effective counts
@@ -1787,28 +1979,14 @@ importIsoformExpression <- function(
             message('Step 3 of 3: Normalizing FPKM/TxPM values via edgeR...')
         }
 
-        if(calculateCountsFromAbundance) {
-            ### calclate new coints
-            newCounts <- localDataList$abundance * localDataList$length
-
-            ### Scale new to same total counts as org matrix
-            countsSum <- colSums(localDataList$counts)
-            newSum <- colSums(newCounts)
-            countsMat <- t(t(newCounts) * (countsSum/newSum))
-        } else {
-            countsMat <- localDataList$counts
-        }
-
-        ### Subset to expressed features
         okIso <- rownames(localDataList$abundance)[which(
             rowSums( localDataList$abundance > 1 ) > 1
         )]
-        countsMat <- countsMat[which(rownames(countsMat) %in% okIso),]
-
+        abundMat <- localDataList$abundance[which( rownames(localDataList$abundance) %in% okIso),]
 
         ### Calculate normalization factors
-        localDGE <- suppressWarnings( edgeR::DGEList(countsMat, remove.zeros = TRUE) )
-        localDGE <- suppressWarnings( edgeR::calcNormFactors(localDGE, method = normalizationMethod) )
+        localDGE <- suppressMessages( suppressWarnings( edgeR::DGEList(abundMat, remove.zeros = TRUE) ) )
+        localDGE <- suppressMessages( suppressWarnings( edgeR::calcNormFactors(localDGE, method = normalizationMethod) ) )
 
         ### Apply normalization factors
         localDataList$abundance <- t(t(localDataList$abundance) / localDGE$samples$norm.factors)
@@ -1820,8 +1998,33 @@ importIsoformExpression <- function(
         localDataList$abundance <- as.data.frame(localDataList$abundance)
         localDataList$counts <- as.data.frame(localDataList$counts)
         localDataList$length <- as.data.frame(localDataList$length)
+        localDataList$countsFromAbundance <- NULL # remove message of how it was imported
 
-        localDataList$countsFromAbundance <- NULL
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+            ### Test for duplication
+            rownames(localDataList$abundance) <- fixNames(
+                nameVec = rownames(localDataList$abundance),
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+            )
+
+            rownames(localDataList$counts) <- fixNames(
+                nameVec = rownames(localDataList$counts),
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+            )
+
+            rownames(localDataList$length) <- fixNames(
+                nameVec = rownames(localDataList$length),
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+
+            )
+        }
 
         ### Add isoform id as col
         if(addIsofomIdAsColumn) {
@@ -1861,14 +2064,18 @@ importRdata <- function(
     isoformRepExpression = NULL,
     designMatrix,
     isoformExonAnnoation,
+    isoformNtFasta = NULL,
     comparisonsToMake = NULL,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
-    includeVersionIfAvailable=TRUE,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
+    removeTECgenes = TRUE,
     PTCDistance = 50,
     foldChangePseudoCount = 0.01,
-    addIFmatrix = nrow(designMatrix) <= 20,
+    addIFmatrix = TRUE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -1932,6 +2139,11 @@ importRdata <- function(
                         '    Using row.names as \'isoform_id\' for \'isoformCountMatrix\'. If not suitable you must add them manually.'
                     ))
                     isoformCountMatrix$isoform_id <- rownames(isoformCountMatrix)
+
+                }
+
+                if(any(duplicated( isoformCountMatrix$isoform_id) )) {
+                    stop('The \'isoform_id\' of the count matrix must have unique ids.')
                 }
             }
             if ( abundSuppled ) {
@@ -1944,6 +2156,9 @@ importRdata <- function(
                         '    Using row.names as \'isoform_id\' for \'isoformRepExpression\'. If not suitable you must add them manually.'
                     ))
                     isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
+                }
+                if(any(duplicated( isoformRepExpression$isoform_id) )) {
+                    stop('The \'isoform_id\' of the expression matrix must have unique ids.')
                 }
             }
 
@@ -1999,8 +2214,10 @@ importRdata <- function(
 
         ### Convert potential factors
         if (TRUE) {
-            designMatrix$condition <- as.character(designMatrix$condition)
+            orgCond <- designMatrix$condition
+
             designMatrix$sampleID  <- as.character(designMatrix$sampleID)
+            designMatrix$condition <- as.character(designMatrix$condition)
 
             if (!is.null(comparisonsToMake)) {
                 comparisonsToMake$condition_1 <-
@@ -2064,7 +2281,7 @@ importRdata <- function(
             } else {
                 # create it
                 comparisonsToMake <-
-                    allPairwiseFeatures(designMatrix$condition)
+                    allPairwiseFeatures(orgCond)
                 colnames(comparisonsToMake) <-
                     c('condition_1', 'condition_2')
             }
@@ -2093,6 +2310,22 @@ importRdata <- function(
             ### Test for full rank
 
 
+        }
+
+        ### Test NT input
+        if(TRUE) {
+            if( !is.null( isoformNtFasta )) {
+                if( !is.character( isoformNtFasta)) {
+                    stop('The \'isoformNtFasta\' argument must be a charachter string.')
+                }
+
+                if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
+                    stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
+                }
+                if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
+                    stop('The file pointed to via the \'isoformNtFasta\' argument does not seem to be a fasta file...')
+                }
+            }
         }
     }
 
@@ -2134,116 +2367,221 @@ importRdata <- function(
         }
     }
 
+    ### Fix names (done before input is handled and compared)
+    if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+        if( countsSuppled ) {
+            isoformCountMatrix$isoform_id <- fixNames(
+                nameVec = isoformCountMatrix$isoform_id,
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+            )
+        }
+        if ( abundSuppled ) {
+            isoformRepExpression$isoform_id <- fixNames(
+                nameVec = isoformRepExpression$isoform_id,
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+            )
+        }
+
+    }
+
     ### Handle annotation input
     if (!quiet) { message('Step 2 of 6: Obtaining annotation...')}
     if (TRUE) {
-        ### Import GTF is nessesary
-        if (class(isoformExonAnnoation) == 'character') {
-            gtfImported <- TRUE
+        ### Massage obtain  annoation input
+        if(TRUE) {
+            ### Import GTF is nessesary
+            if( class(isoformExonAnnoation) == 'character' ) {
+                gtfImported <- TRUE
 
-            if (length(isoformExonAnnoation) != 1) {
-                stop(paste(
-                    'The path supplied to isoformExonAnnoation',
-                    'must be of length 1'
-                ))
-            }
-            if (!file.exists(isoformExonAnnoation)) {
-                stop(paste(
-                    'The file paht supplied to isoformExonAnnoation',
-                    'points to a \"file\" that does not exists'
-                ))
-            }
-            if( ! grepl('\\.gtf$|\\.gtf\\.gz$', isoformExonAnnoation, ignore.case = TRUE) ) {
-                warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
-            }
+                if (length(isoformExonAnnoation) != 1) {
+                    stop(paste(
+                        'The path supplied to isoformExonAnnoation',
+                        'must be of length 1'
+                    ))
+                }
+                if (!file.exists(isoformExonAnnoation)) {
+                    stop(paste(
+                        'The file paht supplied to isoformExonAnnoation',
+                        'points to a \"file\" that does not exists'
+                    ))
+                }
+                if( ! grepl('\\.gtf$|\\.gtf\\.gz$', isoformExonAnnoation, ignore.case = TRUE) ) {
+                    warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
+                }
 
-            if (!quiet) {
-                message('    importing GTF (this may take a while)')
-            }
-            suppressWarnings(
-                gtfSwichList <- importGTF(
-                    pathToGTF = isoformExonAnnoation,
-                    addAnnotatedORFs = addAnnotatedORFs,
-                    onlyConsiderFullORF = onlyConsiderFullORF,
-                    includeVersionIfAvailable=includeVersionIfAvailable,
-                    PTCDistance = PTCDistance,
-                    removeNonConvensionalChr = removeNonConvensionalChr,
-                    quiet = TRUE
+                if (!quiet) {
+                    message('    importing GTF (this may take a while)')
+                }
+
+                ### Names are fixed by importGTF
+                suppressWarnings(
+                    gtfSwichList <- importGTF(
+                        pathToGTF = isoformExonAnnoation,
+                        addAnnotatedORFs = addAnnotatedORFs,
+                        onlyConsiderFullORF = onlyConsiderFullORF,
+                        removeNonConvensionalChr = FALSE,
+                        ignoreAfterBar = ignoreAfterBar,
+                        ignoreAfterSpace = ignoreAfterSpace,
+                        ignoreAfterPeriod = ignoreAfterPeriod,
+                        removeTECgenes = FALSE,
+                        PTCDistance = PTCDistance,
+                        quiet = TRUE
+                    )
                 )
-            )
 
-            ### Extract wanted annotation files form the spliceR object
-            isoformExonStructure <-
-                gtfSwichList$exons[, c('isoform_id', 'gene_id')]
-            isoformExonStructure <- sort(isoformExonStructure)
-
-            isoformAnnotation <-
-                unique(gtfSwichList$isoformFeatures[,c(
-                    'isoform_id', 'gene_id', 'gene_name'
-                )])
-
-            if (addAnnotatedORFs & gtfImported) {
-                isoORF <- gtfSwichList$orfAnalysis
-
-                if( all( is.na(isoORF$PTC)) ) {
-                    warning(
-                        paste(
-                            '   No CDS annotation was found in the GTF files meaning ORFs could not be annotated.\n',
-                            '    (But ORFs can still be predicted with the analyzeORF() function)'
-                        )
+                ### Extract isoforms to remove (and remove from GTF if nessesary)
+                isoformsToRemove <- character()
+                if( removeTECgenes & any(!is.na( gtfSwichList$isoformFeatures$gene_biotype)) ) {
+                    isoformsToRemove <- c(
+                        isoformsToRemove,
+                        unique(gtfSwichList$isoformFeatures$isoform_id[which(
+                            gtfSwichList$isoformFeatures$gene_biotype == 'TEC'
+                        )])
                     )
 
-                    addAnnotatedORFs <- FALSE
+                    ### Remove TEC from GTF switchList
+                    gtfSwichList <- subsetSwitchAnalyzeRlist(
+                        gtfSwichList,
+                        gtfSwichList$isoformFeatures$gene_biotype != 'TEC'
+                    )
+
+                }
+                if( removeNonConvensionalChr ) {
+                    nonChanonicalChrsIso <- unique(
+                        gtfSwichList$exons$isoform_id[which(
+                            grepl('_|\\.'  , as.character(gtfSwichList$exons@seqnames))
+                        )]
+                    )
+
+                    gtfSwichList <- subsetSwitchAnalyzeRlist(
+                        gtfSwichList,
+                        ! gtfSwichList$isoformFeatures$isoform_id %in% nonChanonicalChrsIso
+                    )
+
+                    isoformsToRemove <- c(
+                        isoformsToRemove,
+                        nonChanonicalChrsIso
+                    )
+                }
+
+                ### If nessesary remove TEC and non-charnonical from rep exp data
+                if( countsSuppled & length(isoformsToRemove) ) {
+                    isoformCountMatrix <- isoformCountMatrix[which(
+                        ! isoformCountMatrix$isoform_id %in% isoformsToRemove
+                    ),]
+                }
+                if ( abundSuppled & length(isoformsToRemove) ) {
+                    isoformRepExpression <- isoformRepExpression[which(
+                        ! isoformRepExpression$isoform_id %in% isoformsToRemove
+                    ),]
+
+                }
+
+                ### Reduce to the genes quantified
+                genesQuantified <- gtfSwichList$isoformFeatures$gene_id[which(
+                    gtfSwichList$isoformFeatures$isoform_id %in% isoformRepExpression$isoform_id
+                )]
+                if(length(genesQuantified) ) {
+                    gtfSwichList <- subsetSwitchAnalyzeRlist(
+                        gtfSwichList,
+                        gtfSwichList$isoformFeatures$gene_id %in% genesQuantified
+                    )
+                }
+
+                ### Extract wanted annotation files form the switchAnalyzeR object
+                isoformExonStructure <-
+                    gtfSwichList$exons[, c('isoform_id', 'gene_id')]
+                isoformExonStructure <- sort(isoformExonStructure)
+
+                colsToExtract <- c(
+                    'isoform_id', 'gene_id', 'gene_name',
+                    'gene_biotype','iso_biotype'
+                )
+                isoformAnnotation <-
+                    unique(gtfSwichList$isoformFeatures[,na.omit(
+                        match(colsToExtract , colnames(gtfSwichList$isoformFeatures))
+                    )])
+
+
+
+                if (addAnnotatedORFs & gtfImported) {
+                    isoORF <- gtfSwichList$orfAnalysis
+
+                    if( all( is.na(isoORF$PTC)) ) {
+                        warning(
+                            paste(
+                                '   No CDS annotation was found in the GTF files meaning ORFs could not be annotated.\n',
+                                '    (But ORFs can still be predicted with the analyzeORF() function)'
+                            )
+                        )
+
+                        addAnnotatedORFs <- FALSE
+                    }
                 }
             }
-        } else {
-            gtfImported <- FALSE
 
-            ### Test
-            if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
-                stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
-            }
+            if( class(isoformExonAnnoation) != 'character' ) {
+                gtfImported <- FALSE
 
-            ### Test for other than exons by annotation
-            if(any(  colnames(isoformExonAnnoation@elementMetadata) == 'type' )) {
-                stop(
-                    paste(
-                        'The \'type\' column of the data supplied to \'isoformExonAnnoation\'',
-                        'indicate there are multiple levels of data.',
-                        'Please fix this (providing only exon-level) or simply',
-                        '\nprovide a string with the path to the GTF file to the \'isoformExonAnnoation\' - ',
-                        'then IsoformSwitchAnalyzeR will import and massage the GTF file for you.'
+                ### Test
+                if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
+                    stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
+                }
+
+                ### Test for other than exons by annotation
+                if(any(  colnames(isoformExonAnnoation@elementMetadata) == 'type' )) {
+                    stop(
+                        paste(
+                            'The \'type\' column of the data supplied to \'isoformExonAnnoation\'',
+                            'indicate there are multiple levels of data.',
+                            'Please fix this (providing only exon-level) or simply',
+                            '\nprovide a string with the path to the GTF file to the \'isoformExonAnnoation\' - ',
+                            'then IsoformSwitchAnalyzeR will import and massage the GTF file for you.'
+                        )
                     )
-                )
-            }
+                }
 
-            ### Test for other than exons by overlap of transcript features
-            localExonList <- split(isoformExonAnnoation@ranges, isoformExonAnnoation$isoform_id)
-            localExonListReduced <- reduce(localExonList)
-            if(
-                any( sapply( width(localExonList), sum) != sapply( width(localExonListReduced), sum) )
-            ) {
-                stop(
-                    paste(
-                        'The data supplied to \'isoformExonAnnoation\' appears to be multi-leveled',
-                        '(Fx both containing exon and CDS information for transcripts - which a GTF file does).',
-                        'If your annotation data originate from a GTF file please supply a string',
-                        'indicating the path to the GTF file to the \'isoformExonAnnoation\' argument instead - then IsoformSwitchAnalyzeR will handle the multi-levels.'
+                ### Test for other than exons by overlap of transcript features
+                localExonList <- split(isoformExonAnnoation@ranges, isoformExonAnnoation$isoform_id)
+                localExonListReduced <- reduce(localExonList)
+                if(
+                    any( sapply( width(localExonList), sum) != sapply( width(localExonListReduced), sum) )
+                ) {
+                    stop(
+                        paste(
+                            'The data supplied to \'isoformExonAnnoation\' appears to be multi-leveled',
+                            '(Fx both containing exon and CDS information for transcripts - which a GTF file does).',
+                            'If your annotation data originate from a GTF file please supply a string',
+                            'indicating the path to the GTF file to the \'isoformExonAnnoation\' argument instead - then IsoformSwitchAnalyzeR will handle the multi-levels.'
+                        )
                     )
-                )
+                }
+
+                ### Fix names
+                if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+                    isoformExonAnnoation$isoform_id <- fixNames(
+                        nameVec = isoformExonAnnoation$isoform_id,
+                        ignoreAfterBar = ignoreAfterBar,
+                        ignoreAfterSpace = ignoreAfterSpace,
+                        ignoreAfterPeriod = ignoreAfterPeriod
+                    )
+                }
+
+                ### Devide the data
+                isoformExonStructure <-
+                    isoformExonAnnoation[, c('isoform_id', 'gene_id')]
+
+                isoformAnnotation <-
+                    unique(as.data.frame(isoformExonAnnoation@elementMetadata))
+                if (!'gene_name' %in% colnames(isoformAnnotation)) {
+                    isoformAnnotation$gene_name <- NA
+                }
             }
 
-
-
-            ### Devide the data
-            isoformExonStructure <-
-                isoformExonAnnoation[, c('isoform_id', 'gene_id')]
-
-            isoformAnnotation <-
-                unique(as.data.frame(isoformExonAnnoation@elementMetadata))
-            if (!'gene_name' %in% colnames(isoformAnnotation)) {
-                isoformAnnotation$gene_name <- NA
-            }
         }
 
         ### Test the obtained annoation
@@ -2288,11 +2626,15 @@ importRdata <- function(
         }
 
         jcCutoff <- 0.95
+
+        onlyInAnnoation <- setdiff(unique(expIso), isoformAnnotation$isoform_id)
+
         if (j1 != 1 ) {
-            if( j1 < jcCutoff) {
+            if( j1 < jcCutoff | length(onlyInAnnoation) ) {
+                options(warning.length = 2000L)
                 stop(
                     paste(
-                        '\nThe annotation and quantification (count/abundance matrix and isoform annotation)',
+                        'The annotation and quantification (count/abundance matrix and isoform annotation)',
                         'seems to be different (jacard similarity < 0.95).',
                         '\nEither isforoms found in the annotation are',
                         'not quantifed or vise versa.',
@@ -2300,10 +2642,30 @@ importRdata <- function(
                         length(unique(expIso)), 'isoforms were quantified.\n',
                         length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
                         'Only', length(intersect(expIso, isoformAnnotation$isoform_id)), 'overlap.\n',
+                        length(setdiff(unique(expIso), isoformAnnotation$isoform_id)), 'isoforms quantifed isoforms had no corresponding annoation\n',
                         '\nThis combination cannot be analyzed since it will',
                         'cause discrepencies between quantification and annotation thereby skewing all analysis.\n',
-                        '\nPlease make sure they belong together and try again.',
-                        'For more info see the FAQ in the vignette.',
+
+                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
+                        '1) The files do not fit together (e.g. different databases, versions, etc)',
+                            '(no fix except using propperly paired files).\n',
+                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+                        '    3 Examples from expression matrix are :',
+                        paste0( sample(expIso, 3), collapse = ', '),'\n',
+                        '    3 Examples of isoform annotation are  :',
+                        paste0( sample(isoformAnnotation$isoform_id, 3), collapse = ', '),'\n',
+
+                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+                        '1) The files do not fit together (e.g different databases versions etc.)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) If you are using Ensembl data you have supplied the GTF without phaplotyps. You need to supply the',
+                        '<Ensembl_version>.chr_patch_hapl_scaff.gtf file - NOT the <Ensembl_version>.chr.gtf\n',
+                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n\n',
+
+                        '\nFor more info see the FAQ in the vignette.\n',
                         sep=' '
                     )
                 )
@@ -2311,19 +2673,17 @@ importRdata <- function(
             if( j1 >= jcCutoff ) {
                 warning(
                     paste(
-                        '\nThe annotation and quantification (count/abundance matrix and isoform annotation)',
-                        'contain differences in which isoforms are analyzed.',
+                        'The annotation and quantification (count/abundance matrix and isoform annotation)',
+                        'Seem to be slightly different.',
 
                         '\nSpecifically:\n',
-                        length(unique(expIso)), 'isoforms were quantified.\n',
-                        length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
+                        length(setdiff(isoformAnnotation$isoform_id, unique(expIso))), 'isoforms were only found in the annotation\n',
 
-                        'The annotation provided contain:',
-                        length(unique(isoformAnnotation$isoform_id)) - length(unique(expIso)),
-                        'more isoforms than the count matrix.\n',
                         '\nPlease make sure this is on purpouse since differences',
                         'will cause inaccurate quantification and thereby skew all analysis.\n',
-                        '\n!NB! All differences were removed from the final switchAnalyzeRlist!',
+
+                        'If you have quantified with Salmon this could be normal since it as default only keep one copy of identical sequnces (can be prevented using the --keepDuplicates option)\n',
+                        'We strongly encurage you to go back and figure out why this is the case.\n\n',
                         sep=' '
                     )
                 )
@@ -2345,17 +2705,17 @@ importRdata <- function(
                     isoformExonStructure$isoform_id %in% isoformsUsed
                 ), ]
                 isoformAnnotation <-isoformAnnotation[which(
-                    isoformAnnotation$isoform_id    %in% isoformsUsed
+                    isoformAnnotation$isoform_id %in% isoformsUsed
                 ), ]
 
                 if( countsSuppled ) {
                     isoformCountMatrix <-isoformCountMatrix[which(
-                        isoformCountMatrix$isoform_id    %in% isoformsUsed
+                        isoformCountMatrix$isoform_id %in% isoformsUsed
                     ), ]
                 }
                 if( abundSuppled ) {
                     isoformRepExpression <-isoformRepExpression[which(
-                        isoformRepExpression$isoform_id    %in% isoformsUsed
+                        isoformRepExpression$isoform_id %in% isoformsUsed
                     ), ]
                 }
 
@@ -2401,6 +2761,7 @@ importRdata <- function(
             rownames(isoformRepExpression) <- NULL
         }
     }
+
 
     ### If nessesary calculate RPKM values
     if (!quiet) { message('Step 3 of 6: Calculating gene expression and isoform fraction...') }
@@ -2494,6 +2855,86 @@ importRdata <- function(
         }
 
     }
+
+    ### Handle sequence input
+    if(TRUE) {
+        addIsoformNt <- FALSE
+
+        if(!is.null(isoformNtFasta)) {
+            isoformNtSeq <- do.call(
+                c,
+                lapply(isoformNtFasta, function(aFile) {
+                    Biostrings::readDNAStringSet(
+                        filepath = isoformNtFasta, format = 'fasta'
+                    )
+                })
+            )
+
+            if(!is(isoformNtSeq, "DNAStringSet")) {
+                stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
+            }
+
+            ### Fix names
+            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+
+                names(isoformNtSeq) <- fixNames(
+                    nameVec = names(isoformNtSeq),
+                    ignoreAfterBar = ignoreAfterBar,
+                    ignoreAfterSpace = ignoreAfterSpace,
+                    ignoreAfterPeriod = ignoreAfterPeriod
+                )
+            }
+
+            ### Subset to used
+            isoformNtSeq <- isoformNtSeq[which(
+                names(isoformNtSeq) %in% isoformRepExpression$isoform_id
+            )]
+
+            ### Remove potential duplication
+            isoformNtSeq <- isoformNtSeq[which(
+                ! duplicated(names(isoformNtSeq))
+            )]
+
+
+            if( ! all( isoformRepExpression$isoform_id %in% names(isoformNtSeq) ) ) {
+                warning(
+                    paste(
+                        'The fasta file supplied to \'isoformNtFasta\' does not contain the',
+                        'nucleotide (DNA) sequence for all isoforms quantified and will not be added',
+                        '\nSpecifically:\n',
+                        length(unique(isoformRepExpression$isoform_id)), 'isoforms were quantified.\n',
+                        length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
+                        'Only', length(intersect(names(isoformNtSeq), isoformRepExpression$isoform_id)), 'overlap.\n',
+                        length(setdiff(unique(isoformRepExpression$isoform_id), names(isoformNtSeq))), 'isoforms quantifed isoforms had no corresponding nucleotide sequence\n',
+
+                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
+                        '1) The files do not fit together (different databases, versions etc)',
+                            '(no fix except using propperly paired files).\n',
+                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+                        '    3 Examples from expression matrix are :',
+                        paste0( sample(unique(isoformRepExpression$isoform_id), 3), collapse = ', '),'\n',
+                        '    3 Examples of sequence annotation are :',
+                        paste0( sample(names(isoformNtSeq), 3), collapse = ', '),'\n',
+
+
+                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+                        '1) The files do not fit together (different databases versions)',
+                            '(no fix except using propperly paired files).\n',
+                        '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
+                        'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
+                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n\n',
+                        sep = ' '
+                    )
+                )
+            } else {
+                addIsoformNt <- TRUE
+            }
+        }
+    }
+
 
     ### Sum to gene level gene expression - updated
     if(TRUE) {
@@ -2674,6 +3115,8 @@ importRdata <- function(
                 'condition_2',
                 'gene_name',
                 'class_code',
+                'gene_biotype',
+                'iso_biotype',
                 'gene_overall_mean',
                 'gene_value_1',
                 'gene_value_2',
@@ -2745,6 +3188,14 @@ importRdata <- function(
             dfSwichList$isoformRepIF <- isoformRepIF[,c('isoform_id',designMatrix$sampleID)]
         }
 
+        ### Add nucleotide sequence
+        if(addIsoformNt) {
+            dfSwichList$ntSequence <- isoformNtSeq[which(
+                names(isoformNtSeq) %in% dfSwichList$isoformFeatures$isoform_id
+            )]
+
+        }
+
     }
 
     if (!quiet) {
@@ -2759,6 +3210,7 @@ preFilter <- function(
     geneExpressionCutoff = 1,
     isoformExpressionCutoff = 0,
     IFcutoff = 0.01,
+    acceptedGeneBiotype = NULL,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
     reduceToSwitchingGenes = FALSE,
@@ -2802,6 +3254,21 @@ preFilter <- function(
             }
         }
 
+        if( !is.null(acceptedGeneBiotype) & 'gene_biotype' %in% colnames(switchAnalyzeRlist$isoformFeatures) ) {
+            okBiotypes <- unique(switchAnalyzeRlist$isoformFeatures$gene_biotype)
+
+            if( !all(acceptedGeneBiotype %in% okBiotypes) ) {
+                notAnnot <- setdff(acceptedGeneBiotype, okBiotypes)
+
+                warning(
+                    paste(
+                        'Some of the supplied biotypes are not found in the isoforms supplied and will be ignored\n',
+                        'These are:', paste(notAnnot, collapse = ', ')
+                    )
+                )
+            }
+        }
+
         if (!is.logical(removeSingleIsoformGenes)) {
             stop('The removeSingleIsoformGenes must be either TRUE or FALSE')
         }
@@ -2830,6 +3297,7 @@ preFilter <- function(
                 'gene_ref',
                 'isoform_id',
                 'gene_id',
+                'gene_biotype',
                 'class_code',
                 'gene_overall_mean',
                 'iso_overall_mean',
@@ -2884,6 +3352,19 @@ preFilter <- function(
             if (!nrow(localData)) {
                 stop('No genes were left after filtering for isoform fraction (IF) values')
             }
+        }
+
+        if (!is.null(acceptedGeneBiotype)) {
+            if( 'gene_biotype' %in% colnames(localData) ) {
+                localData <- localData[which(localData$gene_biotype %in% acceptedGeneBiotype), ]
+
+                if (!nrow(localData)) {
+                    stop('No genes were left after filtering for acceptedGeneBiotype.')
+                }
+            } else {
+                warning('Gene biotypes were not annotated so the \'acceptedGeneBiotype\' argument was ignored.')
+            }
+
         }
 
         if (!is.null(acceptedIsoformClassCode)) {

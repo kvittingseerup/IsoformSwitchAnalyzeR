@@ -9,18 +9,20 @@ This function extracts the nucleotide (NT) sequence of transcripts by extracting
 \usage{
 extractSequence(
     switchAnalyzeRlist,
-    genomeObject,
+    genomeObject  = NULL,
     onlySwitchingGenes = TRUE,
     alpha = 0.05,
     dIFcutoff = 0.1,
     extractNTseq = TRUE,
     extractAAseq = TRUE,
     filterAALength = FALSE,
+    alsoSplitFastaFile = FALSE,
     removeORFwithStop=TRUE,
     addToSwitchAnalyzeRlist = TRUE,
     writeToFile = TRUE,
     pathToOutput = getwd(),
     outputPrefix='isoformSwitchAnalyzeR_isoform',
+    forceReExtraction = FALSE,
     quiet=FALSE
 )
 }
@@ -30,7 +32,7 @@ extractSequence(
 A \code{switchAnalyzeRlist} object (where ORF info (predicted by \link{analyzeORF}) have been added if the amino acid sequence should be extracted).
 }
   \item{genomeObject}{
-A \code{BSgenome} object uses as reference genome (for example Hsapiens for Homo sapiens, Mmusculus for mouse).
+A \code{BSgenome} object uses as reference genome (for example Hsapiens for Homo sapiens, Mmusculus for mouse). Only nessesary if sequences have not already been extracted.
 }
   \item{onlySwitchingGenes}{
 A logic indicating whether the only sequences from transcripts in genes with significant switching isoforms (as indicated by the \code{alpha} and \code{dIFcutoff} cutoff) should be extracted. Default is TRUE.
@@ -50,6 +52,11 @@ A logical indicating whether the amino acid (AA) sequence of the annotated open 
   \item{filterAALength}{
 A logical indicating whether to filter on the resulting sequences based on their length. This option exist to allows for easier usage of the Pfam and SignalIP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be > 5 AA and < 1000 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is FALSE.
 }
+
+\item{alsoSplitFastaFile}{
+A subset of the web based analysis tools currently supported by IsoformSwitchAnalyzeR have restrictions on the number of sequences in each submission (currently PFAM and to a less extend SignalP). To enable easy use of those web tool this paramter was implemented. By setting this paramter to TRUE a number of amino acide FASTA files will ALSO be generated each only containing the number of sequences allow (currenly max 500 for some tools) thereby enabling easy analysis of the data in multiple web-based submissions. Only considered (if \code{writeToFile=TRUE}).
+}
+
   \item{removeORFwithStop}{
   A logical indicating whether ORFs containing stop codons, definde as * when the ORF nucleotide sequences is translated to the amino acid seqeunce, should be A) removed from the ORF annotation in the switchAnalyzeRlist and B) removed from the sequences added to the switchAnalyzeRlist and/or writen to fasta files. This is only nessesary if you are analyzing quantified known annotated data where you supplied a GTF file to the import function. If you have used \code{analyzeORF} to identify ORFs this should not have an effect. This option will have no effect if no ORFs are found. Default is TRUE.
   }
@@ -65,6 +72,7 @@ If \code{writeToFile} is TRUE, this argument controls the path to the directory 
 \item{outputPrefix}{
 If \code{writeToFile=TRUE} this argument allows for a user specified prefix of the output files(s). The prefix provided here will get a suffix of '_nt.fasta' or '_AA.fasta' depnding on the file type. Default is 'isoformSwitchAnalyzeR_isoform' (thereby creating the 'isoformSwitchAnalyzeR_isoform_nt.fasta' and 'isoformSwitchAnalyzeR_isoform_AA.fasta' files).
 }
+\item{forceReExtraction}{ A logic indicating whether to force re-extraction of the biological sequences - else sequences already stored in the switchAnalyzeRlist will be used instead if available (because this function had already been used once). Default is FALSE}
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
 }
 
@@ -85,7 +93,8 @@ See \code{?analyzeCPAT}, \code{?analyzePFAM} or \code{?analyzeSignalIP} (under d
 }
 
 \value{
-If \code{writeToFile=TRUE} one fasta file pr sequence type (controled via \code{extractNTseq} and \code{extractAAseq}) are written to the folder indicated by \code{pathToOutput}. If \code{addToSwitchAnalyzeRlist=TRUE} the sequences are added to the \code{switchAnalyzeRlist} as respectively \code{DNAStringSet} and \code{AAStringSet} objects under the names 'ntSequence' and 'aaSequence'. The names of these sequences matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist.
+If \code{writeToFile=TRUE} one fasta file pr sequence type (controled via \code{extractNTseq} and \code{extractAAseq}) are written to the folder indicated by \code{pathToOutput}. If \code{alsoSplitFastaFile=TRUE} both a fasta file containing all isoforms (denoted '_complete' in file name) as well as a number of fasta files containging subsets of the entire file will be created. The subset fasta files will have the following indication "subset_X_of_Y" in the file names.
+If \code{addToSwitchAnalyzeRlist=TRUE} the sequences are added to the \code{switchAnalyzeRlist} as respectively \code{DNAStringSet} and \code{AAStringSet} objects under the names 'ntSequence' and 'aaSequence'. The names of these sequences matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist. The switchAnalyzeRlist is return no matter whether it was modified or not.
 }
 
 \references{

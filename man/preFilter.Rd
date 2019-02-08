@@ -14,6 +14,7 @@ preFilter(
     geneExpressionCutoff = 1,
     isoformExpressionCutoff = 0,
     IFcutoff=0.01,
+    acceptedGeneBiotype = NULL,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
     reduceToSwitchingGenes=FALSE,
@@ -38,6 +39,10 @@ The expression cutoff (most likely in RPKM/FPKM) which isoforms must be expresse
 
   \item{IFcutoff}{
 The cutoff on isoform usage (measured as Isoform Fraction, see details) which isoforms must be used more than in at least one conditions of a comparison. NULL disables the filter. Default is 0 (which removes non-contributing isoforms).
+}
+
+  \item{acceptedGeneBiotype}{
+A vector of strings indicating which gene biotypes (data typically optained from GTF files). Can be any biotype annotated, the most common beeing: "protein_coding", "lincRNA" and "antisense". Default is NULL.
 }
 
   \item{acceptedIsoformClassCode}{

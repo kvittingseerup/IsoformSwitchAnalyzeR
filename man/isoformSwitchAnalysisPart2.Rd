@@ -9,21 +9,30 @@ This high-level function adds the results of the extrenal sequence analysis supp
 \usage{
 isoformSwitchAnalysisPart2(
     switchAnalyzeRlist,
-    alpha=0.05,
+    alpha = 0.05,
     dIFcutoff = 0.1,
-    n=NA,
+    n = NA,
     codingCutoff,
     removeNoncodinORFs,
-    pathToCPATresultFile=NULL,
+    pathToCPATresultFile = NULL,
     pathToCPC2resultFile = NULL,
-    pathToPFAMresultFile=NULL,
-    pathToSignalPresultFile=NULL,
-    consequencesToAnalyze=c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified'),
-    pathToOutput=getwd(),
-    fileType='pdf',
-    asFractionTotal=FALSE,
-    outputPlots=TRUE,
-    quiet=FALSE
+    pathToPFAMresultFile = NULL,
+    pathToNetSurfP2resultFile = NULL,
+    pathToSignalPresultFile = NULL,
+    consequencesToAnalyze = c(
+        'intron_retention',
+        'coding_potential',
+        'ORF_seq_similarity',
+        'NMD_status',
+        'domains_identified',
+        'IDR_identified',
+        'signal_peptide_identified'
+    ),
+    pathToOutput = getwd(),
+    fileType = 'pdf',
+    asFractionTotal = FALSE,
+    outputPlots = TRUE,
+    quiet = FALSE
 )
 }
 
@@ -53,17 +62,22 @@ A logic indicating wether to remove ORF information from the isoforms which the 
 }
 
   \item{pathToCPATresultFile}{
-Path to the CPAT result file. If the webserver is used please dowload the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file.
+Path to the CPAT result file. If the webserver is used please dowload the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file. See \link{analyzeCPAT} for details.
 }
 \item{pathToCPC2resultFile}{
-Path to the CPC2 result file. If the webserver is used please dowload the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file.
+Path to the CPC2 result file. If the webserver is used please dowload the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file. See \link{analyzeCPC2} for details.
 }
 
-  \item{pathToPFAMresultFile}{
-  Path to the PFAM result file. If the webserver is used you need to copy paste the result part of the mail you get into a empty plain text document (notepad, sublimetext TextEdit or similar (aka not word)) and save that to a file. This file is then used as input to the function.
+\item{pathToPFAMresultFile}{
+  A string indicating the full path to the Pfam result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. If the webserver is used you need to copy paste the result part of the mail you get into a empty plain text document (notepad, sublimetext TextEdit or similar (aka not word)) and save that. See \link{analyzePFAM} for details.
 }
+
+  \item{pathToNetSurfP2resultFile}{
+  A string indicating the full path to the NetSurfP-2 result csv file. See \link{analyzeNetSurfP2} for details.
+}
+
   \item{pathToSignalPresultFile}{
-  Path to the summary SignalP result file. If using the web-server the results should be copy pasted into a empty plain text document (notepad, sublimetext TextEdit or similar (aka not word)) and save that to a file. This file is then used as input to the function.
+  A string indicating the full path to the SignalP result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. If using the web-server the results should be copy pasted into a empty plain text document (notepad, sublimetext TextEdit or similar (aka not word)) and save that. See \link{analyzeSignalP} for details.
 }
   \item{consequencesToAnalyze}{
     A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences beteen transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated and signal peptides annotated by Pfam).
@@ -112,6 +126,8 @@ Kristoffer Vitting-Seerup
 
 \seealso{
 \code{\link{analyzeCPAT}}\cr
+\code{\link{analyzeCPC2}}\cr
+\code{\link{analyzeNetSurfP2}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeAlternativeSplicing}}\cr
@@ -123,13 +139,14 @@ Kristoffer Vitting-Seerup
 \examples{
 data("exampleSwitchListIntermediary")
 exampleSwitchListAnalyzed <- isoformSwitchAnalysisPart2(
-    switchAnalyzeRlist       = exampleSwitchListIntermediary,
-    dIFcutoff                = 0.4,   # Set high for short runtime in example data
-    pathToCPATresultFile     = system.file("extdata/cpat_results.txt", package = "IsoformSwitchAnalyzeR"),
-    pathToPFAMresultFile     = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
-    pathToSignalPresultFile  = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR"),
-    codingCutoff             = 0.725,
-    removeNoncodinORFs       = TRUE,  # Because ORF was predicted de novo
-    outputPlots              = FALSE  # keeps the function from outputting the plots from this example
+    switchAnalyzeRlist        = exampleSwitchListIntermediary,
+    dIFcutoff                 = 0.4,   # Set high for short runtime in example data
+    pathToCPC2resultFile      = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
+    pathToPFAMresultFile      = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
+    pathToNetSurfP2resultFile = system.file("extdata/netsurfp2_results.csv.gz", package = "IsoformSwitchAnalyzeR"),
+    pathToSignalPresultFile   = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR"),
+    codingCutoff              = 0.725,
+    removeNoncodinORFs        = TRUE,  # Because ORF was predicted de novo
+    outputPlots               = FALSE  # keeps the function from outputting the plots from this example
 )
 }

@@ -16,10 +16,11 @@ isoformSwitchAnalysisPart1(
     dIFcutoff = 0.1,
     switchTestMethod='DEXSeq',
     orfMethod = "longest",
-    genomeObject,
+    genomeObject = NULL,
     cds = NULL,
     pathToOutput = getwd(),
     outputSequences = TRUE,
+    prepareForWebServers = FALSE,
     overwriteORF=FALSE,
     quiet=FALSE
 )
@@ -66,6 +67,10 @@ A logical indicating whether to overwrite the ORF analysis already stored in the
   \item{outputSequences}{
 A logical indicating whether transcript nucleotide and amino acid sequences should be outputted to \code{pathToOutput}. Default is TRUE.
 }
+\item{prepareForWebServers}{
+A logical indicating whether the amino acid fasta files saved (if \code{outputSequences=TRUE}) should be prepared for the online web-servises currently supported (as they have some limitations on what can submitted). See details. Default is FALSE (for backward compatability).
+}
+
 \item{quiet}{ A logical indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
 
@@ -78,6 +83,8 @@ This function performs the first part of a Isoform Analysis Workflow by
     \item If no ORFs are annotated the isoforms are analyzed for open reading frames (ORFs, see \link{analyzeORF})
     \item The isoform nucleotide and ORF amino acid sequences are extracted and saved to fasta files as well as added to the switchAnalyzeRlist enabling external sequence analysis with CPAT, Pfam and SignalP (see vignette for more info).
 }
+
+if \code{prepareForWebServers=TRUE} both the "filterAALength" and "alsoSplitFastaFile" will be enabled in the \code{extractSequence} function.
 }
 
 \value{

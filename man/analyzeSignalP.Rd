@@ -5,7 +5,7 @@
 Import Result of SignalP Analysis
 }
 \description{
-Allows for easy integration of the result of SignalP (external sequence analysis of signal peptides) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' of the \code{analyzeCPAT} argument we recommend using \code{analyzeCPAT} before \code{analyzePFAM} and \code{analyzeSignalP} if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the result of SignalP (external sequence analysis of signal peptides) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeSignalP, analyzeEspritz, analyzePFAM if you have predicted the ORFs with \code{analyzeORF}.
 }
 \usage{
 analyzeSignalP(
@@ -20,12 +20,16 @@ analyzeSignalP(
 A \code{switchAnalyzeRlist} object
 }
   \item{pathToSignalPresultFile}{
-A string indicating the full path to the summary SignalP result file. See \code{details} for suggestion of how to run and obtain the result of the SignalP tool.
+A string indicating the full path to the summary SignalP result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the SignalP tool.
 }
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
 
 \details{
+A signal peptide is a short peptide sequence which indicate a protein is destined towards the secrotry pathway.
+
+The SignalP web-server is less stringent than PFAM with regards to the number of sequences in the files uploaded so we sugget trying the combined fasta file first - and if that does not work try the files containg subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
+
 Notes for how to run the external tools:
 If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP should be run with the paramter "standard" under "Output format" and "No graphics" under "Graphics output". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results should be copy pasted (from the web-page) into an empty plain text document (notepat, sublimetext TextEdit or similar (not word)) and save that to a txt file. This file is then used as input to the function. If a stand-alone version was just supply the path to the summary result file
 }
@@ -58,6 +62,7 @@ Kristoffer Vitting-Seerup
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
+\code{\link{analyzeNetSurfP2}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }

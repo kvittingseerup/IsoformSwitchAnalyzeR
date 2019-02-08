@@ -39,7 +39,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 }
 
 \item{n}{
-The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be generated in each subfolder indicated by \code{splitComparison, splitFunctionalConsequences}. Use NA to create all. Default is 10.
+The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be generated in each subfolder indicated by \code{splitComparison} and \code{splitFunctionalConsequences}. Use NA to create all. Default is 10.
 }
 
 \item{sortByQvals}{

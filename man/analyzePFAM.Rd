@@ -5,7 +5,7 @@
 Import Result of PFAM analysis
 }
 \description{
-Allows for easy integration of the result of Pfam (external sequence analysis of protein domains) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' of the \code{analyzeCPAT} argument we recommend using \code{analyzeCPAT} before \code{analyzePFAM} and \code{analyzeSignalP} if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the result of Pfam (external sequence analysis of protein domains) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzePFAM, analyzeEspritz and analyzeSignalP if you have predicted the ORFs with \code{analyzeORF}.
 }
 \usage{
 analyzePFAM(
@@ -21,7 +21,7 @@ analyzePFAM(
 A \code{switchAnalyzeRlist} object
 }
   \item{pathToPFAMresultFile}{
-A string indicating the full path to the Pfam result file. See \code{details} for suggestion of how to run and obtain the result of the Pfam tool.
+A string indicating the full path to the Pfam result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the Pfam tool.
 }
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
@@ -30,6 +30,10 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 }
 
 \details{
+A protein domain is a part of a protein which by itself can maintain a fixed three-dimentional structure. Protein domains are found in most proteins and usually have a specific function.
+
+The PFAM webserver is quite strict with regards to the number of sequences in the files uploaded so we sugget multiple runs each with one of the the files containg subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
+
 Notes for how to run the external tools: \cr
 Use default paramters. If you want to use the webserver it is easily done as follows:.
 1) Go to \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan}
@@ -84,6 +88,7 @@ Kristoffer Vitting-Seerup
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeNetSurfP2}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

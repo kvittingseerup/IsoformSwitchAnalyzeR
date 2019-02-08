@@ -9,10 +9,15 @@ Function for importing a GTF (can be either gziped or unpacked) into R as a \cod
 \usage{
 importGTF(
     pathToGTF,
+    isoformNtFasta = NULL,
+    extractAaSeq = FALSE,
     addAnnotatedORFs=TRUE,
     onlyConsiderFullORF=FALSE,
     removeNonConvensionalChr=FALSE,
-    includeVersionIfAvailable=TRUE,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod=FALSE,
+    removeTECgenes = TRUE,
     PTCDistance=50,
     quiet=FALSE
 )
@@ -20,13 +25,28 @@ importGTF(
 \arguments{
 \item{pathToGTF}{ A string indicating the full path to the (gziped or unpacked) GTF that should be imported.}
 
+\item{isoformNtFasta}{
+A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucloetide (genomic) sequence of all isoforms quantified. This is usefull for: 1) people working with non-model organisms where extracting the sequnce from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index).
+}
+
+\item{extractAaSeq}{
+A logic indicating whether the nucleotide sequence imported via \code{isoformNtFasta} should be translated to amino acid sequence and stored in the switchAnalyzeList. Requires ORFs are imported, see \code{addAnnotatedORFs}. Default is true if a fasta file is supplied.
+}
+
 \item{addAnnotatedORFs}{ A logic indicating whether the ORF from the GTF should be added to the \code{switchAnalyzeRlist}. This ORF is defined as the regions annoated as 'CDS' in the 'type' collumn (collumn 3). Default is TRUE.}
 
 \item{onlyConsiderFullORF}{ A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annoated is defined as those that both have a annotated 'start_codon' and 'stop_codon' in the 'type' column (column 3). This argument is only considered if onlyConsiderFullORF=TRUE. Default is FALSE.}
 
-\item{removeNonConvensionalChr}{ A logic indicating whether non-conventional chromosomes, here defined as chromosome names containing a '_'. These regions are typically used to annotate regions that cannot be assocaiated to a specific region (such as the human 'chr1_gl000191_random') or regions quite different due to different haplotypes (e.g. the 'chr6_cox_hap2'). Default is FALSE.}
+\item{removeNonConvensionalChr}{ A logic indicating whether non-conventional chromosomes, here defined as chromosome names containing either a '_' or a period ('.'). These regions are typically used to annotate regions that cannot be assocaiated to a specific region (such as the human 'chr1_gl000191_random') or regions quite different due to different haplotypes (e.g. the 'chr6_cox_hap2'). Default is FALSE.}
 
-\item{includeVersionIfAvailable}{ A logic indicateding whether to combined gene/transcript ids with their respective version numbers (GENCODE style) if the version numbers are in a seperate column - as is often the case with Ensemble data (this functionality will not remove exsiting version numbering from ids if set to FALSE). Defalut is TRUE}
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Usefull for analysis of GENCODE files. Default is TRUE.}
+
+\item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Usefull for analysis of gffutils generated GTF files. Default is TRUE.}
+
+\item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first periot ("."). Should be used with care. Default is FALSE.}
+
+\item{removeTECgenes}{A logic indicating whether to remove genes marked as "To be Experimentally Confirmed" (if annotation is available). The default is TRUE aka to remove them which is in line
+with Gencode recomendations (TEC are not in gencode annotations). For more info about TEC see \url{https://www.gencodegenes.org/pages/biotypes.html}.}
 
 \item{PTCDistance}{ Only considered if \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}

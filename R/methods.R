@@ -109,7 +109,8 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
             'isoformSwitchAnalysis','ntSequence','aaSequence',
             'switchConsequence', 'isoformSwitchAnalysis',
             # added to prevent wrong IF estimations after limma based test introduction
-            'isoformRepIF','isoformRepExpression','isoformCountMatrix'
+            'isoformRepIF','isoformRepExpression','isoformCountMatrix',
+            'runInfo'
         )
     )
     if(length(otherAnalysisPerformed)) {
@@ -162,13 +163,19 @@ summary.switchAnalyzeRlist <- function(object, ...) {
         object$isoformFeatures[,c('condition_1','condition_2')]
     ))
     nCond <- nrow(object$conditions)
+    nSamples <- sum(object$conditions$nrReplicates)
+
     nGenes <- length(unique(object$isoformFeatures$gene_id))
     nIso <- length(unique(object$isoformFeatures$isoform_id))
 
     analysisAdded <- setdiff(
         names(object),
-        c('isoformFeatures','exons','conditions','sourceId',
-          'isoformSwitchAnalysis','designMatrix','isoformCountMatrix','isoformRepExpression','isoformRepIF')
+        c(
+            'isoformFeatures','exons','conditions','sourceId',
+            'isoformSwitchAnalysis','designMatrix',
+            'isoformCountMatrix','isoformRepExpression','isoformRepIF',
+            'runInfo'
+        )
     )
 
     if( 'codingPotentialValue' %in% colnames(object$isoformFeatures) ) {
@@ -184,7 +191,12 @@ summary.switchAnalyzeRlist <- function(object, ...) {
               nComparisons,
               'comparison from',
               nCond,
-              'conditions\n',
+              'conditions',
+              paste0(
+                  '(in total ',
+                nSamples,
+                ' samples)\n'
+              ),
               sep=' '
         )
     )
@@ -230,6 +242,8 @@ summary.switchAnalyzeRlist <- function(object, ...) {
             'orfAnalysis'                ,'ORFs'                  , analysisAdded)
         analysisAdded <- gsub(
             'switchConsequence'          ,'Switch Consequences'   , analysisAdded)
+        analysisAdded <- gsub(
+            'idrAnalysis'          ,'IDR'   , analysisAdded)
 
         print(paste(analysisAdded, collapse = ', '))
     }
@@ -628,6 +642,9 @@ createSwitchAnalyzeRlist <- function(
     if( abundSuppled ) {
         localSwitchList$isoformRepExpression <- isoformRepExpression[,c('isoform_id',designMatrix$sampleID)]
     }
+
+    ### Add runInfo
+    localSwitchList$runInfo <- list()
 
     ### Subset if nessesary
     if(length(genesToRemove)) {

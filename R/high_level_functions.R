@@ -4,10 +4,11 @@ isoformSwitchAnalysisPart1 <- function(
     dIFcutoff = 0.1,
     switchTestMethod = 'DEXSeq',
     orfMethod = 'longest',
-    genomeObject,
+    genomeObject = NULL,
     cds = NULL,
     pathToOutput = getwd(),
     outputSequences = TRUE,
+    prepareForWebServers = FALSE, # to keep backcompatability
     overwriteORF = FALSE,
     quiet = FALSE
 ) {
@@ -19,6 +20,15 @@ isoformSwitchAnalysisPart1 <- function(
             'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
         )
     }
+
+    ### Test
+    ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
+    if( ! ntAlreadyInSwitchList ) {
+        if (class(genomeObject) != 'BSgenome') {
+            stop('The genomeObject argument must be a BSgenome')
+        }
+    }
+
 
     ### Run preFilter
     switchAnalyzeRlist <-
@@ -134,8 +144,9 @@ isoformSwitchAnalysisPart1 <- function(
         extractAAseq = TRUE,
         addToSwitchAnalyzeRlist = TRUE,
         writeToFile = outputSequences,
+        filterAALength = prepareForWebServers,
+        alsoSplitFastaFile = prepareForWebServers,
         pathToOutput = pathToOutput,
-        filterAALength = TRUE,
         quiet = TRUE
     )
 
@@ -177,6 +188,7 @@ isoformSwitchAnalysisPart2 <- function(
     pathToCPATresultFile = NULL,
     pathToCPC2resultFile = NULL,
     pathToPFAMresultFile = NULL,
+    pathToNetSurfP2resultFile = NULL,
     pathToSignalPresultFile = NULL,
     consequencesToAnalyze = c(
         'intron_retention',
@@ -184,6 +196,7 @@ isoformSwitchAnalysisPart2 <- function(
         'ORF_seq_similarity',
         'NMD_status',
         'domains_identified',
+        'IDR_identified',
         'signal_peptide_identified'
     ),
     pathToOutput = getwd(),
@@ -279,6 +292,14 @@ isoformSwitchAnalysisPart2 <- function(
                 quiet = TRUE
             )
     }
+    if (!is.null(pathToNetSurfP2resultFile)) {
+        switchAnalyzeRlist <-
+            analyzeNetSurfP2(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                pathToNetSurfP2resultFile = pathToNetSurfP2resultFile,
+                quiet = TRUE
+            )
+    }
     if (!is.null(pathToSignalPresultFile)) {
         switchAnalyzeRlist <-
             analyzeSignalP(
@@ -338,9 +359,6 @@ isoformSwitchAnalysisPart2 <- function(
             quiet = TRUE
         )
     analysisDone <- analysisDone + 1
-
-    ### Reduce annotation
-    #switchAnalyzeRlist <- removeAnnoationData(switchAnalyzeRlist)
 
     ### Make isoform switch plots
     if (outputPlots) {

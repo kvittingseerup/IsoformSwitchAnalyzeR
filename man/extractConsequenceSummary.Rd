@@ -44,7 +44,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 A logic indicting whether the summarized results should be plotted. Default is TRUE.
 }
   \item{plotGenes}{
-A logic indicating whether to plot the number/fraction of genes (if TRUE) or switches (if FALSE) with functional consequences should be plotted.
+A logic indicating whether to plot the number/fraction of genes with (if TRUE) or isoforms (if FALSE) involeved with isoform switches with functional consequences (both filtered via \code{alpha} and \code{dIFcutoff}.
 }
   \item{localTheme}{
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
