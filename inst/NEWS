@@ -1,4 +1,7 @@
-1.5.4: IsoformSwitchAnalyzeR 2019-XX-XX ( MAJOR )
+1.5.5: IsoformSwitchAnalyzeR 2019-XX-XX ( XXXX )
+
+
+1.5.4: IsoformSwitchAnalyzeR 2019-02-08 ( MAJOR )
     Summary: IsoformSwitchAnalyzeR now:
         1) Supports analysis of Intrinsically Disordered Regions (IDR)
         2) Have much better handling of multiple annoation files making it easy to use Ensemble annotation
@@ -74,7 +77,7 @@
         sequences which can sumitted at the same time, the following updates were made:
             - extractSequence() now:
                     1) Supports multi-fasta output (so multiple runs can be submitted to the web-servers (omitting the max number of sequences))
-                    2) Supports trimming the AA sequences the max lenght allowed (currently 1000) (allowing analysis of at least some parts of the protein).
+                    2) Supports trimming the AA sequences the max lenght allowed (currently 1000 AA) (allowing analysis of at least some parts of the protein).
             - To support results based on the multi-fasta output of extractSequence() both
                 analyzePFAM and analyzeSignalP was updated to support importing of results distributed into mutiple files.
             - To ensure the trimming of AA sequences did not affect downstream analysis:
@@ -84,6 +87,7 @@
                         a ORF was not analyzed  (only if acutally trimmed by extractSequence()).
             - Our tests suggest one find 5% fewer switch consequences when the sequences are trimmed - but unless
                 EBI reconsideres their limitations this cannot fixed.
+                    Complaints can be send via: https://www.ebi.ac.uk/support/ or on twitter via @hmm3r
 
     - importIsoformExpression() got a workover. It now:
             Handles failed library quantification.

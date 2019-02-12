@@ -1414,9 +1414,6 @@ expressionAnalysisPlot <- function(
                     'condition_1', 'condition_2'
                 )])
 
-            levelsToMatch <-
-                unique(as.vector(t(allConditionPairs))) # get the levels in the order in the file
-
             if (nrow(allConditionPairs) > 1) {
                 if (missing(condition1) | missing(condition2)) {
                     stop(
@@ -1450,6 +1447,7 @@ expressionAnalysisPlot <- function(
                     )
                 }
 
+                levelsToMatch <- c(condition1, condition2)
 
                 conditionsFound <-
                     apply(allConditionPairs, 1, function(x) {
@@ -1482,14 +1480,15 @@ expressionAnalysisPlot <- function(
                 }
 
             } else {
-                condition1 <- allConditionPairs$condition_1
-                condition2 <- allConditionPairs$condition_2
+                if( is.null(condition1) & is.null(condition2)) {
+                    condition1 <- allConditionPairs$condition_1
+                    condition2 <- allConditionPairs$condition_2
+                }
+
+                levelsToMatch <- c(condition1, condition2)
             }
 
-            levelsToMatch <-
-                levelsToMatch[which(
-                    levelsToMatch %in% c(condition1, condition2)
-                )]
+
 
         }
 
@@ -1901,12 +1900,11 @@ expressionAnalysisPlot <- function(
                     levelsToMatch, function(x) {
                         which(grepl(
                             paste0('^',x,'$'),
-                            trimWhiteSpace(geneExpressionCombined$Condition)
+                            trimWhiteSpace(c(condition1, condition2))
                         ))[1]
                     }
                 )]
             )
-
 
             ### Build Plot
             g1 <-

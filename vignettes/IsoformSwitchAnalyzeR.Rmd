@@ -484,7 +484,7 @@ extractTopSwitches(exampleSwitchList, filterForConsequences = TRUE, n=3)
 <br />
 
 ### Examples Visualizations
-To illustrate visualizations, both for individual genes and for the genome-wide analysis, we will use a larger dataset which is a subset of two of the TCGA Cancer types analyzed in Vitting-Seerup et al 2017. Please note that all analysis describe below can be done with any data analyzed as describe above. The TCGA data can be loaded as follows:
+To illustrate visualizations, both for individual genes and for the genome-wide analysis, we will use a larger dataset which is a subset of two of the TCGA Cancer types analyzed in Vitting-Seerup et al 2017. Please note that all analysis describe below can be done with any data analyzed as describe above. The TCGA example data can be loaded as follows:
 
 ```{r}
 data("exampleSwitchListAnalyzed")
@@ -536,6 +536,7 @@ Furthermore, note that:
 
 - The differential gene/isoform expression analysis is not a part of the standard IsoformSwitchAnalyzeR workflow but can easily be added as described in [Adding differential gene expression].
 - the _switchPlot()_ function have a argument called _IFcutoff_ which requires the Isoform Fraction of an isforom to be larger than IFcutoff (default 0.05) to be included in the plot. Increasing this cutoff can result in "cleaner" plots as less used isoforms will be removed.
+- Some regions of transcripts might be marked as "Not Analyzed" if you have been using webservers - for more info on that see [The switchPlot contains regions "Not Anootated"]
 
 <br />
 
@@ -939,13 +940,11 @@ Note that:
 The switchAnalyzeRlist now contains all the information imported in seperate entires of the switchAnalyzeRlist object:
 
 ```{R}
-head(exampleSwitchListAnalyzed$isoformFeatures,2)
+head(aSwitchList$isoformFeatures,2)
 
-head(exampleSwitchListAnalyzed$exons,2)
+head(aSwitchList$exons,2)
 
-head(exampleSwitchListAnalyzed$ntSequence,2)
-
-head(exampleSwitchListAnalyzed$aaSequence,2)
+head(aSwitchList$ntSequence,2)
 
 # Etc...
 ```
@@ -1052,6 +1051,7 @@ By using _preFilter()_ it is possible to remove genes and isoforms from all aspe
 * Isoform expression
 * Isoform Fraction (isoform usage)
 * Unwanted isoform classes
+* Unwanted gene biotypes
 * Genes without differential isoform usage
 
 Removal of single isoform genes is the default setting in _preFilter()_ since these genes, per definition, cannot have changes in isoform usage. 
@@ -1228,15 +1228,12 @@ The _analyzeORF()_ function can be used as follows:
 ```{r}
 ### This example relies on the example data from the 'Usage of The Statistical Test' section above 
 
-### analyzeORF needs the genomic sequence to predict ORFs. 
-# These are readily available from Bioconductor as BSgenome orbjects: 
-# http://bioconductor.org/packages/release/BiocViews.html#___BSgenome
-# Here we use Hg19 --- which can be downloaded by copy/pasting the following two lines into the R termminal:
-# BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
-
-library(BSgenome.Hsapiens.UCSC.hg19)
-
-exampleSwitchListAnalyzed <- analyzeORF(exampleSwitchListAnalyzed, genomeObject = Hsapiens, showProgress=FALSE)
+exampleSwitchListAnalyzed <- analyzeORF(
+    exampleSwitchListAnalyzed,
+    orfMethod = "longest",
+    # genomeObject = Hsapiens, # not nessesary since sequences are already stored in the switchAnalyzeRlist
+    showProgress=FALSE
+)
 
 head(exampleSwitchListAnalyzed$orfAnalysis, 3)
 
@@ -1556,8 +1553,7 @@ The central visualization is the switch plot, created with _switchPlot()_ functi
 As illustrated here:
 
 ```{r, fig.width=12, fig.height=3}
-### Load already analyzed data
-data("exampleSwitchListAnalyzed")
+### exampleSwitchListAnalyzedSubset is created above
 
 switchPlotTranscript(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B')
 ```
@@ -1629,7 +1625,6 @@ The workflow implemented in IsoformSwitchAnalyzeR is mostly focused on identifyi
 ```
 ### Step (1) Import data and create SwitchAnalyzeRlist
 mySwitchList <- importCufflinksData()      # OR
-mySwitchList <- importIsoformExpression()  # OR
 mySwitchList <- importRdata()
 
 ### Step (2) Prefilter
@@ -1793,14 +1788,17 @@ exampleSwitchListAnalyzed <- analyzeORF(exampleSwitchListAnalyzed, genomeObject 
 mean(exampleSwitchListAnalyzed$orfAnalysis$orfTransciptLength)
 
 # run ORF analysis on most upstream ORF
-exampleSwitchListAnalyzed2 <- analyzeORF(exampleSwitchListAnalyzed, genomeObject = Hsapiens, orfMethod = 'mostUpstream', minORFlength = 50)
+exampleSwitchListAnalyzed2 <- analyzeORF(exampleSwitchListAnalyzed, orfMethod = 'mostUpstream', minORFlength = 50)
 mean(exampleSwitchListAnalyzed2$orfAnalysis$orfTransciptLength)
 
 # calculate pairwise difference
 summary(
     exampleSwitchListAnalyzed2$orfAnalysis$orfTransciptLength -
         exampleSwitchListAnalyzed$orfAnalysis$orfTransciptLength[
-            match(exampleSwitchListAnalyzed2$orfAnalysis$isoform_id ,exampleSwitchListAnalyzed$orfAnalysis$isoform_id)
+            match(
+                exampleSwitchListAnalyzed2$orfAnalysis$isoform_id,
+                exampleSwitchListAnalyzed$orfAnalysis$isoform_id
+            )
         ]
 )
 ```
@@ -1970,6 +1968,7 @@ Back to [Table of Content]
 - [The error "The supplied design matrix will result in a model matrix that is not full rank"]
 - [How to prevent visualization of NMD in the switchPlot]
 - [BSGenomes for non-model organismes]
+- [The switchPlot contains regions "Not Anootated"]
 
 ### What Quantification Tool(s) Should I Use?
 Please note that the following is a reflection of my personal convictions and should not be read as "the truth" and that the considerations and recomendations apply both if you are interested in transcript level quantification (as used in this vignette) and if your interest is gene expression analysis.
@@ -2094,6 +2093,13 @@ In some biological systems the role of NMD is not well estabilished whereby one 
 If you are analyzing a non-model organisme the easiest way of incooperating the underlying sequence analysis is to use the _isoformNtFasta_ argument in importRdata. This is the recomended analysis workflow even for model organisme and will make the entire analysis more accurate as well as speed up specific steps of the workflow.
 
 Alternatively one can build a costom BSgenome as describe [here](https://www.bioconductor.org/packages/devel/bioc/vignettes/BSgenome/inst/doc/BSgenomeForge.pdf).
+
+<br />
+
+## The switchPlot contains regions "Not Anootated"
+The problem is the incrisingly strict limiatations on some of the external sequences analysis tools (primarly EBI's pfam but also SignalP)  specifically there websites  which amongst others have limitations on the max length of the sequences which can be analyzed. To extract the maximum information IsoformSwitchAnalyzeR supports trimming of the amino acid sequences so the fit the length allowed to be analyzed. This naturally mean that some parts of a sequence cannot be analyzed - and that is what is visualized in the switchPlot. Furthermore please note that un-analyzed regions are ignored during the consequence predictions meaning that the trimming result in no bias. Specifically this is controled with the "filterAALength" argument of _extractSequence()_ function (but the websites will not run them if they are to long).
+
+Complaints about these limitations can be send to EBI via their [website](https://www.ebi.ac.uk/support/) or on twitter via @hmm3r
 
 <br />
 

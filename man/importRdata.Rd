@@ -8,7 +8,7 @@ Create SwitchAnalyzeRlist From Standard R Objects
 \description{
 A general-purpose interface to constructing a switchAnalyzeRlist from Standard R objects containing expression and annoatation information. The data needed for this function are
 \itemize{
-    \item{\code{1}: Normalized biological replicate isoform expression data, preferentially both counts and abundances but either will do.}
+    \item{\code{1}: Normalized biological replicate isoform expression data, preferentially both counts and abundances but either will do. See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
     \item{\code{2}: Isoform annotation (both genomic exon coordinates and which gene the isoform belongs to). This can also be supplied as the path to a GTF file where the information can be found.}
     \item{\code{3}: A design matrix indicating which samples belong to which condition}
 }
