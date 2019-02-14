@@ -1555,17 +1555,17 @@ As illustrated here:
 ```{r, fig.width=12, fig.height=3}
 ### exampleSwitchListAnalyzedSubset is created above
 
-switchPlotTranscript(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B')
+switchPlotTranscript(exampleSwitchListAnalyzedSubset, gene = 'ZAK')
 ```
 ```{r, fig.width=3, fig.height=3}
-switchPlotGeneExp (exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B', condition1='iPS', condition2='hESC')
+switchPlotGeneExp (exampleSwitchListAnalyzedSubset, gene = 'ZAK')
 ```
 ```{r, fig.width=4, fig.height=3}
-switchPlotIsoExp(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B', condition1='iPS', condition2='hESC')
+switchPlotIsoExp(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B')
 ```
 
 ```{r, fig.width=4, fig.height=3}
-switchPlotIsoUsage(exampleSwitchListAnalyzedSubset, gene = 'TNFRSF1B', condition1='iPS', condition2='hESC')
+switchPlotIsoUsage(exampleSwitchListAnalyzedSubset, gene = 'ZAK')
 ```
 
 <br />
