@@ -12,10 +12,12 @@ extractConsequenceEnrichment(
     consequencesToAnalyze = 'all',
     alpha=0.05,
     dIFcutoff = 0.1,
+    countGenes = TRUE,
     analysisOppositeConsequence=FALSE,
     plot=TRUE,
     localTheme = theme_bw(base_size = 12),
-    returnResult=FALSE,
+    minEventsForPlotting = 10,
+    returnResult=TRUE,
     returnSummary=TRUE
 )
 }
@@ -33,6 +35,11 @@ The cutoff which the (callibrated) fdr correct p-values must be smaller than for
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
 }
+
+\item{countGenes}{
+A logic indicating whether it is the number of genes (if TRUE) or isoform switches (if FALSE) which primarly result in gain/loss that are counted. Default is TRUE.
+}
+
 \item{analysisOppositeConsequence}{
 A logic indicating whether reverse the analysis meaing if "Domain gains"" are analyze using default parameters setting \code{analysisOppositeConsequence=TRUE} will case the analysis to be performed on "Domain loss". The main effect is for the visual appearence of plot which will be mirrored (around the 0.5 fraction). Default is FALSE.
 }
@@ -42,8 +49,13 @@ A logic indicting whether the analysis should be plotted. Default is TRUE.
   \item{localTheme}{
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw(base_size = 14).
 }
+
+ \item{minEventsForPlotting}{
+The minimum number of events (total gain/loss) must be pressent before the result is visualized. Default is 10.
+}
+
   \item{returnResult}{
-A logic indicating whether the analysis should be returned as a data.frame. Default is FALSE.
+A logic indicating whether the analysis should be returned as a data.frame. Default is TRUE.
 }
  \item{returnSummary}{
 A logic indicating whether to return the statistical summary (if TRUE) or the underlying data (if FALSE). Default is TRUE.

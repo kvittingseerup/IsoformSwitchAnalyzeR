@@ -1,3 +1,23 @@
+1.5.6: IsoformSwitchAnalyzeR 2019-02-26 ( minor )
+    - Fixed two problems with intron retention analysis:
+        - Fixed an edge-case senario where multiple consequtive retentions were
+            only counted as one (and somtimes coordinates were seperated by ',' instead of ';')
+        - The coordinates repported were accedentially the last and first
+            coordinate of the sourounding exons. Now they are the first and last coordinate of the intron.
+        - The example data was updated accordingly
+    - The axis text of extractSplicingSummary was changed to better reflect what it acutally shows
+    - All enrichment functions (extractSplicingEnrichment, extractSplicingEnrichmentComparison,
+        extractConsequenceEnrichment, extractConsequenceEnrichmentComparison) now
+        also supports counting on genes (instead of switches) which is the new default.
+        For consistency they all also now per default return the data.frame with the summary statistics.
+    - extractConsequenceEnrichment and extractSplicingEnrichment now have a "minEventsForPlotting" argument which causes
+        a event to only be visualized if there is at least a number of features (default is 10).
+    - importRdata and importGTF will now automatically collaps adjecent exons (two exons without any intron in between)
+    - analyzeSignalP was updated to support results from the new and improved SignalP-5 server
+    - switchPlotGeneExp() and switchPlot was updated so the order of the bars correspond to the conditions in the switchAnalyzeRlist.
+    - various maintainance updates
+    - Various changes preparing for future updates
+
 1.5.5: IsoformSwitchAnalyzeR 2019-02-14 ( minor )
     - Small vignette update
 

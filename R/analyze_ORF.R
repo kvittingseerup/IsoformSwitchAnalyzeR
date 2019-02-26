@@ -583,6 +583,9 @@ analyzeORF <- function(
             all.x = TRUE
         )
 
+        # myResultDf$orfStarExon <- NULL
+        # myResultDf$orfEndExon <- NULL
+
         ### Add result to switch list
         switchAnalyzeRlist$orfAnalysis <- myResultDf
 

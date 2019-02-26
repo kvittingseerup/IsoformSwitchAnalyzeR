@@ -223,7 +223,7 @@ If you are using the:
 6. _Huber et al. **Orchestrating high-throughput genomic analysis with Bioconductor**. Nat. Methods, 2015, 12:115-121._ [link](https://www.nature.com/articles/nmeth.3252).
 7. _Wang et al. **CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model**. Nucleic Acids Res. 2013, 41:e74._ [link](https://academic.oup.com/nar/article/41/6/e74/2902455).
 8. _Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2012)_ [link](https://academic.oup.com/nar/article/40/D1/D290/2903007). 
-9. _Petersen et al. **SignalP 4.0: discriminating signal peptides from transmembrane regions**. Nature Methods, 8:785-786, 2011_ [link](https://www.nature.com/articles/nmeth.1701)
+9. _Almagro et al. SignalP 5.0 improves signal peptide predictions using deep neural networks.**. Nat. Biotechnol (2019)_ [link](https://www.nature.com/articles/s41587-019-0036-z)
 10. _Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015)._ [link](https://f1000research.com/articles/4-1521/v2).
 11. _Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)_ [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25).
 12. _Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)_ [link](https://academic.oup.com/nar/article/43/7/e47/2414268).
@@ -260,7 +260,7 @@ The first step of a IsoformSwitchAnalyzeR workflow is to import and integrate th
 - Tools for Coding Potential Analysis:
     + CPC2 : The Coding Calculator 2, which can be run either locally or via their [webserver](http://cpc2.cbi.pku.edu.cn/batch.php).
     + CPAT : The Coding-Potential Assessment Tool, which can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/).
-- SignalP : Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
+- SignalP : Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (V5 is supported).
 - NetSurfP-2 : Prediction of IIntrinsically Disordered Regions (IDR), which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/).
 
 All of the above steps are performed by the high-level function:
@@ -569,7 +569,8 @@ From this summary plot many conclusions are possible. First of all, the most fre
 extractConsequenceEnrichment(
     exampleSwitchListAnalyzed,
     consequencesToAnalyze='all',
-    analysisOppositeConsequence = TRUE
+    analysisOppositeConsequence = TRUE,
+    returnResult = FALSE # if TRUE returns a data.frame with the results
 )
 ```
 
@@ -586,7 +587,7 @@ extractConsequenceEnrichmentComparison(
     exampleSwitchListAnalyzed,
     consequencesToAnalyze=c('domains_identified','intron_retention','coding_potential'),
     analysisOppositeConsequence = TRUE,
-    returnResult = FALSE # returns a data.frame with the results
+    returnResult = FALSE # if TRUE returns a data.frame with the results
 )
 ```
 
@@ -597,7 +598,10 @@ The analysis shows that compared to LUAD, COAD have a significantly higher fract
 Such a results leads to the question what cellular mechanism underlies behind these changes. Due to the detailed alternative splicing analysis also performed by IsoformSwitchAnalyzeR we can analyze this question using the built-in summary function:
 
 ```{r, fig.width=12, fig.height=4.5}
-extractSplicingEnrichment(exampleSwitchListAnalyzed)
+extractSplicingEnrichment(
+    exampleSwitchListAnalyzed,
+    returnResult = FALSE # if TRUE returns a data.frame with the results
+)
 ```
 
 Which is equivivalent to the consequnce enrichment analysis described above. From this analysis, we see that although the patterns of consequences looked somewhat slimiar (as illustrated above), the underlying consequences are quite different. COAD utilizes alternative 3' acceptor sites (A3), multiple exon skipping (MES) and alternative transcription start sites (ATSS) while LUAD utilize intron retention (IR) and alternative transcription termination sites (ATTS) more. For more details (and functionality) regarding splicing analysis see the [Genome-Wide Analysis of Alternative Splicing] section.
@@ -1284,7 +1288,7 @@ The two fasta files that are the output by _extractSequence()_ (if writeToFile=T
 * CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/). This is an alternative to CPC2.
 * CPC2 : The Coding Potential Calculator 2 which is a tool for predicting whether an isoform is coding or not. CPC2 can be run either locally or via their [webserver](http://cpc2.cbi.pku.edu.cn/batch.php). This is an alternative to CPAT.
 * Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
-* SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/).
+* SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (V5 is supported).
 * NetSurfP-2 : Prediction of Intrinsically Disordered Regions (IDR) --- regions of a protein which does not have a fixed three-dimentional structure (oposite protein domains). NetSurfP-2 can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/).
 
 Please note that:
@@ -1299,7 +1303,7 @@ We suggest that the external sequence analysis tools are run as follows:
 * CPAT : Use default parameters and the nucleotide fasta file (_nt.fasta). If the [webserver](http://lilab.research.bcm.edu/cpat/) was used, download the tab-delimited result file (available at the bottom of the result page). If a stand-alone version was used, just supply the path to the result file. 
 * CPC2 : Use default paramters and if required select the most similar species. If the [webser](\url{http://cpc2.cbi.pku.edu.cn/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" botton). If a stand-alone version was just just supply the path to the result file.
 * Pfam : Use default parameters and the amino acid fasta file (_AA.fasta). If the [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan) is used you need to copy/paste the result part of the mail you receive into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to a plain text (txt) file. The path to that file should be supplied. If a stand-alone version was used, just supply the path to the result file. A more detailed walkthrough is found under details in the documentation of the \code{analyzePFAM()} function (?analyzePFAM).
-* SignalP : Use the amino acid fasta file (_AA.fasta). When using a stand-alone version, SignalP should be run with the '-f summary' option. If using the [webserver](http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "standard" under "Output format" and "No graphics" under "Graphics output". When using the web-server, the results (everything between the two hoizontal lines) should be copy/pasted into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to plain text (txt) file. This file is then used as input to the function. If a stand-alone version was used, just supply the path to the summary result file.
+* SignalP : Use the amino acid fasta file (_AA.fasta). If using the [webserver](http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the paramter "Short output (no figures)" under "Output format" and one should sepect the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results can be downloaded using the "Downloads" botton in the top-right conor where the user should select "Prediction summary" and supply the path to the resulting file to the "pathToSignalPresultFile" argument. If a stand-alone version was just supply the path to the summary result file.
 * NetSurfP-2 : 1) Go to [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/). 2) Upload the amino acoid file (_AA) created with extractSequence() function. 3) Submit your job. 4) Wait till job is finished (if you submit your email you will recieve a notification). 5) In the top-right conor of the result site use the "Export All" botton to download the results as a CNV file. 6) Supply a string indicating the path to the downloaded cnv file directly to the "pathToNetSurfP2resultFile" argument.
 
 Back to [Table of Content]
@@ -1384,10 +1388,10 @@ Another type of annotation we easily can obtain, since we know the exon structur
 exampleSwitchListAnalyzed <- analyzeAlternativeSplicing(exampleSwitchListAnalyzed, quiet=TRUE)
 
 ### overview of number of intron retentions (IR)
-table(exampleSwitchListAnalyzed$isoformFeatures$IR)
+table(exampleSwitchListAnalyzed$AlternativeSplicingAnalysis$IR)
 ```
 
-Meaning 25 isoforms contain one intron retention (IR) which two isoforms each contain two intron retentions.
+Meaning 20 isoforms contain one intron retention (IR) and 7 isoforms each contain two or more intron retentions.
 
 IsoformSwitchAnalyzeR also supports many types of genone wide analysis of alternative splicing - for a more thorough walkthrough of the analysis of alternative splicing see the [Analyzing Alternative Splicing] workflow.
 
@@ -1969,6 +1973,7 @@ Back to [Table of Content]
 - [How to prevent visualization of NMD in the switchPlot]
 - [BSGenomes for non-model organismes]
 - [The switchPlot contains regions "Not Anootated"]
+- [Can I use a GFF file instead of a GTF file?]
 
 ### What Quantification Tool(s) Should I Use?
 Please note that the following is a reflection of my personal convictions and should not be read as "the truth" and that the considerations and recomendations apply both if you are interested in transcript level quantification (as used in this vignette) and if your interest is gene expression analysis.
@@ -2096,10 +2101,42 @@ Alternatively one can build a costom BSgenome as describe [here](https://www.bio
 
 <br />
 
-## The switchPlot contains regions "Not Anootated"
-The problem is the incrisingly strict limiatations on some of the external sequences analysis tools (primarly EBI's pfam but also SignalP)  specifically there websites  which amongst others have limitations on the max length of the sequences which can be analyzed. To extract the maximum information IsoformSwitchAnalyzeR supports trimming of the amino acid sequences so the fit the length allowed to be analyzed. This naturally mean that some parts of a sequence cannot be analyzed - and that is what is visualized in the switchPlot. Furthermore please note that un-analyzed regions are ignored during the consequence predictions meaning that the trimming result in no bias. Specifically this is controled with the "filterAALength" argument of _extractSequence()_ function (but the websites will not run them if they are to long).
+### The switchPlot contains regions "Not Anootated"
+The problem is the incrisingly strict limiatations on some of the external sequences analysis tools (primarly EBI's Pfam)  specifically there websites  which amongst others have limitations on the max length of the sequences which can be analyzed. To extract the maximum information IsoformSwitchAnalyzeR supports trimming of the amino acid sequences so the fit the length allowed to be analyzed. This naturally mean that some parts of a sequence cannot be analyzed - and that is what is visualized in the switchPlot. Furthermore please note that un-analyzed regions are ignored during the consequence predictions meaning that the trimming result in no bias. Specifically this is controled with the "filterAALength" argument of _extractSequence()_ function (but the websites will not run them if they are to long).
 
 Complaints about these limitations can be send to EBI via their [website](https://www.ebi.ac.uk/support/) or on twitter via @hmm3r
+
+<br />
+
+### Can I use a GFF file instead of a GTF file?
+Unfortunatly not. But there is a simple work around using the following pearl script:
+
+    #!/usr/bin/perl
+    
+    use warnings;
+    use strict;
+    while (<>) {
+    chomp;
+    my @parts = split /\t/;
+    if ( !(($parts[2] eq 'three_prime_UTR')|($parts[2] eq 'five_prime_UTR')|($parts[2] eq 'exon')|($parts[2] eq 'CDS')) ) {
+    next;
+    }
+    elsif ( $parts[2] eq 'three_prime_UTR') {
+    $parts[2] = '3UTR';
+    }
+    elsif ($parts[2] eq 'five_prime_UTR') {
+    $parts[2] = '5UTR';
+    }
+    $parts[8] =~ s/^Parent=((\w+)\.\w*).*/gene_id \"$2\"; transcript_id \"$1\";/sg;
+    $_ = join "\t" , @parts;
+    print "$_\n";
+    }
+
+Simply save the script as "converter_gff_to_gtf.pl""
+
+and run
+    
+    perl converter_gff_to_gtf.pl input.gff > output.gtf
 
 <br />
 

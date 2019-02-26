@@ -5,12 +5,13 @@
 Import Result of SignalP Analysis
 }
 \description{
-Allows for easy integration of the result of SignalP (external sequence analysis of signal peptides) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeSignalP, analyzeEspritz, analyzePFAM if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the result of SignalP (external sequence analysis of signal peptides) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeSignalP, analyzeNetSurfP2, analyzePFAM if you have predicted the ORFs with \code{analyzeORF}.
 }
 \usage{
 analyzeSignalP(
     switchAnalyzeRlist,
     pathToSignalPresultFile,
+    minSignalPeptideProbability = 0.5,
     quiet=FALSE
 )
 }
@@ -22,6 +23,8 @@ A \code{switchAnalyzeRlist} object
   \item{pathToSignalPresultFile}{
 A string indicating the full path to the summary SignalP result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the SignalP tool.
 }
+\item{minSignalPeptideProbability}{ A numeric between 0 and 1 indicating the minimum probability for calling a signal peptide. Default is 0.5}
+
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
 
@@ -31,7 +34,7 @@ A signal peptide is a short peptide sequence which indicate a protein is destine
 The SignalP web-server is less stringent than PFAM with regards to the number of sequences in the files uploaded so we sugget trying the combined fasta file first - and if that does not work try the files containg subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools:
-If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP should be run with the paramter "standard" under "Output format" and "No graphics" under "Graphics output". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results should be copy pasted (from the web-page) into an empty plain text document (notepat, sublimetext TextEdit or similar (not word)) and save that to a txt file. This file is then used as input to the function. If a stand-alone version was just supply the path to the summary result file
+If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP should be run with the paramter "Short output (no figures)" under "Output format" and one should sepect the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results can be downloaded using the "Downloads" botton in the top-right conor where the user should select "Prediction summary" and supply the path to the resulting file to the pathToSignalPresultFile argument. If a stand-alone version was just supply the path to the summary result file.
 }
 
 \value{
@@ -51,7 +54,7 @@ The data.frame added have one row pr isoform and contains 6 columns:
 \references{
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{\code{SignalP} : Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. Nature Methods, 8:785-786, 2011}
+    \item{\code{SignalP} : Almagro et al. SignalP 5.0 improves signal peptide predictions using deep neural networks. Nat. Biotechnol (2019).}
 }
 }
 

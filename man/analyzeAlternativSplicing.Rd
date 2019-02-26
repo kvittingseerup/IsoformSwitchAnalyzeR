@@ -67,7 +67,7 @@ Since the comparison is to the hypothetical pre-RNA the interpretation of an eve
 }
 
 \value{
-A \code{switchAnalyzeRlist} where the collumn \code{IR} indicating the number of Intron Retentions found in each transcript have been added to the \code{isoform_features} entry. NA is used if the transcript was not analyzed. Furthermore a data.frame (called 'AlternativeSplicingAnalysis'), where for each isoform_id containing the number of alternative splicing events found as well as the genomic coordinates of the affected region(s), is added to the \code{switchAnalyzeRlist}.
+A \code{switchAnalyzeRlist} where the collumn \code{IR} indicating the number of Intron Retentions found in each transcript have been added to the \code{isoform_features} entry. NA is used if the transcript was not analyzed. Furthermore a data.frame (called 'AlternativeSplicingAnalysis'), where for each isoform_id containing the number of alternative splicing events found as well as the genomic coordinates of the affected region(s), is added to the \code{switchAnalyzeRlist}. In this data.frame genomic coordinat for each splice are seperated by ";" except for cases where there are multiple MES, then each set of coordinates belonging to a MES is seperated by ',' (and then the coordinates belong to a specific MES is sepetrated by ';').
 }
 
 \references{

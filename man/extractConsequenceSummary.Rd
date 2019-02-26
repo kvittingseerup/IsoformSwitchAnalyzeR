@@ -16,6 +16,7 @@ extractConsequenceSummary(
     dIFcutoff=0.1,
     plot=TRUE,
     plotGenes=FALSE,
+    simplifyLocation = TRUE,
     localTheme=theme_bw(),
     returnResult=FALSE
 )
@@ -46,6 +47,11 @@ A logic indicting whether the summarized results should be plotted. Default is T
   \item{plotGenes}{
 A logic indicating whether to plot the number/fraction of genes with (if TRUE) or isoforms (if FALSE) involeved with isoform switches with functional consequences (both filtered via \code{alpha} and \code{dIFcutoff}.
 }
+
+\item{simplifyLocation}{
+A logic indicating whether to simplify the switches involved in changes in sub-celluar localizations (due the the hundreds of posibilites). Done by only considering where the isoform used more has a location switch to. Default is TRUE.
+}
+
   \item{localTheme}{
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
 }

@@ -1646,6 +1646,33 @@ importGTF <- function(
         sort(mfGTF[exonAnoationIndex , c('transcript_id', 'gene_id')])
     colnames(myExons@elementMetadata) <- c('isoform_id', 'gene_id')
 
+    # Collaps ajecent exons (without any intron between)
+    if(TRUE) {
+        ### Reduce ajecent exons
+        tmp <- unlist(
+            reduce(
+                split(
+                    myExons,
+                    myExons$isoform_id
+                )
+            )
+        )
+        ### Add isoform id
+        tmp$isoform_id <- tmp@ranges@NAMES
+        tmp@ranges@NAMES <- NULL
+
+        ### add gene id
+        tmp$gene_id <-myExons$gene_id[match(
+            tmp$isoform_id, myExons$isoform_id
+        )]
+
+        ### sort
+        tmp <- tmp[sort.list(tmp$isoform_id),]
+
+        ### Overwrite
+        myExons <- tmp
+    }
+
     # create replicates
     nrRep <-
         data.frame(
@@ -1915,7 +1942,21 @@ importIsoformExpression <- function(
                 )
             }
 
+            ### Test existence
+            if(TRUE) {
+                fileTest <- file.exists(localFiles)
 
+                if( !all(fileTest)) {
+                    stop(
+                        paste0(
+                            '\nSomething went wrong with the file-path creation. Please contact developer with reproducible example.',
+                            '\n One file which did not work out was:\n ',
+                            localFiles[which( ! fileTest) [1]],
+                            sep=''
+                        )
+                    )
+                }
+            }
         }
 
         ### Use Txtimporter to import data
@@ -2307,8 +2348,31 @@ importRdata <- function(
                 ))
             }
 
-            ### Test for full rank
+            ### Test conditions with n=1
+            cndCnt <- table(designMatrix$condition)
+            if( any(cndCnt == 1) ) {
+                warning(
+                    paste0(
+                        '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!',
+                        '\nIsoformSwitchAnalyzeR is not made to work with conditions without indepdendet biological replicates and results will not be trustworthy!',
+                        '\nAt best data without replicates should be analyzed as a pilot study before investing in more replicates.',
+                        '\nPlase consult the "Analysing experiments without replicates" and "What constitute an independent biological replicate?" sections of the vignette.',
+                        '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!'
+                    )
+                )
+            }
 
+            ### Test for full rank
+            isFullRank <- testFullRank( designMatrix )
+
+            if( ! isFullRank ) {
+                stop(
+                    paste(
+                        'The supplied design matrix will result in a model matrix that is not full rank',
+                        '\nPlease make sure there are no co-linearities in the design'
+                    )
+                )
+            }
 
         }
 
@@ -2349,20 +2413,6 @@ importRdata <- function(
             )
             comparisonsToMake$condition_2 <- makeProperNames(
                 comparisonsToMake$condition_2
-            )
-        }
-    }
-
-    ### Test full rank of design
-    if(TRUE) {
-        isFullRank <- testFullRank( designMatrix )
-
-        if( ! isFullRank ) {
-            stop(
-                paste(
-                    'The supplied design matrix will result in a model matrix that is not full rank',
-                    '\nPlease make sure there are no co-linearities in the design'
-                )
             )
         }
     }
@@ -2983,10 +3033,10 @@ importRdata <- function(
 
                     isoSummary <- data.frame(
                         isoform_id       = isoformRepExpression$isoform_id,
-                        iso_overall_mean = rowMeans(isoformRepExpression[,designMatrix$sampleID]),
+                        iso_overall_mean = rowMeans(isoformRepExpression[,designMatrix$sampleID, drop=FALSE]),
                         iso_value        = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
-                        iso_std          = apply(   isoformRepExpression[, isoIndex], 1, sd),
-                        IF_overall       = rowMeans(isoformRepIF[,designMatrix$sampleID], na.rm = TRUE),
+                        iso_std          = apply(   isoformRepExpression[, isoIndex, drop=FALSE], 1, sd),
+                        IF_overall       = rowMeans(isoformRepIF[,designMatrix$sampleID, drop=FALSE], na.rm = TRUE),
                         IF               = rowMeans(isoformRepIF[, isoIndex, drop=FALSE], na.rm = TRUE),
                         stringsAsFactors = FALSE
                     )
@@ -3000,9 +3050,9 @@ importRdata <- function(
 
                     geneSummary <- data.frame(
                         gene_id = geneRepExpression$gene_id,
-                        gene_overall_mean = rowMeans(geneRepExpression[,designMatrix$sampleID]),
+                        gene_overall_mean = rowMeans(geneRepExpression[,designMatrix$sampleID, drop=FALSE]),
                         gene_value = rowMeans(geneRepExpression[, geneIndex, drop=FALSE]),
-                        gene_std = apply(geneRepExpression[, geneIndex], 1, sd),
+                        gene_std = apply(geneRepExpression[, geneIndex, drop=FALSE], 1, sd),
                         stringsAsFactors = FALSE
                     )
                     geneSummary$gene_stderr <-

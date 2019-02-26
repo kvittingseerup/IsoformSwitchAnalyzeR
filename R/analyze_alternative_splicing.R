@@ -648,8 +648,6 @@ if(TRUE) {
                     }
                 } else {
                     #### intron retension
-                    # annotate ISI
-                    asTypes$ISI <- asTypes$ISI + 1
 
                     # Get the exon indexe(s) involved in the intron retension (with respect to the transcript not the overlapping list)
                     numberOfReplicates1 <- overlappingExons[which(overlappingExons$isoform1 == overlappingExons$isoform1[c1]),'isoform2'] # get the exon(s) from transcript1 for the exon currently under investigation
@@ -663,6 +661,14 @@ if(TRUE) {
                     #   1            2
                     # Then the numberOfReplicates1 will have length 2, whereas numberOfReplicates2 will have length 1
                     # Since i want isoform1 exon 1 to be compared to both isoform2 exon1 and exon2 I will have to use numberOfReplicates1 with transcript2 and vice versa
+
+                    # annotate ISI
+                    #asTypes$ISI <- asTypes$ISI + 1 # KVS Correction Feb 2019
+
+                    # KVS Correction Feb 2019
+                    nRetentions <- max(sapply(numberOfReplicatesList, length))- 1
+                    asTypes$ISI <- asTypes$ISI + nRetentions # KVS Correction Feb 2019
+
 
                     # test for 3' overhang in the intron retension
                     if( all( c(numberOfReplicates1[1], numberOfReplicates2[1]) != c(1,1) )) { # only test if non of the exons are first exon
@@ -687,20 +693,32 @@ if(TRUE) {
 
                     for(i in 1:( max(sapply(numberOfReplicatesList, length )) -1) ) {
                         if(asTypes$ISI > 1) { # if a ISI have already been anotated for this transcript (the counter is above where it is > 1 (and not > 0))
-                            if(i == 1) { # then for the first entry use a ','
-                                asTypes$ISI.start <- paste(asTypes$ISI.start, transcriptList[[transcriptWithOUTintronRetension]]$end[ numberOfReplicatesList[[transcriptWithIntronRetension]][i]], sep=',')
-                                asTypes$ISI.end   <- paste(asTypes$ISI.end,   transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ],   sep=',')
-                            } else { # for the rest use ';'
-                                asTypes$ISI.start <- paste(asTypes$ISI.start, transcriptList[[transcriptWithOUTintronRetension]]$end[ numberOfReplicatesList[[transcriptWithIntronRetension]][i]], sep=';')
-                                asTypes$ISI.end   <- paste(asTypes$ISI.end,   transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ],   sep=';')
+
+                            # KVS Correction Feb 2019
+                            #if(i == 1) { # then for the first entry use a ','
+                            #    asTypes$ISI.start <- paste(asTypes$ISI.start, transcriptList[[transcriptWithOUTintronRetension]]$end  [ numberOfReplicatesList[[transcriptWithIntronRetension]][i]    ]  , sep=',')
+                            #    asTypes$ISI.end   <- paste(asTypes$ISI.end,   transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ] , sep=',')
+                            #} else { # for the rest use ';'
+                            #    asTypes$ISI.start <- paste(asTypes$ISI.start, transcriptList[[transcriptWithOUTintronRetension]]$end  [ numberOfReplicatesList[[transcriptWithIntronRetension]][i]    ] , sep=';')
+                            #    asTypes$ISI.end   <- paste(asTypes$ISI.end,   transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ] , sep=';')
+                            #}
+
+                            if(is.na(asTypes$ISI.start)) {
+                                asTypes$ISI.start <-                          transcriptList[[transcriptWithOUTintronRetension]]$end  [ numberOfReplicatesList[[transcriptWithIntronRetension]][i]    ] +1 # KVS Correction Feb 2019
+                                asTypes$ISI.end   <-                          transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ] -1 # KVS Correction Feb 2019
+                            } else {
+                                asTypes$ISI.start <- paste(asTypes$ISI.start, transcriptList[[transcriptWithOUTintronRetension]]$end  [ numberOfReplicatesList[[transcriptWithIntronRetension]][i]    ] +1, sep=';') # KVS Correction Feb 2019
+                                asTypes$ISI.end   <- paste(asTypes$ISI.end,   transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ] -1, sep=';') # KVS Correction Feb 2019
                             }
+
+
                         } else { # if a ISI have not been anotated for this transcript
                             if(is.na(asTypes$ISI.start)) {
-                                asTypes$ISI.start <- paste( transcriptList[[transcriptWithOUTintronRetension]]$end[ numberOfReplicatesList[[transcriptWithIntronRetension]][i]] )
-                                asTypes$ISI.end   <- paste( transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ] )
+                                asTypes$ISI.start <-                          transcriptList[[transcriptWithOUTintronRetension]]$end  [ numberOfReplicatesList[[transcriptWithIntronRetension]][i]    ] +1 # KVS Correction Feb 2019
+                                asTypes$ISI.end   <-                          transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ] -1 # KVS Correction Feb 2019
                             } else {
-                                asTypes$ISI.start <- paste(asTypes$ISI.start, transcriptList[[transcriptWithOUTintronRetension]]$end[ numberOfReplicatesList[[transcriptWithIntronRetension]][i]], sep=';')
-                                asTypes$ISI.end   <- paste(asTypes$ISI.end,   transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ],   sep=';')
+                                asTypes$ISI.start <- paste(asTypes$ISI.start, transcriptList[[transcriptWithOUTintronRetension]]$end  [ numberOfReplicatesList[[transcriptWithIntronRetension]][i]    ] +1, sep=';') # KVS Correction Feb 2019
+                                asTypes$ISI.end   <- paste(asTypes$ISI.end,   transcriptList[[transcriptWithOUTintronRetension]]$start[ numberOfReplicatesList[[transcriptWithIntronRetension]][i] +1 ] -1, sep=';') # KVS Correction Feb 2019
                             }
                         }
 
@@ -723,7 +741,7 @@ if(TRUE) {
                 }
             } # end of overlapping exons while loop
 
-            ################################ Analyze non-overlapping exons  ###############################
+            #a############################### Analyze non-overlapping exons  ###############################
             ## A data.frame to help retrive the exons corresponding to the skipping indexes
             overlappingExons2 <- rbind(c(0,0), overlappingExons, (numberOfExons+1))
             colnames(overlappingExons2) <- c('isoform1','isoform2')
@@ -954,9 +972,6 @@ if(TRUE) {
             isoformsToAnalyze$analyzed <- 'yes'
             isoformsToAnalyze$MEE <- 0 # these are not nessesarely overwritten else
 
-            #0.08
-
-
             #### Determine whether major or preTranscript
             ## Extract all exons to analyze belonging to this gene
             exonList <- isoformFeaturesSplit[ uniqIsoformNames ] # this list is used several times
@@ -1084,7 +1099,7 @@ if(TRUE) {
 
             ######## Classify the rest of the AS types ########
             # loop over the unique isoforms to make the AS type comparason
-            for(i in 1:length(uniqueIsoformsIndex)) {
+            for(i in 1:length(uniqueIsoformsIndex)) { # i <- 2
 
                 if(major) { # if I compare to major
                     if(uniqueIsoformsIndex[i] %in% maxIsoformIndex) {next} # if this isoform is the major
@@ -1190,7 +1205,10 @@ if(TRUE) {
 
             # write local data to global dataframe (so everything is stored and can be returned)
             # this is faster than replacing the full dataset and also faster (and more readiable) than using c(26:40)
-            transcriptData[["transcript_features"]][isoformsToAnalyzeWithinGeneIndexGlobal,c("major","IF1","IF2","dIF","ESI","MEE","MESI","ISI","A5","A3","ATSS","ATTS","analyzed",'ESI.start', 'ESI.end','MEE.start','MEE.end','MESI.start','MESI.end','ISI.start','ISI.end','A5.start','A5.end','A3.start','A3.end','ATSS.start','ATSS.end','ATTS.start','ATTS.end')] = isoformsToAnalyze[,c("major","IF1","IF2","dIF","ESI","MEE","MESI","ISI","A5","A3","ATSS","ATTS","analyzed",'ESI.start', 'ESI.end','MEE.start','MEE.end','MESI.start','MESI.end','ISI.start','ISI.end','A5.start','A5.end','A3.start','A3.end','ATSS.start','ATSS.end','ATTS.start','ATTS.end')] #slow index - THE RATE LIMITING STEP
+            transcriptData[["transcript_features"]][
+                isoformsToAnalyzeWithinGeneIndexGlobal,
+                                    c("major","IF1","IF2","dIF","ESI","MEE","MESI","ISI","A5","A3","ATSS","ATTS","analyzed",'ESI.start', 'ESI.end','MEE.start','MEE.end','MESI.start','MESI.end','ISI.start','ISI.end','A5.start','A5.end','A3.start','A3.end','ATSS.start','ATSS.end','ATTS.start','ATTS.end')
+            ] <- isoformsToAnalyze[,c("major","IF1","IF2","dIF","ESI","MEE","MESI","ISI","A5","A3","ATSS","ATTS","analyzed",'ESI.start', 'ESI.end','MEE.start','MEE.end','MESI.start','MESI.end','ISI.start','ISI.end','A5.start','A5.end','A3.start','A3.end','ATSS.start','ATSS.end','ATTS.start','ATTS.end')] #slow index - THE RATE LIMITING STEP
             #paste(difftime(Sys.time(),t10,u='sec'),'Time to write to global file',sep=' ')
 
             ### Update progressbar
@@ -1784,7 +1802,6 @@ extractSplicingSummary <- function(
             ### Summarize
             localConseq3$upAs <- !is.na(localConseq3$genomic_start_up)
             localConseq3$dnAs <- !is.na(localConseq3$genomic_start_down)
-
         }
     }
 
@@ -1838,7 +1855,7 @@ extractSplicingSummary <- function(
             .drop = TRUE,
             .fun = function(
                 aDF
-            ) { # aDF <- localConseq5[which( localConseq5$AStype == 'combined' & localConseq5$Comparison == 'LUAD_ctrl vs LUAD_cancer' & localConseq5$isoRegulation == 'Up'),]
+            ) { # aDF <- localConseq5[which( localConseq5$AStype == 'IR' & localConseq5$Comparison == 'COAD_ctrl vs COAD_cancer' & localConseq5$isoRegulation == 'Up'),]
                 localRes <- data.frame(
                     nrGenesWithConsequences = length(
                         unique( aDF$gene_id[which(aDF$anyAs)] )
@@ -1861,7 +1878,7 @@ extractSplicingSummary <- function(
 
         myNumbers$splicingResult <- paste(
             myNumbers$AStype,
-            ifelse(myNumbers$isoRegulation == 'Dn','loss','gain'),
+            ifelse(myNumbers$isoRegulation == 'Dn','in isoform used less','in isoform used more'),
             sep=' '
         )
 
@@ -1880,7 +1897,7 @@ extractSplicingSummary <- function(
                     y = geneFraction
                 )) +
                     labs(
-                        x = 'Alternative transcription event in switch',
+                        x = 'Alternative transcription event in Isoform',
                         y = 'Fraction of significant genes\n(with at least one event)'
                     )
             } else {
@@ -1890,7 +1907,7 @@ extractSplicingSummary <- function(
                         y = nrGenesWithConsequences
                     )) +
                     labs(
-                        x = 'Alternative transcription event in switch',
+                        x = 'Alternative transcription event in Isoform',
                         y = 'Number of significant genes\n(with at least one event)'
                     )
             }
@@ -1902,7 +1919,7 @@ extractSplicingSummary <- function(
                         x = splicingResult,
                         y = isoFraction)
                 ) + labs(
-                    x = 'Alternative transcription event in switch',
+                    x = 'Alternative transcription event in Isoform',
                     y = 'Fraction of significant isoforms\n(with at least one event)')
             } else {
                 g1 <- ggplot(
@@ -1912,7 +1929,7 @@ extractSplicingSummary <- function(
                         y = nrIsoWithConsequences
                     )
                 ) + labs(
-                    x = 'Alternative transcription event in switch',
+                    x = 'Alternative transcription event in Isoform',
                     y = 'Number of significant isoforms\n(with at least one event)'
                 )
             }
@@ -1954,9 +1971,11 @@ extractSplicingEnrichment <- function(
     alpha = 0.05,
     dIFcutoff = 0.1,
     onlySigIsoforms = FALSE,
+    countGenes = TRUE,
     plot = TRUE,
     localTheme = theme_bw(base_size = 14),
-    returnResult=FALSE,
+    minEventsForPlotting = 10,
+    returnResult=TRUE,
     returnSummary=TRUE
 ) {
     ### Test input
@@ -2334,10 +2353,23 @@ extractSplicingEnrichment <- function(
         .data = localConseq4,
         .variables = c('condition_1','condition_2','AStype'),
         .fun = function(aDF) { # aDF <- localConseq4[1:50,]
-            localRes <- data.frame(
-                nUp=sum(aDF$nrDiff > 0),
-                nDown=sum(aDF$nrDiff < 0)
-            )
+            if( countGenes ) {
+                aDF2 <- plyr::ddply(aDF[,c('gene_ref','nrDiff')], .variables = 'gene_ref', function(aGene) {
+                    data.frame(
+                        nrDiff = sum(aGene$nrDiff)
+                    )
+                })
+
+                localRes <- data.frame(
+                    nUp  = sum(aDF2$nrDiff > 0),
+                    nDown= sum(aDF2$nrDiff < 0)
+                )
+            } else {
+                localRes <- data.frame(
+                    nUp=sum(aDF$nrDiff > 0),
+                    nDown=sum(aDF$nrDiff < 0)
+                )
+            }
 
             if( localRes$nUp > 0 | localRes$nDown > 0 ) {
                 localTest <- suppressWarnings(
@@ -2366,6 +2398,10 @@ extractSplicingEnrichment <- function(
         ),]
         gainLossBalance$propUpQval <- p.adjust(gainLossBalance$propUpPval, method = 'fdr')
         gainLossBalance$Significant <- gainLossBalance$propUpQval < alpha
+        gainLossBalance$Significant <- factor(
+            gainLossBalance$Significant,
+            levels=c(FALSE,TRUE)
+        )
 
         gainLossBalance$Comparison <- paste(
             gainLossBalance$condition_1,
@@ -2386,19 +2422,31 @@ extractSplicingEnrichment <- function(
             gainLossBalance$AStype,
             levels = myOrder
         )
+
+        ### Subset based on minEvents
+        gainLossBalance <- gainLossBalance[which(
+            (gainLossBalance$nUp + gainLossBalance$nDown) >= minEventsForPlotting
+        ),]
     }
 
     ### Plot result
     if(plot) {
+        if( countGenes ) {
+            xText <- 'Fraction of Switching Genes (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+        } else {
+            xText <- 'Fraction of Switches (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+        }
+
         g1 <- ggplot(data=gainLossBalance, aes(y=AStype, x=propUp, color=Significant)) +
             geom_point(size=4) +
             geom_errorbarh(aes(xmax = propUpCiHi, xmin=propUpCiLo), height = .3) +
             facet_wrap(~Comparison) +
             geom_vline(xintercept=0.5, linetype='dashed') +
             labs(
-                x='Fraction of Switches Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)',
+                x=xText,
                 y='Alternative Splicing Event\n(in isoform used more)') +
             localTheme +
+            theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
             scale_color_manual('Significant', values=c('black','red'), drop=FALSE) +
             coord_cartesian(xlim=c(0,1))
 
@@ -2410,8 +2458,23 @@ extractSplicingEnrichment <- function(
         if(returnSummary) {
             return(gainLossBalance)
         } else {
-            localConseq5 <- localConseq4[,c('gene_id','gene_name','condition_1','condition_2','AStype','nrDiff')]
-            localConseq5$ASchange <- ifelse(localConseq5$nrDiff > 0, 'Primarly gain','Primarly loss')
+            localConseq5 <- localConseq3[,c('gene_id','gene_name','AStype','isoformUpregulated','isoformDownregulated','iso_ref_up','iso_ref_down','condition_1','condition_2')]
+
+            ### Transfer res
+            localConseq5$nrDiff <- localConseq4$nrDiff[match(
+                stringr::str_c( localConseq5$iso_ref_up, localConseq5$iso_ref_down, localConseq5$AStype ),
+                stringr::str_c( localConseq4$iso_ref_up, localConseq4$iso_ref_down, localConseq4$AStype )
+            )]
+            localConseq5$nrDiff[which(is.na(localConseq5$nrDiff))] <- 0
+
+            localConseq5$iso_ref_up <- NULL
+            localConseq5$iso_ref_down <- NULL
+
+            localConseq5$ASchange <- dplyr::case_when(
+                localConseq5$nrDiff > 0 ~ 'Primarly gain',
+                localConseq5$nrDiff < 0 ~ 'Primarly loss',
+                TRUE ~ 'No change'
+            )
 
             return(localConseq5)
         }
@@ -2426,8 +2489,10 @@ extractSplicingEnrichmentComparison <- function(
     alpha = 0.05,
     dIFcutoff = 0.1,
     onlySigIsoforms = FALSE,
+    countGenes = TRUE,
     plot = TRUE,
     localTheme = theme_bw(base_size = 14),
+    minEventsForPlotting = 10,
     returnResult=TRUE
 ) {
     ### Extract splicing enrichment
@@ -2437,7 +2502,9 @@ extractSplicingEnrichmentComparison <- function(
         alpha=alpha,
         dIFcutoff=dIFcutoff,
         onlySigIsoforms=onlySigIsoforms,
+        countGenes = countGenes,
         plot=FALSE,
+        minEventsForPlotting = 0,
         returnResult=TRUE
     )
     spliceTypes <- split(as.character(unique(splicingCount$AStype)), unique(splicingCount$AStype))
@@ -2472,9 +2539,12 @@ extractSplicingEnrichmentComparison <- function(
             localSpliceCount1$fisherPvalue <- fisherTestResult$p_value
 
             localSpliceCount1$pair <- 1:2
+            localSpliceCount1$forPlotting <- any(
+                (localSpliceCount1$nUp + localSpliceCount1$nDown) >= minEventsForPlotting
+            )
 
             return(
-                localSpliceCount1[,c('Comparison','propUp','propUpCiLo','propUpCiHi','fisherPvalue','pair')]
+                localSpliceCount1[,c('Comparison','propUp','propUpCiLo','propUpCiHi','fisherPvalue','pair','forPlotting')]
             )
         })
 
@@ -2500,22 +2570,40 @@ extractSplicingEnrichmentComparison <- function(
         stringr::str_c(tmp$var1, tmp$var2, tmp$AStype)
     )]
     fisherRes$Significant <- fisherRes$fisherQvalue < alpha
+    fisherRes$Significant <- factor(
+        fisherRes$Significant,
+        levels=c(FALSE,TRUE)
+    )
 
 
     ### Plot
     if(plot) {
-        g1 <- ggplot(data=fisherRes, aes(y=Comparison, x=propUp, color=Significant)) +
+        fisherRes2 <- fisherRes[which(
+            fisherRes$forPlotting
+        ),]
+
+        if(nrow(fisherRes2) == 0) {
+            stop('No features left to plot after subsetting with \'minEventsForPlotting\'.')
+        }
+
+        if( countGenes ) {
+            xText <- 'Fraction of Switching Genes (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+        } else {
+            xText <- 'Fraction of Switches (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+        }
+
+        g1 <- ggplot(data=fisherRes2, aes(y=Comparison, x=propUp, color=Significant)) +
             geom_point(size=4) +
             geom_errorbarh(aes(xmax = propUpCiHi, xmin=propUpCiLo), height = .3) +
             facet_grid(comp~AStype, scales = 'free_y') +
             geom_vline(xintercept=0.5, linetype='dashed') +
             labs(
-                x='Fraction of Switches Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)',
+                x=xText,
                 y='Comparison'
             ) +
             scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red'), drop=FALSE) +
             localTheme +
-            theme(strip.text.y = element_text(angle = 0)) +
+            theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1), strip.text.y = element_text(angle = 0)) +
             coord_cartesian(xlim=c(0,1))
         print(g1)
     }

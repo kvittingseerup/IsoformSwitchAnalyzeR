@@ -4,7 +4,7 @@
 Exracts alternative splicing summary
 }
 \description{
-This functions function summarizes the individual alternative splicing events for each gene or switches and plots and/or returns a data.frame with the information
+This functions function summarizes the individual alternative splicing events for each gene or switches and plots and/or returns a data.frame with the information. Please note this summarizes the overall number of splicing events - for looking into differences between the isoforms in a switch please use \link{extractSplicingEnrichment}.
 }
 \usage{
 extractSplicingSummary(

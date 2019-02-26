@@ -773,6 +773,9 @@ analyzePFAM <- function(
             myPfamResultDf <- myPfamResultDf[, newOrder]
         }
 
+        #myPfamResultDf$pfamStarExon <- NULL
+        #myPfamResultDf$pfamEndExon <- NULL
+
         # add the pfam results to the switchAnalyzeRlist object
         switchAnalyzeRlist$domainAnalysis <- myPfamResultDf
 
@@ -810,6 +813,7 @@ analyzePFAM <- function(
 analyzeSignalP <- function(
     switchAnalyzeRlist,
     pathToSignalPresultFile,
+    minSignalPeptideProbability = 0.5,
     quiet = FALSE
 ) {
     if (is.null(switchAnalyzeRlist$orfAnalysis)) {
@@ -829,89 +833,199 @@ analyzeSignalP <- function(
 
     ### Obtain signalP result
     if (TRUE) {
-        singalPresults <- do.call(rbind, plyr::llply(
+        ### Figure out which signal p it is
+        fileHead <- read.table(
             pathToSignalPresultFile,
-            .fun = function(
-                aFile
-            ) {
-                read.table(
-                    aFile,
-                    header = FALSE,
-                    stringsAsFactors = FALSE,
-                    fill = TRUE,
-                    col.names = paste('V', 1:13, sep = '')
-                )
+            nrows = 2,
+            fill = TRUE,
+            header = FALSE,
+            comment.char = '',
+            sep='\t',
+            stringsAsFactors = FALSE
+        )
+
+        isSignalP5 <- grepl('SignalP-5', fileHead$V1[1])
+
+        ### SignalP5
+        if( isSignalP5 ) {
+            if( ! grepl('Eukarya', fileHead$V2[1]) ){
+                warning('It seems SignalP was run as Non-Eukaryote - was that on purpouse?')
             }
-        ))
-        if(nrow(singalPresults) == 0) {
-            stop('The result file(s) seems to be empty')
+
+            ### Read in predictions
+            if(TRUE) {
+                singalPresults <- do.call(rbind, plyr::llply(
+                    pathToSignalPresultFile,
+                    .fun = function(
+                        aFile
+                    ) {
+                        read.table(
+                            aFile,
+                            header = FALSE,
+                            stringsAsFactors = FALSE,
+                            fill = TRUE,
+                            col.names = c('isoform_id',unlist((fileHead[2,-1]))),
+                            sep='\t'
+                        )
+                    }
+                ))
+
+                colnames(singalPresults) <- gsub('\\.$','', colnames(singalPresults))
+                colnames(singalPresults) <- gsub('\\.','_', colnames(singalPresults))
+
+            }
+
+            ### Sanity check that it is a SignalIP result file
+            if(TRUE) {
+                if(nrow(singalPresults) == 0) {
+                    stop('The result file(s) seems to be empty')
+                }
+
+                t1 <- ! is.character(singalPresults$isoform_id)
+                t2 <- ! is.character(singalPresults$Prediction)
+                t3 <- ! is.numeric(singalPresults$SP_Sec_SPI)
+                t4 <- ! is.numeric(singalPresults$OTHER)
+                t5 <- ! all(singalPresults$Prediction %in% c('OTHER','SP(Sec/SPI)','LIPO(Sec/SPII)','TAT(Tat/SPI)'))
+
+                if( any( c(t1,t2,t3,t4,t5))) {
+                    stop('The pathToSignalPresultFile does not seam to be the result of a SignalP 5 analysis')
+                }
+
+                if( ! any( singalPresults$isoform_id %in% switchAnalyzeRlist$isoformFeatures$isoform_id) ) {
+                    stop('The pathToSignalPresultFile does not contain result of isoforms analyzed in the switchAnalyzeRlist')
+                }
+            }
+
+            ### Reduce to features of interest
+            if(TRUE) {
+                peptideCols <- c('SP_Sec_SPI','TAT_Tat_SPI','LIPO_Sec_SPII')
+
+                ### With signal
+                singalPresults <- singalPresults[which(
+                    apply(
+                        X = singalPresults[,na.omit(match(peptideCols, colnames(singalPresults))), drop=FALSE],
+                        MARGIN = 1,
+                        FUN = function(x) { any(x >= minSignalPeptideProbability)}
+
+                    )
+                ),]
+
+                # Analyzed with ORF
+                singalPresults <- singalPresults[which(
+                    singalPresults$isoform_id %in% switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                        !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                    )]
+                ),]
+
+                if( nrow(singalPresults) == 0) {
+                    stop('No signal peptides were found for the isoforms analyzed in this switchAnalyzeRlist')
+                }
+            }
+
+            ### Massage
+            if(TRUE) {
+                singalPresults$aa_removed <- sapply(
+                    strsplit(singalPresults$CS_Position, split = '\\.|-'),
+                    function(x) {
+                        as.integer( gsub('^CS pos: ', '', x[1]) )
+                    }
+                )
+
+                singalPresults$Prediction <- NULL
+            }
         }
 
-        # extract summary
-        singalPresults <-
-            singalPresults[which(grepl(
-                pattern = "SP=\'YES\'",
-                x =  singalPresults$V2
-            )), ]
-
-        ### Sanity check that it is a SignalIP result file
-        if (TRUE) {
-            if (nrow(singalPresults) == 0) {
-                stop('No signial peptides were found')
+        ### SignalP4
+        if( ! isSignalP5 ) {
+            ### Old file
+            singalPresults <- do.call(rbind, plyr::llply(
+                pathToSignalPresultFile,
+                .fun = function(
+                    aFile
+                ) {
+                    read.table(
+                        aFile,
+                        header = FALSE,
+                        stringsAsFactors = FALSE,
+                        fill = TRUE,
+                        col.names = paste('V', 1:13, sep = '')
+                    )
+                }
+            ))
+            if(nrow(singalPresults) == 0) {
+                stop('The result file(s) seems to be empty')
             }
 
-            t1 <- all(singalPresults$V3 == 'Cleavage')
-            t2 <- all(singalPresults$V4 == 'site')
-            t3 <- all(singalPresults$V5 == 'between')
-            t4 <- all(singalPresults$V6 == 'pos.')
-            t5 <- all(grepl('^Name=', singalPresults$V1))
-            t6 <- all(grepl('^Networks=', singalPresults$V13))
+            # extract summary
+            singalPresults <-
+                singalPresults[which(grepl(
+                    pattern = "SP=\'YES\'",
+                    x =  singalPresults$V2
+                )), ]
 
-            if (!all(t1, t2, t3, t4, t5, t6)) {
+            ### Sanity check that it is a SignalIP result file
+            if (TRUE) {
+                if (nrow(singalPresults) == 0) {
+                    stop('No signial peptides were found')
+                }
+
+                t1 <- all(singalPresults$V3 == 'Cleavage')
+                t2 <- all(singalPresults$V4 == 'site')
+                t3 <- all(singalPresults$V5 == 'between')
+                t4 <- all(singalPresults$V6 == 'pos.')
+                t5 <- all(grepl('^Name=', singalPresults$V1))
+                t6 <- all(grepl('^Networks=', singalPresults$V13))
+
+                if (!all(t1, t2, t3, t4, t5, t6)) {
+                    stop(
+                        'The file(s) pointed to by \'pathToSignalPresultFile\' is not a SignalIP summary file'
+                    )
+                }
+            }
+
+            ### Massage data
+            singalPresults <- singalPresults[, c(1, 7, 13)]
+            colnames(singalPresults) <-
+                c('transcript_id', 'aa_removed', 'network_used')
+            singalPresults$transcript_id <-
+                sapply(
+                    strsplit(singalPresults$transcript_id, 'Name='),
+                    function(x) {x[2]}
+                )
+            singalPresults$network_used <-
+                sapply(
+                    strsplit(singalPresults$network_used, 'Networks=SignalP-'),
+                    function(x) {
+                        x[2]
+                    }
+                )
+
+            # test names
+            if (!any(
+                singalPresults$transcript_id %in%
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+            )) {
                 stop(
-                    'The file(s) pointed to by \'pathToSignalPresultFile\' is not a SignalIP summary file'
+                    'The transcript ids in the file pointed to by the \'pathToSignalPresultFile\' argument does not match the transcripts stored in the supplied switchAnalyzeRlist'
                 )
             }
+
+            ### Reduce to relevant
+            singalPresults <- singalPresults[which(
+                singalPresults$transcript_id %in%
+                    switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                        !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                    )]
+            ), ]
+
+            colnames(singalPresults)[1] <- 'isoform_id'
+
         }
+
     }
 
     ### Convert from AA coordinats to transcript and genomic coordinats
     if (TRUE) {
-        ### Massage data
-        singalPresults <- singalPresults[, c(1, 7, 13)]
-        colnames(singalPresults) <-
-            c('transcript_id', 'aa_removed', 'network_used')
-        singalPresults$transcript_id <-
-            sapply(
-                strsplit(singalPresults$transcript_id, 'Name='),
-                function(x) {x[2]}
-            )
-        singalPresults$network_used <-
-            sapply(
-                strsplit(singalPresults$network_used, 'Networks=SignalP-'),
-                function(x) {
-                    x[2]
-                }
-            )
-
-        # test names
-        if (!any(
-            singalPresults$transcript_id %in%
-            switchAnalyzeRlist$isoformFeatures$isoform_id
-        )) {
-            stop(
-                'The transcript ids in the file pointed to by the \'pathToSignalPresultFile\' argument does not match the transcripts stored in the supplied switchAnalyzeRlist'
-            )
-        }
-
-        ### Reduce to relevant
-        singalPresults <- singalPresults[which(
-            singalPresults$transcript_id %in%
-                switchAnalyzeRlist$orfAnalysis$isoform_id[which(
-                    !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
-                )]
-        ), ]
-
         ### Convert cleavage site to transcript coordinats
         # df with orf start
         orfStartDF <-
@@ -921,7 +1035,7 @@ analyzeSignalP <- function(
         # calculate start position
         singalPresults$transcriptClevageAfter <-
             (singalPresults$aa_removed  * 3) + orfStartDF[match(
-                x = singalPresults$transcript_id,
+                x = singalPresults$isoform_id,
                 table = orfStartDF$isoform_id
             ), 2] - 1
 
@@ -930,7 +1044,7 @@ analyzeSignalP <- function(
         myExons <-
             as.data.frame(switchAnalyzeRlist$exons[which(
                 switchAnalyzeRlist$exons$isoform_id %in%
-                    singalPresults$transcript_id
+                    singalPresults$isoform_id
             ),])
         myExonsSplit <- split(myExons, f = myExons$isoform_id)
 
@@ -938,9 +1052,9 @@ analyzeSignalP <- function(
         singalPresults <-
             plyr::ddply(
                 singalPresults,
-                .variables = 'transcript_id',
+                .variables = 'isoform_id',
                 .fun = function(aDF) {
-                    localExons <- myExonsSplit[[aDF$transcript_id[1]]]
+                    localExons <- myExonsSplit[[aDF$isoform_id[1]]]
 
                     tempDf <-
                         data.frame(
@@ -957,20 +1071,6 @@ analyzeSignalP <- function(
             )
 
         singalPresults$has_signal_peptide <- 'yes'
-        singalPresults <-
-            singalPresults[, c(
-                'transcript_id',
-                'has_signal_peptide',
-                'network_used',
-                'aa_removed',
-                'transcriptClevageAfter',
-                'genomicClevageAfter'
-            )]
-
-        colnames(singalPresults) <-
-            gsub('transcript_id',
-                 'isoform_id',
-                 colnames(singalPresults))
 
     }
 
@@ -1079,7 +1179,7 @@ analyzeNetSurfP2 <- function(
 
         ### Sanity check
         if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
-            stop('The \'pathToEspritzResultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
+            stop('The \'pathToNetSurfP2resultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
         }
 
         ### Subset to relecant features
@@ -1231,7 +1331,10 @@ analyzeNetSurfP2 <- function(
                 disResDf$transcriptStart
             ), ]
 
-        # add the pfam results to the switchAnalyzeRlist object
+        #disResDf$idrStarExon <- NULL
+        #disResDf$idrEndExon <- NULL
+
+        # add the results to the switchAnalyzeRlist object
         switchAnalyzeRlist$idrAnalysis <- disResDf
 
         # add indication to transcriptDf

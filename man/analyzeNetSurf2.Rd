@@ -59,7 +59,7 @@ Use default paramters. If you want to use the webserver it is easily done as fol
 5) In the top-right conor of the result site use the "Export All" botton to download the results as a CNV file.
 6) Supply a string indicating the path to the downloaded cnv file directly to the "pathToNetSurfP2resultFile" argument.
 
-IDR are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run Espritz once on all isoforms and then supply the entire file to \code{analyzeEspritz()}.
+IDR are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run NetSurfP2 once on all isoforms and then supply the entire file to \code{analyzeNetSurfP2}.
 }
 
 \value{
