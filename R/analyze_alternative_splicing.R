@@ -2050,153 +2050,12 @@ extractSplicingEnrichment <- function(
 
     ### Get pairs
     if(TRUE) {
-        localData <- switchAnalyzeRlist$isoformFeatures[which(
-            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value < alpha &
-                abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
-        ),
-        c(
-            'iso_ref',
-            'gene_ref',
-            'isoform_switch_q_value',
-            'gene_switch_q_value',
-            'dIF'
-        )]
-        if (!nrow(localData)) {
-            stop('No genes were considered switching with the used cutoff values')
-        }
-
-        ### add switch direction
-        localData$switchDirection <- NA
-        localData$switchDirection[which(sign(localData$dIF) ==  1)] <- 'up'
-        localData$switchDirection[which(sign(localData$dIF) == -1)] <- 'down'
-
-        ### split based on genes and conditions
-        localDataList <-
-            split(localData, f = localData$gene_ref, drop = TRUE)
-
-        ### Extract pairs of isoforms passing the filters
-        pairwiseIsoComparisonList <-
-            plyr::llply(
-                .data = localDataList,
-                .progress = 'none',
-                .fun = function(aDF) {
-                    # aDF <- localDataList[[171]]
-                    isoResTest <-
-                        any(!is.na(
-                            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-                        ))
-                    if (isoResTest) {
-                        sigIso <- aDF$iso_ref[which(
-                            aDF$isoform_switch_q_value < alpha &
-                                abs(aDF$dIF) > dIFcutoff
-                        )]
-                    } else {
-                        sigIso <- aDF$iso_ref[which(
-                            aDF$gene_switch_q_value < alpha &
-                                abs(aDF$dIF) > dIFcutoff
-                        )]
-                    }
-                    if (length(sigIso) == 0) {
-                        return(NULL)
-                    }
-
-                    ### reduce to significant if nessesary
-                    if (onlySigIsoforms) {
-                        aDF <- aDF[which(aDF$iso_ref %in% sigIso), ]
-                    }
-                    if (nrow(aDF) < 2) {
-                        return(NULL)
-                    }
-
-                    ### make sure there are both up and down
-                    if (!all(c('up', 'down') %in% aDF$switchDirection)) {
-                        return(NULL)
-                    }
-
-                    ### extract pairs of isoforms
-                    upIso   <-
-                        as.vector(aDF$iso_ref[which(
-                            aDF$switchDirection == 'up'
-                        )])
-                    downIso <-
-                        as.vector(aDF$iso_ref[which(
-                            aDF$switchDirection == 'down'
-                        )])
-
-                    allIsoCombinations <-
-                        setNames(
-                            base::expand.grid(
-                                upIso,
-                                downIso,
-                                stringsAsFactors = FALSE,
-                                KEEP.OUT.ATTRS = FALSE
-                            ),
-                            nm = c('iso_ref_up', 'iso_ref_down')
-                        )
-
-                    ### Reduce to those where at least one of them is significant
-                    allIsoCombinations <-
-                        allIsoCombinations[which(
-                            allIsoCombinations$iso_ref_up %in% sigIso |
-                                allIsoCombinations$iso_ref_down %in% sigIso
-                        ), ]
-
-                    ### Add gen ref
-                    allIsoCombinations$gene_ref    <- aDF$gene_ref[1]
-
-                    return(allIsoCombinations)
-                }
-            )
-
-        ### Remove empty entries
-        pairwiseIsoComparisonList <-
-            pairwiseIsoComparisonList[which(
-                ! sapply(pairwiseIsoComparisonList, is.null)
-            )]
-        if (length(pairwiseIsoComparisonList) == 0) {
-            stop('No candidate genes with the required cutoffs were found')
-        }
-
-        ### Conver to data.frame
-        pairwiseIsoComparison <-
-            myListToDf(pairwiseIsoComparisonList, addOrignAsColumn = FALSE)
-
-        ### Add additional info
-        # iso name
-        pairwiseIsoComparison$isoformUpregulated   <-
-            switchAnalyzeRlist$isoformFeatures$isoform_id[match(
-                pairwiseIsoComparison$iso_ref_up,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
-        pairwiseIsoComparison$isoformDownregulated <-
-            switchAnalyzeRlist$isoformFeatures$isoform_id[match(
-                pairwiseIsoComparison$iso_ref_down,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
-
-        # gene info
-        pairwiseIsoComparison$gene_id   <-
-            switchAnalyzeRlist$isoformFeatures$gene_id[match(
-                pairwiseIsoComparison$iso_ref_up,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
-        pairwiseIsoComparison$gene_name   <-
-            switchAnalyzeRlist$isoformFeatures$gene_name[match(
-                pairwiseIsoComparison$iso_ref_up,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
-        # condition
-        pairwiseIsoComparison$condition_1 <-
-            switchAnalyzeRlist$isoformFeatures$condition_1[match(
-                pairwiseIsoComparison$iso_ref_down,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
-
-        pairwiseIsoComparison$condition_2 <-
-            switchAnalyzeRlist$isoformFeatures$condition_2[match(
-                pairwiseIsoComparison$iso_ref_down,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
+        pairwiseIsoComparison <- extractSwitchPairs(
+            switchAnalyzeRlist,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            onlySigIsoforms = onlySigIsoforms
+        )
     }
 
     ### Massage AS analysis
@@ -2427,18 +2286,26 @@ extractSplicingEnrichment <- function(
         gainLossBalance <- gainLossBalance[which(
             (gainLossBalance$nUp + gainLossBalance$nDown) >= minEventsForPlotting
         ),]
+
+        gainLossBalance$nTot <- gainLossBalance$nUp + gainLossBalance$nDown
     }
 
     ### Plot result
     if(plot) {
         if( countGenes ) {
-            xText <- 'Fraction of Switching Genes (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+            xText <- 'Fraction of Switching Genes Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         } else {
-            xText <- 'Fraction of Switches (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+            xText <- 'Fraction of Switches Primarly\nResulting in Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         }
 
-        g1 <- ggplot(data=gainLossBalance, aes(y=AStype, x=propUp, color=Significant)) +
-            geom_point(size=4) +
+        gainLossBalance$AStype2 <- paste(
+            gainLossBalance$AStype, 'gain',
+            '\n(paried with',gainLossBalance$AStype, 'loss)'
+        )
+
+        g1 <- ggplot(data=gainLossBalance, aes(y=AStype2, x=propUp, color=Significant)) +
+            #geom_point(size=4) +
+            geom_point(aes(size=nTot)) +
             geom_errorbarh(aes(xmax = propUpCiHi, xmin=propUpCiLo), height = .3) +
             facet_wrap(~Comparison) +
             geom_vline(xintercept=0.5, linetype='dashed') +
@@ -2447,7 +2314,12 @@ extractSplicingEnrichment <- function(
                 y='Alternative Splicing Event\n(in isoform used more)') +
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
-            scale_color_manual('Significant', values=c('black','red'), drop=FALSE) +
+            scale_color_manual(name = paste0('FDR < ', alpha), values=c('black','red'), drop=FALSE) +
+            scale_size_continuous(name = 'Observations') +
+            guides(
+                color = guide_legend(order=1),
+                size = guide_legend(order=2)
+            ) +
             coord_cartesian(xlim=c(0,1))
 
         print(g1)
@@ -2456,6 +2328,7 @@ extractSplicingEnrichment <- function(
     ### Return data
     if(returnResult) {
         if(returnSummary) {
+            gainLossBalance$nTot <- NULL
             return(gainLossBalance)
         } else {
             localConseq5 <- localConseq3[,c('gene_id','gene_name','AStype','isoformUpregulated','isoformDownregulated','iso_ref_up','iso_ref_down','condition_1','condition_2')]
@@ -2509,6 +2382,8 @@ extractSplicingEnrichmentComparison <- function(
     )
     spliceTypes <- split(as.character(unique(splicingCount$AStype)), unique(splicingCount$AStype))
 
+    splicingCount$nTot <- splicingCount$nUp + splicingCount$nDown
+
     ### Make each pairwise comparison
     myComparisons <- allPairwiseFeatures( unique(splicingCount$Comparison) )
 
@@ -2544,7 +2419,7 @@ extractSplicingEnrichmentComparison <- function(
             )
 
             return(
-                localSpliceCount1[,c('Comparison','propUp','propUpCiLo','propUpCiHi','fisherPvalue','pair','forPlotting')]
+                localSpliceCount1[,c('Comparison','propUp','propUpCiLo','propUpCiHi','fisherPvalue','pair','forPlotting','nTot')]
             )
         })
 
@@ -2582,26 +2457,36 @@ extractSplicingEnrichmentComparison <- function(
             fisherRes$forPlotting
         ),]
 
+        fisherRes2$AStype2 <- paste(
+            fisherRes2$AStype, 'gain',
+            '\n(paried with',fisherRes2$AStype, 'loss)'
+        )
+
         if(nrow(fisherRes2) == 0) {
             stop('No features left to plot after subsetting with \'minEventsForPlotting\'.')
         }
 
         if( countGenes ) {
-            xText <- 'Fraction of Switching Genes (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+            xText <- 'Fraction of Switching Genes Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         } else {
-            xText <- 'Fraction of Switches (primarly) Resulting in Gain\nof Alternative Splicing Events\n(Compared to Loss)\n(with 95% confidence interval)'
+            xText <- 'Fraction of Switches Primarly\nResulting in Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         }
 
         g1 <- ggplot(data=fisherRes2, aes(y=Comparison, x=propUp, color=Significant)) +
-            geom_point(size=4) +
+            geom_point(aes(size=nTot)) +
             geom_errorbarh(aes(xmax = propUpCiHi, xmin=propUpCiLo), height = .3) +
-            facet_grid(comp~AStype, scales = 'free_y') +
+            facet_grid(comp~AStype2, scales = 'free_y') +
             geom_vline(xintercept=0.5, linetype='dashed') +
             labs(
                 x=xText,
                 y='Comparison'
             ) +
-            scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red'), drop=FALSE) +
+            scale_color_manual(name = paste0('FDR across\ncomparisons\n< ', alpha), values=c('black','red'), drop=FALSE) +
+            scale_size_continuous(name = 'Observations') +
+            guides(
+                color = guide_legend(order=1),
+                size = guide_legend(order=2)
+            ) +
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1), strip.text.y = element_text(angle = 0)) +
             coord_cartesian(xlim=c(0,1))
@@ -2609,6 +2494,8 @@ extractSplicingEnrichmentComparison <- function(
     }
 
     if(returnResult) {
+        fisherRes$nTot <- NULL
+
         fisherRes$pair <- stringr::str_c('propUp_comparison_', fisherRes$pair)
 
         fisherRes2 <- reshape2::dcast(data = fisherRes, comp + AStype ~ pair, value.var=c('propUp'))

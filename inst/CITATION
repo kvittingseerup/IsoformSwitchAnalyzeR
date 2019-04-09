@@ -10,3 +10,14 @@ citEntry(
    url = "http://mcr.aacrjournals.org/content/early/2017/06/02/1541-7786.MCR-16-0459",
    textVersion = "Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017)."
 )
+
+citEntry(
+   entry="Article",
+   title = "IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences",
+   author = "Kristoffer Vitting-Seerup, Albin Sandelin",
+   journal = "Bioinformatics",
+   year = 2019,
+   doi = "10.1093/bioinformatics/btz247",
+   url = "http://dx.doi.org/10.1093/bioinformatics/btz247",
+   textVersion = "Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. Bioinformatics. (2019)."
+)

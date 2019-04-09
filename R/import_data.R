@@ -15,6 +15,33 @@ importCufflinksFiles <- function(
 ) {
     ### Test that files exist
     if (TRUE) {
+        if( pathToGTF == '' ) {
+            stop(
+                paste(
+                    'The \'pathToGTF\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                    '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                    'to import your own data? The system.file() should only be used',
+                    'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                    'To access your own data simply provide the string to the directory with the data as:',
+                    '"path/to/quantification/".',
+                    sep=' '
+                )
+            )
+        }
+        if( pathToGeneDEanalysis == '' ) {
+            stop(
+                paste(
+                    'The \'pathToGeneDEanalysis\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                    '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                    'to import your own data? The system.file() should only be used',
+                    'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                    'To access your own data simply provide the string to the directory with the data as:',
+                    '"path/to/quantification/".',
+                    sep=' '
+                )
+            )
+        }
+
         # pathToGTF
         if (!file.exists(pathToGTF)) {
             stop('The \'pathToGTF\' argument does not point to an acutal file')
@@ -59,9 +86,7 @@ importCufflinksFiles <- function(
 
     ### Import the supplied files (not gtf)
     if (TRUE) {
-        if (!quiet) {
-            message("Loading genes and isoforms...")
-        }
+        if (!quiet) { message('Step 1 of 5: Importing data...')}
         suppressMessages(
             geneDiffanalysis     <-
                 readr::read_tsv(
@@ -323,9 +348,7 @@ importCufflinksFiles <- function(
 
     ### Massage and merge gene and isoform annoation and DE analysis
     if (TRUE) {
-        if (!quiet) {
-            message("Merging gene and isoform expression...")
-        }
+        if (!quiet) { message('Step 2 of 5: Merging gene and isoform expression...')}
         ### Design matrix
         readGroup$sample_name <-
             stringr::str_c(readGroup$condition, '_', readGroup$replicate_num)
@@ -672,12 +695,8 @@ importCufflinksFiles <- function(
 
     ### Obtain transcript structure information
     if (TRUE) {
-        if (!quiet) {
-            message(paste(
-                'Importing transcript structure. This can take a',
-                'while (since a GTF is a unstructured file)...'
-            ))
-        }
+        if (!quiet) { message('Step 3 of 5: Obtaining annotation...')}
+
         ### Import file
         exonFeatures <-  rtracklayer::import(pathToGTF, format = 'gtf')
         if (length(exonFeatures) == 0)
@@ -745,10 +764,8 @@ importCufflinksFiles <- function(
 
     ### Fix to correct for Cufflinks annotation problem where cufflinks assignes
     # transcripts from several annotated genes to 1 cuffgene
-    if (fixCufflinksAnnotationProblem) {
-        if (!quiet) {
-            message("Analyzing cufflinks annotation problem...")
-        }
+    if (   fixCufflinksAnnotationProblem ) {
+        if (!quiet) { message('Step 4 of 3: Fixing cufflinks annotation problem...')}
 
         geneName <- unique(isoformData[, c('gene_id', 'gene_name')])
         geneNameSplit <-
@@ -760,9 +777,6 @@ importCufflinksFiles <- function(
 
         if (length(geneNameSplit) > 0) {
             # if there are any problems
-            if (!quiet) {
-                message("Fixing cufflinks annotation problem...")
-            }
             #get indexes of those affected
             geneNameIndexesData     <-
                 which(isoformData$gene_id %in% names(geneNameSplit))
@@ -863,7 +877,7 @@ importCufflinksFiles <- function(
             if (!quiet) {
                 message(
                     paste(
-                        "Cufflinks annotation problem was fixed for",
+                        "    Cufflinks annotation problem was fixed for",
                         length(geneNameSplit),
                         "Cuff_genes",
                         sep = ' '
@@ -879,10 +893,11 @@ importCufflinksFiles <- function(
             }
         }
     } # end of fix cufflinks annotatopn problem
-
-    if (!quiet) {
-        message("Making IsoformSwitchAanalyzeRlist...\n")
+    if ( ! fixCufflinksAnnotationProblem ) {
+        if (!quiet) { message('Step 4 of 5: Skipped fixing of cufflinks annotation problem (due to fixCufflinksAnnotationProblem argument)...')}
     }
+
+    if (!quiet) { message('Step 5 of 5: Creating switchAanalyzeRlist...')}
 
     ### Calculate IF values
     localAnnot <- unique(isoformData[,c('gene_id','isoform_id')])
@@ -1001,6 +1016,10 @@ importCufflinksFiles <- function(
         switchAnalyzeRlist$isoformRepIF <- ifMatrix
     }
 
+    if (!quiet) {
+        message("Done")
+    }
+
     return(switchAnalyzeRlist)
 }
 
@@ -1020,29 +1039,66 @@ importGTF <- function(
 ) {
     ### Test files
     if(TRUE) {
-        if( ! file.exists(pathToGTF) ) {
-            stop('The file does not appear to exist')
-        }
-
-        if( ! grepl('\\.gtf$|\\.gtf\\.gz$', pathToGTF, ignore.case = TRUE) ) {
-            warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
-        }
-
-        ### Test NT input
+        ### Test existance of files
         if(TRUE) {
-            if( !is.null( isoformNtFasta )) {
+            if( pathToGTF == '' ) {
+                stop(
+                    paste(
+                        'The \'pathToGTF\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                        'to import your own data? The system.file() should only be used',
+                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                        'To access your own data simply provide the string to the directory with the data as:',
+                        '"path/to/quantification/".',
+                        sep=' '
+                    )
+                )
+            }
+            if( ! file.exists(pathToGTF) ) {
+                stop(
+                    paste(
+                        'The file pointed to with the \'pathToGTF\' argument does not exists.',
+                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        sep=' '
+                    )
+                )
+            }
+
+            if( !is.null(isoformNtFasta)) {
                 if( !is.character( isoformNtFasta)) {
                     stop('The \'isoformNtFasta\' argument must be a charachter string.')
+                }
+
+                if( any(isoformNtFasta == '') ) {
+                    stop(
+                        paste(
+                            'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                            '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                            'to import your own data? The system.file() should only be used',
+                            'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                            'To access your own data simply provide the string to the directory with the data as:',
+                            '"path/to/quantification/".',
+                            sep=' '
+                        )
+                    )
                 }
 
                 if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
                     stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
                 }
+
                 if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
                     stop('The file pointed to via the \'isoformNtFasta\' argument does not seem to be a fasta file...')
                 }
             }
+
+
         }
+
+        if( ! grepl('\\.gtf$|\\.gtf\\.gz$', pathToGTF, ignore.case = TRUE) ) {
+            warning('The file pointed to by the "pathToGTF" argument appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
+        }
+
     }
 
     # Read in from GTF file and create Rdata file for easy loading
@@ -1203,7 +1259,9 @@ importGTF <- function(
     if (addAnnotatedORFs) {
         # test whether any CDS are found
         if (any(mfGTF$type == 'CDS')) {
-            message('converting annotated CDSs')
+            if (!quiet) {
+                message('converting annotated CDSs')
+            }
             myCDS <-
                 sort(mfGTF[which(mfGTF$type == 'CDS'), 'transcript_id'])
             myCDSedges <-
@@ -1767,7 +1825,8 @@ importGTF <- function(
 }
 
 importIsoformExpression <- function(
-    parentDir,
+    parentDir = NULL,
+    sampleVector = NULL,
     calculateCountsFromAbundance=TRUE,
     addIsofomIdAsColumn=TRUE,
     interLibNormTxPM=TRUE,
@@ -1784,6 +1843,74 @@ importIsoformExpression <- function(
 ) {
     ### To do
     # Could get a "summarize to gene level" option
+
+    ### Test
+    if(TRUE) {
+        if( all(c( is.null(parentDir), is.null(sampleVector) )) ) {
+            stop('Either the \'parentDir\' or the \'sampleVector\' argument must be used.')
+        }
+        if( !is.null(parentDir) & !is.null(sampleVector) ) {
+            stop('Only one of the the \'parentDir\' and \'sampleVector\' argument can be used.')
+        }
+
+        inputIsDir <- ! is.null(parentDir)
+
+        if(   inputIsDir ) {
+            if( !is.character(parentDir) ) {
+                stop('The user should supply a sting to the \'parentDir\' argument.')
+            }
+            if( parentDir == '' ) {
+                stop(
+                    paste(
+                        'The \'parentDir\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                        'to import your own data? The system.file() should only be used',
+                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                        'To access your own data simply provide the string to the directory with the data as:',
+                        '"path/to/quantification/".',
+                        sep=' '
+                    )
+                )
+            }
+            if( ! dir.exists(parentDir) ) {
+                stop(
+                    paste(
+                        'The directory pointed to with the \'parentDir\' argument does not exists.',
+                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        sep=' '
+                    )
+                )
+            }
+        }
+        if( ! inputIsDir ) {
+            if( !is.character(sampleVector) ) {
+                stop('The user should supply a sting to the \'sampleVector\' argument.')
+            }
+            if( '' %in% sampleVector ) {
+                stop(
+                    paste(
+                        'The \'sampleVector\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        '\nDid you try to use the system.file("your/quant/dir/quant.file", package="IsoformSwitchAnalyzeR")',
+                        'to import your own data? The system.file() should only be used',
+                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                        'To access your own data simply provide the string to the files with the data as:',
+                        '"path/to/quantification/quantification.file".',
+                        sep=' '
+                    )
+                )
+            }
+            if( ! all(file.exists(sampleVector))  ) {
+                stop(
+                    paste(
+                        'One or more of the files pointed to with the \'sampleVector\' argument does not exists.',
+                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        sep=' '
+                    )
+                )
+            }
+        }
+
+    }
 
     ### Initialize
     if(TRUE) {
@@ -1809,88 +1936,97 @@ importIsoformExpression <- function(
             eLengthCol     = c('eff_length'     , 'EffectiveLength', 'effective_length', ''),
             stringsAsFactors = FALSE
         )
-    }
 
-    ### Identify directories of interest
-    if (TRUE) {
-        if (!quiet) {
-            message('Step 1 of ', analysisCount, ': Identifying which algorithm was used...')
-        }
-        dirList <- split(
-            list.dirs(
-                path = parentDir,
-                full.names = FALSE,
-                recursive = FALSE
-            ),
-            list.dirs(
-                path = parentDir,
-                full.names = FALSE,
-                recursive = FALSE
-            )
+        headerTypes <- list(
+            Kallisto = c('target_id','length','eff_length','est_counts','tpm'),
+            Salmon = c('Name','Length','EffectiveLength','TPM','NumReads'),
+            RSEM = c('transcript_id','gene_id','length','effective_length','expected_count','TPM','FPKM','IsoPct'),
+            StringTie = c('t_id','chr','strand','start','end','t_name','num_exons','length','gene_id','gene_name','cov','FPKM')
         )
-        dirList <- dirList[which(sapply(dirList, nchar) > 0)]
-
-        ### Extract those where there are files of interest
-        dirList <-
-            dirList[sapply(
-                dirList,
-                FUN = function(aDir) {
-                    # aDir <- dirList[[1]]
-                    localFiles <-
-                        list.files(
-                            paste0(parentDir, '/', aDir),
-                            recursive = FALSE
-                        )
-
-                    any(sapply(
-                        paste(supportedTypes$fileName, '$', sep = ''),
-                        function(aFileName) {
-                            grepl(pattern = aFileName, x =  localFiles)
-                        }))
-                }
-            )]
-
-        if (length(dirList) == 0) {
-            stop('No directories of interest were found')
-        }
-
     }
 
-    ### Identify input type
-    if(TRUE) {
-        dataAnalyed <- supportedTypes[which(
-            sapply(
-                paste0(supportedTypes$fileName,'$'),
-                function(aFileName) {
-                    any(grepl(
-                        pattern = aFileName,
-                        x = list.files(paste0( parentDir, '/', dirList[[1]] ))
-                    ))
-                })
-        ), ]
+    ### Handle directory input
+    if(inputIsDir) {
+        ### Identify directories of interest
+        if (TRUE) {
+            if (!quiet) {
+                message('Step 1 of ', analysisCount, ': Identifying which algorithm was used...')
+            }
+            dirList <- split(
+                list.dirs(
+                    path = parentDir,
+                    full.names = FALSE,
+                    recursive = FALSE
+                ),
+                list.dirs(
+                    path = parentDir,
+                    full.names = FALSE,
+                    recursive = FALSE
+                )
+            )
+            dirList <- dirList[which(sapply(dirList, nchar) > 0)]
 
-        if (nrow(dataAnalyed) > 1) {
-            stop('Could not uniquely identify file type - please contact developer')
+            ### Extract those where there are files of interest
+            dirList <-
+                dirList[sapply(
+                    dirList,
+                    FUN = function(aDir) {
+                        # aDir <- dirList[[1]]
+                        localFiles <-
+                            list.files(
+                                paste0(parentDir, '/', aDir),
+                                recursive = FALSE
+                            )
+
+                        any(sapply(
+                            paste(supportedTypes$fileName, '$', sep = ''),
+                            function(aFileName) {
+                                grepl(pattern = aFileName, x =  localFiles)
+                            }))
+                    }
+                )]
+
+            if (length(dirList) == 0) {
+                stop(
+                    paste(
+                        'No directories of interest were found.',
+                        'Have you renamed the quantification files? (that should not be done).',
+                        sep=' '
+                    )
+                )
+            }
+
         }
-        if (!quiet) {
-            message(paste('    The quantification algorithm used was:', dataAnalyed$orign, sep = ' '))
-        }
 
-        if( dataAnalyed$orign == 'StringTie' & is.null(readLength)) {
-            stop(paste(
-                'When importing StringTie results the \'readLength\' argument',
-                'must be specified.\n',
-                'This argument must be set to the number of base pairs sequenced',
-                '(e.g. if the \n quantified data is 75 bp paired ends \'readLength\' should be set to 75.'
-            ))
-        }
+        ### Identify input type
+        if(TRUE) {
+            dataAnalyed <- supportedTypes[which(
+                sapply(
+                    paste0(supportedTypes$fileName,'$'),
+                    function(aFileName) {
+                        any(grepl(
+                            pattern = aFileName,
+                            x = list.files(paste0( parentDir, '/', dirList[[1]] ))
+                        ))
+                    })
+            ), ]
 
-    }
+            if (nrow(dataAnalyed) > 1) {
+                stop('Could not uniquely identify file type - please contact developer')
+            }
+            if (!quiet) {
+                message(paste('    The quantification algorithm used was:', dataAnalyed$orign, sep = ' '))
+            }
 
-    ### Import files with txtimport
-    if(TRUE) {
-        if (!quiet) {
-            message('Step 2 of ', analysisCount, ': Reading data...')
+            if( dataAnalyed$orign == 'StringTie' & is.null(readLength)) {
+                stop(paste(
+                    'When importing StringTie results the \'readLength\' argument',
+                    'must be specified.\n',
+                    'This argument must be set to the number of base pairs sequenced',
+                    '(e.g. if the \n quantified data is 75 bp paired ends \'readLength\' should be set to 75.'
+                ))
+            }
+
         }
 
         ### Make paths for tximport
@@ -1957,6 +2093,112 @@ importIsoformExpression <- function(
                     )
                 }
             }
+        }
+    }
+
+    ### Handle file input
+    if( ! inputIsDir ) {
+        if (!quiet) {
+            message('Step 1 of ', analysisCount, ': Identifying which algorithm was used...')
+        }
+
+        ### Identify input type
+        if(TRUE) {
+            sampleFilePath <- sample(sampleVector,1)
+            suppressMessages(
+                sampleFile <- readr::read_tsv(
+                    sampleFilePath, col_names = TRUE, n_max = 2
+                )
+            )
+
+            dataAnalyed <- data.frame(
+                orign = names(headerTypes)[which(
+                    sapply(headerTypes, function(x) {
+                        all(x %in% colnames(sampleFile))
+                    })
+                )],
+                stringsAsFactors = FALSE
+            )
+
+            if (nrow(dataAnalyed) > 1) {
+                stop('Could not uniquely identify file type - please contact developer')
+            }
+            if (!quiet) {
+                message(paste('    The quantification algorithm used was:', dataAnalyed$orign, sep = ' '))
+            }
+
+            if( dataAnalyed$orign == 'StringTie' & is.null(readLength)) {
+                stop(paste(
+                    'When importing StringTie results the \'readLength\' argument',
+                    'must be specified.\n',
+                    'This argument must be set to the number of base pairs sequenced',
+                    '(e.g. if the \n quantified data is 75 bp paired ends \'readLength\' should be set to 75.'
+                ))
+            }
+
+        }
+
+        ### Add names
+        if(TRUE) {
+            localFiles <- sampleVector
+            fileNames <- names(localFiles)
+
+            ### Add file names
+            if( is.null( fileNames ) | any(is.na( fileNames )) ) {
+                if(any(is.na( fileNames ))) {
+                    if (!quiet) {
+                        message('    NAs was found in the name vector IsoformSwitchAnalyzeR will try and create new once.')
+                    }
+                }
+
+                fileNames <- sapply(strsplit(localFiles, '/'), function(x) {
+                    tmp <- tail(x, 1)
+                    tmp <- gsub('\\.tsv$|\\.sf$|\\.isoforms.results|\\.ctab$|\\.csv|\\.txt', '', tmp)
+                    return(tmp)
+                })
+            }
+
+            if(any(duplicated(fileNames)) ) {
+                # fileNames <- c('t','t','b')
+                nameCount <- as.data.frame(table(fileNames))
+
+                fileNames <- plyr::ddply(nameCount, 'fileNames', function(aDF) {
+                    if( aDF$Freq == 1) {
+                        return(
+                            data.frame(
+                                newId = aDF$fileNames,
+                                stringsAsFactors = FALSE
+                            )
+                        )
+                    } else {
+                        return(
+                            data.frame(
+                                newId = paste0(aDF$fileNames, '_', 1:aDF$Freq),
+                                stringsAsFactors = FALSE
+                            )
+                        )
+                    }
+                })$newId
+            }
+
+            if( any(duplicated(fileNames)) ){
+                stop(
+                    paste(
+                        'IsoformSwitchAnalyzeR could not fix the missing name problem.',
+                        'Please assign names to the vector provided to',
+                        'the \'sampleVector\' argument using the names() function.'
+                    )
+                )
+            }
+
+            names(localFiles) <- fileNames
+        }
+    }
+
+    ### Import files with txtimport
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 2 of ', analysisCount, ': Reading data...')
         }
 
         ### Use Txtimporter to import data
@@ -2100,6 +2342,7 @@ importIsoformExpression <- function(
     return(localDataList)
 }
 
+
 importRdata <- function(
     isoformCountMatrix = NULL,
     isoformRepExpression = NULL,
@@ -2129,6 +2372,59 @@ importRdata <- function(
         progressBarLogic <- FALSE
     }
 
+    ### Test existance of files
+    if(TRUE) {
+        if( !is.null(isoformNtFasta)) {
+            if( any( isoformNtFasta == '') ) {
+                stop(
+                    paste(
+                        'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                        'to import your own data? The system.file() should only be used',
+                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                        'To access your own data simply provide the string to the directory with the data as:',
+                        '"path/to/quantification/".',
+                        sep=' '
+                    )
+                )
+            }
+            if( ! file.exists(isoformNtFasta) ) {
+                stop(
+                    paste(
+                        'The file pointed to with the \'isoformNtFasta\' argument does not exists.',
+                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        sep=' '
+                    )
+                )
+            }
+        }
+
+        if( class(isoformExonAnnoation) == 'character' ) {
+            if( isoformExonAnnoation == '' ) {
+                stop(
+                    paste(
+                        'The \'isoformExonAnnoation\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                        'to import your own data? The system.file() should only be used',
+                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                        'To access your own data simply provide the string to the directory with the data as:',
+                        '"path/to/quantification/".',
+                        sep=' '
+                    )
+                )
+            }
+            if( ! file.exists(isoformExonAnnoation) ) {
+                stop(
+                    paste(
+                        'The file pointed to with the \'isoformExonAnnoation\' argument does not exists.',
+                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        sep=' '
+                    )
+                )
+            }
+        }
+    }
+
     ### Test whether imput data fits together
     if (!quiet) { message('Step 1 of 6: Checking data...')}
     if (TRUE) {
@@ -2144,6 +2440,10 @@ importRdata <- function(
             if( abundSuppled ) {
                 isoformRepExpression <- as.data.frame(isoformRepExpression)
 
+                if( any( apply(isoformRepExpression[,which(colnames(isoformRepExpression) != 'isoform_id')],2, class) %in% c('character', 'factor') )) {
+                    stop('The isoformCountMatrix contains character/factor column(s) (other than the isoform_id column)')
+                }
+
                 extremeValues <- range( isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')], na.rm = TRUE )
                 if( max(extremeValues) < 30 ) {
                     warning('The expression data supplied to \'isoformRepExpression\' seems very small - please double-check that it is NOT log-transformed')
@@ -2156,6 +2456,10 @@ importRdata <- function(
 
             if( countsSuppled ) {
                 isoformCountMatrix <- as.data.frame(isoformCountMatrix)
+
+                if( any( apply(isoformCountMatrix[,which(colnames(isoformCountMatrix) != 'isoform_id')],2, class) %in% c('character', 'factor') )) {
+                    stop('The isoformCountMatrix contains character/factor column(s) (other than the isoform_id column)')
+                }
 
                 extremeValues <- range( isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')], na.rm = TRUE )
                 if( max(extremeValues) < 30 ) {
@@ -2203,6 +2507,10 @@ importRdata <- function(
                 }
             }
 
+            ### Potentially convert from tibble
+            if( class(designMatrix)[1] == 'tbl_df') {
+                designMatrix <- as.data.frame(designMatrix)
+            }
             if (!all(c('sampleID', 'condition') %in% colnames(designMatrix))) {
                 stop(paste(
                     'The data.frame passed to the \'designMatrix\'',
@@ -2357,7 +2665,7 @@ importRdata <- function(
                         '\nIsoformSwitchAnalyzeR is not made to work with conditions without indepdendet biological replicates and results will not be trustworthy!',
                         '\nAt best data without replicates should be analyzed as a pilot study before investing in more replicates.',
                         '\nPlase consult the "Analysing experiments without replicates" and "What constitute an independent biological replicate?" sections of the vignette.',
-                        '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!'
+                        '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!\n'
                     )
                 )
             }
@@ -2441,7 +2749,7 @@ importRdata <- function(
     ### Handle annotation input
     if (!quiet) { message('Step 2 of 6: Obtaining annotation...')}
     if (TRUE) {
-        ### Massage obtain  annoation input
+        ### Handle annoation input
         if(TRUE) {
             ### Import GTF is nessesary
             if( class(isoformExonAnnoation) == 'character' ) {
@@ -2675,17 +2983,17 @@ importRdata <- function(
             expIso <- isoformRepExpression$isoform_id
         }
 
-        jcCutoff <- 0.95
+        jcCutoff <- 0.925
 
-        onlyInAnnoation <- setdiff(unique(expIso), isoformAnnotation$isoform_id)
+        onlyInExp <- setdiff(unique(expIso), isoformAnnotation$isoform_id)
 
         if (j1 != 1 ) {
-            if( j1 < jcCutoff | length(onlyInAnnoation) ) {
+            if( j1 < jcCutoff | length(onlyInExp) ) {
                 options(warning.length = 2000L)
                 stop(
                     paste(
                         'The annotation and quantification (count/abundance matrix and isoform annotation)',
-                        'seems to be different (jacard similarity < 0.95).',
+                        'seems to be different (Jaccard similarity < 0.925).',
                         '\nEither isforoms found in the annotation are',
                         'not quantifed or vise versa.',
                         '\nSpecifically:\n',
@@ -2702,10 +3010,12 @@ importRdata <- function(
                         '2) It is somthing to do with how the isoform ids are stored in the different files.',
                         'This problem might be solvable using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
-                        '    3 Examples from expression matrix are :',
-                        paste0( sample(expIso, 3), collapse = ', '),'\n',
-                        '    3 Examples of isoform annotation are  :',
-                        paste0( sample(isoformAnnotation$isoform_id, 3), collapse = ', '),'\n',
+                        '    Examples from expression matrix are :',
+                        paste0( sample(expIso, min(c(3, length(expIso)))), collapse = ', '),'\n',
+                        '    Examples of annoation are :',
+                        paste0( sample(isoformAnnotation$isoform_id, min(c(3, length(isoformAnnotation$isoform_id)))), collapse = ', '),'\n',
+                        '    Examples of isoforms which were only found im the quantification are  :',
+                        paste0( sample(onlyInExp, min(c(3, length(onlyInExp)))), collapse = ', '),'\n',
 
                         '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
                         '1) The files do not fit together (e.g different databases versions etc.)',
@@ -2773,7 +3083,7 @@ importRdata <- function(
         }
     }
 
-    ### Subset to data used
+    ### Subset to libraries used
     if (TRUE) {
         designMatrix <-
             designMatrix[which(
@@ -2871,7 +3181,7 @@ importRdata <- function(
 
         nOk <- length(okIsoforms)
         nTot <- nrow(isoformRepExpression)
-        if( nOk != nTot) {
+        if( nOk != nTot ) {
             if (!quiet) {
                 ### Message
                 message(
@@ -2882,24 +3192,24 @@ importRdata <- function(
                         'isoforms were removed since they were not expressed in any samples.'
                     )
                 )
+            }
 
-                ### Subset expression
-                isoformRepExpression <- isoformRepExpression[which(
-                    isoformRepExpression$isoform_id %in% okIsoforms
+            ### Subset expression
+            isoformRepExpression <- isoformRepExpression[which(
+                isoformRepExpression$isoform_id %in% okIsoforms
+            ),]
+            if(countsSuppled) {
+                isoformCountMatrix <- isoformCountMatrix[which(
+                    isoformCountMatrix$isoform_id %in% okIsoforms
                 ),]
-                if(countsSuppled) {
-                    isoformCountMatrix <- isoformCountMatrix[which(
-                        isoformCountMatrix$isoform_id %in% okIsoforms
-                    ),]
-                }
+            }
 
-                ### Annotation
-                isoformExonStructure <- isoformExonStructure[which( isoformExonStructure$isoform_id %in% okIsoforms),]
-                isoformAnnotation <- isoformAnnotation[which( isoformAnnotation$isoform_id %in% okIsoforms),]
+            ### Annotation
+            isoformExonStructure <- isoformExonStructure[which( isoformExonStructure$isoform_id %in% okIsoforms),]
+            isoformAnnotation <- isoformAnnotation[which( isoformAnnotation$isoform_id %in% okIsoforms),]
 
-                if (addAnnotatedORFs & gtfImported) {
-                    isoORF <- isoORF[which( isoORF$isoform_id %in% okIsoforms),]
-                }
+            if (addAnnotatedORFs & gtfImported) {
+                isoORF <- isoORF[which( isoORF$isoform_id %in% okIsoforms),]
             }
 
         }
@@ -2967,7 +3277,6 @@ importRdata <- function(
                         paste0( sample(unique(isoformRepExpression$isoform_id), 3), collapse = ', '),'\n',
                         '    3 Examples of sequence annotation are :',
                         paste0( sample(names(isoformNtSeq), 3), collapse = ', '),'\n',
-
 
                         '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
                         '1) The files do not fit together (different databases versions)',
@@ -3264,6 +3573,8 @@ preFilter <- function(
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
     reduceToSwitchingGenes = FALSE,
+    reduceFurtherToGenesWithConsequencePotential = FALSE,
+    onlySigIsoforms = FALSE,
     keepIsoformInAllConditions = FALSE,
     alpha = 0.05,
     dIFcutoff = 0.1,
@@ -3277,6 +3588,20 @@ preFilter <- function(
                 'must be a \'switchAnalyzeRlist\''
             ))
         }
+
+        if( switchAnalyzeRlist$sourceId == 'gtf') {
+            warning(
+                paste(
+                    'The switchAnalyzeRlist seems to be created from a gtf file',
+                    'wereby expression is probably not annotated.',
+                    'Running preFilter() might not be what you want.',
+                    '\nIf expression info was manually added afterwards',
+                    'please ignore this warning.',
+                    sep=''
+                )
+            )
+        }
+
 
         if (!is.null(isoformExpressionCutoff)) {
             if (!is.numeric(isoformExpressionCutoff)) {
@@ -3340,42 +3665,77 @@ preFilter <- function(
 
     ### Find which isoforms to keep
     if (TRUE) {
-        ### Extract data
-        columnsToExtraxt <-
-            c(
-                'iso_ref',
-                'gene_ref',
-                'isoform_id',
-                'gene_id',
-                'gene_biotype',
-                'class_code',
-                'gene_overall_mean',
-                'iso_overall_mean',
-                'IF_overall',
-                'dIF',
-                'gene_switch_q_value'
-            )
-        columnsToExtraxt <-
-            na.omit(match(
-                columnsToExtraxt,
-                colnames(switchAnalyzeRlist$isoformFeature)
-            ))
-        #localData <- unique( switchAnalyzeRlist$isoformFeature[, columnsToExtraxt ] ) # no need
-        localData <-
-            switchAnalyzeRlist$isoformFeature[, columnsToExtraxt]
+        ### Extract data to filter on
+        if(TRUE) {
+            columnsToExtraxt <-
+                c(
+                    'iso_ref',
+                    'gene_ref',
+                    'isoform_id',
+                    'gene_id',
+                    'gene_biotype',
+                    'class_code',
+                    'gene_overall_mean',
+                    'iso_overall_mean',
+                    'IF_overall',
+                    'dIF',
+                    'gene_switch_q_value',
+                    'isoform_switch_q_value'
+                )
+            columnsToExtraxt <-
+                na.omit(match(
+                    columnsToExtraxt,
+                    colnames(switchAnalyzeRlist$isoformFeature)
+                ))
+            #localData <- unique( switchAnalyzeRlist$isoformFeature[, columnsToExtraxt ] ) # no need
+            localData <-
+                switchAnalyzeRlist$isoformFeature[, columnsToExtraxt]
 
-        # Count features
-        transcriptCount <- length(unique(localData$isoform_id))
+            # Count features
+            transcriptCount <- length(unique(localData$isoform_id))
+        }
 
-        ### Do filtering
-        if (reduceToSwitchingGenes &
-            any(!is.na(localData$gene_switch_q_value))) {
-            localData <- localData[which(localData$gene_switch_q_value < alpha &
-                                             abs(localData$dIF) > dIFcutoff), ]
+        ### Reduce to genes with switches
+        if (reduceToSwitchingGenes ) {
+            if( reduceFurtherToGenesWithConsequencePotential ) {
+                tmp <- extractSwitchPairs(
+                    switchAnalyzeRlist,
+                    alpha = alpha,
+                    dIFcutoff = dIFcutoff,
+                    onlySigIsoforms = onlySigIsoforms
+                )
+                deGenes <- unique(tmp$gene_ref)
+
+            } else {
+                isoResTest <-
+                    any(!is.na(
+                        localData$isoform_switch_q_value
+                    ))
+                if (isoResTest) {
+                    deGenes <- localData$gene_ref[which(
+                        localData$isoform_switch_q_value < alpha &
+                            abs(localData$dIF) > dIFcutoff
+                    )]
+                } else {
+                    deGenes <- localData$gene_ref[which(
+                        localData$gene_switch_q_value < alpha &
+                            abs(localData$dIF) > dIFcutoff
+                    )]
+                }
+            }
+
+            localData <- localData[which(
+                localData$gene_ref %in% deGenes
+            ),]
+
             if (!nrow(localData)) {
                 stop('No genes were left after filtering for switching genes')
             }
+
+
         }
+
+
 
         if (!is.null(geneExpressionCutoff)) {
             localData <- localData[which(
@@ -3467,7 +3827,7 @@ preFilter <- function(
     if (!quiet) {
         message(
             paste(
-                'The fitering removed ',
+                'The filtering removed ',
                 transcriptsRemoved,
                 ' ( ',
                 percentRemoved,

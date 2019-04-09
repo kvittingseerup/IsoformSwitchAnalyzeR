@@ -28,6 +28,8 @@ analyzeCPAT(
 \details{
 Notes for how to run the external tools:
 Use default paramters. If the webser (\url{http://lilab.research.bcm.edu/cpat/}) was used download the tab-delimited result file (from the bottom of the result page). If a stand-alone version was just just supply the path to the result file.
+
+Please note that the \code{analyzeCPAT()} function will automatically only import the CPAT results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 }
 
 \value{

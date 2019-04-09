@@ -57,7 +57,7 @@ Additional columns can be used to describe other co-factors such as batch effect
 \item{isoformExonAnnoation}{
 Can either be:
 \itemize{
-    \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "/myAnnotation/myGenome/isoformsQuantified.gtf")}
+    \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "myAnnotation/myGenome/isoformsQuantified.gtf")}
     \item{\code{2}: A \code{GRange} object (see \code{?GRanges}) containing one entry per exon per isoform with the genomic coordinat of that isoform. This \code{GRange} should furthmore contain two meta data columns called 'isoform_id' and 'gene_id' indicating both which isoform the exon belongs to as well as which gene the isoform belongs to. The 'isoform_id' column must match the isoform ids used in the 'isoform_id' column of the \code{isoformRepExpression} data.frame. If possible we suggest that a third columns called 'gene_name' with the corresponding gene names is also added. If not supplied gene_name will be annotated as NA.}
 }
 }
@@ -147,11 +147,11 @@ Kristoffer Vitting-Seerup
 ### Please note
 # 1) The way of importing files in the following example with
 #       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
-#       specialiced to access the sample data in the IsoformSwitchAnalyzeR package
-#       and not somhting you need to do - just supply the string e.g.
-#       "/myAnnotation/isoformsQuantified.gtf" to the functions
+#       specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+#       and not something you need to do - just supply the string e.g.
+#       "myAnnotation/isoformsQuantified.gtf" to the functions
 # 2) importRdata directly supports import of a GTF file - just supply the
-#       path (e.g. "/myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
+#       path (e.g. "myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 
 ### Import quantifications
 salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))

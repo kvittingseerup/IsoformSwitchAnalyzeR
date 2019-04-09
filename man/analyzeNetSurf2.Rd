@@ -51,7 +51,7 @@ Intrinsically Disordered Regions (IDR) are regions of a protein which does not h
 The NetSurfP web-server currently have no restriction on the number of sequences in the file uploaded so we sugget using the combined aa fasta file. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools: \cr
-Use default paramters. If you want to use the webserver it is easily done as follows:.
+Use default paramters. If you want to use the webserver it is easily done as follows:
 1) Go to \url{http://www.cbs.dtu.dk/services/NetSurfP-2.0/}
 2) Upload the amino acoid file (_AA) created with \code{extractSequence}.
 3) Submit your job.
@@ -59,7 +59,12 @@ Use default paramters. If you want to use the webserver it is easily done as fol
 5) In the top-right conor of the result site use the "Export All" botton to download the results as a CNV file.
 6) Supply a string indicating the path to the downloaded cnv file directly to the "pathToNetSurfP2resultFile" argument.
 
+If you run NetSurfP-2 locally just use the "--csv" argument and provide the resulting csv file to the \code{pathToNetSurfP2resultFile} argument.
+
+
 IDR are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run NetSurfP2 once on all isoforms and then supply the entire file to \code{analyzeNetSurfP2}.
+
+Please note that the \code{analyzeNetSurfP2()} function will automatically only import the NetSurfP-2 results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 }
 
 \value{

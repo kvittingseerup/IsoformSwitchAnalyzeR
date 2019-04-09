@@ -14,6 +14,8 @@ isoformSwitchTestDRIMSeq(
     dIFcutoff = 0.1,
     testIntegration = 'isoform_only',
     reduceToSwitchingGenes = TRUE,
+    reduceFurtherToGenesWithConsequencePotential = TRUE,
+    onlySigIsoforms = FALSE,
     dmFilterArgs=list(
         min_feature_expr = 4,
         min_samps_feature_expr = min(
@@ -47,8 +49,18 @@ A string indicating how to interpret the DRIMSeq test for differential isoform u
         }
     }
 
-    \item{reduceToSwitchingGenes}{
-A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains significant switching (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.}
+\item{reduceToSwitchingGenes}{
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains at least one isoform significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) - works on dIF values corrected for confounding effects if overwriteIFvalues=TRUE. Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
+}
+
+\item{reduceFurtherToGenesWithConsequencePotential}{
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which have the potential to find isoform switches with predicted consequences. This argument is a more strict version of \code{reduceToSwitchingGenes} as it not only requires that at least one isoform is significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) but also that there is an isoform with the opposite effect size (e.g. used less if the first isoform is used more). The minimum effect size of the opposing isoform usage is also controled by \code{dIFcutoff}. The exsistence of such an opposing isoform means a switch pair can be formed. It is these pairs that can be analyzed for functional consequences further downstream in the IsoformSwitchAnalyzeR workflow. Enabling this will make the downstream analysis a even faster (than just using reduceToSwitchingGenes) since fewer genes needs to be analyzed. Requires that \code{reduceToSwitchingGenes=TRUE} to have any effect. Default is TRUE.
+}
+
+
+\item{onlySigIsoforms}{
+A logic indicating whether both isoforms the pairs considered if \code{reduceFurtherToGenesWithConsequencePotential=TRUE} should be significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Default is FALSE (aka only one of the isoforms in a pair should be significantly differential used).
+}
 
     %\item{nCores}{ An inter indicating the number of cores to be used in parallel processing. Defaults is FALSE.}
     \item{dmFilterArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmFilter()} function enabling filtering based on replicate data. Must be supplied as a named list. Default is 4 counts in at least as many libraries as there are replicates in the smalles condition}
@@ -136,11 +148,11 @@ Kristoffer Vitting-Seerup
 ### Please note
 # 1) The way of importing files in the following example with
 #       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
-#       specialiced to access the sample data in the IsoformSwitchAnalyzeR package
-#       and not somhting you need to do - just supply the string e.g.
-#       "/myAnnotation/isoformsQuantified.gtf" to the functions
+#       specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+#       and not something you need to do - just supply the string e.g.
+#       "myAnnotation/isoformsQuantified.gtf" to the functions
 # 2) importRdata directly supports import of a GTF file - just supply the
-#       path (e.g. "/myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
+#       path (e.g. "myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 
 ### Import quantifications
 salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))

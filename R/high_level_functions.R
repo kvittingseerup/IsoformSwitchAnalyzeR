@@ -24,7 +24,15 @@ isoformSwitchAnalysisPart1 <- function(
     ### Test
     ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
     if( ! ntAlreadyInSwitchList ) {
-        if (class(genomeObject) != 'BSgenome') {
+        if( is.null(genomeObject)) {
+            stop(paste(
+                'Since the switchAnalyzeRlist does not contain the',
+                'transcript sequences the BSgenome argument must be used.',
+                '\nIf you used importRdata() to generate the switchAnalyzeRlist',
+                'consider using the isoformNtFasta argument instead (recomended).',
+                sep=' '
+            ))
+        } else if (class(genomeObject) != 'BSgenome') {
             stop('The genomeObject argument must be a BSgenome')
         }
     }

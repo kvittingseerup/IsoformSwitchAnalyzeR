@@ -15,6 +15,8 @@ isoformSwitchTestDEXSeq(
     correctForConfoundingFactors=TRUE,
     overwriteIFvalues=TRUE,
     reduceToSwitchingGenes = TRUE,
+    reduceFurtherToGenesWithConsequencePotential = TRUE,
+    onlySigIsoforms = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 )
@@ -40,7 +42,15 @@ A logic indicating whether to overwrite the IF and dIF stored in the switchAnaly
 }
 
 \item{reduceToSwitchingGenes}{
-A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains significant switching (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) - works on dIF values corrected for confounding effects if overwriteIFvalues=TRUE. Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains at least one isoform significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) - works on dIF values corrected for confounding effects if overwriteIFvalues=TRUE. Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
+}
+
+\item{reduceFurtherToGenesWithConsequencePotential}{
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which have the potential to find isoform switches with predicted consequences. This argument is a more strict version of \code{reduceToSwitchingGenes} as it not only requires that at least one isoform is significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) but also that there is an isoform with the opposite effect size (e.g. used less if the first isoform is used more). The minimum effect size of the opposing isoform usage is also controled by \code{dIFcutoff}. The exsistence of such an opposing isoform means a switch pair can be formed. It is these pairs that can be analyzed for functional consequences further downstream in the IsoformSwitchAnalyzeR workflow. Enabling this will make the downstream analysis a even faster (than just using reduceToSwitchingGenes) since fewer genes needs to be analyzed. Requires that \code{reduceToSwitchingGenes=TRUE} to have any effect. Default is TRUE.
+}
+
+\item{onlySigIsoforms}{
+A logic indicating whether both isoforms the pairs considered if \code{reduceFurtherToGenesWithConsequencePotential=TRUE} should be significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Default is FALSE (aka only one of the isoforms in a pair should be significantly differential used).
 }
 
 \item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Defaults is FALSE.}
@@ -103,11 +113,11 @@ Kristoffer Vitting-Seerup
 ### Please note
 # 1) The way of importing files in the following example with
 #       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
-#       specialiced to access the sample data in the IsoformSwitchAnalyzeR package
-#       and not somhting you need to do - just supply the string e.g.
-#       "/myAnnotation/isoformsQuantified.gtf" to the functions
+#       specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+#       and not something you need to do - just supply the string e.g.
+#       "myAnnotation/isoformsQuantified.gtf" to the functions
 # 2) importRdata directly supports import of a GTF file - just supply the
-#       path (e.g. "/myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
+#       path (e.g. "myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 
 ### Import quantifications
 salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))

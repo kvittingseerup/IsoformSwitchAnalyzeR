@@ -923,29 +923,31 @@ extractSequence <- function(
                 )
             )
         }
+
+        ### Extract switchAnalyzeRlist ORF annotation and filter for those I need
+        switchORFannotation <-
+            unique(data.frame(switchAnalyzeRlist$orfAnalysis[, c(
+                'isoform_id',
+                "orfTransciptStart",
+                'orfTransciptEnd',
+                "orfTransciptLength",
+                "PTC"
+            )]))
+        switchORFannotation <-
+            switchORFannotation[which(!is.na(switchORFannotation$PTC)), ]
+        switchORFannotation <-
+            switchORFannotation[which(
+                switchORFannotation$isoform_id %in%
+                    names(transcriptSequencesDNAstring)), ]
+        switchORFannotation <-
+            switchORFannotation[which(
+                switchORFannotation$orfTransciptStart != 0
+            ), ]
+
         if( aaAlreadyInSwitchList ) {
             transcriptORFaaSeq <- switchAnalyzeRlist$aaSequence
-        } else {
-            ### Extract switchAnalyzeRlist ORF annotation and filter for those I need
-            switchORFannotation <-
-                unique(data.frame(switchAnalyzeRlist$orfAnalysis[, c(
-                    'isoform_id',
-                    "orfTransciptStart",
-                    'orfTransciptEnd',
-                    "orfTransciptLength",
-                    "PTC"
-                )]))
-            switchORFannotation <-
-                switchORFannotation[which(!is.na(switchORFannotation$PTC)), ]
-            switchORFannotation <-
-                switchORFannotation[which(
-                    switchORFannotation$isoform_id %in%
-                        names(transcriptSequencesDNAstring)), ]
-            switchORFannotation <-
-                switchORFannotation[which(
-                    switchORFannotation$orfTransciptStart != 0
-                ), ]
 
+        } else {
             ### Reorder transcript sequences
             transcriptSequencesDNAstringInData <-
                 transcriptSequencesDNAstring[na.omit(match(

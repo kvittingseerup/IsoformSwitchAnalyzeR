@@ -6,12 +6,13 @@ Import expression data from Kallisto, Salmon, RSEM or StringTie into R.
 }
 
 \description{
-A general-purpose import function which imports isoform expression data from Kallisto, Salmon, RSEM or StringTie into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Importantly this import function also enables inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files.
+A general-purpose import function which imports isoform expression data from Kallisto, Salmon, RSEM or StringTie into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Importantly this import function also enables (and per default performs) inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files.
 }
 
 \usage{
 importIsoformExpression(
-    parentDir,
+    parentDir = NULL,
+    sampleVector = NULL,
     calculateCountsFromAbundance=TRUE,
     addIsofomIdAsColumn=TRUE,
     interLibNormTxPM=TRUE,
@@ -29,7 +30,9 @@ importIsoformExpression(
 }
 
 \arguments{
-\item{parentDir}{ Parrent directory where each quantified sample is in a sub-directory.}
+\item{parentDir}{ Parrent directory where each quantified sample is in a sub-directory. The function will then look for files containing the (suffix) of the default files names for the quantification tools. The suffixes identified are 'abundance.tsv' for Kallisto, 'quant.sf' for Salmon, 'isoforms.results' for RSEM and 't_data.ctab' for StringTie. This is an alternative to \code{sampleVector} (aka only one of them should be used).}
+
+\item{sampleVector}{ A vector with the path to each quantification file to import. If the vector has names assigned (via the \code{names} function) these names will be used as the column name of the resulting tables. Else This is an alternative to \code{parentDir} (aka only one of them should be used). See example.}
 
 \item{calculateCountsFromAbundance}{A logic indicating whether to generate estimated counts using the estimated abundances. Recomended as it will incooperate the bias correction algorithms into the analysis. Default is TRUE.}
 
@@ -39,11 +42,11 @@ importIsoformExpression(
 
 \item{normalizationMethod}{A string indicating the method used for the inter-library normalization. Must be one of "TMM", "RLE", "upperquartile". See \code{?edgeR::calcNormFactors} for more details. Default is "TMM".}
 
-\item{pattern}{ Character string containing a regular expression for which files to import (applied to full path). Defailt is "" corresponding to all. See base::grepl for more details.}
+\item{pattern}{ Only used in combination with \code{parentDir}. A character string containing a regular expression for which files to import (applied to full path). Defailt is "" corresponding to all. See base::grepl for more details.}
 
-\item{invertPattern}{ Logical. If TRUE return indices or values for elements that do not match..}
+\item{invertPattern}{ Only used in combination with \code{parentDir}. A Logical. If TRUE return indices or values for elements that do not match..}
 
-\item{ignore.case}{ if FALSE, the pattern matching is case sensitive and if TRUE, case is ignored during matching.}
+\item{ignore.case}{ Only used in combination with \code{parentDir}. A logical. if FALSE, the pattern matching is case sensitive and if TRUE, case is ignored during matching.}
 
 \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Usefull for analysis of GENCODE data. Default is TRUE.}
 
@@ -100,15 +103,30 @@ Kristoffer Vitting-Seerup
 ### Please note
 # The way of importing files in the following example with
 # "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
-# specialiced to access the sample data in the IsoformSwitchAnalyzeR package
-# and not somhting you need to do - just supply the string e.g.
-# "/mySalmonQuantifications/" to the function
+# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# and not something you need to do - just supply the string e.g.
+# "mySalmonQuantifications/" or 'mySalmonQuantifications/file1.sf' to the function
 
-### Import
-salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))
+### Import via parentDir
+salmonQuant <- importIsoformExpression(parentDir = system.file("extdata/", package="IsoformSwitchAnalyzeR"))
 
 names(salmonQuant)
 
 head(salmonQuant$abundance, 2)
+
+
+### Import via sampleVector
+myFiles <- c(
+    system.file("extdata/Fibroblasts_0/quant.sf", package="IsoformSwitchAnalyzeR"),
+    system.file("extdata/Fibroblasts_1/quant.sf", package="IsoformSwitchAnalyzeR")
+)
+names(myFiles) <- c('Fibroblasts_0','Fibroblasts_1')
+
+salmonQuant <- importIsoformExpression(sampleVector = myFiles)
+
+names(salmonQuant)
+
+head(salmonQuant$abundance, 2)
+
 
 }

@@ -112,9 +112,9 @@ Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. C
 #       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
 #       specialiced to access the sample data in the IsoformSwitchAnalyzeR package
 #       and not somhting you need to do - just supply the string e.g.
-#       "/myAnnotation/isoformsQuantified.gtf" to the functions
+#       "myAnnotation/isoformsQuantified.gtf" to the functions
 # 2) importRdata directly supports import of a GTF file - just supply the
-#       path (e.g. "/myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
+#       path (e.g. "myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 
 ### Import quantifications
 salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))

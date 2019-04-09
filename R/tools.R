@@ -1076,3 +1076,237 @@ determineTranscriptClass <- function(
         return('Transcripts')
     }
 }
+
+newLineAtMiddel <- function(aVec, switchUnderline = TRUE, middleChar = ' ') { # aVec <- myNumbers$featureCompared
+    if(switchUnderline) {
+        aVec <- gsub(pattern = '_', replacement = ' ',x = aVec)
+    }
+
+    correctedString <- sapply(aVec, function(aString) {  # aString <- myNumbers$featureCompared[1]
+        spaceIndex <- gregexpr(pattern = middleChar, aString)[[1]]
+
+        if( -1 %in% spaceIndex ) {
+            return(aString)
+        } else {
+            toSub <- which.min(
+                abs( spaceIndex - (nchar(aString)/2) )
+            )
+
+            newStr <- paste0(
+                substring(aString, first = 1, last = spaceIndex[toSub] -1),
+                '\n',
+                substring(aString, first = spaceIndex[toSub] +1, last = nchar(aString))
+            )
+
+            return(newStr)
+        }
+    })
+
+    return(correctedString)
+}
+
+extractSwitchPairs <- function(
+    switchAnalyzeRlist,
+    alpha = 0.05,
+    dIFcutoff = 0.1,
+    onlySigIsoforms = FALSE,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Check input
+    if (TRUE) {
+        # check switchAnalyzeRlist
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
+            )
+        }
+
+        if (alpha < 0 |
+            alpha > 1) {
+            warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
+        }
+        if (alpha > 0.05) {
+            warning(
+                'Most journals and scientists consider an alpha larger than 0.05 untrustworthy. We therefore recommend using alpha values smaller than or queal to 0.05'
+            )
+        }
+
+        # test wether switching have been analyzed
+        if (!any(!is.na(
+            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
+        ))) {
+            stop(
+                'The analsis of isoform switching must be performed before functional consequences can be analyzed. Please run ?detectIsoformSwitching and try again.'
+            )
+        }
+    }
+
+    if (showProgress & !quiet) {
+        progressBar <- 'text'
+    } else {
+        progressBar <- 'none'
+    }
+
+    ### Subset to relevant data
+    if (TRUE) {
+        localData <- switchAnalyzeRlist$isoformFeatures[
+            which(
+                switchAnalyzeRlist$isoformFeatures$gene_switch_q_value < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            ),
+            c(
+                'iso_ref',
+                'gene_ref',
+                'isoform_switch_q_value',
+                'gene_switch_q_value',
+                'dIF'
+            )
+            ]
+
+        if (!nrow(localData)) {
+            stop('No genes were considered switching with the used cutoff values')
+        }
+
+        ### add switch direction
+        localData$switchDirection <- NA
+        localData$switchDirection[which(sign(localData$dIF) ==  1)] <- 'up'
+        localData$switchDirection[which(sign(localData$dIF) == -1)] <- 'down'
+
+        ### split based on genes and conditions
+        localDataList <-
+            split(
+                localData[,c(
+                    'iso_ref',
+                    'gene_ref',
+                    'isoform_switch_q_value',
+                    'gene_switch_q_value',
+                    'dIF',
+                    'switchDirection'
+                )],
+                f = localData$gene_ref,
+                drop = TRUE
+            )
+
+        ### Extract pairs of isoforms passing the filters
+        pairwiseIsoComparisonList <-
+            plyr::llply(
+                .data = localDataList,
+                .progress = 'none',
+                .fun = function(aDF) {
+                    # aDF <- localDataList[[171]]
+                    isoResTest <-
+                        any(!is.na(
+                            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+                        ))
+                    if (isoResTest) {
+                        sigIso <- aDF$iso_ref[which(
+                            aDF$isoform_switch_q_value < alpha &
+                                abs(aDF$dIF) > dIFcutoff
+                        )]
+                    } else {
+                        sigIso <- aDF$iso_ref[which(
+                            aDF$gene_switch_q_value < alpha &
+                                abs(aDF$dIF) > dIFcutoff
+                        )]
+                    }
+                    if (length(sigIso) == 0) {
+                        return(NULL)
+                    }
+
+                    ### reduce to significant if nessesary
+                    if (onlySigIsoforms) {
+                        aDF <- aDF[which(aDF$iso_ref %in% sigIso), ]
+                    }
+                    if (nrow(aDF) < 2) {
+                        return(NULL)
+                    }
+
+                    ### make sure there are both up and down
+                    if (!all(c('up', 'down') %in% aDF$switchDirection)) {
+                        return(NULL)
+                    }
+
+                    ### extract pairs of isoforms
+                    upIso   <-
+                        as.vector(aDF$iso_ref[which(
+                            aDF$switchDirection == 'up'
+                        )])
+                    downIso <-
+                        as.vector(aDF$iso_ref[which(
+                            aDF$switchDirection == 'down'
+                        )])
+
+                    allIsoCombinations <-
+                        setNames(
+                            base::expand.grid(
+                                upIso,
+                                downIso,
+                                stringsAsFactors = FALSE,
+                                KEEP.OUT.ATTRS = FALSE
+                            ),
+                            nm = c('iso_ref_up', 'iso_ref_down')
+                        )
+
+                    ### Reduce to those where at least one of them is significant
+                    allIsoCombinations <-
+                        allIsoCombinations[which(
+                            allIsoCombinations$iso_ref_up %in% sigIso |
+                                allIsoCombinations$iso_ref_down %in% sigIso
+                        ), ]
+
+                    ### Add gen ref
+                    allIsoCombinations$gene_ref    <- aDF$gene_ref[1]
+
+                    return(allIsoCombinations)
+                }
+            )
+
+        ### Remove empty entries
+        pairwiseIsoComparisonList <-
+            pairwiseIsoComparisonList[which(
+                ! sapply(pairwiseIsoComparisonList, is.null)
+            )]
+        if (length(pairwiseIsoComparisonList) == 0) {
+            stop('No candidate genes with the required cutoffs were found')
+        }
+
+        ### Conver to data.frame
+        pairwiseIsoComparison <-
+            myListToDf(pairwiseIsoComparisonList, addOrignAsColumn = FALSE)
+    }
+
+    ### Add in additional data
+    if(TRUE) {
+        ### Add isoform names
+        matchVectorUp <- match(
+            pairwiseIsoComparison$iso_ref_up,
+            switchAnalyzeRlist$isoformFeatures$iso_ref
+        )
+        matchVectorDn <- match(
+            pairwiseIsoComparison$iso_ref_down,
+            switchAnalyzeRlist$isoformFeatures$iso_ref
+        )
+
+        pairwiseIsoComparison$isoformUpregulated   <-
+            switchAnalyzeRlist$isoformFeatures$isoform_id[matchVectorUp]
+        pairwiseIsoComparison$isoformDownregulated <-
+            switchAnalyzeRlist$isoformFeatures$isoform_id[matchVectorDn]
+
+        ### Gene infl
+        pairwiseIsoComparison$gene_id <-
+            switchAnalyzeRlist$isoformFeatures$gene_id[matchVectorUp]
+        pairwiseIsoComparison$gene_name <-
+            switchAnalyzeRlist$isoformFeatures$gene_name[matchVectorUp]
+
+        ### Conditons
+        pairwiseIsoComparison$condition_1 <-
+            switchAnalyzeRlist$isoformFeatures$condition_1[matchVectorUp]
+        pairwiseIsoComparison$condition_2 <-
+            switchAnalyzeRlist$isoformFeatures$condition_2[matchVectorUp]
+
+    }
+
+    return(pairwiseIsoComparison)
+}
+

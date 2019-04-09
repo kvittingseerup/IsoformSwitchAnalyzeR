@@ -83,8 +83,12 @@ analyzeSwitchConsequences <- function(
             # SignalIP
             'signal_peptide_identified',
 
-            # espritz
-            'IDR_identified'
+            # IDR
+            'IDR_identified',
+
+            # sub cell
+            'sub_cell_location',
+            'solubility_status'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -172,7 +176,7 @@ analyzeSwitchConsequences <- function(
         if ('IDR_identified'  %in% consequencesToAnalyze) {
             if (is.null(switchAnalyzeRlist$idrAnalysis)) {
                 stop(
-                    'To test differences in IDR, the result of the Espritx analysis must be advailable. Please run analyzeEspritz() and try again,'
+                    'To test differences in IDR, the result of the NetSurfP2 analysis must be advailable. Please run analyzeNetSurfP2() and try again,'
                 )
             }
         }
@@ -214,6 +218,21 @@ analyzeSwitchConsequences <- function(
             }
         }
 
+        if ('sub_cell_location'  %in% consequencesToAnalyze) {
+            if ( ! 'sub_cell_location' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+                stop(
+                    'Cannot test for differences in sub-cellular location as such results are not annotated'
+                )
+            }
+        }
+        if ('solubility_status'  %in% consequencesToAnalyze) {
+            if ( ! 'solubility_status' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+                stop(
+                    'Cannot test for differences in solubility status as such results are not annotated'
+                )
+            }
+        }
+
     }
 
     if (showProgress & !quiet) {
@@ -228,130 +247,15 @@ analyzeSwitchConsequences <- function(
             message('Step 1 of 4: Extracting genes with isoform switches...')
         }
 
-        localData <- switchAnalyzeRlist$isoformFeatures[which(
-            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value < alpha &
-                abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
-        ),
-        c(
-            'iso_ref',
-            'gene_ref',
-            'isoform_switch_q_value',
-            'gene_switch_q_value',
-            'dIF'
-        )]
-        if (!nrow(localData)) {
-            stop('No genes were considered switching with the used cutoff values')
-        }
+        ### Extract Iso pairs
+        pairwiseIsoComparison <- extractSwitchPairs(
+            switchAnalyzeRlist,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            onlySigIsoforms = onlySigIsoforms
+        )
 
-        ### add switch direction
-        localData$switchDirection <- NA
-        localData$switchDirection[which(sign(localData$dIF) ==  1)] <- 'up'
-        localData$switchDirection[which(sign(localData$dIF) == -1)] <- 'down'
-
-        ### split based on genes and conditions
-        localDataList <-
-            split(localData, f = localData$gene_ref, drop = TRUE)
-
-        ### Extract pairs of isoforms passing the filters
-        pairwiseIsoComparisonList <-
-            plyr::llply(
-                .data = localDataList,
-                .progress = 'none',
-                .fun = function(aDF) {
-                    # aDF <- localDataList[[171]]
-                    isoResTest <-
-                        any(!is.na(
-                            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-                        ))
-                    if (isoResTest) {
-                        sigIso <- aDF$iso_ref[which(
-                            aDF$isoform_switch_q_value < alpha &
-                                abs(aDF$dIF) > dIFcutoff
-                        )]
-                    } else {
-                        sigIso <- aDF$iso_ref[which(
-                            aDF$gene_switch_q_value < alpha &
-                                abs(aDF$dIF) > dIFcutoff
-                        )]
-                    }
-                    if (length(sigIso) == 0) {
-                        return(NULL)
-                    }
-
-                    ### reduce to significant if nessesary
-                    if (onlySigIsoforms) {
-                        aDF <- aDF[which(aDF$iso_ref %in% sigIso), ]
-                    }
-                    if (nrow(aDF) < 2) {
-                        return(NULL)
-                    }
-
-                    ### make sure there are both up and down
-                    if (!all(c('up', 'down') %in% aDF$switchDirection)) {
-                        return(NULL)
-                    }
-
-                    ### extract pairs of isoforms
-                    upIso   <-
-                        as.vector(aDF$iso_ref[which(
-                            aDF$switchDirection == 'up'
-                        )])
-                    downIso <-
-                        as.vector(aDF$iso_ref[which(
-                            aDF$switchDirection == 'down'
-                        )])
-
-                    allIsoCombinations <-
-                        setNames(
-                            base::expand.grid(
-                                upIso,
-                                downIso,
-                                stringsAsFactors = FALSE,
-                                KEEP.OUT.ATTRS = FALSE
-                            ),
-                            nm = c('iso_ref_up', 'iso_ref_down')
-                        )
-
-                    ### Reduce to those where at least one of them is significant
-                    allIsoCombinations <-
-                        allIsoCombinations[which(
-                            allIsoCombinations$iso_ref_up %in% sigIso |
-                                allIsoCombinations$iso_ref_down %in% sigIso
-                        ), ]
-
-                    ### Add gen ref
-                    allIsoCombinations$gene_ref    <- aDF$gene_ref[1]
-
-                    return(allIsoCombinations)
-                }
-            )
-
-        ### Remove empty entries
-        pairwiseIsoComparisonList <-
-            pairwiseIsoComparisonList[which(
-                ! sapply(pairwiseIsoComparisonList, is.null)
-            )]
-        if (length(pairwiseIsoComparisonList) == 0) {
-            stop('No candidate genes with the required cutoffs were found')
-        }
-
-        ### Conver to data.frame
-        pairwiseIsoComparison <-
-            myListToDf(pairwiseIsoComparisonList, addOrignAsColumn = FALSE)
-
-        ### Add isoform names
-        pairwiseIsoComparison$isoformUpregulated   <-
-            switchAnalyzeRlist$isoformFeatures$isoform_id[match(
-                pairwiseIsoComparison$iso_ref_up,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
-        pairwiseIsoComparison$isoformDownregulated <-
-            switchAnalyzeRlist$isoformFeatures$isoform_id[match(
-                pairwiseIsoComparison$iso_ref_down,
-                switchAnalyzeRlist$isoformFeatures$iso_ref
-            )]
-
-        ### Extract paris to compare
+        ### Extract isoform_id pairs
         pairwiseIsoComparisonUniq <-
             unique(pairwiseIsoComparison[,c(
                 'isoformUpregulated', 'isoformDownregulated'
@@ -392,7 +296,7 @@ analyzeSwitchConsequences <- function(
             .inform = TRUE,
             .progress = progressBar,
             .fun = function(aDF) {
-                # aDF <- pairwiseIsoComparisonUniq[77,]
+                # aDF <- pairwiseIsoComparisonUniq[267,]
                 compareAnnotationOfTwoIsoforms(
                     switchAnalyzeRlist    = minimumSwitchList,
                     consequencesToAnalyze = consequencesToAnalyze,
@@ -609,8 +513,11 @@ compareAnnotationOfTwoIsoforms <- function(
             'domain_length',
             # SignalIP
             'signal_peptide_identified',
-            # espritz
-            'IDR_identified'
+            # IDR
+            'IDR_identified',
+            # DeepLoc3
+            'sub_cell_location',
+            'solubility_status'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -694,6 +601,22 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
+        if ('sub_cell_location'  %in% consequencesToAnalyze) {
+            if ( ! 'sub_cell_location' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+                stop(
+                    'Cannot test for differences in sub-cellular location as such results are not annotated'
+                )
+            }
+        }
+        if ('solubility_status'  %in% consequencesToAnalyze) {
+            if ( ! 'solubility_status' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+                stop(
+                    'Cannot test for differences in solubility status as such results are not annotated'
+                )
+            }
+        }
+
+
         if (!is.numeric(ntCutoff)) {
             stop('The ntCutoff arugment must be an numeric')
         }
@@ -728,6 +651,17 @@ compareAnnotationOfTwoIsoforms <- function(
                 stop(
                     'The transcrip ORF amino acid sequences must be added to the switchAnalyzeRlist before ORF overlap analysis can be performed. Please run \'extractSequence\' and try again.'
                 )
+            }
+        }
+
+        if( 'sub_cell_location' %in% consequencesToAnalyze) {
+            if( ! 'sub_cell_location' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+                'Subcellular localizations have not been analyzed. Please annotate and try again.'
+            }
+        }
+        if( 'solubility_status' %in% consequencesToAnalyze) {
+            if( ! 'solubility_status' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+                'Subcellular localizations have not been analyzed. Please annotate and try again.'
             }
         }
 
@@ -767,6 +701,12 @@ compareAnnotationOfTwoIsoforms <- function(
         if ('coding_potential'   %in% consequencesToAnalyze) {
             columnsToExtract <- c(columnsToExtract, 'codingPotential')
         }
+        if ('sub_cell_location'   %in% consequencesToAnalyze) {
+            columnsToExtract <- c(columnsToExtract, 'sub_cell_location')
+        }
+        if ('solubility_status'   %in% consequencesToAnalyze) {
+            columnsToExtract <- c(columnsToExtract, 'solubility_status')
+        }
 
         transcriptData <-
             unique(switchAnalyzeRlist$isoformFeatures[
@@ -796,7 +736,9 @@ compareAnnotationOfTwoIsoforms <- function(
                 'genomic_domain_position',
                 'domain_length',
                 'signal_peptide_identified',
-                'IDR_identified'
+                'IDR_identified',
+                'solubility_status',
+                'sub_cell_location'
             ) %in% consequencesToAnalyze
         )) {
             columnsToExtract2 <-
@@ -2153,6 +2095,75 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
+        if ('sub_cell_location'         %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) == 2) {
+                if( sum(!is.na(transcriptData$sub_cell_location)) == 2 ) {
+                    differentLoc <-
+                        transcriptData$sub_cell_location[1] != transcriptData$sub_cell_location[2]
+
+                    # make repport
+                    localIndex <-
+                        which(
+                            isoComparison$featureCompared ==
+                                'sub_cell_location'
+                        )
+                    isoComparison$isoformsDifferent[localIndex] <-
+                        differentLoc
+
+                    if (differentLoc & addDescription) {
+                        upLoc <- transcriptData$sub_cell_location[which(
+                            transcriptData$isoform_id == upIso
+                        )]
+                        dnLoc <- transcriptData$sub_cell_location[which(
+                            transcriptData$isoform_id != upIso
+                        )]
+
+                        #isoComparison$switchConsequence[localIndex] <- paste0('Location switch to ', upLoc)
+                        isoComparison$switchConsequence[localIndex] <- paste0(
+                            'Location switch from ',
+                            dnLoc,
+                            ' to ', upLoc
+                        )
+                    }
+                }
+            }
+        }
+
+        if ('solubility_status'         %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) == 2) {
+                if( sum(!is.na(transcriptData$solubility_status)) == 2 ) {
+                    differentSolubility <-
+                        transcriptData$solubility_status[1] !=
+                        transcriptData$solubility_status[2]
+
+                    # make repport
+                    localIndex <-
+                        which(
+                            isoComparison$featureCompared ==
+                                'solubility_status'
+                        )
+                    isoComparison$isoformsDifferent[localIndex] <-
+                        differentSolubility
+
+                    if (differentSolubility & addDescription) {
+                        upSoluble <-
+                            'Soluble' ==
+                            transcriptData$solubility_status[which(
+                                transcriptData$isoform_id == upIso
+                            )]
+                        if (upSoluble) {
+                            isoComparison$switchConsequence[localIndex] <-
+                                'Membrane tethering loss'
+                        } else {
+                            isoComparison$switchConsequence[localIndex] <-
+                                'Membrane tethering gain'
+                        }
+                    }
+                }
+            }
+
+        }
+
     }
 
     if (onlyRepportDifferent) {
@@ -2176,6 +2187,7 @@ extractConsequenceSummary <- function(
     dIFcutoff = 0.1,
     plot = TRUE,
     plotGenes = FALSE,
+    simplifyLocation = TRUE,
     localTheme = theme_bw(),
     returnResult = FALSE
 ) {
@@ -2312,6 +2324,22 @@ extractConsequenceSummary <- function(
             rbind(localSwitchConsequences, tmp)
     }
 
+    ### Handle location
+    if( simplifyLocation & 'sub_cell_location' %in% localSwitchConsequences$featureCompared ) {
+        toModifyIndex <- which(localSwitchConsequences$featureCompared == 'sub_cell_location')
+
+        localSwitchConsequences$switchConsequence[toModifyIndex] <- sapply(
+            strsplit(
+                localSwitchConsequences$switchConsequence[toModifyIndex],
+                ' from | to '
+            ),
+            function(x) {
+                paste(x[c(1,3)], collapse = ' to ')
+            }
+        )
+    }
+
+
     ### Extract Sig iso
     isoResTest <-
         any(!is.na(
@@ -2390,6 +2418,10 @@ extractConsequenceSummary <- function(
         myNumbers$plotComparison <-
             gsub(' vs ', '\nvs\n', myNumbers$Comparison)
 
+        myNumbers$featureCompared <- newLineAtMiddel(
+            myNumbers$featureCompared
+        )
+
         ### Make plot
         if (plotGenes) {
             if (asFractionTotal) {
@@ -2459,10 +2491,12 @@ extractConsequenceEnrichment <- function(
     consequencesToAnalyze = 'all',
     alpha=0.05,
     dIFcutoff = 0.1,
+    countGenes = TRUE,
     analysisOppositeConsequence=FALSE,
     plot=TRUE,
     localTheme = theme_bw(base_size = 12),
-    returnResult=FALSE,
+    minEventsForPlotting = 10,
+    returnResult=TRUE,
     returnSummary=TRUE
 ) {
     ### Test input
@@ -2531,7 +2565,10 @@ extractConsequenceEnrichment <- function(
             'genomic_domain_position',
             'domain_length',
             # SignalIP
-            'signal_peptide_identified'
+            'signal_peptide_identified',
+            # sub cell
+            'sub_cell_location',
+            'solubility_status'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -2558,47 +2595,87 @@ extractConsequenceEnrichment <- function(
             )
         }
 
+        hasLocation <- 'sub_cell_location' %in%
+            colnames(switchAnalyzeRlist$isoformFeatures)
+
 
     }
 
-    ### Get Consequences
-    localConseq <- switchAnalyzeRlist$switchConsequence[
-        which( !is.na(
-            switchAnalyzeRlist$switchConsequence$switchConsequence
-        ))
-        ,]
-    localConseq <- localConseq[which( ! grepl('switch', localConseq$switchConsequence)),]
+    ### Extract non-location consequences
+    if(TRUE) {
+        localConseq <- switchAnalyzeRlist$switchConsequence[
+            which( !is.na(
+                switchAnalyzeRlist$switchConsequence$switchConsequence
+            ))
+            ,]
+        localConseq <- localConseq[which(
+            ! grepl('switch', localConseq$switchConsequence)
+        ),]
 
-    ### make list with levels
-    levelList <- list(
-        tss=c('Tss more upstream','Tss more downstream'),
-        tts=c('Tts more downstream','Tts more upstream'),
-        last_exon=c('Last exon more downstream','Last exon more upstream'),
-        isoform_length=c('Length gain','Length loss'),
-        isoform_seq_similarity=c('Length gain','Length loss'),
-        exon_number=c('Exon gain','Exon loss'),
-        intron_retention=c('Intron retention gain','Intron retention loss'),
-        ORF_length=c('ORF is longer','ORF is shorter'),
-        ORF=c('Complete ORF loss','Complete ORF gain'),
-        x5_utr_length=c('5UTR is longer','5UTR is shorter'),
-        x3_utr_length=c('3UTR is longer','3UTR is shorter'),
-        NMD_status=c('NMD sensitive','NMD insensitive'),
-        coding_potential=c('Transcript is coding','Transcript is Noncoding'),
-        domains_identified=c('Domain gain','Domain loss'),
-        IDR_identified = c('IDR gain','IDR loss'),
-        domain_length=c('Domain length gain','Domain length loss'),
-        signal_peptide_identified=c('Signal peptide gain','Signal peptide loss')
-    )
-    levelListDf <- plyr::ldply(levelList, function(x) data.frame(feature=x, stringsAsFactors = FALSE))
+        ### make list with levels
+        levelList <- list(
+            tss=c('Tss more upstream','Tss more downstream'),
+            tts=c('Tts more downstream','Tts more upstream'),
+            last_exon=c('Last exon more downstream','Last exon more upstream'),
+            isoform_length=c('Length gain','Length loss'),
+            isoform_seq_similarity=c('Length gain','Length loss'),
+            exon_number=c('Exon gain','Exon loss'),
+            intron_retention=c('Intron retention gain','Intron retention loss'),
+            ORF_length=c('ORF is longer','ORF is shorter'),
+            ORF=c('Complete ORF loss','Complete ORF gain'),
+            x5_utr_length=c('5UTR is longer','5UTR is shorter'),
+            x3_utr_length=c('3UTR is longer','3UTR is shorter'),
+            NMD_status=c('NMD sensitive','NMD insensitive'),
+            coding_potential=c('Transcript is coding','Transcript is Noncoding'),
+            domains_identified=c('Domain gain','Domain loss'),
+            IDR_identified = c('IDR gain','IDR loss'),
+            domain_length=c('Domain length gain','Domain length loss'),
+            signal_peptide_identified=c('Signal peptide gain','Signal peptide loss'),
+            solubility_status = c('Membrane tethering gain','Membrane tethering loss')
+        )
+        levelListDf <- plyr::ldply(levelList, function(x) data.frame(feature=x, stringsAsFactors = FALSE))
 
-    ### Add consequence paris
-    localConseq$conseqPair <- levelListDf$.id[match(localConseq$switchConsequence, levelListDf$feature)]
-    localConseq <- localConseq[which( !is.na(localConseq$conseqPair)),]
+        ### Add consequence paris
+        localConseq$conseqPair <- levelListDf$.id[match(localConseq$switchConsequence, levelListDf$feature)]
+        localConseq <- localConseq[which( !is.na(localConseq$conseqPair)),]
 
-    ### Subset to consequences analyzed
-    localConseq <- localConseq[which(
-        localConseq$featureCompared %in% consequencesToAnalyze
-    ),]
+        ### Subset to consequences analyzed
+        localConseq <- localConseq[which(
+            localConseq$featureCompared %in% consequencesToAnalyze
+        ),]
+    }
+
+    ### Extract location consequecnes
+    if(hasLocation) {
+        localLocConseq <- switchAnalyzeRlist$switchConsequence[
+            which( !is.na(
+                switchAnalyzeRlist$switchConsequence$switchConsequence
+            ))
+            ,]
+        localLocConseq <- localLocConseq[which(
+            grepl('Location switch', localLocConseq$switchConsequence)
+        ),]
+
+        locationsList <- lapply(
+            strsplit(
+                localLocConseq$switchConsequence,
+                ' from | to '
+            ),
+            function(x) {
+                x[2:3]
+            }
+        )
+        localLocConseq$from <- sapply(
+            locationsList,
+            function(x) x[1]
+        )
+        localLocConseq$to <- sapply(
+            locationsList,
+            function(x) x[2]
+        )
+
+    }
+
 
     ### Subset to significant features
     if(TRUE) {
@@ -2627,15 +2704,28 @@ extractConsequenceEnrichment <- function(
                 localConseq$iso_ref_up   %in% sigIso$iso_ref
             ),]
 
+            if(hasLocation) {
+                localLocConseq <- localLocConseq[which(
+                    localLocConseq$iso_ref_down %in% sigIso$iso_ref |
+                        localLocConseq$iso_ref_up   %in% sigIso$iso_ref
+                ),]
+            }
         } else {
             localConseq <- localConseq[which(
                 localConseq$gene_ref %in% sigIso$gene_ref
             ),]
+
+            if(hasLocation) {
+                localLocConseq <- localLocConseq[which(
+                    localLocConseq$gene_ref %in% sigIso$gene_ref
+                ),]
+            }
+
         }
     }
 
 
-    ### Summarize gain vs loss for each AStype in each condition
+    ### Summarize gain vs loss for each consequence in each condition
     consequenceBalance <- plyr::ddply(
         .data = localConseq,
         .variables = c('condition_1','condition_2','conseqPair'),
@@ -2657,7 +2747,20 @@ extractConsequenceEnrichment <- function(
             )
 
             ### Summarize category
-            localNumber <- as.data.frame(table(aDF$switchConsequence))
+            if( countGenes ) {
+                df2 <- aDF[
+                    which(!is.na(aDF$switchConsequence)),
+                    c('gene_id','switchConsequence')
+                ]
+                localNumber <- plyr::ddply(df2, .drop = FALSE, .variables = 'switchConsequence', function(x) {
+                    data.frame(
+                        Freq = length(unique(x$gene_id))
+                    )
+                })
+                colnames(localNumber)[1] <- 'Var1'
+            } else {
+                localNumber <- as.data.frame(table(aDF$switchConsequence))
+            }
 
             if(nrow(localNumber) == 2) {
                 localTest <- suppressWarnings(
@@ -2689,41 +2792,142 @@ extractConsequenceEnrichment <- function(
         }
     )
 
-    ### Plot result
+    ### Summarize gain vs loss for each location
+    if( hasLocation ) {
+        locationBalance <- plyr::ddply(
+            .data = localLocConseq,
+            .variables = c('condition_1','condition_2'),
+            #.inform = TRUE,
+            .fun = function(aDF) { # aDF <- localLocConseq[1:20,]
+                locationsAnalyzed <- unique(c(
+                    aDF$from, aDF$to
+                ))
+                locationsAnalyzedList <- split(
+                    locationsAnalyzed,
+                    locationsAnalyzed
+                )
+
+                localCount <- plyr::ldply(
+                    locationsAnalyzedList,
+                    function(aLocation) {
+                        ### Summarize category
+                        if( countGenes ) {
+                            localNumber <- data.frame(
+                                Var1 = paste(c('Location switch to','Location switch away from'), aLocation),
+                                Freq = c(
+                                    length(unique( aDF$gene_ref[which(aDF$to   == aLocation)])),
+                                    length(unique( aDF$gene_ref[which(aDF$from == aLocation)]))
+                                )
+                            )
+                        } else {
+                            localNumber <- data.frame(
+                                Var1 = paste(c('Location switch to','Location switch away from'), aLocation),
+                                Freq = c(
+                                    sum(aDF$to   == aLocation),
+                                    sum(aDF$from == aLocation)
+                                )
+                            )
+                        }
+
+                        if(nrow(localNumber) == 2) {
+                            localTest <- suppressWarnings(
+                                prop.test(localNumber$Freq[1], sum(localNumber$Freq))
+                            )
+
+                            localRes <- data.frame(
+                                feature=stringr::str_c(
+                                    localNumber$Var1[1],
+                                    ' (paired with ',
+                                    localNumber$Var1[2],
+                                    ')'
+                                ),
+                                propOfRelevantEvents=localTest$estimate,
+                                stringsAsFactors = FALSE
+                            )
+
+                            localRes$propCiLo <- min(localTest$conf.int)
+                            localRes$propCiHi <- max(localTest$conf.int)
+                            localRes$propPval <- localTest$p.value
+                        } else {
+                            warning('Somthing strange happend - contact developer with reproducible example')
+                        }
+
+                        localRes$nUp   <- localNumber$Freq[1] # order is always fixed
+                        localRes$nDown <- localNumber$Freq[2] # order is always fixed
+
+                        return(localRes)
+
+                    }
+                )
+
+                return(localCount)
+            }
+        )
+
+        colnames(locationBalance)[3] <- c('conseqPair')
+
+
+        consequenceBalance <- rbind(
+            consequenceBalance,
+            locationBalance
+        )
+    }
+
     consequenceBalance$propQval <- p.adjust(consequenceBalance$propPval, method = 'fdr')
     consequenceBalance$Significant <- consequenceBalance$propQval < alpha
-
-    ### Add comparison
-    consequenceBalance$Comparison <- paste(
-        consequenceBalance$condition_1,
-        'vs',
-        consequenceBalance$condition_2,
-        sep='\n'
+    consequenceBalance$Significant <- factor(
+        consequenceBalance$Significant,
+        levels=c(FALSE,TRUE)
     )
 
-    ### Massage
-    consequenceBalance$feature2 <- gsub(' \\(', '\n(', consequenceBalance$feature)
-    consequenceBalance$feature2 <- gsub('with ', 'with\n', consequenceBalance$feature2)
-
-    consequenceBalance$feature2 <- factor(
-        consequenceBalance$feature2,
-        levels = rev(sort(unique(as.character(consequenceBalance$feature2))))
-    )
-
-
+    ### Plot result
     if(plot) {
-        consequenceBalance$feature2 <- gsub('with\n','with ', consequenceBalance$feature2)
+        if(countGenes) {
+            xText <- 'Fraction of Genes Having the Consequence Indicated\n(of Switches Affected by Either of Opposing Consequences)\n(With 95% Confidence Interval)'
+        } else {
+            xText <- 'Fraction of Switches Having the Consequence Indicated\n(of Switches Affected by Either of Opposing Consequences)\n(With 95% Confidence Interval)'
+        }
 
-        g1 <- ggplot(data=consequenceBalance, aes(y=feature2, x=propOfRelevantEvents, color=Significant)) +
-            geom_point(size=4) +
+        consequenceBalance2 <- consequenceBalance[which(
+            (consequenceBalance$nUp + consequenceBalance$nDown) >= minEventsForPlotting
+        ),]
+
+        consequenceBalance2$nTot <- consequenceBalance2$nDown + consequenceBalance2$nUp
+
+        ### Add comparison
+        consequenceBalance2$Comparison <- paste(
+            consequenceBalance2$condition_1,
+            'vs',
+            consequenceBalance2$condition_2,
+            sep='\n'
+        )
+
+        ### Massage
+        consequenceBalance2$feature2 <- gsub(' \\(', '\n(', consequenceBalance2$feature)
+
+        consequenceBalance2$feature2 <- factor(
+            consequenceBalance2$feature2,
+            levels = rev(sort(unique(as.character(consequenceBalance2$feature2))))
+        )
+
+        g1 <- ggplot(data=consequenceBalance2, aes(y=feature2, x=propOfRelevantEvents, color=Significant)) +
+            #geom_point(size=4) +
             geom_errorbarh(aes(xmax = propCiLo, xmin=propCiHi), height = .3) +
+            geom_point(aes(size=nTot)) +
             facet_wrap(~Comparison) +
             geom_vline(xintercept=0.5, linetype='dashed') +
             labs(
-                x='Fraction of switches having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)',
-                y='Consequence of Isoform Switch\n(and the opposing consequence)') +
+                x=xText,
+                y='Consequence of Isoform Switch\n(and the opposing consequence)'
+            ) +
             localTheme +
-            scale_color_manual('Significant', values=c('black','red'), drop=FALSE) +
+            theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
+            scale_color_manual(name = paste0('FDR < ', alpha), values=c('black','red'), drop=FALSE) +
+            scale_size_continuous(name = 'Observations') +
+            guides(
+                color = guide_legend(order=1),
+                size = guide_legend(order=2)
+            ) +
             coord_cartesian(xlim=c(0,1))
 
         print(g1)
@@ -2731,7 +2935,6 @@ extractConsequenceEnrichment <- function(
 
     if(returnResult) {
         if(returnSummary) {
-            consequenceBalance$feature2 <- NULL
             consequenceBalance$Comparison <- NULL
 
             return(consequenceBalance)
@@ -2747,9 +2950,11 @@ extractConsequenceEnrichmentComparison <- function(
     consequencesToAnalyze = 'all',
     alpha=0.05,
     dIFcutoff = 0.1,
+    countGenes = TRUE,
     analysisOppositeConsequence=FALSE,
     plot=TRUE,
     localTheme = theme_bw(base_size = 14),
+    minEventsForPlotting = 10,
     returnResult=TRUE
 ) {
     ### Extract splicing enrichment
@@ -2758,6 +2963,8 @@ extractConsequenceEnrichmentComparison <- function(
         consequencesToAnalyze = consequencesToAnalyze,
         alpha = alpha,
         dIFcutoff = dIFcutoff,
+        countGenes = countGenes,
+        minEventsForPlotting = 0,
         analysisOppositeConsequence=analysisOppositeConsequence,
         plot = FALSE,
         returnResult = TRUE
@@ -2767,6 +2974,7 @@ extractConsequenceEnrichmentComparison <- function(
         '\nvs\n',
         conseqCount$condition_2
     )
+    conseqCount$nTot <- conseqCount$nDown + conseqCount$nUp
 
     ### Extract pairs
     conseqPairs <- split(as.character(unique(conseqCount$feature)), unique(conseqCount$feature))
@@ -2777,7 +2985,7 @@ extractConsequenceEnrichmentComparison <- function(
     ### Loop over each pariwise comparison
     fisherRes <- plyr::ddply(myComparisons, c('var1','var2'), function(localComparison) { # localComparison <- myComparisons[1,]
         ### Loop over each
-        localAsRes <- plyr::ldply(conseqPairs, .inform = TRUE, function(localConseq) { # localConseq <- 'domains_identified'
+        localAsRes <- plyr::ldply(conseqPairs, .inform = TRUE, function(localConseq) { # localConseq <- 'Membrane tethering gain (paired with Membrane tethering loss)'
             ### Extract local data
             localSpliceCount1 <- conseqCount[which(
                 conseqCount$Comparison %in% c(localComparison$var1, localComparison$var2) &
@@ -2802,9 +3010,12 @@ extractConsequenceEnrichmentComparison <- function(
             localSpliceCount1$fisherPvalue    <- fisherTestResult$p_value
 
             localSpliceCount1$pair <- 1:2
+            localSpliceCount1$forPlotting <- any(
+                (localSpliceCount1$nUp + localSpliceCount1$nDown) >= minEventsForPlotting
+            )
 
             return(
-                localSpliceCount1[,c('Comparison','propOfRelevantEvents','propCiLo','propCiHi','fisherOddsRatio','fisherPvalue','pair')]
+                localSpliceCount1[,c('Comparison','propOfRelevantEvents','propCiLo','propCiHi','fisherOddsRatio','fisherPvalue','pair','forPlotting','nTot')]
             )
         })
 
@@ -2830,7 +3041,10 @@ extractConsequenceEnrichmentComparison <- function(
         stringr::str_c(tmp$var1, tmp$var2, tmp$consequence)
     )]
     fisherRes$Significant <- fisherRes$fisherQvalue < alpha
-
+    fisherRes$Significant <- factor(
+        fisherRes$Significant,
+        levels=c(FALSE,TRUE)
+    )
 
     ### Plot
     if(plot) {
@@ -2838,21 +3052,42 @@ extractConsequenceEnrichmentComparison <- function(
         fisherRes2$consequence <- gsub(' \\(paired','\n\\(paired', fisherRes2$consequence)
         fisherRes2$consequence <- gsub('with ','with\n', fisherRes2$consequence)
 
+        fisherRes2 <- fisherRes2[which(fisherRes2$forPlotting),]
+        if(nrow(fisherRes2) == 0) {
+            stop('No features left to plot after subsetting with \'minEventsForPlotting\'.')
+        }
+
+        if(countGenes) {
+            xText <- 'Fraction of genes having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)'
+        } else {
+            xText <- 'Fraction of switches having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)'
+        }
 
         g1 <- ggplot(data=fisherRes2, aes(y=Comparison, x=propOfRelevantEvents, color=Significant)) +
-            geom_point(size=4) +
+            #geom_point(aes(size=4)) +
+            geom_point(aes(size=nTot)) +
             geom_errorbarh(aes(xmax = propCiHi, xmin=propCiLo), height = .3) +
             facet_grid(comp~consequence, scales = 'free_y') +
             geom_vline(xintercept=0.5, linetype='dashed') +
-            labs(x='Fraction of alternative splicing events being gains\n(compared to losses)\n(with 95% confidence interval)', y='Comparison') +
-            scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red'), drop=FALSE) +
+            labs(x=xText, y='Comparison') +
+            #scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red'), drop=FALSE) +
+            scale_color_manual(name = paste0('FDR across\ncomparisons\n< ', alpha), values=c('black','red'), drop=FALSE) +
+            scale_size_continuous(name = 'Observations') +
+            guides(
+                color = guide_legend(order=1),
+                size = guide_legend(order=2)
+            ) +
             localTheme +
-            theme(strip.text.y = element_text(angle = 0)) +
+            theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1), strip.text.y = element_text(angle = 0)) +
             coord_cartesian(xlim=c(0,1))
+
         print(g1)
+
     }
 
     if(returnResult) {
+        fisherRes$nTot <- NULL
+
         fisherRes$pair <- stringr::str_c('propUp_comparison_', fisherRes$pair)
         colnames(fisherRes)[which(colnames(fisherRes) == 'propOfRelevantEvents')] <- 'propUp'
 

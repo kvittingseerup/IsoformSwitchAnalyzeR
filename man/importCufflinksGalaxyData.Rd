@@ -4,7 +4,7 @@
 Import CuffDiff (Cufflinks) Data Into R
 }
 \description{
-This function enables users to run Cufflinks/Cuffdiff on Galaxy and then afterwards import the result into R for post analysis with isoformSwitchAnalyzeR. The user just has to download (some of) the Cuffdiff result files from galaxy and input the paths to this function. The data is then imported into R, massaged and returned as a switchAnalyzeRlist enabling a full analysis with IsoformSwitchAnalyzeR.
+This function enables users to run Cufflinks/Cuffdiff and then afterwards import the result into R for post analysis with isoformSwitchAnalyzeR. The user just has to point IsoformSwitchAnalyzeR to some of the Cuffdiff result files. The data is then imported into R, massaged and returned as a switchAnalyzeRlist enabling a full analysis with IsoformSwitchAnalyzeR. This approach also supports post-analysis of results from Galaxy.
 }
 
 \usage{
@@ -26,27 +26,27 @@ importCufflinksFiles(
 }
 \arguments{
   \item{pathToGTF}{
-A string indicating the path to the GTF file used as input to Cuffdiff file (downloaded from fx galaxy).
+A string indicating the path to the GTF file used as input to Cuffdiff file (downloaded from e.g. galaxy). Please note this file is usually not in the same directory as the CuffDiff results.
 }
   \item{pathToGeneDEanalysis}{
-A string indicating the path to the file "gene differential expression testing" file (downloaded from fx galaxy).
+A string indicating the path to the file "gene differential expression testing" file (downloaded from e.g. galaxy).
 }
   \item{pathToIsoformDEanalysis}{
-A string indicating the path to the file "transcript differential expression testing" file (downloaded from fx galaxy).
+A string indicating the path to the file "transcript differential expression testing" file (downloaded from e.g. galaxy).
 }
   \item{pathToGeneFPKMtracking}{
-A string indicating the path to the file "gene FPKM tracking" file (downloaded from fx galaxy).
+A string indicating the path to the file "gene FPKM tracking" file (downloaded from e.g. galaxy).
 }
 
 \item{pathToIsoformReadGroupTracking}{
-A string indicating the path to the file "isoform read group tracking" file (downloaded from fx galaxy).
+A string indicating the path to the file "isoform read group tracking" file (downloaded from e.g. galaxy).
 }
 
   \item{pathToIsoformFPKMtracking}{
-A string indicating the path to the file "transcript FPKM tracking" file (downloaded from fx galaxy).
+A string indicating the path to the file "transcript FPKM tracking" file (downloaded from e.g. galaxy).
 }
 \item{pathToSplicingAnalysis}{
-A string indicating the path to the file "splicing differential expression testing" file (downloaded from fx galaxy).. Only needed if the splicing analysis should be added. Default is NULL (not added).
+A string indicating the path to the file "splicing differential expression testing" file (downloaded from e.g. galaxy).. Only needed if the splicing analysis should be added. Default is NULL (not added).
 }
   \item{pathToReadGroups}{
 A string indicating the path to the file "Read groups" file (downloaded from fx galaxy).
@@ -92,9 +92,9 @@ Note that since there was an error in Cufflinks/Cuffdiff's estimation of standar
 ### Please note
 # The way of importing files in the following example with
 # "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
-# specialiced to access the sample data in the IsoformSwitchAnalyzeR package
-# and not somhting you need to do - just supply the string e.g.
-# "/myAnnotation/isoformsQuantified.gtf" to the functions
+# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# and not something you need to do - just supply the string e.g.
+# "myAnnotation/isoformsQuantified.gtf" to the functions
 
 ### Use the files from the cummeRbund example data
 aSwitchList <- importCufflinksFiles(

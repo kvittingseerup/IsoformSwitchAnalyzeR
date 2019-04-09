@@ -1,3 +1,33 @@
+1.5.7: IsoformSwitchAnalyzeR 2019-04-09 ( minor )
+    - isoformSwitchTestDRIMSeq() and isoformSwitchTestDEXSeq() was updated with the
+            'reduceFurtherToGenesWithConsequencePotential' functionality. This option, which is TRUE by default,
+            subsets the switchAnalyzeRlist to genes where a isoform switch pair can be formed (just like it is
+            done during the consequence prediction analysis) thereby reducing the number
+            of isoforms needed to be analyzed/annotated and thereby the runtime of the entire workflow.
+            This is a slightly more strict version of the reduceToSwitchingGenes option and reppresent a filtering
+            that would otherwise occure at the consequence prediction stage.
+    - importIsoformExpression() was extended to also enable import via a list of paths to files of interest.
+    - importCufflinksFiles(), importGTF(), importIsoformExpression(), importRdata() was updated to give better error messages when:
+            system.file() was erroneously used to try and import non-example data files
+            when paths to non-existing files/directories were supplied
+    - Visual improvements to the plots produced by:
+            - extractConsequenceSummary()
+            - extractSplicingEnrichment()
+            - extractSplicingEnrichmentComparison()
+            - extractConsequenceEnrichment()
+            - extractConsequenceEnrichmentComparison()
+    - The default minimum jaccard similarity (JC) cutoff used in importRdata was reduced to from 0.95 to 0.925
+            This should enable analysis of of all UCSC knownGenes annotation sets.
+    - The refrence for the enrichment functions were updated to Vitting-Seerup et al. Bioinformatics (2019).
+    - Fixed a bug in extractSequence() which caused an error if sequences were annotated but had to be trimmed.
+    - Fixed a bug in preFilter that caused wrong subsetting when reduceToSwitchingGenes=TRUE.
+    - Fixed a bug in switchPlot() that caused the domain legend to go missing when only IDR was detected.
+    - Fixed the includeCombined argument in extractSwitchSummary() so FALSE now work.
+    - Various documentation updates
+    - Various vignette updates
+    - Various maintainance updates
+    - Various usability updates (mostly better error messages)
+
 1.5.6: IsoformSwitchAnalyzeR 2019-02-26 ( minor )
     - Fixed two problems with intron retention analysis:
         - Fixed an edge-case senario where multiple consequtive retentions were

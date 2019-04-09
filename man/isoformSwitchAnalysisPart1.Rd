@@ -109,10 +109,8 @@ Kristoffer Vitting-Seerup
 data("exampleSwitchList")
 exampleSwitchList
 
-library(BSgenome.Hsapiens.UCSC.hg19)
 exampleSwitchList <- isoformSwitchAnalysisPart1(
     switchAnalyzeRlist=exampleSwitchList,
-    genomeObject = Hsapiens,
     dIFcutoff = 0.4,        # Set high for short runtime in example data
     outputSequences = FALSE # keeps the function from outputting the fasta files from this example
 )

@@ -49,6 +49,7 @@ To run PFAM locally you should use the pfam_scan.pl script as described in the r
 
 Protein domains are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run pfam once on all isoforms and then supply the entire file to \code{analyzePFAM()}.
 
+Please note that the \code{analyzePFAM()} function will automatically only import the Pfam results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 }
 
 \value{

@@ -5,6 +5,8 @@ isoformSwitchTestDRIMSeq <- function(
     dIFcutoff = 0.1,
     testIntegration = 'isoform_only',
     reduceToSwitchingGenes = TRUE,
+    reduceFurtherToGenesWithConsequencePotential = TRUE,
+    onlySigIsoforms = FALSE,
     dmFilterArgs=list(
         min_feature_expr = 4,
         min_samps_feature_expr = min(
@@ -72,6 +74,18 @@ isoformSwitchTestDRIMSeq <- function(
                 'The \'testIntegration\' argument must be one',
                 'of \'isoform_only\', \'gene_only\', \'intersect\''
             ))
+        }
+
+        if( any(switchAnalyzeRlist$conditions$nrReplicates == 1)) {
+            stop(
+                paste(
+                    'A statistical test cannot be performed without replicates.',
+                    'Please remove all conditions with only 1 replicate and try again.',
+                    '\nThis can either be done before creating the switchAnalyzeRlist',
+                    'in the first place or with the subsetSwitchAnalyzeRlist() function',
+                    sep=' '
+                )
+            )
         }
 
     }
@@ -452,31 +466,43 @@ isoformSwitchTestDRIMSeq <- function(
     }
 
     ### Reduce to genes with switches
-    if (reduceToSwitchingGenes) {
-        isoResTest <-
-            any(!is.na(
-                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-            ))
-        if (isoResTest) {
-            combinedGeneIDsToKeep <-
-                switchAnalyzeRlist$isoformFeatures$gene_ref[which(
-                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
-                        alpha &
-                        abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
-                )]
+    if (reduceToSwitchingGenes ) {
+        if( reduceFurtherToGenesWithConsequencePotential ) {
+            tmp <- extractSwitchPairs(
+                switchAnalyzeRlist,
+                alpha = alpha,
+                dIFcutoff = dIFcutoff,
+                onlySigIsoforms = onlySigIsoforms
+            )
+            combinedGeneIDsToKeep <- unique(tmp$gene_ref)
+
         } else {
-            combinedGeneIDsToKeep <-
-                switchAnalyzeRlist$isoformFeatures$gene_ref[which(
-                    switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <
-                        alpha &
-                        abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
-                )]
+            isoResTest <-
+                any(!is.na(
+                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+                ))
+            if (isoResTest) {
+                combinedGeneIDsToKeep <-
+                    switchAnalyzeRlist$isoformFeatures$gene_ref[which(
+                        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
+                            alpha &
+                            abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+                    )]
+            } else {
+                combinedGeneIDsToKeep <-
+                    switchAnalyzeRlist$isoformFeatures$gene_ref[which(
+                        switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <
+                            alpha &
+                            abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+                    )]
+            }
         }
+
         if (length(combinedGeneIDsToKeep) == 0) {
             stop(paste(
                 'No signifcant switches were found with the supplied cutoffs',
                 'whereby we cannot reduce the switchAnalyzeRlist to only',
-                'significant genes'
+                'significant genes (with consequence potential)'
             ))
         }
 
@@ -486,7 +512,6 @@ isoformSwitchTestDRIMSeq <- function(
                 switchAnalyzeRlist$isoformFeatures$gene_ref %in% combinedGeneIDsToKeep
             )
     }
-
 
     if (!quiet) {
         message('Done')
@@ -502,6 +527,8 @@ isoformSwitchTestDEXSeq <- function(
     correctForConfoundingFactors=TRUE,
     overwriteIFvalues=TRUE,
     reduceToSwitchingGenes = TRUE,
+    reduceFurtherToGenesWithConsequencePotential = TRUE,
+    onlySigIsoforms = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -538,6 +565,17 @@ isoformSwitchTestDEXSeq <- function(
                 }
             }
 
+            if( any(switchAnalyzeRlist$conditions$nrReplicates == 1)) {
+                stop(
+                    paste(
+                        'A statistical test cannot be performed without replicates.',
+                        'Please remove all conditions with only 1 replicate and try again.',
+                        '\nThis can either be done before creating the switchAnalyzeRlist',
+                        'in the first place or with the subsetSwitchAnalyzeRlist() function',
+                        sep=' '
+                    )
+                )
+            }
         }
 
         ### Setup progress bar
@@ -756,7 +794,7 @@ isoformSwitchTestDEXSeq <- function(
                 analysisDone,
                 ' of ',
                 nrAnalysis,
-                ': Testing each pariwise comparisons with DEXSeq (this might be a bit slow)...',
+                ': Testing each pairwise comparisons with DEXSeq (this might be a bit slow)...',
                 sep=''
             ))
 
@@ -1071,19 +1109,31 @@ isoformSwitchTestDEXSeq <- function(
     }
 
     ### Reduce to genes with switches
-    if (reduceToSwitchingGenes) {
-        combinedGeneIDsToKeep <-
-            switchAnalyzeRlist$isoformFeatures$gene_ref[which(
-                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
-                    alpha &
-                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
-            )]
+    if (reduceToSwitchingGenes ) {
+        if( reduceFurtherToGenesWithConsequencePotential ) {
+            tmp <- extractSwitchPairs(
+                switchAnalyzeRlist,
+                alpha = alpha,
+                dIFcutoff = dIFcutoff,
+                onlySigIsoforms = onlySigIsoforms
+            )
+            combinedGeneIDsToKeep <- unique(tmp$gene_ref)
+
+        } else {
+            combinedGeneIDsToKeep <- unique(
+                switchAnalyzeRlist$isoformFeatures$gene_ref[which(
+                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
+                        alpha &
+                        abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+                )]
+            )
+        }
 
         if (length(combinedGeneIDsToKeep) == 0) {
             stop(paste(
                 'No signifcant switches were found with the supplied cutoffs',
                 'whereby we cannot reduce the switchAnalyzeRlist to only',
-                'significant genes'
+                'significant genes (with consequence potential)'
             ))
         }
 
@@ -1228,7 +1278,7 @@ extractSwitchSummary <- function(
         drop = FALSE
     )
 
-    if (length(dataList) > 1 | includeCombined) {
+    if (includeCombined) {
         dataList$combined <- dataDF
     }
 

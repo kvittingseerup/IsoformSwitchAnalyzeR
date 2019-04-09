@@ -86,29 +86,9 @@ Kristoffer Vitting-Seerup
 ### Prepare example data
 data("exampleSwitchListAnalyzed")
 
-# subset for fast runtime
-exampleSwitchListAnalyzed <- subsetSwitchAnalyzeRlist(
-    exampleSwitchListAnalyzed,
-    exampleSwitchListAnalyzed$isoformFeatures$gene_id \%in\% sample(exampleSwitchListAnalyzed$isoformFeatures$gene_id, 10)
-)
-
-
-# Analyze consequences
-consequencesOfInterest <- c(
-    'intron_retention',
-    'coding_potential',
-    'NMD_status',
-    'domains_identified'
-)
-exampleSwitchListAnalyzed <- analyzeSwitchConsequences(
-    exampleSwitchListAnalyzed,
-    consequencesToAnalyze = consequencesOfInterest
-)
-
 ### Summarize switch consequences
 consequenceSummary <- extractConsequenceSummary(
     exampleSwitchListAnalyzed,
-    includeCombined = TRUE,
     returnResult = TRUE,        # return data.frame with summary
     plotGenes = TRUE            # plot summary
 )

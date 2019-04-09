@@ -89,7 +89,11 @@ Kristoffer Vitting-Seerup
 \code{\link{preFilter}}
 }
 \examples{
-# Import exampled gtf file
+# Note the way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# and not something you need to do - just supply the string e.g.
+# "myAnnotation/isoformsQuantified.gtf" to the functions
 
 aSwitchList <- importGTF(pathToGTF=system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"))
 aSwitchList

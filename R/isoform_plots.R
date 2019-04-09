@@ -258,7 +258,9 @@ switchPlotTranscript <- function(
                     'gene_name',
                     'codingPotential',
                     'PTC',
-                    'class_code'
+                    'class_code',
+                    'sub_cell_location',
+                    'solubility_status'
                 )
             columnsToExtract <-
                 na.omit(match(
@@ -273,6 +275,18 @@ switchPlotTranscript <- function(
                     rowsToExtract,
                     columnsToExtract
             ])
+
+            ### Remove if all is annotated as NA
+            if(!is.null(isoInfo$sub_cell_location)) {
+                if(all(is.na(isoInfo$sub_cell_location))) {
+                    isoInfo$sub_cell_location <- NULL
+                }
+            }
+            if(!is.null(isoInfo$solubility_status)) {
+                if(all(is.na(isoInfo$solubility_status))) {
+                    isoInfo$solubility_status <- NULL
+                }
+            }
 
             ### Extract ORF info
             columnsToExtract <-
@@ -871,6 +885,36 @@ switchPlotTranscript <- function(
         } else {
             nameDF$newTxName <- nameDF$oldTxName
         }
+
+        if( 'sub_cell_location' %in% colnames(isoInfo) ) {
+            matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
+
+            nameDF$newTxName <- paste0(
+                nameDF$newTxName,
+                '\n(Location: ',
+                gsub('_',' ', isoInfo$sub_cell_location[match(
+                    nameDF$oldTxName,
+                    isoInfo$isoform_id
+                )]),
+                ')'
+            )
+        }
+        if( 'solubility_status' %in% colnames(isoInfo) ) {
+            matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
+
+            nameDF$newTxName <- paste0(
+                nameDF$newTxName,
+                '\n(',
+                gsub('_',' ', isoInfo$solubility_status[match(
+                    nameDF$oldTxName,
+                    isoInfo$isoform_id
+                )]),
+                ')'
+            )
+        }
+
+
+
         myTranscriptPlotData$transcript <-
             nameDF$newTxName[match(
                 myTranscriptPlotData$transcript, nameDF$oldTxName
@@ -1900,7 +1944,7 @@ expressionAnalysisPlot <- function(
                     levelsToMatch, function(x) {
                         which(grepl(
                             paste0('^',x,'$'),
-                            trimWhiteSpace(c(condition1, condition2))
+                            trimWhiteSpace(geneExpressionCombined$Condition)
                         ))[1]
                     }
                 )]
@@ -2806,7 +2850,7 @@ switchPlot <- function(
 
     ### are domains analysed
     if (any(
-        c('domain_identified', 'signal_peptide_identified') %in%
+        c('domain_identified', 'signal_peptide_identified','idr_identified') %in%
         colnames(switchAnalyzeRlist$isoformFeatures)
     )) {
         anyDomains <-
@@ -2819,6 +2863,11 @@ switchPlot <- function(
                 switchAnalyzeRlist$isoformFeatures$signal_peptide_identified[
                     indexToAnalyze2
                 ] == 'yes'
+            ) |
+            any(
+                switchAnalyzeRlist$isoformFeatures$idr_identified[
+                    indexToAnalyze2
+                    ] == 'yes'
             )
 
         if (is.na(anyDomains)) {

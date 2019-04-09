@@ -137,6 +137,13 @@ Kristoffer Vitting-Seerup
 }
 
 \examples{
+### Please note
+# The way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# and not smoothing you need to do - just supply the string e.g.
+# "/path/to/externalAnalysis/toolResult.txt" pointing to the result file.
+
 data("exampleSwitchListIntermediary")
 exampleSwitchListAnalyzed <- isoformSwitchAnalysisPart2(
     switchAnalyzeRlist        = exampleSwitchListIntermediary,

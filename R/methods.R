@@ -120,7 +120,8 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
                     which(
                         switchAnalyzeRlist[[ localAnalysis ]]$isoform_id %in%
                             isoformsToKeep
-                    ),]
+                    ),,drop=FALSE
+                ]
         }
     }
 
@@ -224,7 +225,7 @@ summary.switchAnalyzeRlist <- function(object, ...) {
         print(switchNumber)
 
         ## add to analysis performed
-        analysisAdded <- c('Isoform Swich Identification',analysisAdded)
+        analysisAdded <- c('Isoform Switch Identification',analysisAdded)
     }
 
     if(length(analysisAdded)) {
@@ -244,6 +245,8 @@ summary.switchAnalyzeRlist <- function(object, ...) {
             'switchConsequence'          ,'Switch Consequences'   , analysisAdded)
         analysisAdded <- gsub(
             'idrAnalysis'          ,'IDR'   , analysisAdded)
+        analysisAdded <- gsub(
+            'subCellLocationAnalysis'          ,'Sub-cellular localization'   , analysisAdded)
 
         print(paste(analysisAdded, collapse = ', '))
     }
