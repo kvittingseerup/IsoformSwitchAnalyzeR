@@ -12,7 +12,7 @@ isoformSwitchAnalysisPart2(
     alpha = 0.05,
     dIFcutoff = 0.1,
     n = NA,
-    codingCutoff,
+    codingCutoff = NULL,
     removeNoncodinORFs,
     pathToCPATresultFile = NULL,
     pathToCPC2resultFile = NULL,
@@ -53,7 +53,7 @@ The number of top genes (after filtering and sorted according to \code{sortByQva
 Numeric indicating the cutoff used by CPAT/CPC2 for distinguishing between coding and non-coding transcripts.
 \enumerate{
     \item For CPAT: The cutoff is dependent on species analyzed. Our analysis suggest that the optimal cutoff for overlapping coding and noncoding isoforms are 0.725 for human and 0.721 for mouse - HOWEVER the suggested cutoffs from the CPAT article (see references) derived by comparing known genes to random non-coding regions of the genome is 0.364 for human and 0.44 for mouse. No default is used.
-    \item For CPC2: The cutoff suggested is 0.5 for all species and will default to that if not supplied
+    \item For CPC2: The cutoff suggested is 0.5 for all species, and this cutoff will be used if nothing is specified by the user
 }
 }
 

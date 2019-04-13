@@ -197,6 +197,10 @@ switchPlotTopSwitches <- function(
                     rowsToExtract ,
                     collumnsToExtract
                 ])
+
+            if( ! 'switchConsequencesGene' %in% colnames(localData)) {
+                localData$switchConsequencesGene <- FALSE
+            }
         }
 
         # Possible extra filter
@@ -389,34 +393,64 @@ switchPlotTopSwitches <- function(
                     )
                 }
 
-                ### add plot type
-                if (fileType == 'pdf') {
-                    pdf(
-                        file = paste(fileName, '.pdf', sep = ''),
-                        height = 5,
-                        width = 8,
-                        onefile = FALSE
+                if( switchAnalyzeRlist$sourceId != 'preDefinedSwitches') {
+                    ### add plot type
+                    if (fileType == 'pdf') {
+                        pdf(
+                            file = paste(fileName, '.pdf', sep = ''),
+                            height = 5,
+                            width = 8,
+                            onefile = FALSE
+                        )
+                    } else {
+                        png(
+                            filename = paste(fileName, '.png', sep = ''),
+                            height = 5,
+                            width = 8,
+                            units = 'in',
+                            res = 300
+                        )
+                    }
+                    ### Do the plot
+                    switchPlot(
+                        switchAnalyzeRlist = switchAnalyzeRlist,
+                        gene = aDF$gene_id,
+                        condition1 = aDF$condition_1,
+                        condition2 = aDF$condition_2,
+                        IFcutoff = IFcutoff,
+                        localTheme = theme_bw(base_size = 8),
+                        additionalArguments = additionalArguments
                     )
+                    dev.off()
                 } else {
-                    png(
-                        filename = paste(fileName, '.png', sep = ''),
-                        height = 5,
-                        width = 8,
-                        units = 'in',
-                        res = 300
+                    ### add plot type
+                    if (fileType == 'pdf') {
+                        pdf(
+                            file = paste(fileName, '.pdf', sep = ''),
+                            height = 3,
+                            width = 8,
+                            onefile = FALSE
+                        )
+                    } else {
+                        png(
+                            filename = paste(fileName, '.png', sep = ''),
+                            height = 3,
+                            width = 8,
+                            units = 'in',
+                            res = 300
+                        )
+                    }
+                    ### Do the plot
+                    switchPlotTranscript(
+                        switchAnalyzeRlist = switchAnalyzeRlist,
+                        gene = aDF$gene_id,
+                        condition1 = aDF$condition_1,
+                        condition2 = aDF$condition_2,
+                        localTheme = theme_bw(base_size = 8)
                     )
+                    dev.off()
                 }
-                ### Do the plot
-                switchPlot(
-                    switchAnalyzeRlist = switchAnalyzeRlist,
-                    gene = aDF$gene_id,
-                    condition1 = aDF$condition_1,
-                    condition2 = aDF$condition_2,
-                    IFcutoff = IFcutoff,
-                    localTheme = theme_bw(base_size = 8),
-                    additionalArguments = additionalArguments
-                )
-                dev.off()
+
 
                 return(NULL)
             }

@@ -541,6 +541,7 @@ Furthermore, note that:
 - the _switchPlot()_ function has an argument called _IFcutoff_ which requires the Isoform Fraction of an Isoform to be larger than IFcutoff (default 0.05) to be included in the plot. Increasing this cutoff can result in "cleaner" plots as less used isoforms will be removed.
 - Some regions of transcripts might be marked as "Not Analyzed" if you have been using webservers - for more info on that see [The switchPlot contains regions "Not Annotated"]
 
+
 <br />
 
 ##### Genome-wide Summaries
@@ -554,7 +555,7 @@ extractSwitchOverlap(
 )
 ```
 
-We can look more into the details of the consequences by considering each type consequence separately as follows:
+Within each condition we can look more into the details of the isoform switch consequences by considering each type consequence separately as follows:
 
 ```{r, fig.width=12, fig.height=5}
 extractConsequenceSummary(
@@ -615,7 +616,21 @@ extractSplicingEnrichment(
 )
 ```
 
-Which is equivalent to the consequence enrichment analysis described above. From this analysis, we see that although the patterns of consequences looked somewhat similar (as illustrated above), the underlying consequences are quite different. COAD utilizes Alternative 3' acceptor sites (A3), multiple exon skipping (MES) and alternative transcription start sites (ATSS) while LUAD utilize intron retention (IR) and alternative transcription termination sites (ATTS) more. For more details (and functionality) regarding splicing analysis see the [Genome-Wide Analysis of Alternative Splicing] section.
+Which is equivalent to the consequence enrichment analysis described above. From this analysis, we see that although the patterns of consequences looked somewhat similar (as illustrated above), the underlying consequences are quite different. COAD utilizes Alternative 3' acceptor sites (A3), multiple exon skipping (MES) and alternative transcription start sites (ATSS) while LUAD utilize intron retention (IR) and alternative transcription termination sites (ATTS) more. 
+
+We can also contrast the two cancer types to look for systematic differences in splicing as follows
+
+```{r, fig.width=12, fig.height=4}
+extractSplicingEnrichmentComparison(
+    exampleSwitchListAnalyzed,
+    splicingToAnalyze = c('A3','MES','ATSS','ATTS'), # the splicing highlighted above
+    returnResult = FALSE # if TRUE returns a data.frame with the results
+)
+```
+
+From which we can see the only systematic difference is the use of alternative transcription start sites (ATSS).
+
+For more details regarding splicing analysis see the [Genome-Wide Analysis of Alternative Splicing] section.
 
 <br />
 
@@ -1588,48 +1603,6 @@ switchPlotIsoUsage(exampleSwitchListAnalyzedSubset, gene = 'ZAK')
 
 <br />
 
-Another useful tool implemented is the _isoformToGeneExp()_ function which takes a data.frame of isoform expression and summarizes it up to gene-level expression values. This function is quite useful in conjunction with the _importIsoformExpression()_ function since the _importIsoformExpression()_ function imports isoform-level data --- which can then be summarized to gene level data with _isoformToGeneExp()_. This is quite analogous to what tximport can do --- except it allows for incorporation of the additional features, such as inter-library normalization, implemented in _importIsoformExpression()_.
-
-<br />
-If the end goal is not to calculate gene expression (from the isoform expression) but instead to calculate isoform fractions we have implemented the _isoformToIsoformFraction()_ function.
-
-<br />
-
-The last tool currently built into IsoformSwitchAnalyzeR is the extractExpressionMatrix() function. The expression information stored in the switchAnalyzeRlist's isoformFeatures is ideal for comparing multiple annotations in a specific comparison of two conditions, but is not well-suited for the comparison of multiple conditions. The _extractExpressionMatrix()_ function solves this by converting the average expression information (gene expression, isoform expression or Isoform Fraction values --- as controlled via the _feature_ argument) into a matrix format as illustrated here:
-
-
-```{r}
-data("exampleSwitchListIntermediary")
-ifMatrix <- extractExpressionMatrix(exampleSwitchListAnalyzed)
-
-head(ifMatrix)
-
-dim(ifMatrix)
-
-```
-
-<br />
-
-Such a matrix can be used for global comparisons of multiple conditions and analysis of sample correlations:
-
-```{r, fig.width=4, fig.height=3}
-# correlation plot
-ggplot(reshape2::melt(cor(ifMatrix)), aes(x=Var1, y=Var2, fill=value)) + 
-    geom_tile() +
-    scale_fill_continuous('Correlation') +
-    labs(x='Condition', y='Condition') +
-    theme_minimal() +
-    theme(axis.text.x=element_text(angle=-90, hjust = 0, vjust=0.5)) # turn x-axis 90 degrees
-```
-
-Or expression (via a heat map):
-
-```{r, fig.width=8, fig.height=4}
-library(pheatmap)
-pheatmap(t(ifMatrix), show_colnames=FALSE)
-```
-
-
 Back to [Table of Content]
 
 <br />
@@ -1997,7 +1970,6 @@ This section is about considerations and recommendations for quantification of R
 
 But why not do both?
 
-<br />
 
 **Isoform/transcript quantification**
 
@@ -2027,7 +1999,7 @@ With regards to gene-leve quantification it is now widely recognized that perfor
 3) The ability to correctly quantify genes even if they contain isoform switches.
 4) The runtime. Lightweight algorithms are MUCH faster!
 
-In summary: unless you have single end RNASeq data there is no good reason for not doing transcript level quantification. Summarizing transcript to gene level should be easy with tools such as [tximport](http://bioconductor.org/packages/release/bioc/html/tximport.html) or IsoformSwitchAnalyzeR's _importIsoformExpression()_ (which acutally is just a tximport wrapper with extra functionalities).
+In summary: unless you have single end RNASeq data and don't know the fragment length there is no good reason for not doing transcript level quantification and afterwards summarizing to gene level. The gene level summaries can easily be obtainedwith tools such as [tximport](http://bioconductor.org/packages/release/bioc/html/tximport.html) or IsoformSwitchAnalyzeR's _importIsoformExpression()_ (which acutally is just a tximport wrapper with extra functionalities).
 
 Back to [Table of Content]
 
@@ -2198,7 +2170,7 @@ Back to [Table of Content]
 
 <br />
 
-## Generating additional links for easy sharing:
+##### Generating additional links for sharing online
 
 - [The switchPlot]
 - [Genome-wide Summaries]

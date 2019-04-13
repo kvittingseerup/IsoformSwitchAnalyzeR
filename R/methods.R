@@ -51,12 +51,14 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
     ),]
 
     # design matrix
-    switchAnalyzeRlist$designMatrix <- switchAnalyzeRlist$designMatrix[which(
-        switchAnalyzeRlist$designMatrix$condition %in% c(
-            unique(switchAnalyzeRlist$isoformFeatures$condition_1),
-            unique(switchAnalyzeRlist$isoformFeatures$condition_2)
-        )
-    ),]
+    if( switchAnalyzeRlist$sourceId != 'preDefinedSwitches' ) {
+        switchAnalyzeRlist$designMatrix <- switchAnalyzeRlist$designMatrix[which(
+            switchAnalyzeRlist$designMatrix$condition %in% c(
+                unique(switchAnalyzeRlist$isoformFeatures$condition_1),
+                unique(switchAnalyzeRlist$isoformFeatures$condition_2)
+            )
+        ),]
+    }
 
     # rep count columns
     if( !is.null(switchAnalyzeRlist$isoformCountMatrix )) {
@@ -164,7 +166,15 @@ summary.switchAnalyzeRlist <- function(object, ...) {
         object$isoformFeatures[,c('condition_1','condition_2')]
     ))
     nCond <- nrow(object$conditions)
+
     nSamples <- sum(object$conditions$nrReplicates)
+    if(is.na(nSamples)) {
+        if(!is.null( object$isoformCountMatrix )) {
+            nSamples <- ncol(object$isoformCountMatrix) - 1
+        } else {
+            nSamples <- ncol(object$isoformRepExpression) - 1
+        }
+    }
 
     nGenes <- length(unique(object$isoformFeatures$gene_id))
     nIso <- length(unique(object$isoformFeatures$isoform_id))

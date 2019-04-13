@@ -35,6 +35,19 @@ isoformSwitchTestDRIMSeq <- function(
                 'must be a \'switchAnalyzeRlist\''
             ))
         }
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+            stop(
+                paste(
+                    'The switchAnalyzeRlist is made from pre-defined isoform switches',
+                    'which means it is made without defining conditions (as it should be).',
+                    '\nThis also means it cannot used to test for new isoform switches -',
+                    'if that is your intention you need to create a new',
+                    'switchAnalyzeRlist with the importRdata() function and try again.',
+                    sep = ' '
+                )
+            )
+        }
+
         if (!is.logical(reduceToSwitchingGenes))  {
             stop(paste(
                 'The argument supplied to \'reduceToSwitchingGenes\'',
@@ -542,6 +555,19 @@ isoformSwitchTestDEXSeq <- function(
                     'must be a \'switchAnalyzeRlist\''
                 ))
             }
+            if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+                stop(
+                    paste(
+                        'The switchAnalyzeRlist is made from pre-defined isoform switches',
+                        'which means it is made without defining conditions (as it should be).',
+                        '\nThis also means it cannot used to test for new isoform switches -',
+                        'if that is your intention you need to create a new',
+                        'switchAnalyzeRlist with the importRdata() function and try again.',
+                        sep = ' '
+                    )
+                )
+            }
+
             if (!is.logical(reduceToSwitchingGenes))  {
                 stop(paste(
                     'The argument supplied to \'reduceToSwitchingGenes\'',
@@ -1634,7 +1660,6 @@ extractTopSwitches <- function(
             ### Add to df
             dataDF$combinedDIF <-
                 combinedDif[match(dataDF$gene_ref , names(combinedDif))]
-            dataDF$gene_ref <- NULL
 
             dataDF2 <-
                 dataDF[sort.list(dataDF$combinedDIF, decreasing = TRUE), ]
@@ -1689,7 +1714,7 @@ extractTopSwitches <- function(
                                     'switches were found. Returning those.'
                                 ))
                             }
-                            n2 <- nrow(dataDF)
+                            n2 <- nrow(dataDF2)
                         } else {
                             n2 <- n
                         }
@@ -1697,6 +1722,10 @@ extractTopSwitches <- function(
                         return(aDF[1:n2, ])
                     }
                 )
+
+            dataDF2 <- dataDF2[which(
+                !is.na(dataDF2$gene_ref)
+            ),]
 
             dataDF2$comparison <- NULL
 

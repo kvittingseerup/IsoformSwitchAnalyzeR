@@ -1,3 +1,9 @@
+1.5.8: IsoformSwitchAnalyzeR 2019-04-13 ( minor )
+    - Fixed a bug in analyzeSwitchConsequences that caused the all the extract*Enrichment*() function plots to loos the conditions.
+    - Fixed a bug that could cause extractTopSwitches() to return additional NA if to few examples were found.
+    - Small vignette updates
+    - Various changes preparing for future updates.
+
 1.5.7: IsoformSwitchAnalyzeR 2019-04-09 ( minor )
     - isoformSwitchTestDRIMSeq() and isoformSwitchTestDEXSeq() was updated with the
             'reduceFurtherToGenesWithConsequencePotential' functionality. This option, which is TRUE by default,

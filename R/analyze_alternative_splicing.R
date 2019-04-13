@@ -2286,6 +2286,9 @@ extractSplicingEnrichment <- function(
         gainLossBalance <- gainLossBalance[which(
             (gainLossBalance$nUp + gainLossBalance$nDown) >= minEventsForPlotting
         ),]
+        if(nrow(gainLossBalance) == 0) {
+            stop('No features left for ploting after filtering with via "minEventsForPlotting" argument.')
+        }
 
         gainLossBalance$nTot <- gainLossBalance$nUp + gainLossBalance$nDown
     }
@@ -2368,6 +2371,22 @@ extractSplicingEnrichmentComparison <- function(
     minEventsForPlotting = 10,
     returnResult=TRUE
 ) {
+    ### Test
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        nComp <- nrow( unique(
+            switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_2')]
+        ))
+
+        if( nComp == 1) {
+            stop('Cannot do a contrast of different comparisons since only one comparison is analyzed in the switchAnalyzeRlist.')
+        }
+    }
+
     ### Extract splicing enrichment
     splicingCount <- extractSplicingEnrichment(
         switchAnalyzeRlist=switchAnalyzeRlist,
@@ -2531,6 +2550,18 @@ extractSplicingGenomeWide <- function(
         if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+            stop(
+                paste(
+                    'The switchAnalyzeRlist is made from pre-defined isoform switches',
+                    'which means it is made without defining conditions (as it should be).',
+                    '\nThis also means it cannot used to plot conditional expression -',
+                    'if that is your intention you need to create a new',
+                    'switchAnalyzeRlist with the importRdata() function and start over.',
+                    sep = ' '
+                )
             )
         }
         if (alpha < 0 |

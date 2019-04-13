@@ -347,20 +347,20 @@ analyzeSwitchConsequences <- function(
             pairwiseIsoComparison,
             by = c('isoformUpregulated', 'isoformDownregulated')
         )
-        ### Add additional information
-        consequencesOfIsoformSwitchingDfcomplete <- dplyr::inner_join(
-            consequencesOfIsoformSwitchingDfcomplete,
-            switchAnalyzeRlist$isoformFeatures[match(
-                unique(consequencesOfIsoformSwitchingDfcomplete$gene_ref),
-                switchAnalyzeRlist$isoformFeatures$gene_ref
-            ),
-            c('gene_ref',
-              'gene_id',
-              'gene_name',
-              'condition_1',
-              'condition_2')],
-            by = 'gene_ref'
-        )
+        #### Add additional information
+        #consequencesOfIsoformSwitchingDfcomplete <- dplyr::inner_join(
+        #    consequencesOfIsoformSwitchingDfcomplete,
+        #    switchAnalyzeRlist$isoformFeatures[match(
+        #        unique(consequencesOfIsoformSwitchingDfcomplete$gene_ref),
+        #        switchAnalyzeRlist$isoformFeatures$gene_ref
+        #    ),
+        #    c('gene_ref',
+        #      'gene_id',
+        #      'gene_name',
+        #      'condition_1',
+        #      'condition_2')],
+        #    by = 'gene_ref'
+        #)
 
         ### reorder
         newOrder <- na.omit(match(
@@ -2891,6 +2891,9 @@ extractConsequenceEnrichment <- function(
         consequenceBalance2 <- consequenceBalance[which(
             (consequenceBalance$nUp + consequenceBalance$nDown) >= minEventsForPlotting
         ),]
+        if(nrow(consequenceBalance2) == 0) {
+            stop('No features left for ploting after filtering with via "minEventsForPlotting" argument.')
+        }
 
         consequenceBalance2$nTot <- consequenceBalance2$nDown + consequenceBalance2$nUp
 
@@ -2957,6 +2960,23 @@ extractConsequenceEnrichmentComparison <- function(
     minEventsForPlotting = 10,
     returnResult=TRUE
 ) {
+    ### Test
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        nComp <- nrow( unique(
+            switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_2')]
+        ))
+
+        if( nComp == 1) {
+            stop('Cannot do a contrast of different comparisons since only one comparison is analyzed in the switchAnalyzeRlist.')
+        }
+    }
+
+
     ### Extract splicing enrichment
     conseqCount <- extractConsequenceEnrichment(
         switchAnalyzeRlist = switchAnalyzeRlist,
@@ -3128,6 +3148,19 @@ extractConsequenceGenomeWide <- function(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
         }
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+            stop(
+                paste(
+                    'The switchAnalyzeRlist is made from pre-defined isoform switches',
+                    'which means it is made without defining conditions (as it should be).',
+                    '\nThis also means it cannot used to plot conditional expression -',
+                    'if that is your intention you need to create a new',
+                    'switchAnalyzeRlist with the importRdata() function and start over.',
+                    sep = ' '
+                )
+            )
+        }
+
         if (alpha < 0 |
             alpha > 1) {
             warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
