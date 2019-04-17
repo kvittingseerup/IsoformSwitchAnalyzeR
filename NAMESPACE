@@ -13,7 +13,7 @@ import(DBI)
 import(tximport)
 import(DRIMSeq)
 import(DEXSeq)
-import(limma)
+import(limma, except=c(plotMA))
 
 ### Import compiled code
 useDynLib(IsoformSwitchAnalyzeR)

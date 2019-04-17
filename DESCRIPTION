@@ -1,7 +1,7 @@
 Package: IsoformSwitchAnalyzeR
 Type: Package
 Title: An R package to Identify, Annotate and Visualize Alternative Splicing and Isoform Switches with Functional Consequences (from RNA-seq data)
-Version: 1.5.8
+Version: 1.5.9
 Author: Kristoffer Vitting-Seerup
 Maintainer: Kristoffer Vitting-Seerup <k.vitting.seerup@gmail.com>
 Description: IsoformSwitchAnalyzeR enables identification and analysis of alternative splicing and isoform switches with predicted functional consequences (e.g. gain/loss of protein domains etc.) from quantification by Kallisto, Salmon, Cufflinks/Cuffdiff, RSEM etc.

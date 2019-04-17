@@ -1,3 +1,7 @@
+1.5.9: IsoformSwitchAnalyzeR 2019-XX-XX ( XXX )
+    - importIsoformExpression was extended to give better error messages.
+    - Fixed the namespace warning.
+
 1.5.8: IsoformSwitchAnalyzeR 2019-04-13 ( minor )
     - Fixed a bug in analyzeSwitchConsequences that caused the all the extract*Enrichment*() function plots to loos the conditions.
     - Fixed a bug that could cause extractTopSwitches() to return additional NA if to few examples were found.
