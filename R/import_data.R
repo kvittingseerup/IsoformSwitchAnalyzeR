@@ -1873,6 +1873,15 @@ importIsoformExpression <- function(
                 )
             }
             if( ! dir.exists(parentDir) ) {
+                if( ! file_test("-d", parentDir) ) {
+                    stop(
+                        paste(
+                            'The file pointed to with the \'parentDir\' argument seems not to be a directory.',
+                            'Did you mean to use the \'sampleVector\' argument?',
+                            sep=' '
+                        )
+                    )
+                }
                 stop(
                     paste(
                         'The directory pointed to with the \'parentDir\' argument does not exists.',
@@ -1881,6 +1890,7 @@ importIsoformExpression <- function(
                     )
                 )
             }
+
         }
         if( ! inputIsDir ) {
             if( !is.character(sampleVector) ) {
@@ -1904,6 +1914,15 @@ importIsoformExpression <- function(
                     paste(
                         'One or more of the files pointed to with the \'sampleVector\' argument does not exists.',
                         '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        sep=' '
+                    )
+                )
+            }
+            if( ! all(file_test("-f", sampleVector)) ) {
+                stop(
+                    paste(
+                        'One or more of the files pointed to with the \'sampleVector\' argument seems to be a directory.',
+                        'Did you mean to use the \'parentDir\' argument?',
                         sep=' '
                     )
                 )
@@ -1965,6 +1984,8 @@ importIsoformExpression <- function(
                 )
             )
             dirList <- dirList[which(sapply(dirList, nchar) > 0)]
+
+
             if(length(dirList) == 0) {
                 stop('No subdirecories were found in the supplied folder. Please check and try again.')
             }
@@ -1996,6 +2017,27 @@ importIsoformExpression <- function(
                         return(fileOfInterest)
                     }
                 )]
+
+            ### Remove hidden directories
+            if( any( grepl('^\\.', names(dirList)) )  ) {
+                nHidden <- sum( grepl('^\\.', names(dirList)) )
+                nTotal <- length(dirList)
+                warning(
+                    paste(
+                        'The importIsoformExpression() function identified',
+                        nHidden,
+                        'hidden sub-directories',
+                        paste0('(of a total ',nTotal,' sub-directories of interest)'),
+                        '\nThese were identified as having the prefix "." and will be ignored.',
+                        '\nIf you want to keep them you will have to re-name the sub-directories omitting the starting ".".',
+                        sep=' '
+                    )
+                )
+
+                dirList <- dirList[which(
+                    ! grepl('^\\.', names(dirList))
+                )]
+            }
 
             if (length(dirList) == 0) {
                 stop(
@@ -2328,21 +2370,28 @@ importIsoformExpression <- function(
 
     ### Noralize TxPM values based on effective counts
     if(interLibNormTxPM) {
-        if (!quiet) {
-            message('Step 3 of 3: Normalizing FPKM/TxPM values via edgeR...')
+        if( ncol(localDataList$abundance) >= 2) {
+            if (!quiet) {
+                message('Step 3 of 3: Normalizing FPKM/TxPM values via edgeR...')
+            }
+
+            okIso <- rownames(localDataList$abundance)[which(
+                rowSums( localDataList$abundance > 1 ) > 1
+            )]
+            abundMat <- localDataList$abundance[which( rownames(localDataList$abundance) %in% okIso),]
+
+            ### Calculate normalization factors
+            localDGE <- suppressMessages( suppressWarnings( edgeR::DGEList(abundMat, remove.zeros = TRUE) ) )
+            localDGE <- suppressMessages( suppressWarnings( edgeR::calcNormFactors(localDGE, method = normalizationMethod) ) )
+
+            ### Apply normalization factors
+            localDataList$abundance <- t(t(localDataList$abundance) / localDGE$samples$norm.factors)
+        } else {
+            if (!quiet) {
+                message('Step 3 of 3: Normalizing skipped due to only 1 sample...')
+            }
+
         }
-
-        okIso <- rownames(localDataList$abundance)[which(
-            rowSums( localDataList$abundance > 1 ) > 1
-        )]
-        abundMat <- localDataList$abundance[which( rownames(localDataList$abundance) %in% okIso),]
-
-        ### Calculate normalization factors
-        localDGE <- suppressMessages( suppressWarnings( edgeR::DGEList(abundMat, remove.zeros = TRUE) ) )
-        localDGE <- suppressMessages( suppressWarnings( edgeR::calcNormFactors(localDGE, method = normalizationMethod) ) )
-
-        ### Apply normalization factors
-        localDataList$abundance <- t(t(localDataList$abundance) / localDGE$samples$norm.factors)
     }
 
     ### Massage data

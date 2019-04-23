@@ -1,4 +1,11 @@
-1.5.9: IsoformSwitchAnalyzeR 2019-XX-XX ( XXX )
+1.5.9: IsoformSwitchAnalyzeR 2019-04-23( minor )
+    - importIsoformExpression was extended to
+            - Give better error messages in clase of mixup between giving directories or files as input.
+            - Ignore system files (ignoreing directories with the '.' prefix)
+    - Updated vignette to highlight the difference between using importIsoformExpression
+            with the "parentDir" and "sampleVector" argument.
+
+1.5.9: IsoformSwitchAnalyzeR 2019-04-17 ( minor )
     - importIsoformExpression was extended to give better error messages.
     - Fixed the namespace warning.
 

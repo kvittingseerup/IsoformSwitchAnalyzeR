@@ -330,7 +330,14 @@ salmonQuant <- importIsoformExpression(
 )
 ```
 
-Which results in a list containing both count and abundance estimates for each isoform:
+Note that:
+
+1) When using the "parentDir" argument importIsoformExpression() assumes each quantification files are stored in seperate sub-directory. To accomodate cases where that is not the case the "sampleVector" argument should be used instead.
+
+2) When using the "parentDir" argument importIsoformExpression() can can import only a subset of the subfolders via the "pattern" argument (and its friends). See documentation for importIsoformExpression() for more details.
+
+
+The result of using importIsoformExpression is a list containing both count and abundance estimates for each isoform:
 
 ```{r}
 head(salmonQuant$abundance, 2)
@@ -348,7 +355,7 @@ Apart from the isoform quantification we need 2-3 additional sets of annotation.
 3) if you have "only" quantified the transcriptome via tools such as Salmon/Kallisto/RSEM (aka you did NOT do any guided/de-novo transcriptome assembly (using tools such as Cufflinks/StringTie)) we highly recommended that the transcript nucleotide sequences (the fasta file used to make the index for the quantification tool) is also supplied to IsoformSwitchAnalyzeR. If a fasta file is provided IsoformSwitchAnalyzeR which will import and integrate these sequences into the workflow. Although options are available to extracting transcript sequences later (more info in the [Detailed Workflow]) importing the transcript fasta file at this stage will provide a more accurate (and much faster) analysis. Providing the sequences here will be (a lot!) easier for people analyzing non-model organisms.
 
 
-Since the information in point 2-3 are all files on the computer IsoformSwitchAnalyzeR can import itself the only thing you need to make yourself is the design matrix. The design matrix will have to be generated manually to ensure correct grouping of samples:
+Since the information in point 2-3 from above are just files stored on the computer which IsoformSwitchAnalyzeR itself imports, the only thing you need to make yourself is the design matrix. The design matrix will have to be generated manually to ensure correct grouping of samples:
 
 ```{r}
 myDesign <- data.frame(
@@ -917,6 +924,13 @@ salmonQuant <- importIsoformExpression(
     addIsofomIdAsColumn = TRUE
 )
 ```
+
+Note that:
+
+1) When using the "parentDir" argument importIsoformExpression() assumes each quantification files are stored in seperate sub-directory. To accomodate cases where that is not the case the "sampleVector" argument should be used instead.
+
+2) When using the "parentDir" argument importIsoformExpression() can can import only a subset of the subfolders via the "pattern" argument (and its friends). See documentation for importIsoformExpression() for more details.
+
 
 The output of _importIsoformExpression_ is a list which (among others) contains both replicate count and abundance matrix which can easily be used to generate a switchAnalyzeRlist with the _importRdata()_ function (as described below). Note that _addIsofomIdAsColumn_ argument lets the user control whether the isoform ids are added as row.names (if FALSE) or as a column (if TRUE). Adding it as a column makes the data ready for use with IsoformSwitchAnalyzeR whereas adding ids as row.names makes it the data directly compatible with other exploratory data analysis methods.
 
