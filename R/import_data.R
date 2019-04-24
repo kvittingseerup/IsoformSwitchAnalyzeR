@@ -1873,11 +1873,12 @@ importIsoformExpression <- function(
                 )
             }
             if( ! dir.exists(parentDir) ) {
-                if( ! file_test("-d", parentDir) ) {
+                if( file_test("-f", parentDir) ) {
                     stop(
                         paste(
-                            'The file pointed to with the \'parentDir\' argument seems not to be a directory.',
+                            'The file pointed to with the \'parentDir\' argument seems to be a file (not a directory).',
                             'Did you mean to use the \'sampleVector\' argument?',
+                            '\nType "?importIsoformExpression" for more information.',
                             sep=' '
                         )
                     )
@@ -1923,6 +1924,7 @@ importIsoformExpression <- function(
                     paste(
                         'One or more of the files pointed to with the \'sampleVector\' argument seems to be a directory.',
                         'Did you mean to use the \'parentDir\' argument?',
+                        '\nType "?importIsoformExpression" for more information.',
                         sep=' '
                     )
                 )

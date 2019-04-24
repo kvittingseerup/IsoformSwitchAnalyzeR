@@ -1,4 +1,8 @@
-1.5.9: IsoformSwitchAnalyzeR 2019-04-23( minor )
+1.5.11: IsoformSwitchAnalyzeR 2019-04-24 ( minor )
+    - importIsoformExpression was extended to
+            - Give better error messages in clase of mixup between giving directories or files as input.
+
+1.5.10: IsoformSwitchAnalyzeR 2019-04-23 ( minor )
     - importIsoformExpression was extended to
             - Give better error messages in clase of mixup between giving directories or files as input.
             - Ignore system files (ignoreing directories with the '.' prefix)
