@@ -1,4 +1,4 @@
-## IsoformSwitchAnalyzeR - An R package to Identify, Annotate and Visualize Alternative Splicing and Isoform Switches with Functional Consequences (from RNA-seq data)
+## IsoformSwitchAnalyzeR: Identify, Annotate and Visualize Alternative Splicing and Isoform Switches with Functional Consequences from both short- and long-read RNA-seq data.
 
 
 Since 2010, state-of-the-art bioinformatics tools have allowed researchers to reconstruct and quantify full length transcripts from RNA-seq data. Such genome-wide isoform resolution data has the potential to facilitate both genome-wide analysis of alternative isoform usage and identification of isoform switching. Unfortunately, these types of analyses are still only rarely done and/or reported --- in fact, only 11% of articles analyzing RNA-seq data published since 2016 performed any isoform analysis. 
