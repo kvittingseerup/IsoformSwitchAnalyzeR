@@ -1095,34 +1095,92 @@ importGTF <- function(
 
         }
 
-        if( ! grepl('\\.gtf$|\\.gtf\\.gz$', pathToGTF, ignore.case = TRUE) ) {
-            warning('The file pointed to by the "pathToGTF" argument appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
+
+        if( ! grepl('\\.gtf$|\\.gtf\\.gz$|\\.gff$|\\.gff\\.gz$|\\.gff3$|\\.gff3\\.gz$', pathToGTF, ignore.case = TRUE) ) {
+            warning('The file pointed to by the "pathToGTF" argument appearts not to be a GTF/GFF file as it does have the right suffix - are you sure it is the rigth file?')
         }
 
+        isGTF <- grepl('\\.gtf$|\\.gtf\\.gz$', pathToGTF, ignore.case = TRUE)
+
     }
 
-    # Read in from GTF file and create Rdata file for easy loading
-    if (!quiet) {
-        message('importing GTF (this may take a while)')
-    }
-    mfGTF <- rtracklayer::import(pathToGTF, format='gtf')
+    # Read in from GTF/GFF file
+    if(TRUE) {
+        if(   isGTF ) {
+            if (!quiet) {
+                message('importing GTF (this may take a while)')
+            }
+            mfGTF <- rtracklayer::import(pathToGTF, format='gtf')
 
-    ### Check GTF
-    if (!all(c('transcript_id', 'gene_id') %in% colnames(mfGTF@elementMetadata))) {
-        collumnsMissing <- paste(
-            c('transcript_id', 'gene_id')[which(
-                !c('transcript_id', 'gene_id') %in%
-                    colnames(mfGTF@elementMetadata)
-            )], collapse = ', ')
-        stop(
-            paste(
-                'The GTF file must contain the folliwing collumns',
-                '\'transcript_id\', \'gene_id\' and.',
-                collumnsMissing,
-                'is missing.',
-                sep = ' '
-            )
-        )
+            ### Check GTF
+            if (!all(c('transcript_id', 'gene_id') %in% colnames(mfGTF@elementMetadata))) {
+                collumnsMissing <- paste(
+                    c('transcript_id', 'gene_id')[which(
+                        !c('transcript_id', 'gene_id') %in%
+                            colnames(mfGTF@elementMetadata)
+                    )], collapse = ', ')
+                stop(
+                    paste(
+                        'The GTF file must contain the folliwing collumns',
+                        '\'transcript_id\' and \'gene_id\'.',
+                        collumnsMissing,
+                        'is missing.',
+                        sep = ' '
+                    )
+                )
+            }
+        }
+        if( ! isGTF ){
+            if (!quiet) {
+                message('importing GFF (this may take a while)')
+            }
+            mfGTF <- rtracklayer::import(pathToGTF, format='gff')
+
+            ### Check GTF
+            geneIdPressent <- 'gene_id' %in% colnames(mfGTF@elementMetadata)
+
+            if( ! geneIdPressent ) {
+                ### Check for RefSeq "gene" (aka gene_id)
+                if (!all(c('transcript_id', 'gene') %in% colnames(mfGTF@elementMetadata) )) {
+                    collumnsMissing <- paste(
+                        c('transcript_id', 'gene')[which(
+                            !c('transcript_id', 'gene') %in%
+                                colnames(mfGTF@elementMetadata)
+                        )], collapse = ', ')
+                    stop(
+                        paste(
+                            'The GFF file must contain the folliwing collumns',
+                            '\'transcript_id\' and \'gene\'.',
+                            collumnsMissing,
+                            'is missing.',
+                            sep = ' '
+                        )
+                    )
+                }
+
+                ### Rename RefSeq gene to gene_id
+                if( ! 'gene_id' %in% colnames(mcols(mfGTF)) ) {
+                    if( 'gene' %in% colnames(mcols(mfGTF)) ) {
+                        colnames(mcols(mfGTF))[which(
+                            colnames(mcols(mfGTF)) == 'gene'
+                        )] <- 'gene_id'
+                    } else {
+                        stop('Could not locate the gene id in the gff file.')
+                    }
+                }
+            }
+            if(   geneIdPressent ) {
+                stop(
+                    paste0(
+                        'This is not a RefSeq GFF file (from ftp://ftp.ncbi.nlm.nih.gov/genomes/).',
+                        '\nIsoformSwitchAnalyzeR only handles RefSeq GFF files so please supply GTF file instead.',
+                        '\n(for more info see FAQ about annotate databases in vignette).'
+                    )
+                )
+            }
+
+
+        }
     }
 
     ### Reduce if nessesary
@@ -1139,14 +1197,22 @@ importGTF <- function(
     }
 
     if( removeTECgenes ) {
-        ### Ensembl
-        if( 'gene_biotype' %in% colnames(mcols(mfGTF)) ) {
-            mfGTF <- mfGTF[which(mfGTF$gene_biotype != 'TEC'),]
-        }
+        if(isGTF) {
+            ### Ensembl
+            if( 'gene_biotype' %in% colnames(mcols(mfGTF)) ) {
+                toExclude <-  mfGTF$gene_biotype == 'TEC'
+                if( any( toExclude ) ) {
+                    mfGTF <- mfGTF[-which( toExclude ),]
+                }
+            }
+            ### Gencode
+            if( 'gene_type' %in% colnames(mcols(mfGTF)) ) {
+                toExclude <-  mfGTF$gene_type == 'TEC'
+                if( any( toExclude ) ) {
+                    mfGTF <- mfGTF[-which( toExclude ),]
+                }
 
-        ### Gencode
-        if( 'gene_type' %in% colnames(mcols(mfGTF)) ) {
-            mfGTF <- mfGTF[which(mfGTF$gene_type != 'TEC'),]
+            }
         }
     }
 
@@ -1182,41 +1248,110 @@ importGTF <- function(
 
     ### Make annoation
     if(TRUE) {
-        if (!quiet) {
-            message('converting GTF to switchAnalyzeRlist')
-        }
-        exonAnoationIndex <- which(mfGTF$type == 'exon')
+        if(   isGTF ) {
+            if (!quiet) {
+                message('converting GTF to switchAnalyzeRlist')
+            }
+            exonAnoationIndex <- which(mfGTF$type == 'exon')
 
-        colsToExtract <- c(
-            'transcript_id', 'gene_id', 'gene_name',
-            'gene_type','gene_biotype',     # respectively gencode and ensembl gene type col
-            'transcript_biotype','transcript_type'
-        )
-        myIso <-
-            as.data.frame(unique(mfGTF@elementMetadata[
-                exonAnoationIndex,
-                na.omit(match(colsToExtract, colnames(mfGTF@elementMetadata)))]
-            ))
+            colsToExtract <- c(
+                'transcript_id', 'gene_id', 'gene_name',
+                'gene_type','gene_biotype',     # respectively gencode and ensembl gene type col
+                'transcript_biotype','transcript_type'
+            )
+            myIso <-
+                as.data.frame(unique(mfGTF@elementMetadata[
+                    exonAnoationIndex,
+                    na.omit(match(colsToExtract, colnames(mfGTF@elementMetadata)))]
+                ))
 
-        ### Handle columns not extracted
-        if (is.null(myIso$gene_name)) {
-            myIso$gene_name <- NA
+            ### Handle columns not extracted
+            if (is.null(myIso$gene_name)) {
+                myIso$gene_name <- NA
+            }
+
+            ### Handle columns with multiple options
+            geneTypeCol <- which(colnames(myIso) %in% c('gene_type','gene_biotype'))
+            if( length(geneTypeCol) == 0 ) {
+                myIso$geneType <- NA
+            } else {
+                myIso$geneType <- myIso[,geneTypeCol[1]]
+            }
+
+            isoTypeCol <- which(colnames(myIso) %in% c('transcript_biotype','transcript_type'))
+            if( length(isoTypeCol) == 0 ) {
+                myIso$isoType <- NA
+            } else {
+                myIso$isoType <- myIso[,isoTypeCol]
+            }
+
+        }
+        if( ! isGTF ) {
+            if (!quiet) {
+                message('converting GFF to switchAnalyzeRlist')
+            }
+            exonAnoationIndex <- which(mfGTF$type == 'exon')
+            colsToExtract <- c(
+                'Parent',
+                'gene_id',
+                'transcript_id'
+            )
+
+            # extract exon annot
+            myIso <-
+                as.data.frame(unique(mfGTF@elementMetadata[
+                    exonAnoationIndex,
+                    na.omit(match(colsToExtract, colnames(mfGTF@elementMetadata)))]
+                ))
+
+            if(any(is.na(myIso$transcript_id))) {
+                nNa <- sum(is.na(myIso$transcript_id))
+
+                warning(
+                    paste(
+                        'There were', nNa, 'annotated features without isoform_ids.',
+                        'These were removed.'
+                    )
+                )
+
+                myIso <- myIso[which(
+                    ! is.na(myIso$transcript_id)
+                ),]
+            }
+
+            # extract gene biotype
+            if( 'gene_biotype' %in% colnames(mcols(mfGTF)) ) {
+                gffGeneAnnot <- mfGTF[which( mfGTF$type == 'gene' ),c(
+                    'ID',
+                    'gene_id',
+                    'gene_biotype'
+                )]
+
+                myIso$gene_biotype    <- gffGeneAnnot$gene_biotype[match(myIso$gene_id, gffGeneAnnot$gene_id)]
+            }
+
+
+            ### Handle columns not extracted
+            if (is.null(myIso$gene_name)) {
+                myIso$gene_name <- NA
+            }
+
+            ### Handle columns with multiple options
+            geneTypeCol <- which(colnames(myIso) %in% c('gene_type','gene_biotype'))
+            if( length(geneTypeCol) == 0 ) {
+                myIso$geneType <- NA
+            } else {
+                myIso$geneType <- myIso[,geneTypeCol[1]]
+            }
+
+            isoTypeCol <- which(colnames(myIso) %in% c('transcript_biotype','transcript_type'))
+            if( length(isoTypeCol) == 0 ) {
+                myIso$isoType <- NA
+            } else {
+                myIso$isoType <- myIso[,isoTypeCol]
+            }
         }
 
-        ### Handle columns with multiple options
-        geneTypeCol <- which(colnames(myIso) %in% c('gene_type','gene_biotype'))
-        if( length(geneTypeCol) == 0 ) {
-            myIso$geneType <- NA
-        } else {
-            myIso$geneType <- myIso[,geneTypeCol]
-        }
-
-        isoTypeCol <- which(colnames(myIso) %in% c('transcript_biotype','transcript_type'))
-        if( length(geneTypeCol) == 0 ) {
-            myIso$isoType <- NA
-        } else {
-            myIso$isoType <- myIso[,isoTypeCol]
-        }
 
         ### Make annotation
         myIsoAnot <- data.frame(
@@ -1257,368 +1392,745 @@ importGTF <- function(
 
     ### Add CDS annoation from GTF file inc convertion to transcript coordinats
     if (addAnnotatedORFs) {
-        # test whether any CDS are found
-        if (any(mfGTF$type == 'CDS')) {
-            if (!quiet) {
-                message('converting annotated CDSs')
-            }
-            myCDS <-
-                sort(mfGTF[which(mfGTF$type == 'CDS'), 'transcript_id'])
-            myCDSedges <-
-                suppressMessages(unlist(range(
-                    split(myCDS[, 0], f = myCDS$transcript_id)
-                )))  # Extract EDGEs
-            myCDSedges$id <- names(myCDSedges)
-            names(myCDSedges) <- NULL
 
-            if (onlyConsiderFullORF) {
-                fullyAnnoated <-
-                    as.data.frame(sort(
-                        mfGTF[which(
-                            mfGTF$type %in% c('start_codon', 'stop_codon')),
-                            c('transcript_id', 'type')]))
-                fullyAnnoatedSplit <-
-                    split(as.character(fullyAnnoated$type),
-                          f = fullyAnnoated$transcript_id)
-                fullyAnnoatedCount <-
-                    sapply(fullyAnnoatedSplit, function(x)
-                        length(unique(x)))
-                toKeep <-
-                    names(fullyAnnoatedCount[which(fullyAnnoatedCount == 2)])
-
-
+        if(   isGTF ) {
+            # test whether any CDS are found
+            if (any(mfGTF$type == 'CDS')) {
+                if (!quiet) {
+                    message('converting annotated CDSs')
+                }
+                myCDS <-
+                    sort(mfGTF[which(mfGTF$type == 'CDS'), 'transcript_id'])
                 myCDSedges <-
-                    myCDSedges[which(myCDSedges$id %in% toKeep), ]
-            }
+                    suppressMessages(unlist(range(
+                        split(myCDS[, 0], f = myCDS$transcript_id)
+                    )))  # Extract EDGEs
+                myCDSedges$id <- names(myCDSedges)
+                names(myCDSedges) <- NULL
 
-            ### Extract Exons
-            localExons <- mfGTF[exonAnoationIndex, 'transcript_id']
-            localExons <-
-                localExons[which(
-                    as.character(localExons@strand) %in% c('+', '-')), ]
-            localExons <-
-                localExons[which(localExons$transcript_id %in% myCDSedges$id), ]
-
-            localExons <-
-                localExons[order(localExons$transcript_id,
-                                 start(localExons),
-                                 end(localExons)), ]
-            localExons$exon_id <-
-                paste('exon_', 1:length(localExons), sep = '')
-
-            ### Extract strand specific ORF info
-            cds <- as.data.frame(myCDSedges)
-            # start
-            plusIndex <- which(cds$strand == '+')
-            annoatedStartGRangesPlus <-
-                GRanges(
-                    cds$seqnames[plusIndex],
-                    IRanges(
-                        start = cds$start[plusIndex],
-                        end = cds$start[plusIndex]),
-                    strand = cds$strand[plusIndex],
-                    id = cds$id[plusIndex]
-                )
-            minusIndex <- which(cds$strand == '-')
-            annoatedStartGRangesMinus <-
-                GRanges(
-                    cds$seqnames[minusIndex],
-                    IRanges(
-                        start = cds$end[minusIndex],
-                        end = cds$end[minusIndex]),
-                    strand = cds$strand[minusIndex],
-                    id = cds$id[minusIndex]
-                )
-
-            annoatedStartGRanges <-
-                c(annoatedStartGRangesPlus,
-                  annoatedStartGRangesMinus)
-            annoatedStartGRanges$orf_id <-
-                paste('cds_', 1:length(annoatedStartGRanges), sep = '')
-
-            # end
-            annoatedEndGRangesPlus  <-
-                GRanges(
-                    cds$seqnames[plusIndex],
-                    IRanges(
-                        start = cds$end[plusIndex],
-                        end = cds$end[plusIndex]),
-                    strand = cds$strand[plusIndex],
-                    id = cds$id[plusIndex]
-                )
-            annoatedEndGRangesMinus <-
-                GRanges(
-                    cds$seqnames[minusIndex],
-                    IRanges(
-                        start = cds$start[minusIndex],
-                        end = cds$start[minusIndex]),
-                    strand = cds$strand[minusIndex],
-                    id = cds$id[minusIndex]
-                )
-
-            annoatedEndGRanges <-
-                c(annoatedEndGRangesPlus, annoatedEndGRangesMinus)
-            annoatedEndGRanges$orf_id <-
-                paste('stop_', 1:length(annoatedEndGRanges), sep = '')
-
-            # combine
-            annotatedORFGR <-
-                c(annoatedStartGRanges, annoatedEndGRanges)
+                if (onlyConsiderFullORF) {
+                    fullyAnnoated <-
+                        as.data.frame(sort(
+                            mfGTF[which(
+                                mfGTF$type %in% c('start_codon', 'stop_codon')),
+                                c('transcript_id', 'type')]))
+                    fullyAnnoatedSplit <-
+                        split(as.character(fullyAnnoated$type),
+                              f = fullyAnnoated$transcript_id)
+                    fullyAnnoatedCount <-
+                        sapply(fullyAnnoatedSplit, function(x)
+                            length(unique(x)))
+                    toKeep <-
+                        names(fullyAnnoatedCount[which(fullyAnnoatedCount == 2)])
 
 
-            ### Idenetify overlapping CDS and exons as well as the annoate transcript id
-            suppressWarnings(overlappingAnnotStart <-
-                                 as.data.frame(
-                                     findOverlaps(
-                                         query = localExons,
-                                         subject = annotatedORFGR,
-                                         ignore.strand = FALSE
-                                     )
-                                 ))
-            if (!nrow(overlappingAnnotStart)) {
-                stop(
-                    'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
-                )
-            }
+                    myCDSedges <-
+                        myCDSedges[which(myCDSedges$id %in% toKeep), ]
+                }
 
-            # Annoate overlap ids
-            overlappingAnnotStart$transcript_id <-
-                localExons$transcript_id[overlappingAnnotStart$queryHits]
-            overlappingAnnotStart$exon_id <- localExons$exon_id[
-                overlappingAnnotStart$queryHits
-                ]
+                ### Extract Exons
+                localExons <- mfGTF[exonAnoationIndex, 'transcript_id']
+                localExons <-
+                    localExons[which(
+                        as.character(localExons@strand) %in% c('+', '-')), ]
+                localExons <-
+                    localExons[which(localExons$transcript_id %in% myCDSedges$id), ]
 
-            overlappingAnnotStart$cdsTranscriptID <- annotatedORFGR$id[
-                overlappingAnnotStart$subjectHits
-                ]
-            overlappingAnnotStart$orf_id <- annotatedORFGR$orf_id[
-                overlappingAnnotStart$subjectHits
-                ]
+                localExons <-
+                    localExons[order(localExons$transcript_id,
+                                     start(localExons),
+                                     end(localExons)), ]
+                localExons$exon_id <-
+                    paste('exon_', 1:length(localExons), sep = '')
 
-            # subset to annoateted overlap
-            overlappingAnnotStart <-
-                overlappingAnnotStart[which(
-                    overlappingAnnotStart$transcript_id ==
-                        overlappingAnnotStart$cdsTranscriptID
-                ), c('transcript_id',
-                     'exon_id',
-                     'cdsTranscriptID',
-                     'orf_id')]
+                ### Extract strand specific ORF info
+                cds <- as.data.frame(myCDSedges)
+                # start
+                plusIndex <- which(cds$strand == '+')
+                annoatedStartGRangesPlus <-
+                    GRanges(
+                        cds$seqnames[plusIndex],
+                        IRanges(
+                            start = cds$start[plusIndex],
+                            end = cds$start[plusIndex]),
+                        strand = cds$strand[plusIndex],
+                        id = cds$id[plusIndex]
+                    )
+                minusIndex <- which(cds$strand == '-')
+                annoatedStartGRangesMinus <-
+                    GRanges(
+                        cds$seqnames[minusIndex],
+                        IRanges(
+                            start = cds$end[minusIndex],
+                            end = cds$end[minusIndex]),
+                        strand = cds$strand[minusIndex],
+                        id = cds$id[minusIndex]
+                    )
 
-            # annoate with genomic site
-            overlappingAnnotStart$orfGenomic <-
-                start(annotatedORFGR)[match(
-                    overlappingAnnotStart$orf_id, annotatedORFGR$orf_id
-                )]
+                annoatedStartGRanges <-
+                    c(annoatedStartGRangesPlus,
+                      annoatedStartGRangesMinus)
+                annoatedStartGRanges$orf_id <-
+                    paste('cds_', 1:length(annoatedStartGRanges), sep = '')
+
+                # end
+                annoatedEndGRangesPlus  <-
+                    GRanges(
+                        cds$seqnames[plusIndex],
+                        IRanges(
+                            start = cds$end[plusIndex],
+                            end = cds$end[plusIndex]),
+                        strand = cds$strand[plusIndex],
+                        id = cds$id[plusIndex]
+                    )
+                annoatedEndGRangesMinus <-
+                    GRanges(
+                        cds$seqnames[minusIndex],
+                        IRanges(
+                            start = cds$start[minusIndex],
+                            end = cds$start[minusIndex]),
+                        strand = cds$strand[minusIndex],
+                        id = cds$id[minusIndex]
+                    )
+
+                annoatedEndGRanges <-
+                    c(annoatedEndGRangesPlus, annoatedEndGRangesMinus)
+                annoatedEndGRanges$orf_id <-
+                    paste('stop_', 1:length(annoatedEndGRanges), sep = '')
+
+                # combine
+                annotatedORFGR <-
+                    c(annoatedStartGRanges, annoatedEndGRanges)
 
 
-            ### Enrich exon information
-            myExons <-
-                as.data.frame(localExons[which(
-                    localExons$transcript_id %in%
-                        overlappingAnnotStart$transcript_id),])
+                ### Idenetify overlapping CDS and exons as well as the annoate transcript id
+                suppressWarnings(overlappingAnnotStart <-
+                                     as.data.frame(
+                                         findOverlaps(
+                                             query = localExons,
+                                             subject = annotatedORFGR,
+                                             ignore.strand = FALSE
+                                         )
+                                     ))
+                if (!nrow(overlappingAnnotStart)) {
+                    stop(
+                        'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
+                    )
+                }
 
-            # Strand
-            myExonPlus <- myExons[which(myExons$strand == '+'), ]
-            myExonMinus <- myExons[which(myExons$strand == '-'), ]
+                # Annoate overlap ids
+                overlappingAnnotStart$transcript_id <-
+                    localExons$transcript_id[overlappingAnnotStart$queryHits]
+                overlappingAnnotStart$exon_id <- localExons$exon_id[
+                    overlappingAnnotStart$queryHits
+                    ]
 
-            plusSplit <-
-                split(myExonPlus$width, myExonPlus$transcript_id)
-            minusSplit <-
-                split(myExonMinus$width, myExonMinus$transcript_id)
+                overlappingAnnotStart$cdsTranscriptID <- annotatedORFGR$id[
+                    overlappingAnnotStart$subjectHits
+                    ]
+                overlappingAnnotStart$orf_id <- annotatedORFGR$orf_id[
+                    overlappingAnnotStart$subjectHits
+                    ]
 
-            # cumsum
-            myExonPlus$cumSum <-
-                unlist(sapply(plusSplit , function(aVec) {
-                    cumsum(c(0, aVec))[1:(length(aVec))]
-                }))
-            myExonMinus$cumSum <-
-                unlist(sapply(minusSplit, function(aVec) {
-                    cumsum(c(0, rev(aVec)))[(length(aVec)):1] # reverse
-                }))
+                # subset to annoateted overlap
+                overlappingAnnotStart <-
+                    overlappingAnnotStart[which(
+                        overlappingAnnotStart$transcript_id ==
+                            overlappingAnnotStart$cdsTranscriptID
+                    ), c('transcript_id',
+                         'exon_id',
+                         'cdsTranscriptID',
+                         'orf_id')]
 
-            # exon number
-            myExonPlus$nrExon <-
-                unlist(sapply(plusSplit, function(aVec) {
-                    1:length(aVec)
-                }))
-            myExonMinus$nrExon <-
-                unlist(sapply(minusSplit, function(aVec) {
-                    1:length(aVec)
-                }))
+                # annoate with genomic site
+                overlappingAnnotStart$orfGenomic <-
+                    start(annotatedORFGR)[match(
+                        overlappingAnnotStart$orf_id, annotatedORFGR$orf_id
+                    )]
 
-            # total nr exons
-            myExonPlus$lastExonIndex <-
-                unlist(sapply(plusSplit, function(aVec) {
-                    rep(length(aVec), length(aVec))
-                }))
-            myExonMinus$lastExonIndex <-
-                unlist(sapply(minusSplit, function(aVec) {
-                    rep(1, length(aVec))
-                }))
 
-            # final exon exon junction trancipt position
-            myExonPlus$finalJunctionPos <-
-                unlist(sapply(plusSplit , function(aVec) {
-                    rep(cumsum(c(0, aVec))[length(aVec)], times = length(aVec))
-                }))
-            myExonMinus$finalJunctionPos <-
-                unlist(sapply(minusSplit, function(aVec) {
-                    rep(cumsum(c(0, rev(
-                        aVec
-                    )))[length(aVec)], times = length(aVec))
-                }))
+                ### Enrich exon information
+                myExons <-
+                    as.data.frame(localExons[which(
+                        localExons$transcript_id %in%
+                            overlappingAnnotStart$transcript_id),])
 
-            myExons2 <- rbind(myExonPlus, myExonMinus)
+                # Strand
+                myExonPlus <- myExons[which(myExons$strand == '+'), ]
+                myExonMinus <- myExons[which(myExons$strand == '-'), ]
 
-            ### Annoate with exon information
-            matchIndex <-
-                match(overlappingAnnotStart$exon_id, myExons2$exon_id)
-            overlappingAnnotStart$strand <- myExons2$strand[matchIndex]
-            overlappingAnnotStart$exon_start <- myExons2$start[matchIndex]
-            overlappingAnnotStart$exon_end <- myExons2$end[matchIndex]
-            overlappingAnnotStart$exon_cumsum <- myExons2$cumSum[matchIndex]
-            overlappingAnnotStart$exon_nr <- myExons2$nrExon[matchIndex]
-            overlappingAnnotStart$lastExonIndex <-
-                myExons2$lastExonIndex[matchIndex]
-            overlappingAnnotStart$finalJunctionPos <-
-                myExons2$finalJunctionPos[matchIndex]
+                plusSplit <-
+                    split(myExonPlus$width, myExonPlus$transcript_id)
+                minusSplit <-
+                    split(myExonMinus$width, myExonMinus$transcript_id)
 
-            ### Annoate with transcript coordinats
-            overlappingAnnotStartPlus <-
-                overlappingAnnotStart[which(
-                    overlappingAnnotStart$strand == '+'), ]
-            overlappingAnnotStartPlus$orfTranscript <-
-                overlappingAnnotStartPlus$exon_cumsum + (
-                    overlappingAnnotStartPlus$orfGenomic -
-                        overlappingAnnotStartPlus$exon_start
-                ) + 1
-            overlappingAnnotStartPlus$junctionDistance <-
-                overlappingAnnotStartPlus$finalJunctionPos -
+                # cumsum
+                myExonPlus$cumSum <-
+                    unlist(sapply(plusSplit , function(aVec) {
+                        cumsum(c(0, aVec))[1:(length(aVec))]
+                    }))
+                myExonMinus$cumSum <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        cumsum(c(0, rev(aVec)))[(length(aVec)):1] # reverse
+                    }))
+
+                # exon number
+                myExonPlus$nrExon <-
+                    unlist(sapply(plusSplit, function(aVec) {
+                        1:length(aVec)
+                    }))
+                myExonMinus$nrExon <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        1:length(aVec)
+                    }))
+
+                # total nr exons
+                myExonPlus$lastExonIndex <-
+                    unlist(sapply(plusSplit, function(aVec) {
+                        rep(length(aVec), length(aVec))
+                    }))
+                myExonMinus$lastExonIndex <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        rep(1, length(aVec))
+                    }))
+
+                # final exon exon junction trancipt position
+                myExonPlus$finalJunctionPos <-
+                    unlist(sapply(plusSplit , function(aVec) {
+                        rep(cumsum(c(0, aVec))[length(aVec)], times = length(aVec))
+                    }))
+                myExonMinus$finalJunctionPos <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        rep(cumsum(c(0, rev(
+                            aVec
+                        )))[length(aVec)], times = length(aVec))
+                    }))
+
+                myExons2 <- rbind(myExonPlus, myExonMinus)
+
+                ### Annoate with exon information
+                matchIndex <-
+                    match(overlappingAnnotStart$exon_id, myExons2$exon_id)
+                overlappingAnnotStart$strand <- myExons2$strand[matchIndex]
+                overlappingAnnotStart$exon_start <- myExons2$start[matchIndex]
+                overlappingAnnotStart$exon_end <- myExons2$end[matchIndex]
+                overlappingAnnotStart$exon_cumsum <- myExons2$cumSum[matchIndex]
+                overlappingAnnotStart$exon_nr <- myExons2$nrExon[matchIndex]
+                overlappingAnnotStart$lastExonIndex <-
+                    myExons2$lastExonIndex[matchIndex]
+                overlappingAnnotStart$finalJunctionPos <-
+                    myExons2$finalJunctionPos[matchIndex]
+
+                ### Annoate with transcript coordinats
+                overlappingAnnotStartPlus <-
+                    overlappingAnnotStart[which(
+                        overlappingAnnotStart$strand == '+'), ]
+                overlappingAnnotStartPlus$orfTranscript <-
+                    overlappingAnnotStartPlus$exon_cumsum + (
+                        overlappingAnnotStartPlus$orfGenomic -
+                            overlappingAnnotStartPlus$exon_start
+                    ) + 1
+                overlappingAnnotStartPlus$junctionDistance <-
+                    overlappingAnnotStartPlus$finalJunctionPos -
                     overlappingAnnotStartPlus$orfTranscript + 3 # +3 because the ORF does not include the stop codon - but it should in this calculation
 
-            overlappingAnnotStartMinus <-
-                overlappingAnnotStart[which(
-                    overlappingAnnotStart$strand == '-'), ]
-            overlappingAnnotStartMinus$orfTranscript <-
-                overlappingAnnotStartMinus$exon_cumsum + (
-                    overlappingAnnotStartMinus$exon_end -
-                        overlappingAnnotStartMinus$orfGenomic
-                ) + 1
-            overlappingAnnotStartMinus$junctionDistance <-
-                overlappingAnnotStartMinus$finalJunctionPos -
-                overlappingAnnotStartMinus$orfTranscript + 3 # +3 because the ORF does not include the stop codon - but it should in this calculation
+                overlappingAnnotStartMinus <-
+                    overlappingAnnotStart[which(
+                        overlappingAnnotStart$strand == '-'), ]
+                overlappingAnnotStartMinus$orfTranscript <-
+                    overlappingAnnotStartMinus$exon_cumsum + (
+                        overlappingAnnotStartMinus$exon_end -
+                            overlappingAnnotStartMinus$orfGenomic
+                    ) + 1
+                overlappingAnnotStartMinus$junctionDistance <-
+                    overlappingAnnotStartMinus$finalJunctionPos -
+                    overlappingAnnotStartMinus$orfTranscript + 3 # +3 because the ORF does not include the stop codon - but it should in this calculation
 
-            overlappingAnnotStart2 <-
-                rbind(overlappingAnnotStartPlus,
-                      overlappingAnnotStartMinus)
-            overlappingAnnotStart2 <-
-                overlappingAnnotStart2[order(
-                    overlappingAnnotStart2$transcript_id,
-                    overlappingAnnotStart2$exon_start,
-                    overlappingAnnotStart2$exon_end
-                ), ]
+                overlappingAnnotStart2 <-
+                    rbind(overlappingAnnotStartPlus,
+                          overlappingAnnotStartMinus)
+                overlappingAnnotStart2 <-
+                    overlappingAnnotStart2[order(
+                        overlappingAnnotStart2$transcript_id,
+                        overlappingAnnotStart2$exon_start,
+                        overlappingAnnotStart2$exon_end
+                    ), ]
 
-            ### devide into start and stop
-            starInfo <-
-                overlappingAnnotStart2[which(
-                    grepl('^cds', overlappingAnnotStart2$orf_id)), ]
-            stopInfo <-
-                overlappingAnnotStart2[which(
-                    grepl('^stop', overlappingAnnotStart2$orf_id)), ]
+                ### devide into start and stop
+                starInfo <-
+                    overlappingAnnotStart2[which(
+                        grepl('^cds', overlappingAnnotStart2$orf_id)), ]
+                stopInfo <-
+                    overlappingAnnotStart2[which(
+                        grepl('^stop', overlappingAnnotStart2$orf_id)), ]
 
-            ### predict PTC
-            stopInfo$PTC <-
-                stopInfo$exon_nr != stopInfo$lastExonIndex &
-                stopInfo$junctionDistance > PTCDistance
+                ### predict PTC
+                stopInfo$PTC <-
+                    stopInfo$exon_nr != stopInfo$lastExonIndex &
+                    stopInfo$junctionDistance > PTCDistance
 
-            ### Merge the data
-            starInfo2 <-
-                unique(starInfo[, c('transcript_id',
-                                    'orfGenomic',
-                                    'exon_nr',
-                                    'orfTranscript')])
-            colnames(starInfo2) <-
-                c('isoform_id',
-                  'orfStartGenomic',
-                  'orfStarExon',
-                  'orfTransciptStart')
+                ### Merge the data
+                starInfo2 <-
+                    unique(starInfo[, c('transcript_id',
+                                        'orfGenomic',
+                                        'exon_nr',
+                                        'orfTranscript')])
+                colnames(starInfo2) <-
+                    c('isoform_id',
+                      'orfStartGenomic',
+                      'orfStarExon',
+                      'orfTransciptStart')
 
-            stopInfo2 <-
-                unique(stopInfo[, c(
-                    'transcript_id',
-                    'orfGenomic',
-                    'exon_nr',
-                    'orfTranscript',
-                    'junctionDistance',
-                    'lastExonIndex',
-                    'PTC'
-                )])
-            colnames(stopInfo2) <-
-                c(
-                    'isoform_id',
-                    'orfEndGenomic',
-                    'orfEndExon',
-                    'orfTransciptEnd',
-                    'stopDistanceToLastJunction',
-                    'stopIndex',
-                    'PTC'
+                stopInfo2 <-
+                    unique(stopInfo[, c(
+                        'transcript_id',
+                        'orfGenomic',
+                        'exon_nr',
+                        'orfTranscript',
+                        'junctionDistance',
+                        'lastExonIndex',
+                        'PTC'
+                    )])
+                colnames(stopInfo2) <-
+                    c(
+                        'isoform_id',
+                        'orfEndGenomic',
+                        'orfEndExon',
+                        'orfTransciptEnd',
+                        'stopDistanceToLastJunction',
+                        'stopIndex',
+                        'PTC'
+                    )
+
+                orfInfo <- dplyr::inner_join(starInfo2, stopInfo2, by = 'isoform_id')
+                orfInfo$orfTransciptLength  <-
+                    orfInfo$orfTransciptEnd - orfInfo$orfTransciptStart + 1
+
+                # reorder
+                orfInfo <-
+                    orfInfo[, c(
+                        'isoform_id',
+                        'orfTransciptStart',
+                        'orfTransciptEnd',
+                        'orfTransciptLength',
+                        'orfStarExon',
+                        'orfEndExon',
+                        'orfStartGenomic',
+                        'orfEndGenomic',
+                        'stopDistanceToLastJunction',
+                        'stopIndex',
+                        'PTC'
+                    )]
+
+                # make sure all ORFs are annotated (with NAs)
+                orfInfo <-
+                    dplyr::full_join(orfInfo,
+                                     unique(myIsoAnot[, 'isoform_id', drop = FALSE]),
+                                     by = 'isoform_id',
+                                     all = TRUE)
+
+            } else {
+                # if no CDS were found
+                warning(paste(
+                    'No CDS was found in the GTF file. Please make sure the GTF',
+                    'file have the CDS "feature" annotation. Adding NAs instead'
+                ))
+
+                orfInfo <- data.frame(
+                    isoform_id = unique(myIsoAnot$isoform_id),
+                    orfTransciptStart = NA,
+                    orfTransciptEnd = NA,
+                    orfTransciptLength = NA,
+                    orfStarExon = NA,
+                    orfEndExon = NA,
+                    orfStartGenomic = NA,
+                    orfEndGenomic = NA,
+                    stopDistanceToLastJunction = NA,
+                    stopIndex = NA,
+                    PTC = NA,
+                    stringsAsFactors = FALSE
                 )
+            }
 
-            orfInfo <- dplyr::inner_join(starInfo2, stopInfo2, by = 'isoform_id')
-            orfInfo$orfTransciptLength  <-
-                orfInfo$orfTransciptEnd - orfInfo$orfTransciptStart + 1
+            ### add to iso annotation
+            myIsoAnot$PTC <-
+                orfInfo$PTC[match(myIsoAnot$isoform_id, orfInfo$isoform_id)]
 
-            # reorder
-            orfInfo <-
-                orfInfo[, c(
-                    'isoform_id',
-                    'orfTransciptStart',
-                    'orfTransciptEnd',
-                    'orfTransciptLength',
-                    'orfStarExon',
-                    'orfEndExon',
-                    'orfStartGenomic',
-                    'orfEndGenomic',
-                    'stopDistanceToLastJunction',
-                    'stopIndex',
-                    'PTC'
-                )]
 
-            # make sure all ORFs are annotated (with NAs)
-            orfInfo <-
-                dplyr::full_join(orfInfo,
-                      unique(myIsoAnot[, 'isoform_id', drop = FALSE]),
-                      by = 'isoform_id',
-                      all = TRUE)
-
-        } else {
-            # if no CDS were found
-            warning(paste(
-                'No CDS was found in the GTF file. Please make sure the GTF',
-                'file have the CDS "feature" annotation. Adding NAs instead'
-            ))
-
-            orfInfo <- data.frame(
-                isoform_id = unique(myIsoAnot$isoform_id),
-                orfTransciptStart = NA,
-                orfTransciptEnd = NA,
-                orfTransciptLength = NA,
-                orfStarExon = NA,
-                orfEndExon = NA,
-                orfStartGenomic = NA,
-                orfEndGenomic = NA,
-                stopDistanceToLastJunction = NA,
-                stopIndex = NA,
-                PTC = NA,
-                stringsAsFactors = FALSE
-            )
         }
+        if( ! isGTF ) {
+            # test whether any CDS are found
+            if (any(mfGTF$type == 'CDS')) {
+                if (!quiet) {
+                    message('converting annotated CDSs')
+                }
 
-        ### add to iso annotation
-        myIsoAnot$PTC <-
-            orfInfo$PTC[match(myIsoAnot$isoform_id, orfInfo$isoform_id)]
+                ### Extract CDS Ids
+                colsToExtract <- c(
+                    'ID',
+                    'gene_id',
+                    'transcript_id'
+                )
+                myIso2 <-
+                    as.data.frame(unique(mfGTF@elementMetadata[
+                        which(mfGTF$type == 'mRNA'),
+                        na.omit(match(colsToExtract, colnames(mfGTF@elementMetadata)))]
+                    ))
 
+                ### Extract CDS
+                myCDS <- mfGTF[which(mfGTF$type == 'CDS'),c('ID','transcript_id','Parent')]
+                myCDS$Parent <- sapply(myCDS$Parent, function(x) x[1])
+
+                ### Transfer ids
+                myCDS <- myCDS[which(
+                    myCDS$Parent %in% myIso2$ID
+                ),]
+                myCDS$transcript_id <- myIso2$transcript_id[match(
+                    myCDS$Parent, myIso2$ID
+                )]
+                myCDS <- myCDS[which(
+                    myCDS$transcript_id %in% myIsoAnot$isoform_id
+                ),]
+
+                ### Get it
+                myCDS <-
+                    sort(myCDS[,'transcript_id'])
+                myCDSedges <-
+                    suppressMessages(unlist(range(
+                        split(myCDS[, 0], f = myCDS$transcript_id)
+                    )))  # Extract EDGEs
+                myCDSedges$id <- names(myCDSedges)
+                names(myCDSedges) <- NULL
+
+                ### Extract Exons
+                localExons <- mfGTF[exonAnoationIndex, 'transcript_id']
+                localExons <-
+                    localExons[which(
+                        as.character(localExons@strand) %in% c('+', '-')), ]
+                localExons <-
+                    localExons[which(localExons$transcript_id %in% myCDSedges$id), ]
+
+                localExons <-
+                    localExons[order(localExons$transcript_id,
+                                     start(localExons),
+                                     end(localExons)), ]
+                localExons$exon_id <-
+                    paste('exon_', 1:length(localExons), sep = '')
+
+                ### Extract strand specific ORF info
+                cds <- as.data.frame(myCDSedges)
+                # start
+                plusIndex <- which(cds$strand == '+')
+                annoatedStartGRangesPlus <-
+                    GRanges(
+                        cds$seqnames[plusIndex],
+                        IRanges(
+                            start = cds$start[plusIndex],
+                            end = cds$start[plusIndex]),
+                        strand = cds$strand[plusIndex],
+                        id = cds$id[plusIndex]
+                    )
+                minusIndex <- which(cds$strand == '-')
+                annoatedStartGRangesMinus <-
+                    GRanges(
+                        cds$seqnames[minusIndex],
+                        IRanges(
+                            start = cds$end[minusIndex],
+                            end = cds$end[minusIndex]),
+                        strand = cds$strand[minusIndex],
+                        id = cds$id[minusIndex]
+                    )
+
+                annoatedStartGRanges <-
+                    c(annoatedStartGRangesPlus,
+                      annoatedStartGRangesMinus)
+                annoatedStartGRanges$orf_id <-
+                    paste('cds_', 1:length(annoatedStartGRanges), sep = '')
+
+                # end
+                annoatedEndGRangesPlus  <-
+                    GRanges(
+                        cds$seqnames[plusIndex],
+                        IRanges(
+                            start = cds$end[plusIndex],
+                            end = cds$end[plusIndex]),
+                        strand = cds$strand[plusIndex],
+                        id = cds$id[plusIndex]
+                    )
+                annoatedEndGRangesMinus <-
+                    GRanges(
+                        cds$seqnames[minusIndex],
+                        IRanges(
+                            start = cds$start[minusIndex],
+                            end = cds$start[minusIndex]),
+                        strand = cds$strand[minusIndex],
+                        id = cds$id[minusIndex]
+                    )
+
+                annoatedEndGRanges <-
+                    c(annoatedEndGRangesPlus, annoatedEndGRangesMinus)
+                annoatedEndGRanges$orf_id <-
+                    paste('stop_', 1:length(annoatedEndGRanges), sep = '')
+
+                # combine
+                annotatedORFGR <-
+                    c(annoatedStartGRanges, annoatedEndGRanges)
+
+
+                ### Idenetify overlapping CDS and exons as well as the annoate transcript id
+                suppressWarnings(overlappingAnnotStart <-
+                                     as.data.frame(
+                                         findOverlaps(
+                                             query = localExons,
+                                             subject = annotatedORFGR,
+                                             ignore.strand = FALSE
+                                         )
+                                     ))
+                if (!nrow(overlappingAnnotStart)) {
+                    stop(
+                        'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
+                    )
+                }
+
+                # Annoate overlap ids
+                overlappingAnnotStart$transcript_id <-
+                    localExons$transcript_id[overlappingAnnotStart$queryHits]
+                overlappingAnnotStart$exon_id <- localExons$exon_id[
+                    overlappingAnnotStart$queryHits
+                    ]
+
+                overlappingAnnotStart$cdsTranscriptID <- annotatedORFGR$id[
+                    overlappingAnnotStart$subjectHits
+                    ]
+                overlappingAnnotStart$orf_id <- annotatedORFGR$orf_id[
+                    overlappingAnnotStart$subjectHits
+                    ]
+
+                # subset to annoateted overlap
+                overlappingAnnotStart <-
+                    overlappingAnnotStart[which(
+                        overlappingAnnotStart$transcript_id ==
+                            overlappingAnnotStart$cdsTranscriptID
+                    ), c('transcript_id',
+                         'exon_id',
+                         'cdsTranscriptID',
+                         'orf_id')]
+
+                # annoate with genomic site
+                overlappingAnnotStart$orfGenomic <-
+                    start(annotatedORFGR)[match(
+                        overlappingAnnotStart$orf_id, annotatedORFGR$orf_id
+                    )]
+
+
+                ### Enrich exon information
+                myExons <-
+                    as.data.frame(localExons[which(
+                        localExons$transcript_id %in%
+                            overlappingAnnotStart$transcript_id),])
+
+                # Strand
+                myExonPlus <- myExons[which(myExons$strand == '+'), ]
+                myExonMinus <- myExons[which(myExons$strand == '-'), ]
+
+                plusSplit <-
+                    split(myExonPlus$width, myExonPlus$transcript_id)
+                minusSplit <-
+                    split(myExonMinus$width, myExonMinus$transcript_id)
+
+                # cumsum
+                myExonPlus$cumSum <-
+                    unlist(sapply(plusSplit , function(aVec) {
+                        cumsum(c(0, aVec))[1:(length(aVec))]
+                    }))
+                myExonMinus$cumSum <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        cumsum(c(0, rev(aVec)))[(length(aVec)):1] # reverse
+                    }))
+
+                # exon number
+                myExonPlus$nrExon <-
+                    unlist(sapply(plusSplit, function(aVec) {
+                        1:length(aVec)
+                    }))
+                myExonMinus$nrExon <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        1:length(aVec)
+                    }))
+
+                # total nr exons
+                myExonPlus$lastExonIndex <-
+                    unlist(sapply(plusSplit, function(aVec) {
+                        rep(length(aVec), length(aVec))
+                    }))
+                myExonMinus$lastExonIndex <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        rep(1, length(aVec))
+                    }))
+
+                # final exon exon junction trancipt position
+                myExonPlus$finalJunctionPos <-
+                    unlist(sapply(plusSplit , function(aVec) {
+                        rep(cumsum(c(0, aVec))[length(aVec)], times = length(aVec))
+                    }))
+                myExonMinus$finalJunctionPos <-
+                    unlist(sapply(minusSplit, function(aVec) {
+                        rep(cumsum(c(0, rev(
+                            aVec
+                        )))[length(aVec)], times = length(aVec))
+                    }))
+
+                myExons2 <- rbind(myExonPlus, myExonMinus)
+
+                ### Annoate with exon information
+                matchIndex <-
+                    match(overlappingAnnotStart$exon_id, myExons2$exon_id)
+                overlappingAnnotStart$strand <- myExons2$strand[matchIndex]
+                overlappingAnnotStart$exon_start <- myExons2$start[matchIndex]
+                overlappingAnnotStart$exon_end <- myExons2$end[matchIndex]
+                overlappingAnnotStart$exon_cumsum <- myExons2$cumSum[matchIndex]
+                overlappingAnnotStart$exon_nr <- myExons2$nrExon[matchIndex]
+                overlappingAnnotStart$lastExonIndex <-
+                    myExons2$lastExonIndex[matchIndex]
+                overlappingAnnotStart$finalJunctionPos <-
+                    myExons2$finalJunctionPos[matchIndex]
+
+                ### Annoate with transcript coordinats
+                overlappingAnnotStartPlus <-
+                    overlappingAnnotStart[which(
+                        overlappingAnnotStart$strand == '+'), ]
+                overlappingAnnotStartPlus$orfTranscript <-
+                    overlappingAnnotStartPlus$exon_cumsum + (
+                        overlappingAnnotStartPlus$orfGenomic -
+                            overlappingAnnotStartPlus$exon_start
+                    ) + 1
+                overlappingAnnotStartPlus$junctionDistance <-
+                    overlappingAnnotStartPlus$finalJunctionPos -
+                    overlappingAnnotStartPlus$orfTranscript + 3 # +3 because the ORF does not include the stop codon - but it should in this calculation
+
+                overlappingAnnotStartMinus <-
+                    overlappingAnnotStart[which(
+                        overlappingAnnotStart$strand == '-'), ]
+                overlappingAnnotStartMinus$orfTranscript <-
+                    overlappingAnnotStartMinus$exon_cumsum + (
+                        overlappingAnnotStartMinus$exon_end -
+                            overlappingAnnotStartMinus$orfGenomic
+                    ) + 1
+                overlappingAnnotStartMinus$junctionDistance <-
+                    overlappingAnnotStartMinus$finalJunctionPos -
+                    overlappingAnnotStartMinus$orfTranscript + 3 # +3 because the ORF does not include the stop codon - but it should in this calculation
+
+                overlappingAnnotStart2 <-
+                    rbind(overlappingAnnotStartPlus,
+                          overlappingAnnotStartMinus)
+                overlappingAnnotStart2 <-
+                    overlappingAnnotStart2[order(
+                        overlappingAnnotStart2$transcript_id,
+                        overlappingAnnotStart2$exon_start,
+                        overlappingAnnotStart2$exon_end
+                    ), ]
+
+                ### devide into start and stop
+                starInfo <-
+                    overlappingAnnotStart2[which(
+                        grepl('^cds', overlappingAnnotStart2$orf_id)), ]
+                stopInfo <-
+                    overlappingAnnotStart2[which(
+                        grepl('^stop', overlappingAnnotStart2$orf_id)), ]
+
+                ### predict PTC
+                stopInfo$PTC <-
+                    stopInfo$exon_nr != stopInfo$lastExonIndex &
+                    stopInfo$junctionDistance > PTCDistance
+
+                ### Merge the data
+                starInfo2 <-
+                    unique(starInfo[, c('transcript_id',
+                                        'orfGenomic',
+                                        'exon_nr',
+                                        'orfTranscript')])
+                colnames(starInfo2) <-
+                    c('isoform_id',
+                      'orfStartGenomic',
+                      'orfStarExon',
+                      'orfTransciptStart')
+
+                stopInfo2 <-
+                    unique(stopInfo[, c(
+                        'transcript_id',
+                        'orfGenomic',
+                        'exon_nr',
+                        'orfTranscript',
+                        'junctionDistance',
+                        'lastExonIndex',
+                        'PTC'
+                    )])
+                colnames(stopInfo2) <-
+                    c(
+                        'isoform_id',
+                        'orfEndGenomic',
+                        'orfEndExon',
+                        'orfTransciptEnd',
+                        'stopDistanceToLastJunction',
+                        'stopIndex',
+                        'PTC'
+                    )
+
+                orfInfo <- dplyr::inner_join(starInfo2, stopInfo2, by = 'isoform_id')
+                orfInfo$orfTransciptLength  <-
+                    orfInfo$orfTransciptEnd - orfInfo$orfTransciptStart + 1
+
+                # reorder
+                orfInfo <-
+                    orfInfo[, c(
+                        'isoform_id',
+                        'orfTransciptStart',
+                        'orfTransciptEnd',
+                        'orfTransciptLength',
+                        'orfStarExon',
+                        'orfEndExon',
+                        'orfStartGenomic',
+                        'orfEndGenomic',
+                        'stopDistanceToLastJunction',
+                        'stopIndex',
+                        'PTC'
+                    )]
+
+                # make sure all ORFs are annotated (with NAs)
+                orfInfo <-
+                    dplyr::full_join(orfInfo,
+                                     unique(myIsoAnot[, 'isoform_id', drop = FALSE]),
+                                     by = 'isoform_id',
+                                     all = TRUE)
+
+            } else {
+                # if no CDS were found
+                warning(paste(
+                    'No CDS was found in the GTF file. Please make sure the GTF',
+                    'file have the CDS "feature" annotation. Adding NAs instead'
+                ))
+
+                orfInfo <- data.frame(
+                    isoform_id = unique(myIsoAnot$isoform_id),
+                    orfTransciptStart = NA,
+                    orfTransciptEnd = NA,
+                    orfTransciptLength = NA,
+                    orfStarExon = NA,
+                    orfEndExon = NA,
+                    orfStartGenomic = NA,
+                    orfEndGenomic = NA,
+                    stopDistanceToLastJunction = NA,
+                    stopIndex = NA,
+                    PTC = NA,
+                    stringsAsFactors = FALSE
+                )
+            }
+
+            ### add to iso annotation
+            myIsoAnot$PTC <-
+                orfInfo$PTC[match(myIsoAnot$isoform_id, orfInfo$isoform_id)]
+
+        }
     }
 
     ### Handle sequence input
@@ -1639,6 +2151,18 @@ importGTF <- function(
                 stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
             }
 
+            ### Remove preceeding ref|
+            if(
+                sum(grepl('^ref\\|', names(isoformNtSeq))) == length( isoformNtSeq )
+            ) {
+                names(isoformNtSeq) <- gsub('^ref\\|', '', names(isoformNtSeq))
+            }
+
+            ### Remove potential name duplication
+            isoformNtSeq <- isoformNtSeq[which(
+                ! duplicated(names(isoformNtSeq))
+            )]
+
             ### Fix names
             if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
 
@@ -1650,21 +2174,12 @@ importGTF <- function(
                 )
             }
 
-            ### Subset to annotated isoforms
-            isoformNtSeq <- isoformNtSeq[which(
-                names(isoformNtSeq) %in% myIsoAnot$isoform_id
-            )]
-
-            ### Remove potential name duplication
-            isoformNtSeq <- isoformNtSeq[which(
-                ! duplicated(names(isoformNtSeq))
-            )]
 
             if( ! all(myIsoAnot$isoform_id %in% names(isoformNtSeq)) ) {
                 warning(
                     paste(
                         'The fasta file supplied to \'isoformNtFasta\' does not contain the',
-                        'nucleotide (DNA) sequence for all isoforms annotated and will not be added',
+                        'nucleotide (DNA) sequence for all isoforms annotated and will not be added!',
                         '\nSpecifically:\n',
                         length(unique(myIsoAnot$isoform_id)), 'isoforms were annotated in the GTF\n',
                         length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
@@ -1678,9 +2193,9 @@ importGTF <- function(
                         'This problem might be solvable using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
                         '    3 Examples from GTF are :',
-                        paste0( sample(unique(myIsoAnot$isoform_id), 3), collapse = ', '),'\n',
+                        paste0( sample(unique(myIsoAnot$isoform_id), min(3, nrow(myIsoAnot)) ), collapse = ', '),'\n',
                         '    3 Examples of isoform sequence are  :',
-                        paste0( sample(names(isoformNtSeq), 3), collapse = ', '),'\n',
+                        paste0( sample(names(isoformNtSeq), min(3, length(isoformNtSeq)) ), collapse = ', '),'\n',
 
 
                         '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
@@ -1696,6 +2211,14 @@ importGTF <- function(
             } else {
                 addIsoformNt <- TRUE
             }
+
+            ### Subset to annotated isoforms
+            isoformNtSeq <- isoformNtSeq[which(
+                names(isoformNtSeq) %in% myIsoAnot$isoform_id
+            )]
+            if( length(isoformNtSeq) ) {
+                addIsoformNt <- FALSE
+            }
         }
     }
 
@@ -1703,12 +2226,15 @@ importGTF <- function(
     myExons <-
         sort(mfGTF[exonAnoationIndex , c('transcript_id', 'gene_id')])
     colnames(myExons@elementMetadata) <- c('isoform_id', 'gene_id')
+    myExons <- myExons[which(
+        myExons$isoform_id %in% myIsoAnot$isoform_id
+    ),]
 
     # Collaps ajecent exons (without any intron between)
     if(TRUE) {
         ### Reduce ajecent exons
         tmp <- unlist(
-            reduce(
+            GenomicRanges::reduce(
                 split(
                     myExons,
                     myExons$isoform_id
@@ -1820,7 +2346,7 @@ importGTF <- function(
     }
 
 
-    # Return SpliceRList
+    # Return switchAnalyzeRlist
     return(localSwichList)
 }
 
@@ -2509,14 +3035,11 @@ importRdata <- function(
                     )
                 )
             }
-            if( ! file.exists(isoformNtFasta) ) {
-                stop(
-                    paste(
-                        'The file pointed to with the \'isoformNtFasta\' argument does not exists.',
-                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
-                        sep=' '
-                    )
-                )
+            if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
+                stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
+            }
+            if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
+                stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to be a fasta file...')
             }
         }
 
@@ -3006,6 +3529,14 @@ importRdata <- function(
             if( class(isoformExonAnnoation) != 'character' ) {
                 gtfImported <- FALSE
 
+                if( ! is(object = isoformExonAnnoation, 'GRanges') ) {
+                    stop('When not using a GTF file (by supplying a text string with the path to the file) the "isoformExonAnnoation" argument must be a GRange.')
+                }
+
+                if( length(isoformExonAnnoation) == 0 ) {
+                    stop('The GRange supplied to the "isoformExonAnnoation" argument have zero enteries (rows).')
+                }
+
                 ### Test
                 if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
                     stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
@@ -3050,6 +3581,34 @@ importRdata <- function(
                     )
                 }
 
+                ### Collaps ajecent exons (without any intron between)
+                if(TRUE) {
+                    ### Reduce ajecent exons
+                    tmp <- unlist(
+                        reduce(
+                            split(
+                                isoformExonAnnoation,
+                                isoformExonAnnoation$isoform_id
+                            )
+                        )
+                    )
+                    ### Add isoform id
+                    tmp$isoform_id <- tmp@ranges@NAMES
+                    tmp@ranges@NAMES <- NULL
+
+                    ### add gene id
+                    tmp$gene_id <-isoformExonAnnoation$gene_id[match(
+                        tmp$isoform_id, isoformExonAnnoation$isoform_id
+                    )]
+
+                    ### sort
+                    tmp <- tmp[sort.list(tmp$isoform_id),]
+
+                    ### Overwrite
+                    isoformExonAnnoation <- tmp
+                }
+
+
                 ### Devide the data
                 isoformExonStructure <-
                     isoformExonAnnoation[, c('isoform_id', 'gene_id')]
@@ -3059,6 +3618,7 @@ importRdata <- function(
                 if (!'gene_name' %in% colnames(isoformAnnotation)) {
                     isoformAnnotation$gene_name <- NA
                 }
+
             }
 
         }
@@ -3202,6 +3762,27 @@ importRdata <- function(
 
             }
         }
+
+        ### try saving NA gene_names due to StringTie
+        if(any(is.na(isoformAnnotation$gene_name))) {
+            isoformAnnotation$gene_name <- unlist(
+                lapply(
+                    split(isoformAnnotation$gene_name, isoformAnnotation$gene_id),
+                    function(geneNameVec) {
+                        localGeneNames <- unique(na.omit( geneNameVec ))
+
+                        if( length( localGeneNames ) == 1 ) {
+                            return(
+                                rep(localGeneNames, times = length(geneNameVec))
+                            )
+                        } else {
+                            return(geneNameVec)
+                        }
+                    }
+                )
+            )
+        }
+
     }
 
     ### Subset to libraries used
@@ -3381,7 +3962,7 @@ importRdata <- function(
                 warning(
                     paste(
                         'The fasta file supplied to \'isoformNtFasta\' does not contain the',
-                        'nucleotide (DNA) sequence for all isoforms quantified and will not be added',
+                        'nucleotide (DNA) sequence for all isoforms quantified and will not be added!',
                         '\nSpecifically:\n',
                         length(unique(isoformRepExpression$isoform_id)), 'isoforms were quantified.\n',
                         length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
@@ -3723,6 +4304,12 @@ preFilter <- function(
             )
         }
 
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches') {
+            if( all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall)) ) {
+                stop('The switchAnalyzeRlist was created without expression data whereby it cannot be filtered')
+            }
+        }
+
 
         if (!is.null(isoformExpressionCutoff)) {
             if (!is.numeric(isoformExpressionCutoff)) {
@@ -3770,6 +4357,24 @@ preFilter <- function(
         }
 
         if (reduceToSwitchingGenes) {
+            hasTest <- any(!is.na(
+                c(
+                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value,
+                    switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
+                )
+            ))
+            if( ! hasTest) {
+                stop(
+                    paste(
+                        'The switchAnalyzeRlist does not contain the result',
+                        'of a switch analysis.\nPlease turn off','
+                        the "reduceToSwitchingGenes" argument try again.',
+                        sep=' '
+                    )
+                )
+            }
+
+
             if (alpha < 0 |
                 alpha > 1) {
                 stop('The alpha parameter must be between 0 and 1 ([0,1]).')

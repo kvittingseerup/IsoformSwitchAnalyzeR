@@ -1,448 +1,406 @@
-1.5.11: IsoformSwitchAnalyzeR 2019-04-24 ( minor )
-    - importIsoformExpression was extended to
-            - Give better error messages in clase of mixup between giving directories or files as input.
+Changes in version 1.7.1 (2019-07-19)
+- Update type: Minor.
+- Version bump due to Bioconductor release.
+- Updated NEWS layout in accordance with Bioconductor guidelines.
+- switchPlotTranscript() was extended to also indicate increased/decreased/unchanged isoform usage making interpretation easier. This also required switchPlotTranscript() and switchPlot() was updated with extra arguments to control this behaviour. The switchPlotTranscript() function was furthermore updated to also indicate significance (indated by asterisks) and size (dIF) when used alone (aka not from within switchPlots) making it a good alternative to the switchPlot.
+- switchPlotGeneExp(), switchPlotIsoExp(), switchPlotIsoUsage() was prettyfied and now also show the name of the gene plotted.
+- importRdata() and importGTF() now also supports import of RefSeq GFF files (downloaded from ftp://ftp.ncbi.nlm.nih.gov/genomes/, see FAQ in vignette). This should increase ease of usage for a long range of species not in the Ensembl catalogue.
+- importRdata()
+    * Now also removes non-exsisting introns from annotation even when it is supplied as a GRange (previously only done for GTF files).
+    * No longer removes isoforms with NA as biotypes when removeTECgenes = TRUE.
+    * Was extended to better handle gene_names when novelt transcripts are predicted. Specificallt if there are NA in the gene_name column (e.g. like done by StringTie) these are automatically assigned the same gene name as the other isoforms from the same gene_id (only for cases where a single gene_name is associated to the gene_id).
+- isoformSwitchTestDEXSeq() was updated to:
+    * Better handle rare design setups that could cause an error to occure.
+    * Now handle analysis of data with some isoforms only analyzed in a subset of comparisons
+- The extractSwitchSummary() was extended to also print number of switches.
+- A bug was fixed in extractSequence() which cased a fail when CDS sequences with multiple stop codons where annotated
+- A bug was fiexed which caused extractSplicingSummary() to only return the summary of splicing types with more than "minEventsForPlotting" events.
+- analyzeNetSurfP2() was updated to handle multiple files due to recent restrictions on the number of sequences one can upload to the webserver.
+- switchPlotTopSwitches() and extractTopSwitches() now uses n = Inf to to output all (although internally NA is converted to Inf for backward compatability).
+- subsetSwitchAnalyzeRlist() was improved to be more stable to edgecase sitiuations.
+- isoformToGeneExp() was improved
+    * To be more userfriendly.
+    * To directly support annotation stored in a GTF file (which it itself imports into R).
+    * To directly support switchAnalyzeRlists.
+- analyzePFAM() was updated to be more robust to edge usecases
+- Improved error messages in mutliple function.
+- Various documentation updates.
+- Various stability updates.
 
-1.5.10: IsoformSwitchAnalyzeR 2019-04-23 ( minor )
-    - importIsoformExpression was extended to
-            - Give better error messages in clase of mixup between giving directories or files as input.
-            - Ignore system files (ignoreing directories with the '.' prefix)
-    - Updated vignette to highlight the difference between using importIsoformExpression
-            with the "parentDir" and "sampleVector" argument.
+Changes in version 1.5.11 (2019-04-24)
+- Update type: Minor.
+- importIsoformExpression() was extended to give better error messages in clase of mixup between giving directories or files as input.
 
-1.5.9: IsoformSwitchAnalyzeR 2019-04-17 ( minor )
-    - importIsoformExpression was extended to give better error messages.
-    - Fixed the namespace warning.
+Changes in version 1.5.10 (2019-04-23)
+- Update type: Minor.
+- importIsoformExpression was extended to
+- Give better error messages in clase of mixup between giving directories or files as input.
+- Ignore system files (ignoreing directories with the '.' prefix)
+- Updated vignette to highlight the difference between using importIsoformExpression
+with the "parentDir" and "sampleVector" argument.
 
-1.5.8: IsoformSwitchAnalyzeR 2019-04-13 ( minor )
-    - Fixed a bug in analyzeSwitchConsequences that caused the all the extract*Enrichment*() function plots to loos the conditions.
-    - Fixed a bug that could cause extractTopSwitches() to return additional NA if to few examples were found.
-    - Small vignette updates
-    - Various changes preparing for future updates.
+Changes in version 1.5.9 (2019-04-17)
+- Update type: Minor.
+- importIsoformExpression was extended to give better error messages.
+- Fixed the namespace warning.
 
-1.5.7: IsoformSwitchAnalyzeR 2019-04-09 ( minor )
-    - isoformSwitchTestDRIMSeq() and isoformSwitchTestDEXSeq() was updated with the
-            'reduceFurtherToGenesWithConsequencePotential' functionality. This option, which is TRUE by default,
-            subsets the switchAnalyzeRlist to genes where a isoform switch pair can be formed (just like it is
-            done during the consequence prediction analysis) thereby reducing the number
-            of isoforms needed to be analyzed/annotated and thereby the runtime of the entire workflow.
-            This is a slightly more strict version of the reduceToSwitchingGenes option and reppresent a filtering
-            that would otherwise occure at the consequence prediction stage.
-    - importIsoformExpression() was extended to also enable import via a list of paths to files of interest.
-    - importCufflinksFiles(), importGTF(), importIsoformExpression(), importRdata() was updated to give better error messages when:
-            system.file() was erroneously used to try and import non-example data files
-            when paths to non-existing files/directories were supplied
-    - Visual improvements to the plots produced by:
-            - extractConsequenceSummary()
-            - extractSplicingEnrichment()
-            - extractSplicingEnrichmentComparison()
-            - extractConsequenceEnrichment()
-            - extractConsequenceEnrichmentComparison()
-    - The default minimum jaccard similarity (JC) cutoff used in importRdata was reduced to from 0.95 to 0.925
-            This should enable analysis of of all UCSC knownGenes annotation sets.
-    - The refrence for the enrichment functions were updated to Vitting-Seerup et al. Bioinformatics (2019).
-    - Fixed a bug in extractSequence() which caused an error if sequences were annotated but had to be trimmed.
-    - Fixed a bug in preFilter that caused wrong subsetting when reduceToSwitchingGenes=TRUE.
-    - Fixed a bug in switchPlot() that caused the domain legend to go missing when only IDR was detected.
-    - Fixed the includeCombined argument in extractSwitchSummary() so FALSE now work.
-    - Various documentation updates
-    - Various vignette updates
-    - Various maintainance updates
-    - Various usability updates (mostly better error messages)
+Changes in version 1.5.8 (2019-04-13)
+- Update type: Minor.
+- Fixed a bug in analyzeSwitchConsequences that caused the all the extract*Enrichment*() function plots to loos the conditions.
+- Fixed a bug that could cause extractTopSwitches() to return additional NA if to few examples were found.
+- Small vignette updates
+- Various changes preparing for future updates.
 
-1.5.6: IsoformSwitchAnalyzeR 2019-02-26 ( minor )
-    - Fixed two problems with intron retention analysis:
-        - Fixed an edge-case senario where multiple consequtive retentions were
-            only counted as one (and somtimes coordinates were seperated by ',' instead of ';')
-        - The coordinates repported were accedentially the last and first
-            coordinate of the sourounding exons. Now they are the first and last coordinate of the intron.
-        - The example data was updated accordingly
-    - The axis text of extractSplicingSummary was changed to better reflect what it acutally shows
-    - All enrichment functions (extractSplicingEnrichment, extractSplicingEnrichmentComparison,
-        extractConsequenceEnrichment, extractConsequenceEnrichmentComparison) now
-        also supports counting on genes (instead of switches) which is the new default.
-        For consistency they all also now per default return the data.frame with the summary statistics.
-    - extractConsequenceEnrichment and extractSplicingEnrichment now have a "minEventsForPlotting" argument which causes
-        a event to only be visualized if there is at least a number of features (default is 10).
-    - importRdata and importGTF will now automatically collaps adjecent exons (two exons without any intron in between)
-    - analyzeSignalP was updated to support results from the new and improved SignalP-5 server
-    - switchPlotGeneExp() and switchPlot was updated so the order of the bars correspond to the conditions in the switchAnalyzeRlist.
-    - various maintainance updates
-    - Various changes preparing for future updates
+Changes in version 1.5.7 (2019-04-09)
+- Update type: Minor.
+- isoformSwitchTestDRIMSeq() and isoformSwitchTestDEXSeq() was updated with the
+'reduceFurtherToGenesWithConsequencePotential' functionality. This option, which is TRUE by default, subsets the switchAnalyzeRlist to genes where a isoform switch pair can be formed (just like it is done during the consequence prediction analysis) thereby reducing the number of isoforms needed to be analyzed/annotated and thereby the runtime of the entire workflow. This is a slightly more strict version of the reduceToSwitchingGenes option and reppresent a filtering that would otherwise occure at the consequence prediction stage.
+- importIsoformExpression() was extended to also enable import via a list of paths to files of interest.
+- importCufflinksFiles(), importGTF(), importIsoformExpression(), importRdata() was updated to give better error messages when:
+    * system.file() was erroneously used to try and import non-example data files
+* when paths to non-existing files/directories were supplied
+- Visual improvements to the plots produced by:
+    * extractConsequenceSummary()
+* extractSplicingEnrichment()
+* extractSplicingEnrichmentComparison()
+* extractConsequenceEnrichment()
+* extractConsequenceEnrichmentComparison()
+- The default minimum jaccard similarity (JC) cutoff used in importRdata was reduced to from 0.95 to 0.925
+This should enable analysis of of all UCSC knownGenes annotation sets.
+- The refrence for the enrichment functions were updated to Vitting-Seerup et al. Bioinformatics (2019).
+- Fixed a bug in extractSequence() which caused an error if sequences were annotated but had to be trimmed.
+- Fixed a bug in preFilter that caused wrong subsetting when reduceToSwitchingGenes=TRUE.
+- Fixed a bug in switchPlot() that caused the domain legend to go missing when only IDR was detected.
+- Fixed the includeCombined argument in extractSwitchSummary() so FALSE now work.
+- Various documentation updates
+- Various vignette updates
+- Various maintainance updates
+- Various usability updates (mostly better error messages)
 
-1.5.5: IsoformSwitchAnalyzeR 2019-02-14 ( minor )
-    - Small vignette update
+Changes in version 1.5.6 (2019-02-26)
+- Update type: Minor.
+- Fixed two problems with intron retention analysis:
+    * Fixed an edge-case senario where multiple consequtive retentions were
+only counted as one (and somtimes coordinates were seperated by ',' instead of ';')
+* The coordinates repported were accedentially the last and first coordinate of the sourounding exons. Now they are the first and last coordinate of the intron.
+- The example data was updated accordingly
+- The axis text of extractSplicingSummary was changed to better reflect what it acutally shows.
+- All enrichment functions (extractSplicingEnrichment, extractSplicingEnrichmentComparison, extractConsequenceEnrichment, extractConsequenceEnrichmentComparison) now also supports counting on genes (instead of switches) which is the new default. For consistency they all also now per default return the data.frame with the summary statistics.
+- extractConsequenceEnrichment and extractSplicingEnrichment now have a "minEventsForPlotting" argument which causes
+a event to only be visualized if there is at least a number of features (default is 10).
+- importRdata and importGTF will now automatically collaps adjecent exons (two exons without any intron in between)
+- analyzeSignalP was updated to support results from the new and improved SignalP-5 server
+- switchPlotGeneExp() and switchPlot was updated so the order of the bars correspond to the conditions in the switchAnalyzeRlist.
+- various maintainance updates
+- Various changes preparing for future updates
 
-1.5.4: IsoformSwitchAnalyzeR 2019-02-08 ( MAJOR )
-    Summary: IsoformSwitchAnalyzeR now:
-        1) Supports analysis of Intrinsically Disordered Regions (IDR)
-        2) Have much better handling of multiple annoation files making it easy to use Ensemble annotation
-                (via a combination of isoform id handling and annoation filtering).
-        3) Supports import and propagation of a isoform nucleotide fasta file(s) making it
-                much easier to work with non-model organismes (and makes the workflow much faster for all organismes)
-        4) Better supports the strict limitations on some of the websers
-                used for external analysis to maximise what analysis can be done.
-        5) Documenation and vignette were updated to reflect these changes.
+Changes in version 1.5.5 (2019-02-14)
+- Update type: Minor.
+- Small vignette update
 
+Changes in version 1.5.4 (2019-02-26)
+- Update type: Major.
     !NB! Potentially backward compatability breaking changes were made !NB!
+- Summary: IsoformSwitchAnalyzeR now:
+    1) Supports analysis of Intrinsically Disordered Regions (IDR)
+    2) Have much better handling of multiple annoation files making it easy to use Ensemble annotation (via a combination of isoform id handling and annoation filtering).
+    3) Supports import and propagation of a isoform nucleotide fasta file(s) making it much easier to work with non-model organismes (and makes the workflow much faster for all organismes)
+    4) Better supports the strict limitations on some of the websers used for external analysis to maximise what analysis can be done.
+    5) Documenation and vignette were updated to reflect these changes.
 
-    - To enable robust, uniform and flexible isoform_id handling updates where made to
-        importRdata(), importIsoformExpression() and importGTF(). Specifically:
-         - The "includeVersionIfAvailable" argument is removed (always done behind
-                the scenes but not user configurable (all main annotation types have it)).
-        - We apologize for any inconvenience.
+- Backward compatability change: To enable robust, uniform and flexible isoform_id handling updates where made to importRdata(), importIsoformExpression() and importGTF(). Specifically the "includeVersionIfAvailable" argument is removed (always done behind the scenes but not user configurable (all main annotation types have it)). We apologize for any inconvenience.
 
-    !NB! End of Potentially backward compatability breaking changes !NB!
+- To handle different source names importRdata(), importIsoformExpression() and
+importGTF() functions now (in addition to "ignoreAfterBar") all have the "ignoreAfterSpace" and "ignoreAfterPeriod" arguments. The "ignoreAfterPeriod" replaces (and changes the meaning of) "includeVersionIfAvailable" and "removeIsoformVersion" as indicated above
+- To handle differences in Ensemble source files importRdata() and importGTF() have all been extended with the "removeTECgenes" argument which removes genes marked as "To be Experimentally Confirmed". The default is TRUE aka to remove them which is in line with Gencode recomendations (TEC are not in Gencode annotations). More info about TEC at https://www.gencodegenes.org/pages/biotypes.html
+- The importGTF and importRdata() now also import gene and isoform (bio)types if stored in the GTF file.
+- The 'removeNonConvensionalChr' argument of both importRdata() and importGTF() was updated to also remove chromosomes containing a period ('.').
 
-    - To further facilitate the isoform_id handling and Ensemble data usage:
-         - To handle different source names importRdata(), importIsoformExpression() and
-            importGTF() functions now (in addition to "ignoreAfterBar") all have the
-            "ignoreAfterSpace" and "ignoreAfterPeriod" arguments. The "ignoreAfterPeriod"
-            replaces (and changes the meaning of) "includeVersionIfAvailable" and "removeIsoformVersion" as indicated above
-        - To handle differences in Ensemble source files importRdata() and
-            importGTF() have all been extended with the "removeTECgenes" argument which removes genes marked
-            as "To be Experimentally Confirmed". The default is TRUE aka to remove them which is in line
-            with Gencode recomendations (TEC are not in Gencode annotations).
-            more info about TEC at https://www.gencodegenes.org/pages/biotypes.html
-        - The importGTF and importRdata() now also import gene and isoform (bio)types if stored in the GTF file.
-        - The 'removeNonConvensionalChr' argument of both importRdata() and importGTF() was
-            updated to also remove chromosomes containing a period ('.').
+- IsoformSwitchAnalyzeR now supports analysis of Intrinsically Disordered Regions (IDR) via the external sequence analysis tool NetSurfP-2 (prediction made based on the from amino acide fasta file). To faciliate this the following updates were made:
+    * The analyzeNetSurfP2() function was introduced to import and integrate the result in the switchAnalyzeRlist. Example data was updated accordingly
+    * analyzeSwitchConsequences(), extractConsequenceEnrichment() and extractConsequenceEnrichmentComparison() was updated to also handle IDR data.
+    * switchPlotTranscript() was updated to
+        o Handle overlapping annotation via the "annotationImportance" argument
+        o The color legend is now sorted alphabetically except for signal peptide which is always first and un-annotated regions are shown last.
+        o When using the ifMultipleIdenticalAnnotation = "summarize" option (default) the number of domains is now indcated by (x4) instead of (4) (when four domains are found)
+        o The ifMultipleIdenticalAnnotation argument now also have a 'ignore' option (not recomended).
 
-    - IsoformSwitchAnalyzeR now supports analysis of Intrinsically Disordered Regions (IDR) via
-        the external sequence analysis tool NetSurfP-2 (prediction made based on the from amino
-        acide fasta file). To faciliate this the following updates were made:
-            - The analyzeNetSurfP2() function was introduced to import and integrate the result in the switchAnalyzeRlist
-                Example data was updated accordingly
-            - analyzeSwitchConsequences(), extractConsequenceEnrichment() and
-                extractConsequenceEnrichmentComparison() was updated to also handle IDR data
-            - switchPlotTranscript() was updated to
-                - Handle overlapping annotation via the "annotationImportance" argument
-                - The color legend is now sorted alphabetically except for signal
-                    peptide which is always first and un-annotated regions are shown last.
-                - When using the ifMultipleIdenticalAnnotation = "summarize" option (default) the
-                    number of domains is now indcated by (x4) instead of (4) (when four domains are found)
-                - The ifMultipleIdenticalAnnotation argument now also have a 'ignore' option (not recomended).
+- IsoformSwitchAnalyzeR now makes import, propergation and export of the biological sequences a lot easier. Specifically:
+    * importRdata() now supports
+        o import of the isoform nuclotide (DNA) fasta file (via the isoformNtFasta argument) which will be added to the switchAnalyzeRlist and thereby propegated.
+        o Saves the IF replicate matrix by default.
+        o Propergate factor level info from the condition column of the design matrix in the creation of the switchAnalyzeRlist to ensure correct comparison is made.
+    * analyzeORF() was updated to:
+        o use transcript nucleotide sequences already stored in the switchAnalyzeRlist (e.g. imported by importRdata())
+        o if nessesary save the transcript nucleotide sequnces used to make the ORF predictions (prevents double import).
+    * extractSequence() now:
+        o Use sequences already stored in the switchAnalyzeRlist (e.g. from importRdata() or analyzeORF().
+        o Can split the amino acid sequences into multiple FASTA files to enable direct usea on many of the websides supported. This is controled by the new maxIsoformsInFastaFile paramter.
+    * Since sequences imported from a fasta file and those extracted from a BSgenome might not be completely identical the removeAnnoationData() function was removed from the package.
+- To support the incrisingly strict limiatations on some webtools batch uploades (primarly EBI's pfam but also SignalP) which have on both limitations on i) max AA sequence length and ii) max number of sequences which can sumitted at the same time, the following updates were made:
+    * extractSequence() now:
+    1) Supports multi-fasta output (so multiple runs can be submitted to the web-servers (omitting the max number of sequences))
+    2) Supports trimming the AA sequences the max lenght allowed (currently 1000 AA) (allowing analysis of at least some parts of the protein).
+    * To support results based on the multi-fasta output of extractSequence() both analyzePFAM and analyzeSignalP was updated to support importing of results distributed into mutiple files.
+    * To ensure the trimming of AA sequences did not affect downstream analysis:
+    1) analyzeSwitchConsequences() was updated to ignore regions trimmed away in either of the isoforms compared (only if acutally trimmed by extractSequence())
+    2) The switchPlot and switchPlotTranscript now annotates if parts of a ORF was not analyzed  (only if acutally trimmed by extractSequence()).
+    Note: Our tests suggest one find 5% fewer switch consequences when the sequences are trimmed - but unless EBI reconsideres their limitations this cannot fixed. Complaints can be send via: https://www.ebi.ac.uk/support/ or on twitter via @hmm3r
+- importIsoformExpression() got a workover. It now:
+    1) Handles failed library quantification.
+    2) Performs a more suitable inter-library normalization directly from the abundance matrix.
+- The preFilter() function now also allows for filtering on gene_biotype (imported from GTF)
+- Various other usability updates
+- Various maintainance updates
+- Various documentation updates
+- Various changes preparing for future updates.
 
-    - IsoformSwitchAnalyzeR now makes import, propergation and export of the biological sequences a lot easier. Specifically:
-            - importRdata() now supports
-                - import of the isoform nuclotide (DNA) fasta file (via the isoformNtFasta
-                    argument) which will be added to the switchAnalyzeRlist and thereby propegated.
-                - Saves the IF replicate matrix by default.
-                - Propergate factor level info from the condition
-                    column of the design matrix in the creation of the switchAnalyzeRlist
-                    to ensure correct comparison is made.
-            - analyzeORF() was updated to:
-                - use transcript nucleotide sequences already stored in the switchAnalyzeRlist (e.g. imported by importRdata())
-                - if nessesary save the transcript nucleotide
-                    sequnces used to make the ORF predictions (prevents double import).
-            - extractSequence() now:
-                - Use sequences already stored in the switchAnalyzeRlist (e.g. from importRdata() or
-                    analyzeORF().
-                - Can split the amino acid sequences into multiple FASTA files to
-                    enable direct usea on many of the websides supported. This is
-                    controled by the new maxIsoformsInFastaFile paramter.
-            - Since sequences imported from a fasta file and those extracted from a BSgenome might not
-                be completely identical the removeAnnoationData() function was removed from the package.
+Changes in version 1.5.3 (2018-12-11)
+- Update type: Minor.
+- Updates importCufflinksFiles() ensure full compatability.
 
-    - To support the incrisingly strict limiatations on some webtools batch uploades
-        (primarly EBI's pfam but also SignalP) which have on both limitations on i) max AA sequence length and ii) max number of
-        sequences which can sumitted at the same time, the following updates were made:
-            - extractSequence() now:
-                    1) Supports multi-fasta output (so multiple runs can be submitted to the web-servers (omitting the max number of sequences))
-                    2) Supports trimming the AA sequences the max lenght allowed (currently 1000 AA) (allowing analysis of at least some parts of the protein).
-            - To support results based on the multi-fasta output of extractSequence() both
-                analyzePFAM and analyzeSignalP was updated to support importing of results distributed into mutiple files.
-            - To ensure the trimming of AA sequences did not affect downstream analysis:
-                    1) analyzeSwitchConsequences() was updated to ignore regions
-                        trimmed away in either of the isoforms compared (only if acutally trimmed by extractSequence())
-                    2) The switchPlot and switchPlotTranscript now annotates if parts of
-                        a ORF was not analyzed  (only if acutally trimmed by extractSequence()).
-            - Our tests suggest one find 5% fewer switch consequences when the sequences are trimmed - but unless
-                EBI reconsideres their limitations this cannot fixed.
-                    Complaints can be send via: https://www.ebi.ac.uk/support/ or on twitter via @hmm3r
+Changes in version 1.5.2 (2018-12-05)
+- Update type: Minor.
+- IsoformSwitchAnalyzeR now also supports coding potential assessment via CPC2 through the analyzeCPC2() function. See vignette for more information.
+- Various upates to vignette
 
-    - importIsoformExpression() got a workover. It now:
-            Handles failed library quantification.
-            Performs a more suitable inter-library normalization directly from the abundance matrix.
+Changes in version 1.5.1 (2018-11-05)
+- Update type: Major.
+- An error was fixed which caused isoformSwitchTestDEXSeq() to only return the first condition if multiple were compared.
+- The run-time estimate for isoformSwitchTestDEXSeq was improved based on samples in the range from 2v2 - 20v20.
+- Version bump due to move into Bioconductor 3.9 devel branch.
 
-    - The preFilter() function now also allows for filtering on gene_biotype (imported from GTF)
+Changes in version 1.3.10 (2018-10-18)
+- Update type: Minor.
+- A problem was fixed with the isoformSwitchTestDEXSeq() which could
+cause continuous co-variables to interpreted as discrete co-variables.
+- importRdata() was updated to be a bit more versetile with regards to accepting isoform_ids as row.names.
+- Both isoformSwitchTestDRIMSeq() and isoformSwitchTestDRIMSeq() was updated so the the resulting
+"isoformSwitchAnalysis" entry in the switchAnalyzeRlist also contains results with p-values set to NA. (NA filter removed). Furthemore the interpretation of design matrixes with regards to continous or discrete variables was improved.
+- The vignette was updated all around including the FAQ sections:
+    * "What Quantification Tool(s) Should I Use?"
+    * "What constitue an independent biological replicate?"
+- An error message was corrected to give the rigth error
+- various small updates
 
-    - Various other usability updates
-    - Various maintainance updates
-    - Various documentation updates
-    - Various changes preparing for future updates.
+Changes in version 1.3.9 (2018-09-24)
+- Update type: Minor.
+- Update to namespace to fix 1.3.8 update of importCufflinksFiles
+- Update to vignette to fix header
 
+Changes in version 1.3.8 (2018-09-15)
+- Update type: Minor.
+- Update to importCufflinksFiles to make it faster and more robust.
 
-1.5.3: IsoformSwitchAnalyzeR 2018-12-11 ( minor )
-    - Updates importCufflinksFiles() ensure full compatability.
+Changes in version 1.3.7 (2018-09-15)
+- Update type: Minor.
+- isoformSwitchTestDEXSeq() was updated to use testForDEU instead of nbinomLRT as now reccomended by the authors.
 
-1.5.2: IsoformSwitchAnalyzeR 2018-12-05 ( minor )
-    - IsoformSwitchAnalyzeR now also supports coding potential assessment via CPC2 through the analyzeCPC2() function. See vignette for more information.
-    - Various upates to vignette
+Changes in version 1.3.5 (2018-09-12)
+- Update type: Major.
+- One-line summary: Improved robustness, usability and speed
+- Main changes:
+    * isoformSwitchTestDEXSeq() is introduced as the new default test as it is a more robust and much more reliable test for differential isoform usage.
+    * The original isoformSwitchTest() is decommissioned due to it being inferior to both isoformSwitchTestDEXSeq() and isoformSwitchTestDRIMSeq() in most aspects.
+    * importIsoformExpression() now also support import of StringTie quantifications.
+    * updates that allows for better handling of Ensemble data.
+    * updates throughout the R package making IsoformSwitchAnalyzeR (much) faster and more reliable.
+- Specifically the changes in inlcuded functions are:
+    * isoformSwitchTestDEXSeq() is introduced as the default switch isoform switch test function
+        o I handles the False Discovery Rate much better
+        o It allows for batch corrected effect size estimation
+        o It is a good deal faster (for smaller sample sizes)
+- isoformSwitchTestDRIMSeq() was updated to handle continous co-variates.
+- isoformSwitchTest() has been removed from the package since it is obsolte.
+- The importRdata() now:
+    * Allows for import via either replicate abundance or replciate count data (or both - which is highly reccomended).
+    * These changes were reflected in createSwitchAnalyzeRlist()
+    * Test for full rank of experimental design
+- The importCufflinksCummeRbund() and importCufflinksFiles() now also extract and replicate isoform abundance estimates.
+- The functions importRdata(), importCufflinksCummeRbund() and importCufflinksFiles()
+    * Calculates isoform fractions based on the replicate isoform fraction matrix (instead based on average isoform and gene expression) providing more accurate estimataes.
+    * Was uptimized so they are more streamlined and faster.
+- importGTF (also used by importRdata() ) was updated to handle the problems with version numbering in amongst other Ensembl data.
+- To support the batch correction feature in isoformSwitchTestDEXSeq() the subsetSwitchAnalyzeRlist() function was modified so when subsetting in the the exon entry of the switchAnalyzeRList, as well as any replicate matrix entry (counts, abundances or isoform fractions), all isoforms from genes where at least one isoform passed the filters are kept.
+- The isoformToIsoformFraction() - a general purpose function for calculateing Isoform Fraction (IFs) from isoform expression - are introduced
+- The isoformToGeneExp() function was updated to be true general purpose (less stringent about data formating) and thanks to a tidyverse solution to the central problem is now between 2x-10x faster than previously (and becomses faster as the large the datasets are)
+- createSwitchAnalyzeRlist() was updated to
+    * handle replicate data
+    * fix condition name problems
+    * test for full rank of design
+- importIsoformExpression() was updated to:
+    * Support StringTie data.
+    * Perform the inter-library normalization after a lenient expression cutoff have beeen applied (to remove most very lowly expressed isoforms).
+    * Now uses the "scaledTPM" instead of "lengthScaledTPM" tximport option when imporitng with countsFromAbundance=TRUE
+    * The ignoreAfterBar argument from tximport() is now also supported.
+- We introduce the removeAnnoationData() function which eables removal of biological sequence and/or the replicate quantification data from a switchAnalyzeRlist threby significantly removing the size.
+- The default on the IFcutoff in switchPlot() and switchPlotTopSwitches() was updated from 0 to 0.05 which should result in cleaner plots (meaningisoforms only contributing minimally to the parent gene expression are now omitted from plot).
+- Specifically the package maintenance changes are:
+    * All around speed improvements mainly due to updates regarding two bottelnecks:
+        o stringr::str_c replaces paste0 since it is up to 10x faster on data.frames
+        o dplyr::inner_join() or dplyr::left_join() have replaced most
+base::merge() opperations since since they are up to 10x faster.
+    * All documentation and examples are now based on Salmon data. Cufflinks is shown as a special case.
+        o For this switch new example data was included in the package.
+    * Directy suppor of Cufflinks/Cuffdiff files via the cummeRbund R package (via the importCufflinksCummeRbund function) have been removed due to cummeRbund not being propperly maintained. Use importCufflinksFiles() instead.
+    * analyzeSignalP, analyzePFAM, analyzeCPAT now better handles empty files.
+    * All documentation regarding PFAM was updated to use EBI's homepage (and their restrictions).
+    * Updated package title to reflect the introduction of the alternative splicing module
+    * A requirement for tximport >= 1.8.0 was introduced (due to problems with importing from RSEM in previous versions)
+    * Highligting that import of GTF files can be done from both unziped and gziped gtf files.
+    * Updated NEWS file to follow bioconductor style guideline
+    * Genral update to support condition (and covariate) names compatible with model building in R.
+    * All general support functions (potentially) used more than once place were moved to tool.R and names were streamlined.
+    * Various updates in vignette to reflect all changes desribed above as well as update of installation instructions.
+    * Various updates to input testing to catch commonly occuring problems.
+    * Correction of loads of spelling mistakes kindely pointed out by @afonsoguerra - thanks!
 
-1.5.1: IsoformSwitchAnalyzeR 2018-11-05 ( MAJOR )
-    - An error was fixed which caused isoformSwitchTestDEXSeq() to only return the first condition if multiple were compared.
-    - The run-time estimate for isoformSwitchTestDEXSeq was improved based on samples in the range from 2v2 - 20v20.
-    - Version bump due to move into Bioconductor 3.9 devel branch.
+Changes in version 1.5.3 (2018-04-24)
+- Update type: Minor.
+- Corrected a mistake in extractSplicingEnrichment() and extractConsequenceEnrichment() which
+caused p-values to be corrected for multiple testing with Holms methods instead of BH/FDR (which it is now).
 
-1.3.10: IsoformSwitchAnalyzeR 2018-10-18 ( minor )
-    - A problem was fixed with the isoformSwitchTestDEXSeq() which could
-        cause continuous co-variables to interpreted as discrete co-variables.
-    - importRdata() was updated to be a bit more versetile with regards to accepting isoform_ids as row.names.
-    - Both isoformSwitchTestDRIMSeq() and isoformSwitchTestDRIMSeq() was updated so the the resulting
-        "isoformSwitchAnalysis" entry in the switchAnalyzeRlist also contains results with p-values set to NA. (NA filter removed).
-        Furthemore the interpretation of design matrixes with regards to continous or discrete variables was improved.
-    - The vignette was updated all around including the FAQ sections:
-        - "What Quantification Tool(s) Should I Use?"
-        - "What constitue an independent biological replicate?"
-    - An error message was corrected to give the rigth error
-    - various small updates
+Changes in version 1.5.3 (2018-04-23)
+- Update type: Minor.
+- Small update to importRdata which in rare circumstances could cause an error (J1 not found)
 
-1.3.9: IsoformSwitchAnalyzeR 2018-09-24 ( minor )
-    - Update to namespace to fix 1.3.8 update of importCufflinksFiles
-    - Update to vignette to fix header
+Changes in version 1.1.08 (2018-04-17)
+- Update type: Minor.
+- The preFilter function was updated to only allow filtering on mean expression/usage (gene expression, isoform expression and isoform usage) accross all samples since filtering on individal conditions can lead to loss of false discovery rate. For more information refere to https://www.nature.com/articles/nmeth.3885 and the IWH Bioconductor package.
+- To accomodate this:
+    * All import* functions was updated to include calculation of these means.
+    * All example data was updated to include these meanse.
+    * Relevant documentation was updated to include description of these means
+    * Vignette was updated to reflect these changes
+- The importRdata() was updated to better handle differences in which isoforms have been quantified and which isoforms are in the GTF and quantifications.
+- Information on how to install from the developmental branch of Bioconductor was added to vignette.
+- Small updates to make error messages more informative
+- Update of unclear import error message
+- Updated FAQ in vignette
 
-1.3.8: IsoformSwitchAnalyzeR 2018-09-15 ( minor )
-    - Update to importCufflinksFiles to make it faster and more robust.
+Changes in version 1.1.07 (2018-04-04)
+- Update type: Minor.
+- A bug was fixed in analyzeIntronRetention() so it now works.
+- All import functions (importRdata and importGTF) now per default import CDS as ORF if a GTF file is suppled.
+- Small corrections in vignette.
+- Improved NEWS layout
 
-1.3.7: IsoformSwitchAnalyzeR 2018-09-15 ( minor )
-    - isoformSwitchTestDEXSeq() was updated to use testForDEU instead of nbinomLRT as now reccomended by the authors.
+Changes in version 1.1.06 (2018-03-28)
+- Update type: Major.
+- We are very pleased to introduce a splicing modul for the analysis of isoform switches which allows for thorough analysis of alternative splicing, alternative transcription start sites and alternative transcription termination sites. Although the core of this modul is a liftover of the main functions form the now decapitated R pacakge spliceR we have made several new post analysis directly available. The introduction does however cause a few changes:
+    * The main function for analyzing alternative splicing (including intron retention) is now the analyzeAlternativeSplicing() function (although analyzeIntronRetention() is keept for backward compatability).
+    * The resulting analysis is stored in the 'AlternativeSplicingAnalysis' entry of the switchAnalyzeRlist (instead of under 'IntronRetentionAnalysis')
+    * IsoformSwitchAnalyzeR have been extensively updated with build in functions for global analysis of consequences and splicing. Here we introduce the following function:
+        o extractSwitchOverlap() : Visualizes the overlap in switching features in different comparisons.
+        o extractConsequenceEnrichment() : Analyze for enrichment of either of opposite consequences (e.g. more protein domain loss than gain?).
+        o extractConsequenceEnrichmentComparison() : Comparare enrichment of either of opposite consequences (e.g. more protein domain loss than gain?) between comparisons.
+        o extractSplicingSummary() : Global summary of alternative splicing events.
+        o extractSplicingEnrichment() : Analyze for enrichment of either of opposite consequences (e.g. more exon skipping than exon inclusion?).
+        o extractSplicingEnrichmentComparison() : Comparare enrichment of either of opposite consequences (e.g. more exon skipping than exon inclusion?) between comparisons.
+        o extractGenomeWideSplicingAnalysis() : Global analysis of changes in isoform fraction of isoforms with a specific splice patterns (e.g. exon skipping)
+- The example data 'exampleSwitchListAnalyzed' included in IsoformSwitchAnalyzeR was exchanged to a dataet which better illustrate the usefullness of the analysis that can be done.
+- The vignette were updated to reflect these changes with a whole section of analysis of alternative splicing.
+- The vignette got a thorough workover.
+- The getCDS spliceR function and CDSset class was lifted over and updated to the current UCSC genome browser layout.
+- isoformSwitchTest() was updated so it only callibrates p-values if all comparisons meet the requirements.
+- The switchPlotTranscript() was updated to handle condition names is a perfect substring of another condition name.
+- Small improvements in documentations
 
-1.3.5: IsoformSwitchAnalyzeR 2018-09-12 ( major )
-    - One-line summary: Improved robustness, usability and speed
-    - Main changes:
-        - isoformSwitchTestDEXSeq() is introduced as the new default test as
-            it is a more robust and much more reliable test for differential isoform usage.
-        - The original isoformSwitchTest() is decommissioned due to it being
-            inferior to both isoformSwitchTestDEXSeq() and isoformSwitchTestDRIMSeq() in most aspects.
-        - importIsoformExpression() now also support import of StringTie quantifications.
-        - updates that allows for better handling of Ensemble data.
-        - updates throughout the R package making IsoformSwitchAnalyzeR (much) faster and more reliable.
-    - Specifically the changes in inlcuded functions are:
-        - isoformSwitchTestDEXSeq() is introduced as the default switch isoform switch test function
-            - I handles the False Discovery Rate much better
-            - It allows for batch corrected effect size estimation
-            - It is a good deal faster (for smaller sample sizes)
-        - isoformSwitchTestDRIMSeq() was updated to handle continous co-variates.
-        - isoformSwitchTest() has been removed from the package since it is obsolte.
-        - The importRdata() now:
-            - Allows for import via either replicate abundance or replciate count data (or both - which is highly reccomended).
-            - These changes were reflected in createSwitchAnalyzeRlist()
-            - Test for full rank of experimental design
-        - The importCufflinksCummeRbund() and importCufflinksFiles() now also extract and replicate isoform abundance estimates.
-        - The functions importRdata(), importCufflinksCummeRbund() and importCufflinksFiles()
-            - Calculates isoform fractions based on the replicate isoform fraction matrix
-                (instead based on average isoform and gene expression) providing more accurate estimataes.
-            - Was uptimized so they are more streamlined and faster.
-        - importGTF (also used by importRdata() ) was updated to handle
-            the problems with version numbering in amongst other Ensembl data.
-        - To support the batch correction feature in isoformSwitchTestDEXSeq()
-            the subsetSwitchAnalyzeRlist() function was modified so when
-            subsetting in the the exon entry of the switchAnalyzeRList,
-            as well as any replicate matrix entry (counts, abundances or isoform fractions),
-            all isoforms from genes where at least one isoform passed the filters are kept.
-        - The isoformToIsoformFraction() - a general purpose function for
-            calculateing Isoform Fraction (IFs) from isoform expression - are introduced
-        - The isoformToGeneExp() function was updated to be true general purpose (less stringent
-            about data formating) and thanks to a tidyverse solution to the central
-            problem is now between 2x-10x faster than previously (and becomses faster as the large the datasets are)
-        - createSwitchAnalyzeRlist() was updated to
-            - handle replicate data
-            - fix condition name problems
-            - test for full rank of design
-        - importIsoformExpression() was updated to:
-            - Support StringTie data.
-            - Perform the inter-library normalization after a
-                lenient expression cutoff have beeen applied
-                (to remove most very lowly expressed isoforms).
-            - Now uses the "scaledTPM" instead of "lengthScaledTPM" tximport
-                option when imporitng with countsFromAbundance=TRUE
-            The ignoreAfterBar argument from tximport() is now also supported.
-        - We introduce the removeAnnoationData() function which eables
-                removal of biological sequence and/or the replicate quantification
-                data from a switchAnalyzeRlist threby significantly removing the size.
-        - The default on the IFcutoff in switchPlot() and switchPlotTopSwitches() was
-            updated to 0.05 which should result in cleaner plots (meaningisoforms only
-            contributing minimally to the parent gene expression are now omitted from plot).
-    - Specifically the package maintenance changes are:
-        - All around speed improvements mainly due to updates regarding two bottelnecks:
-            - stringr::str_c replaces paste0 since it is up to 10x faster on data.frames
-            - dplyr::inner_join() or dplyr::left_join() have replaced most
-                base::merge() opperations since since they are up to 10x faster.
-        - All documentation and examples are now based on Salmon data. Cufflinks is shown as a special case.
-            - For this switch new example data was included in the package.
-        - Directy suppor of Cufflinks/Cuffdiff files via the cummeRbund R package
-            (via the importCufflinksCummeRbund function) have been removed. Use importCufflinksFiles() instead.
-        - analyzeSignalP, analyzePFAM, analyzeCPAT now better handles empty files.
-        - All documentation regarding PFAM was updated to use EBI's homepage (and their restrictions).
-        - Updated package title to reflect the introduction of the alternative splicing module
-        - A requirement for tximport >= 1.8.0 was introduced (due to problems with importing from RSEM in previous versions)
-        - Highligting that import of GTF files can be done from both unziped and gziped gtf files.
-        - Updated NEWS file to follow bioconductor style guideline
-        - Genral update to support condition (and covariate) names compatible with model building in R.
-        - All general support functions (potentially) used more than once place were moved to tool.R and names were streamlined.
-        - Various updates in vignette to reflect all changes desribed above as well as update of installation instructions.
-        - Various updates to input testing to catch commonly occuring problems.
-        - Correction of loads of spelling mistakes kindely pointed out by @afonsoguerra - thanks!
+Changes in version 1.1.05 (2018-03-06)
+- Update type: Minor.
+- The importIsoformExpression() function was improved to handle file names with costom pre-fixes and now adds the 'isoform_id' column itself making the matrixes directly compatible with importRdata().
+- Various small imporvements in documentation.
 
-1.1.10: IsoformSwitchAnalyzeR 2018-04-24 ( minor )
-    - Corrected a mistake in extractSplicingEnrichment() and extractConsequenceEnrichment() which
-      caused p-values to be corrected for multiple testing with Holms methods instead of BH/FDR (which it is now).
+Changes in version 1.1.05 (2018-03-01)
+- Update type: Major.
+- Fixed a problem which could cause signal peptides not to be plotted - we highly remend redoing switchPlots (only the visualizations were affected - not the underlying analysis). Thanks to Maxim Ivanov for discovring the problem.
+- Added indication of update importance (minor/major) retrospectively to the NEWS.
 
-1.1.09: IsoformSwitchAnalyzeR 2018-04-23 ( minor )
-    - Small update to importRdata which in rare circumstances could cause an error (J1 not found)
+Changes in version 1.1.03 (2018-02-27)
+- Update type: Minor.
+- Small updates to the switchPlot* functions making them more robust to edge cases
+- Fixed a problem in the assignment of NAs to isoforms without ORFs. The example datasets were updated accordingly.
+- Various small imporvements for robustness.
 
-1.1.08: IsoformSwitchAnalyzeR 2018-04-17 ( minor )
-    - The preFilter function was updated to only allow filtering on mean expression/usage (gene expression, isoform expression and isoform usage)
-         accross all samples since filtering on individal conditions can lead to loss of false discovery rate.
-         For more information refere to https://www.nature.com/articles/nmeth.3885 and the IWH Bioconductor package.
-         Therefore
-         - All import* functions was updated to include calculation of these means.
-         - All example data was updated to include these meanse.
-         - Relevant documentation was updated to include description of these means
-         - Vignette was updated to reflect these changes
-    - The importRdata() was updated to better handle differences in which isoforms have been quantified and which isoforms are in the GTF and quantifications.
-    - Information on how to install from the developmental branch of Bioconductor was added to vignette.
-    - Small updates to make error messages more informative
-    - Update of unclear import error message
-    - Updated FAQ in vignette
+Changes in version 1.1.02 (2018-02-21)
+- Update type: Minor.
+- Update to accommodate analysis of no-replicate pilot experiments (see guide in vignette)
+- Various small bug-fixes
 
-1.1.07: IsoformSwitchAnalyzeR 2018-04-04 ( minor )
-    - A bug was fixed in analyzeIntronRetention() so it now works.
-    - All import functions (importRdata and importGTF) now per default import CDS as ORF if a GTF file is suppled.
-    - Small corrections in vignette.
-    - Improved NEWS layout
+Changes in version 1.1.01 (2017-12-19)
+- Update type: Minor.
+- (The large version-bump is due to the release of the next itteration of Bioconductor)
+- Corrections for a lot of spelling mistakes in the package - huge shoutout to @khoegenauer for the suggestions
+- A few small updates to import functions making the progress even smoother
 
-1.1.06: IsoformSwitchAnalyzeR 2018-03-28 ( major )
-    - We are very pleased to introduce a splicing modul for the analysis of isoform switches which
-      allows for thorough analysis of alternative splicing, alternative transcription start sites
-      and alternative transcription termination sites. Although the core of this modul is a liftover
-      of the main functions form the now decapitated R pacakge spliceR we have made several new post
-      analysis directly available. The introduction does however cause a few changes:
-        - The main function for analyzing alternative splicing (including intron retention)
-          is now the analyzeAlternativeSplicing() function (although analyzeIntronRetention() is keept for backward compatability).
-            - The resulting analysis is stored in the 'AlternativeSplicingAnalysis'
-              entry of the switchAnalyzeRlist (instead of under 'IntronRetentionAnalysis')
+Changes in version 0.99.15 (2017-10-25)
+- Update type: Minor.
+- Fixed a small mistake in the documentation causing build warnings
 
-    - IsoformSwitchAnalyzeR have been extensively updated with build in functions
-      for global analysis of consequences and splicing. Here we introduce the following function:
-        - extractSwitchOverlap()                    : Visualizes the overlap in switching features in different comparisons
-        - extractConsequenceEnrichment()            : Analyze for enrichment of either of opposite consequences
-                                                      (e.g. more protein domain loss than gain?)
-        - extractConsequenceEnrichmentComparison()  : Comparare enrichment of either of opposite consequences
-                                                      (e.g. more protein domain loss than gain?) between comparisons
+Changes in version 0.99.14 (2017-10-22)
+- Update type: Minor.
+- isoformSwitchTestDRIMSeq() was updated to per default use dmFilter()
+- Small updates to documentation better explaining the functionalities from udate 0.99.12
 
-        - extractSplicingSummary()                  : Global summary of alternative splicing events
-        - extractSplicingEnrichment()               : Analyze for enrichment of either of opposite consequences
-                                                      (e.g. more exon skipping than exon inclusion?)
-        - extractSplicingEnrichmentComparison()     : Comparare enrichment of either of opposite consequences
-                                                      (e.g. more exon skipping than exon inclusion?) between comparisons
-        - extractGenomeWideSplicingAnalysis()       : Global analysis of changes in isoform fraction of
-                                                      isoforms with a specific splice patterns (e.g. exon skipping)
-    - The example data 'exampleSwitchListAnalyzed' included in IsoformSwitchAnalyzeR was
-      exchanged to a dataet which better illustrate the usefullness of the analysis that can be done.
-    - The vignette were updated to reflect these changes with a whole section of analysis of alternative splicing.
-    - The vignette also got a thorough workover.
-    - The getCDS spliceR function and CDSset class was lifted over and updated to the current UCSC genome browser layout.
-    - isoformSwitchTest() was updated so it only callibrates p-values if all comparisons meet the requirements.
-    - The switchPlotTranscript() was updated to handle condition names is a perfect substring of another condition name.
-    - Small improvements in documentations
+Changes in version 0.99.13 (2017-10-19)
+- Update type: Minor.
+- Version bump for Bioconductor to keep up
 
-1.1.05: IsoformSwitchAnalyzeR 2018-03-06 (minor)
-    - The importIsoformExpression() function was improved to handle file names with costom pre-fixes
-      and now adds the 'isoform_id' column itself making the matrixes directly compatible with importRdata().
-    - Various small imporvements in documentation.
+Changes in version 0.99.12 (2017-10-19)
+- Update type: Major.
+- importIsoformExpression() have been completely redesigned to utilize the tximport package as well as implementing the option for inter-library normalization of abundance (TxPM) values.
+- The vignette got a thorough workover - huge shoutout to Maria Dalby for the help!
+- isoformSwitchTestDRIMSeq() was extended to also include the dmFilter() functionality as part of the workflow.
+- The internal process calculating gene expression from isoform expression was cast as its own function: isoformToGeneExp().
+- Fixed an error that could cause problems when importing CDSs from a GTF file
+- Updated descriptions and other minor style issues.
 
-1.1.04: IsoformSwitchAnalyzeR 2018-03-01 (major)
-    - Fixed a problem which could cause signal peptides not to be plotted - we highly remend
-      redoing switchPlots (only the visualizations were affected - not the underlying analysis).
-      Thanks to Maxim Ivanov for discovring the problem.
-    - Added indication of update importance (minor/major) retrospectively to the NEWS.
+Changes in version 0.99.11 (2017-06-01)
+- Update type: Major.
+- Fixes some issue raised in the Bioconductor review: To adhere to Bioconductor conventions the subset() method was removed and replaced by the subsetSwitchAnalyzeRlist() function.
+- The importIsoformExpression() function was updated to support import of Transcript Per Million (TxPM) as the relative abundance measure (Instead of TPM and RPKM/FPKM, which are discontinued) when importing data from Kallisto, Salmon and RSEM.
+- The isoformSwitchTestDRIMSeq() function was updated to make one linear model (one dmFit) instead of one model per pairwise comparison.
+- Small update to the switchPlot() functions to make it robust to NA annotation in non-essential data.
+- Added citation information since the article describing the R package was published: Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 
-1.1.03: IsoformSwitchAnalyzeR 2018-02-27 (minor)
-    - Small updates to the switchPlot* functions making them more robust to edge cases
-    - Fixed a problem in the assignment of NAs to isoforms without ORFs. The example datasets were updated accordingly.
-    - Various small imporvements for robustness.
+Changes in version 0.99.10 (2017-05-24)
+- Update type: Minor.
+- Fixes some issue raised in the Bioconductor review
+- Fixes a but introdued during the recent update in how pfam results were integrated.
+- Updates of the vignette for inproved readability.
 
-1.1.02: IsoformSwitchAnalyzeR 2018-02-21  (minor)
-    - Update to accommodate analysis of no-replicate pilot experiments (see guide in vignette)
-    - Various small bug-fixes
+Changes in version 0.99.9 (2017-05-19)
+- Update type: Major.
+- Introduces the iso_ref and gene_ref handles to all entires in the switchAnalyzeRlist which allows for easy integration of data across the different enteries.
+- Now offers full integration with the DRIMSeq tool which utilizises advanced linear models to identify significant changes in isoform usage at isoform level enabling robust analysis of more complex designs including batch effects. The integraiton is availabe via the isoformSwitchTestDRIMSeq() function.
+- Updates IsoformSwitchAnalyzeR to handle EBI's new server for running Pfam.
+- To enable the integration with DRIMSeq switchAnalyzeRlist object have been extended with: a) Isoform replciate count matrix. b) A design matrix.
+- The preFilter function have been updated with new functionalities and default cutoffs that are more suitable for use with DRIMSeq. See function documentation for details.
+- Implements suggested updates from Bioconductor reviewer
+- This update is so large backward compatability is unfortunatly not feasiblie so all existing switchAnalyzeRlists will have to be remade.
+- The extention of the switchAnalyzeRlist have also made a few changes in how to import data nessesary. Specifically:
+    * The importRdata() function now take a replicate count matrix as it's main input and the replicate FPKM matrix is optional.
+    * The importBallgownData() function and it's accompanying "exampleRdata.RData" have been decapitated since it does not contain count information.
+    * The importIsoformExpression() function have been introduced to help with importing data from Kallisto, Salmon and RSEM. This function generates a isoform count matrix from the parent directory of the Kallisto/Salmon/RSEM analysis - which can easily be used with the importRdata() function to generate a switchAnalyzeRlist.
+    *Lastly the vignette have naturally been updated and improved accordingly.
 
-1.1.01: IsoformSwitchAnalyzeR 2017-12-19 (minor)
-    - (The large version-bump is due to the release of the next itteration of Bioconductor)
-    - Corrections for a lot of spelling mistakes in the package - huge shoutout to @khoegenauer for the suggestions
-    - A few small updates to import functions making the progress even smoother
+Changes in version 0.99.9 (2017-04-30)
+- Update type: Multiple minors : covers 0.99.1-0.99.8
+- Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards mostly consering how namespaces are organised and imported.
 
-0.99.15: IsoformSwitchAnalyzeR 2017-10-25 (minor)
-    - Fixed a small mistake in the documentation causing build warnings
+Changes in version 0.99.0 (2017-04-18)
+- Update type: Minor.
+- The following functionalities were added:
+    * Enable filtering for significant switches in the preFilter() function.
+    * The extractGenomeWideAnalysis() function was extended with the "annotationToAnalyze" parameter enabling specification of which annotation types to analyze.
+    * The analyzeSwitchConsequences() function was extended to enable analysis of truncated protein (by supplying 'domain_length' to the 'consequencesToAnalyze' argument).
+    * The analyzeSwitchConsequences() function was extended so the 'ntCutoff' also applies to TSS and TTS analysis.
+- The following bugs were corrected:
+    * A bug where importCufflinksCummeRbund() imported all genomic features of isoforms, including CDS etc, resulting in duplicated regions which caused problems for the intron retention analysis. This is only a problem for Cufflinks/Cuffdiff analysis where the refrence transcriptome contaied non-exon annotation (as defined in the type columns (column 3)) of the gtf file.
+    * A bug in the analyzePFAM() function that sometimes prevented IsoformSwitchAnalyzeR in correctly format the result file whereby the function could not run.
+    * The multi-threading option was removed since it was not supported by windows computers. We plan to bring it back in a later update.
+    * The option of manually supplying the start and stop codon sequences that the annotateORF() function should scan for in transcripts.
+- Furthermorethe vignette was extended for enhanced usability.
 
-0.99.14: IsoformSwitchAnalyzeR 2017-10-22 (minor)
-    - isoformSwitchTestDRIMSeq() was updated to per default use dmFilter()
-    - Small updates to documentation better explaining the functionalities from udate 0.99.12
-
-0.99.13: IsoformSwitchAnalyzeR 2017-10-19 (minor)
-    - Version bump for Bioconductor to keep up
-
-0.99.12: IsoformSwitchAnalyzeR 2017-10-12 (major)
-    - importIsoformExpression() have been completely redesigned to utilize the tximport package as well as implementing the option for inter-library normalization of abundance (TxPM) values.
-    - The vignette got a thorough workover - huge shoutout to Maria Dalby for the help!
-    - isoformSwitchTestDRIMSeq() was extended to also include the dmFilter() functionality as part of the workflow.
-    - The internal process calculating gene expression from isoform expression was cast as its own function: isoformToGeneExp().
-    - Fixed an error that could cause problems when importing CDSs from a GTF file
-    - Updated descriptions and other minor style issues.
-
-0.99.11: IsoformSwitchAnalyzeR 2017-06-01 (major)
-    - Fixes some issue raised in the Bioconductor review
-        To adhere to Bioconductor conventions the subset() method was removed and replaced by the subsetSwitchAnalyzeRlist() function.
-    - The importIsoformExpression() function was updated to support import of Transcript Per Million (TxPM) as the relative abundance measure (Instead of TPM and RPKM/FPKM, which are discontinued) when importing data from Kallisto, Salmon and RSEM.
-    - The isoformSwitchTestDRIMSeq() function was updated to make one linear model (one dmFit) instead of one model per pairwise comparison.
-    - Small update to the switchPlot() functions to make it robust to NA annotation in non-essential data.
-    - Added citation information since the article describing the R package was published: Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
-
-0.99.10: IsoformSwitchAnalyzeR 2017-05-24 (minor)
-    - Fixes some issue raised in the Bioconductor review
-    - Fixes a but introdued during the recent update in how pfam results were integrated.
-    - Updates of the vignette for inproved readability.
-
-0.99.9: IsoformSwitchAnalyzeR 2017-05-19 (major)
-    MAJOR update which:
-        1) Introduces the iso_ref and gene_ref handles to all entires
-           in the switchAnalyzeRlist which allows for easy integration of data across the different enteries.
-        2) Now offers full integration with the DRIMSeq tool which utilizises advanced linear models
-           to identify significant changes in isoform usage at isoform level enabling robust analysis of
-           more complex designs including batch effects. The integraiton is availabe
-           via the isoformSwitchTestDRIMSeq() function.
-        3) Updates IsoformSwitchAnalyzeR to handle EBI's new server for running Pfam.
-        4) To enable the integration with DRIMSeq switchAnalyzeRlist object have been
-           extended with: a) Isoform replciate count matrix. b) A design matrix.
-        5) The preFilter function have been updated with new functionalities and
-           default cutoffs that are more suitable for use with DRIMSeq. See function documentation for details.
-        6) Implements suggested updates from Bioconductor reviewer
-    This update is so large backward compatability is unfortunatly not feasiblie so all existing switchAnalyzeRlists will have to be remade.
-
-    The extention of the switchAnalyzeRlist have also made a few changes in how to import data nessesary. Specifically:
-        - The importRdata() function now take a replicate count matrix as it's main input and the replicate FPKM matrix is optional.
-        - The importBallgownData() function and it's accompanying "exampleRdata.RData" have been decapitated since it does not contain count information.
-        - The importIsoformExpression() function have been introduced to help with importing data
-          from Kallisto, Salmon and RSEM. This function generates a isoform count matrix from the
-          parent directory of the Kallisto/Salmon/RSEM analysis - which can easily be used with
-          the importRdata() function to generate a switchAnalyzeRlist.
-    Lastly the vignette have naturally been updated and improved accordingly.
-
-0.99.1-8: IsoformSwitchAnalyzeR 2017-04-XX (multiple minor)
-    Small incremental updates to ensure IsoformSwitchAnalyzeR lives up to all Bioconductor standards mostly consering how namespaces are organised and imported.
-
-0.99.0: IsoformSwitchAnalyzeR 2017-04-18 (minor)
-    The following functionalities were added:
-    	- Enable filtering for significant switches in the preFilter() function.
-    	- The extractGenomeWideAnalysis() function was extended with the "annotationToAnalyze" parameter enabling specification of which annotation types to analyze.
-    	- The analyzeSwitchConsequences() function was extended to enable analysis of truncated protein (by supplying 'domain_length' to the 'consequencesToAnalyze' argument).
-    	- The analyzeSwitchConsequences() function was extended so the 'ntCutoff' also applies to TSS and TTS analysis.
-    The following bugs were corrected:
-        - A bug where importCufflinksCummeRbund() imported all genomic features of isoforms, including CDS etc, resulting in duplicated regions which caused problems for the intron retention analysis. This is only a problem for Cufflinks/Cuffdiff analysis where the refrence transcriptome contaied non-exon annotation (as defined in the type columns (column 3)) of the gtf file.
-        - A bug in the analyzePFAM() function that sometimes prevented IsoformSwitchAnalyzeR in correctly format the result file whereby the function could not run.
-        - The multi-threading option was removed since it was not supported by windows computers. We plan to bring it back in a later update.
-        - The option of manually supplying the start and stop codon sequences that the annotateORF() function should scan for in transcripts.
-    Furthermorethe vignette was extended for enhanced usability.
-
-0.98.0: IsoformSwitchAnalyzeR 2016-09-01 (Major)
-    We are proud to introduce IsoformSwitchAnalyzeR - fresh out of in-house beta version.
+Changes in version 0.98.0 (2016-09-01)
+- We are proud to introduce IsoformSwitchAnalyzeR - fresh out of in-house beta version.

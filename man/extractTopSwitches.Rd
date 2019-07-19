@@ -39,7 +39,7 @@ The cutoff which the (callibrated) fdr correct p-values must be smaller than for
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
 }
 \item{n}{
-The number of switching features (genes/isoforms) to return. Use NA to return all significant results. Default is 10.
+The number of switching features (genes/isoforms) to return. Use Inf to return all significant results (NA will internally be conveted to Inf for backward compatability). Default is 10.
 }
 \item{inEachComparison}{
 A logic indicating whether to extract top n in each comparison (if TRUE) or from the all analysis (if FALSE). Default is FALSE.

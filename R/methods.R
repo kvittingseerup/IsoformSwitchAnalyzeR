@@ -26,6 +26,9 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
         switchAnalyzeRlist$isoformFeatures,
         subset
     )
+    if(nrow(switchAnalyzeRlist$isoformFeatures) == 0 ) {
+        stop('Nothing is left after subsetting.')
+    }
 
     ### Based on which isoforms are left subset other features
     isoformsToKeep <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
@@ -74,6 +77,7 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
                 )
             ]
     }
+
     # rep expression columns
     if( !is.null(switchAnalyzeRlist$isoformRepExpression )) {
         switchAnalyzeRlist$isoformRepExpression <-
@@ -88,7 +92,8 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
                 )
             ]
     }
-    # rep if columns
+
+    # rep IF columns
     if( !is.null(switchAnalyzeRlist$isoformRepIF )) {
         switchAnalyzeRlist$isoformRepIF <-
             switchAnalyzeRlist$isoformRepIF[
@@ -104,17 +109,29 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
     }
 
     ### For standard analysis
-    otherAnalysisPerformed <- setdiff(
-        names(switchAnalyzeRlist),
+    # otherAnalysisPerformed <- setdiff(
+    #     names(switchAnalyzeRlist),
+    #     c(
+    #         'isoformFeatures','exons','conditions','sourceId','designMatrix',
+    #         'isoformSwitchAnalysis','ntSequence','aaSequence',
+    #         'switchConsequence', 'isoformSwitchAnalysis',
+    #         # added to prevent wrong IF estimations after limma based test introduction
+    #         'isoformRepIF','isoformRepExpression','isoformCountMatrix',
+    #         'runInfo'
+    #     )
+    # )
+    otherAnalysisPerformed <- intersect(
         c(
-            'isoformFeatures','exons','conditions','sourceId','designMatrix',
-            'isoformSwitchAnalysis','ntSequence','aaSequence',
-            'switchConsequence', 'isoformSwitchAnalysis',
-            # added to prevent wrong IF estimations after limma based test introduction
-            'isoformRepIF','isoformRepExpression','isoformCountMatrix',
-            'runInfo'
-        )
+            'orfAnalysis',
+            'domainAnalysis',
+            'signalPeptideAnalysis',
+            'AlternativeSplicingAnalysis',
+            'idrAnalysis',
+            'subCellLocationAnalysis'
+        ),
+        names(switchAnalyzeRlist)
     )
+
     if(length(otherAnalysisPerformed)) {
         for(localAnalysis in otherAnalysisPerformed) {
             switchAnalyzeRlist[[ localAnalysis ]] <-
@@ -217,25 +234,31 @@ summary.switchAnalyzeRlist <- function(object, ...) {
         is.na( object$isoformFeatures$gene_switch_q_value )
     )
     if(includingSwitches) {
-        switchNumber <- extractSwitchSummary(object)
-        colnames(switchNumber) <- c(
-            'Comparison',
-            'switchingIsoforms',
-            'switchingGenes'
+        try(
+            switchNumber <- extractSwitchSummary(object),
+            silent = TRUE
         )
+        if( exists('switchNumber') ) {
+            colnames(switchNumber) <- c(
+                'Comparison',
+                'Isoforms',
+                'Switches',
+                'Genes'
+            )
 
-        # subset if to large
-        if(nrow(switchNumber) > 10) {
-            switchNumberHead <- head(switchNumber, 5)
-            switchNumberTail <- tail(switchNumber, 5)
-            switchNumber <- rbind(switchNumberHead, '...', switchNumberTail)
+            # subset if to large
+            if(nrow(switchNumber) > 10) {
+                switchNumberHead <- head(switchNumber, 5)
+                switchNumberTail <- tail(switchNumber, 5)
+                switchNumber <- rbind(switchNumberHead, '...', switchNumberTail)
+            }
+
+            cat('\nSwitching features:\n')
+            print(switchNumber)
+
+            ## add to analysis performed
+            analysisAdded <- c('Isoform Switch Identification',analysisAdded)
         }
-
-        cat('\nSwitching features:\n')
-        print(switchNumber)
-
-        ## add to analysis performed
-        analysisAdded <- c('Isoform Switch Identification',analysisAdded)
     }
 
     if(length(analysisAdded)) {

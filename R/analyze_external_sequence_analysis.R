@@ -524,6 +524,7 @@ analyzePFAM <- function(
 
     ### Sanity check that it is a PFAM result file
     if (TRUE) {
+        ### Test expected clumns
         test1 <-
             ncol(myPfamResult) == 15 |
             ncol(myPfamResult) == 16 # the output have 15 or 16 collumns depending on whther active sites are predicted
@@ -538,7 +539,15 @@ analyzePFAM <- function(
             stop('The file pointed to by \'pathToPFAMresultFile\' is not a PFAM result file')
         }
 
-        # test names
+        ### Potentially remove '>'
+        t1 <-   all( grepl( '^>', myPfamResult$seq_id ))
+        t2 <- ! all( grepl( '^>', switchAnalyzeRlist$isoformFeatures$isoform_id ))
+        if( t1 & t2 ) {
+            myPfamResult$seq_id <- gsub('^>', '', myPfamResult$seq_id)
+            warning('Removed the prefix ">" from all Pfam results since we suspect they are not supposed to be there.')
+        }
+
+        ### test names
         if (!any(myPfamResult$seq_id %in%
                  switchAnalyzeRlist$isoformFeatures$isoform_id)) {
             stop(
@@ -1138,8 +1147,8 @@ analyzeNetSurfP2 <- function(
                 'The \'pathToNetSurfP2resultFile\' argument must be a string pointing to the PFAM result file'
             )
         }
-        if (!file.exists(pathToNetSurfP2resultFile)) {
-            stop('The file \'pathToNetSurfP2resultFile\' points to does not exist')
+        if (! all( file.exists(pathToNetSurfP2resultFile)) ) {
+            stop('(At least on of) the file(s) \'pathToNetSurfP2resultFile\' points to does not exist')
         }
 
         if( smoothingWindowSize %% 2 != 1 | !is(smoothingWindowSize, 'numeric') ) {
@@ -1161,21 +1170,24 @@ analyzeNetSurfP2 <- function(
 
         ### Read in file
         suppressWarnings(
-            netSurf <- read_csv(
-                file = pathToNetSurfP2resultFile,
-                col_names = TRUE,
-                col_types = cols_only(
-                    id = col_character(),
-                    n = col_integer(),
-                    disorder = col_double()
-                ),
-                progress = showProgress & !quiet
-            )
+            netSurf <- do.call(rbind, plyr::llply(
+                pathToNetSurfP2resultFile,
+                .fun = function(
+                    aFile
+                ) {
+                    read_csv(
+                        file = aFile,
+                        col_names = TRUE,
+                        col_types = cols_only(
+                            id = col_character(),
+                            n = col_integer(),
+                            disorder = col_double()
+                        ),
+                        progress = showProgress & !quiet
+                    )
+                }
+            ))
         )
-        #netSurf <- read_csv(pathToNetSurfP2resultFile, progress = showProgress & !quiet)
-        #netSurf <- netSurf[,c('id','n','disorder')]
-
-
 
         ### Sanity check
         if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {

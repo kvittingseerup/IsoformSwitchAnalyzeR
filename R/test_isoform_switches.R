@@ -786,6 +786,8 @@ isoformSwitchTestDEXSeq <- function(
             )
             localIF <- localIF[,switchAnalyzeRlist$designMatrix$sampleID]
 
+            localIF <- round(localIF, digits = 3)
+
             ### update counter
             analysisDone <- analysisDone + 1
 
@@ -871,18 +873,6 @@ isoformSwitchTestDEXSeq <- function(
                         switchAnalyzeRlist$designMatrix$condition %in% unlist(aComp)
                     ),]
 
-                    ### Extract corresponding count data
-                    localCount <- switchAnalyzeRlist$isoformCountMatrix[
-                        which(
-                            switchAnalyzeRlist$isoformCountMatrix$isoform_id %in%
-                                switchAnalyzeRlist$isoformFeatures$isoform_id
-                        ),
-                        which(
-                            colnames(switchAnalyzeRlist$isoformCountMatrix) %in%
-                                c('isoform_id', designSubset$sampleID)
-                        )
-                    ]
-
                     ### Extract corresponding annotation
                     localAnnot <- switchAnalyzeRlist$isoformFeatures[
                         which(
@@ -890,6 +880,18 @@ isoformSwitchTestDEXSeq <- function(
                             switchAnalyzeRlist$isoformFeatures$condition_2 == aComp$condition_2
                         ),
                         c('isoform_id','iso_ref','gene_ref')
+                    ]
+
+                    ### Extract corresponding count data
+                    localCount <- switchAnalyzeRlist$isoformCountMatrix[
+                        which(
+                            switchAnalyzeRlist$isoformCountMatrix$isoform_id %in%
+                                localAnnot$isoform_id
+                        ),
+                        which(
+                            colnames(switchAnalyzeRlist$isoformCountMatrix) %in%
+                                c('isoform_id', designSubset$sampleID)
+                        )
                     ]
 
 
@@ -914,8 +916,44 @@ isoformSwitchTestDEXSeq <- function(
 
                     colnames(designSubset)[1] <- 'sample'
 
+                    ### remove non-varying features
+                    if( ncol(designSubset) > 2 ) {
+                        coreDesign <- designSubset[,1:2]
+
+                        batchDesign <- designSubset[,3:ncol(designSubset), drop=FALSE]
+
+                        batchDesignReduced <- batchDesign[,which(
+                            apply(batchDesign, 2, function(x) length(unique(x))) > 1
+                        ),drop=FALSE]
+
+                        designSubset <- cbind(
+                            coreDesign,
+                            batchDesignReduced
+                        )
+                    }
+
+                    ### remove completly co-linear features - to dangerous - could be true effects
+                    if(FALSE) {
+                        if( ncol(designSubset) > 2 ) {
+                            toKeep <- integer()
+                            for(i in 3:ncol(designSubset) ) { # i <- 3
+                                if(
+                                    ! identical(
+                                        as.integer(as.factor(designSubset$condition)),
+                                        as.integer(as.factor(designSubset[,i]))
+                                    )
+                                ) {
+                                    toKeep <- c(toKeep, i)
+                                }
+                            }
+
+                            designSubset <- designSubset[,c(1:2,toKeep)]
+                        }
+                    }
+
                     ### Check co-founders for group vs continous variables
                     if( ncol(designSubset) > 2 ) {
+
                         for(i in 3:ncol(designSubset) ) { # i <- 4
                             if( class(designSubset[,i]) %in% c('numeric', 'integer') ) {
                                 if( uniqueLength( designSubset[,i] ) * 2 <= length(designSubset[,i]) ) {
@@ -1183,6 +1221,7 @@ extractSwitchSummary <- function(
     filterForConsequences = FALSE,
     alpha = 0.05,
     dIFcutoff = 0.1,
+    onlySigIsoforms = FALSE,
     includeCombined = nrow(unique(
         switchAnalyzeRlist$isoformFeatures[, c('condition_1', 'condition_1')]
     )) > 1
@@ -1229,118 +1268,202 @@ extractSwitchSummary <- function(
         }
     }
 
-    backUpDf <-
+    nrDf <-
         unique(switchAnalyzeRlist$isoformFeatures[, c(
             'condition_1', 'condition_2'
         )])
-    backUpDf <-
+
+    nrDf <-
         data.frame(
             Comparison = paste(
-                backUpDf$condition_1,
-                backUpDf$condition_2, sep = ' vs '),
+                nrDf$condition_1,
+                nrDf$condition_2, sep = ' vs '),
             nrIsoforms = 0,
+            nrSwitches = 0,
             nrGenes = 0,
             stringsAsFactors = FALSE
         )
 
-    ### Extract data needed
-    columnsToExtract <-
-        c(
-            'isoform_id',
-            'gene_id',
-            'condition_1',
-            'condition_2',
-            'dIF',
-            'isoform_switch_q_value',
-            'gene_switch_q_value',
-            'switchConsequencesGene'
+    if(includeCombined) {
+        nrDf <- rbind(
+            nrDf,
+            data.frame(
+                Comparison = 'Combined',
+                nrIsoforms = 0,
+                nrSwitches = 0,
+                nrGenes = 0,
+                stringsAsFactors = FALSE
+            )
+        )
+    }
+
+
+
+    ### Count genes and isoforms
+    if(TRUE) {
+        ### Extract data needed
+        columnsToExtract <-
+            c(
+                'isoform_id',
+                'gene_id',
+                'condition_1',
+                'condition_2',
+                'dIF',
+                'isoform_switch_q_value',
+                'gene_switch_q_value',
+                'switchConsequencesGene'
+            )
+
+        isoResTest <-
+            any(!is.na(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+            ))
+        if (isoResTest) {
+            dataDF <- switchAnalyzeRlist$isoformFeatures[which(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            ),
+            na.omit(match(
+                columnsToExtract,
+                colnames(switchAnalyzeRlist$isoformFeatures)
+            ))]
+        } else {
+            dataDF <- switchAnalyzeRlist$isoformFeatures[which(
+                switchAnalyzeRlist$isoformFeatures$gene_switch_q_value    < alpha &
+                    abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
+            ),
+            na.omit(match(
+                columnsToExtract,
+                colnames(switchAnalyzeRlist$isoformFeatures)
+            ))]
+        }
+        if (nrow(dataDF)) {
+            if (filterForConsequences) {
+                dataDF <- dataDF[which(dataDF$switchConsequencesGene), ]
+            }
+            if (nrow(dataDF) ) {
+
+                ### Add levels
+                dataDF$comparison <- paste(dataDF$condition_1, dataDF$condition_2, sep = ' vs ')
+                dataDF$comparison <- factor(
+                    x = dataDF$comparison,
+                    levels = setdiff(nrDf$Comparison, 'Combined')
+                )
+
+                ### Summarize pr comparison
+                dataList <- split(
+                    dataDF,
+                    f = dataDF$comparison,
+                    drop = FALSE
+                )
+
+                if (includeCombined) {
+                    dataList$Combined <- dataDF
+                }
+
+                isoResTest <-
+                    any(!is.na(
+                        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+                    ))
+                myNumbers <- plyr::ldply(dataList, function(aDF) {
+                    if (isoResTest) {
+                        sigGenes <-
+                            unique(aDF$gene_id   [which(aDF$isoform_switch_q_value < alpha &
+                                                            abs(aDF$dIF) > dIFcutoff)])
+                        sigIso   <-
+                            unique(aDF$isoform_id[which(aDF$isoform_switch_q_value < alpha &
+                                                            abs(aDF$dIF) > dIFcutoff)])
+                        return(data.frame(
+                            nrIsoforms = length(sigIso),
+                            nrGenes = length(sigGenes)
+                        ))
+                    } else {
+                        sigGenes <-
+                            unique(aDF$gene_id   [which(aDF$gene_switch_q_value < alpha &
+                                                            abs(aDF$dIF) > dIFcutoff)])
+                        sigIso   <-
+                            unique(aDF$isoform_id[which(aDF$gene_switch_q_value < alpha &
+                                                            abs(aDF$dIF) > dIFcutoff)])
+                        return(data.frame(
+                            nrIsoforms = length(sigIso),
+                            nrGenes = length(sigGenes)
+                        ))
+                    }
+
+
+                })
+                colnames(myNumbers)[1] <- 'Comparison'
+
+                ### Overwrite numbers
+                nrDf$nrIsoforms <- myNumbers$nrIsoforms[match(
+                    nrDf$Comparison, myNumbers$Comparison
+                )]
+
+                nrDf$nrGenes <- myNumbers$nrGenes[match(
+                    nrDf$Comparison, myNumbers$Comparison
+                )]
+
+            }
+
+        }
+    }
+
+    ### Count switches
+    if(TRUE) {
+        localSwitches <- extractSwitchPairs(
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            onlySigIsoforms = onlySigIsoforms
+        )
+        localSwitches$Comparison = stringr::str_c(
+            localSwitches$condition_1,
+            ' vs ',
+            localSwitches$condition_2
         )
 
-    isoResTest <-
-        any(!is.na(
-            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-        ))
-    if (isoResTest) {
-        dataDF <- switchAnalyzeRlist$isoformFeatures[which(
-            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value < alpha &
-                abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
-        ),
-        na.omit(match(
-            columnsToExtract,
-            colnames(switchAnalyzeRlist$isoformFeatures)
-        ))]
-    } else {
-        dataDF <- switchAnalyzeRlist$isoformFeatures[which(
-            switchAnalyzeRlist$isoformFeatures$gene_switch_q_value    < alpha &
-                abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
-        ),
-        na.omit(match(
-            columnsToExtract,
-            colnames(switchAnalyzeRlist$isoformFeatures)
-        ))]
-    }
-    if (nrow(dataDF) == 0) {
-        return(backUpDf)
-    }
+        ### Set levels
+        localSwitches$Comparison <- factor(
+            localSwitches$Comparison,
+            levels = nrDf$Comparison
+        )
 
-    if (filterForConsequences) {
-        dataDF <- dataDF[which(dataDF$switchConsequencesGene), ]
-        if (nrow(dataDF) == 0) {
-            return(backUpDf)
+        ### Filter for consequences
+        if(filterForConsequences) {
+            refConseqGenes <- switchAnalyzeRlist$isoformFeatures$gene_ref[which(
+                switchAnalyzeRlist$isoformFeatures$switchConsequencesGene
+            )]
+
+            localSwitches <- localSwitches[which(
+                localSwitches$gene_ref %in% refConseqGenes
+            ),]
         }
-    }
 
-    ### Add levels
-    dataDF$comparison <- paste(dataDF$condition_1, dataDF$condition_2, sep = ' vs ')
-    dataDF$comparison <- factor(
-        x = dataDF$comparison,
-        levels = backUpDf$Comparison
-    )
+        ### Count
+        nrSwitches <- plyr::ddply(
+            .data = localSwitches,
+            .variables = 'Comparison',
+            .drop = FALSE,
+            function(x) {
+                data.frame(nrSwitches = nrow(x))
+            }
+        )
 
-    ### Summarize pr comparison
-    dataList <- split(
-        dataDF,
-        f = dataDF$comparison,
-        drop = FALSE
-    )
-
-    if (includeCombined) {
-        dataList$combined <- dataDF
-    }
-
-    isoResTest <-
-        any(!is.na(
-            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-        ))
-    myNumbers <- plyr::ldply(dataList, function(aDF) {
-        if (isoResTest) {
-            sigGenes <-
-                unique(aDF$gene_id   [which(aDF$isoform_switch_q_value < alpha &
-                                                abs(aDF$dIF) > dIFcutoff)])
-            sigIso   <-
-                unique(aDF$isoform_id[which(aDF$isoform_switch_q_value < alpha &
-                                                abs(aDF$dIF) > dIFcutoff)])
-            return(data.frame(
-                nrIsoforms = length(sigIso),
-                nrGenes = length(sigGenes)
-            ))
-        } else {
-            sigGenes <-
-                unique(aDF$gene_id   [which(aDF$gene_switch_q_value < alpha &
-                                                abs(aDF$dIF) > dIFcutoff)])
-            sigIso   <-
-                unique(aDF$isoform_id[which(aDF$gene_switch_q_value < alpha &
-                                                abs(aDF$dIF) > dIFcutoff)])
-            return(data.frame(
-                nrIsoforms = length(sigIso),
-                nrGenes = length(sigGenes)
+        if(includeCombined) {
+            nrSwitches$nrSwitches[which(
+                nrSwitches$Comparison == 'Combined'
+            )] <- nrow( unique(
+                localSwitches[,c('isoformUpregulated','isoformDownregulated')]
             ))
         }
 
 
-    })
-    colnames(myNumbers)[1] <- 'Comparison'
-    return(myNumbers)
+        nrDf$nrSwitches <- nrSwitches$nrSwitches[match(
+            nrDf$Comparison, nrSwitches$Comparison
+        )]
+    }
+
+    return(nrDf)
 }
 
 extractSwitchOverlap <- function(
@@ -1560,9 +1683,10 @@ extractTopSwitches <- function(
             if (!'switchConsequencesGene' %in%
                 colnames(switchAnalyzeRlist$isoformFeatures)) {
                 stop(paste(
-                    'The switchAnalyzeRlist does not contain isoform',
-                    'switching analysis. Please run the \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\'',
-                    'function first.'
+                    'The switchAnalyzeRlist does not contain the consequence prediction',
+                    'whereby the "filterForConsequences" argument cannot be used.',
+                    '\nIf that is what you want you need to run the \'analyzeSwitchConsequences()\' function first',
+                    sep = ' '
                 ))
             }
         }
@@ -1588,6 +1712,10 @@ extractTopSwitches <- function(
         }
         if (!is.logical(sortByQvals)) {
             stop('The sortByQvals argument supplied must be a logical')
+        }
+
+        if( is.na(n) ) {
+            n <- Inf
         }
     }
 
@@ -1685,7 +1813,7 @@ extractTopSwitches <- function(
 
 
         ### Reduce to the number wanted
-        if (!is.na(n)) {
+        if (! is.infinite(n)) {
             if (inEachComparison) {
                 dataDF2$comparison <-
                     paste(dataDF2$condition_1,

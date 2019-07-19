@@ -10,7 +10,7 @@ Together these three plots enables visualization of gene expression, isoform exp
 }
 \usage{
 switchPlotGeneExp(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     condition1 = NULL,
     condition2 = NULL,
@@ -24,7 +24,7 @@ switchPlotGeneExp(
 )
 
 switchPlotIsoExp(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene=NULL,
     isoform_id = NULL,
     condition1 = NULL,
@@ -40,7 +40,7 @@ switchPlotIsoExp(
 )
 
 switchPlotIsoUsage(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene=NULL,
     isoform_id = NULL,
     condition1 = NULL,

@@ -1,5 +1,5 @@
 switchPlotTranscript <- function(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
     rescaleTranscripts = TRUE,
@@ -7,6 +7,7 @@ switchPlotTranscript <- function(
     reverseMinus = TRUE,
     ifMultipleIdenticalAnnotation = 'summarize',
     annotationImportance = c('signal_peptide','protein_domain','idr'),
+    IFcutoff = 0.05,
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -14,6 +15,8 @@ switchPlotTranscript <- function(
     optimizeForCombinedPlot = FALSE,
     condition1 = NULL,
     condition2 = NULL,
+    dIFcutoff = 0.1,
+    alphas = c(0.05, 0.001),
     localTheme = theme_bw(),
     plot = TRUE
 ) {
@@ -60,6 +63,17 @@ switchPlotTranscript <- function(
             }
         }
 
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches') {
+            if(is.null(condition1)) {
+                condition1 <- switchAnalyzeRlist$isoformFeatures$condition_1[1]
+            }
+            if(is.null(condition2)) {
+                condition2 <- switchAnalyzeRlist$isoformFeatures$condition_2[1]
+            }
+        }
+
+        isConditional <- ! is.null(condition1)
+        hasQuant <- ! all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall))
     }
 
     ### Check for what annotation are stored in the switchAnalyzeRlist
@@ -260,21 +274,55 @@ switchPlotTranscript <- function(
                     'PTC',
                     'class_code',
                     'sub_cell_location',
-                    'solubility_status'
+                    'solubility_status',
+                    'dIF',
+                    'isoform_switch_q_value',
+                    'IF_overall','IF1','IF2'
                 )
             columnsToExtract <-
                 na.omit(match(
                     columnsToExtract,
                     colnames(switchAnalyzeRlist$isoformFeatures)
                 ))
-            rowsToExtract <-
-                which(switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoform_id)
+
+            ### Extract the rows corresponding to features of interes
+            if( isConditional ) {
+                rowsToExtract <-
+                    which(
+                        switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoform_id &
+                            switchAnalyzeRlist$isoformFeatures$condition_1 == condition1 &
+                            switchAnalyzeRlist$isoformFeatures$condition_2 == condition2
+                    )
+            } else {
+                rowsToExtract <-
+                    which(switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoform_id)
+            }
+
 
             isoInfo <-
                 unique(switchAnalyzeRlist$isoformFeatures[
                     rowsToExtract,
                     columnsToExtract
             ])
+
+            ### Subset to used isoforms
+            if(hasQuant) {
+                isoInfo$minIF <- apply(
+                    isoInfo[,na.omit(match(c('IF_overall','IF1','IF2'), colnames(isoInfo)) ),drop=FALSE],
+                    1,
+                    function(x) {
+                        max(x, na.rm = TRUE)
+                    }
+                )
+                isoInfo <- isoInfo[which(
+                    isoInfo$minIF >= IFcutoff
+                ),]
+                if(nrow(isoInfo) == 0) {
+                    stop('No isoforms left after filtering via the "IFcutoff" argument.')
+                }
+
+                isoform_id <- isoInfo$isoform_id
+            }
 
             ### Remove if all is annotated as NA
             if(!is.null(isoInfo$sub_cell_location)) {
@@ -867,25 +915,81 @@ switchPlotTranscript <- function(
     }
     myTranscriptPlotData <- do.call(rbind, myTranscriptPlotDataList)
 
-    ### Correct names                   !!! where Tx Names are changed !!!!
+    ### Correct names  !!! where Tx Names are changed !!!!
     if (TRUE) {
         ### correct transcript names
         # Create name annotation (this can be omitted when ggplots astetics mapping against type works)
-        nameDF <-
-            data.frame(oldTxName = unique(myTranscriptPlotData$transcript))
+        nameDF <- data.frame(
+            oldTxName = unique(myTranscriptPlotData$transcript),
+            newTxName = unique(myTranscriptPlotData$transcript),
+            stringsAsFactors = FALSE
+        )
+
+        ### Modify if class code is defined
         if ('class_code' %in% colnames(isoInfo)) {
-            nameDF$transciptStatus <-
-                isoInfo$class_code[match(nameDF$oldTxName, isoInfo$isoform_id)]
-            nameDF$newTxName <-
-                paste(nameDF$oldTxName,
-                      ' (',
-                      nameDF$transciptStatus,
-                      ')',
-                      sep = '')
-        } else {
-            nameDF$newTxName <- nameDF$oldTxName
+            nameDF$newTxName <- paste(
+                nameDF$newTxName,
+                ' (',
+                isoInfo$class_code[match(nameDF$oldTxName, isoInfo$isoform_id)],
+                ')',
+                sep = ''
+            )
         }
 
+        if ( isConditional ) {
+
+            if( ! optimizeForCombinedPlot ) {
+                ### Interpret direction
+                isoInfo$direction                                      <- 'Unchanged usage'
+                isoInfo$direction[which(isoInfo$dIF > dIFcutoff     )] <- 'Increased usage'
+                isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1)] <- 'Decreased usage'
+
+                ### Add dIF
+                if( ! all(isoInfo$dIF %in% c(0, Inf, -Inf)) ) {
+                    isoInfo$direction  <- paste(
+                        isoInfo$direction,
+                        ': dIF =',
+                        formatC(round(isoInfo$dIF, digits = 2),digits = 2, format='f') ,
+                        sep=' '
+                    )
+                }
+
+                ### Add q-values
+                if(any( !is.na(isoInfo$isoform_switch_q_value))) {
+                    if( ! all(isoInfo$isoform_switch_q_value %in% c(1, -Inf)) ) {
+                        isoInfo$sig <- evalSig(isoInfo$isoform_switch_q_value, alphas = alphas)
+
+                        isoInfo$direction <- startCapitalLetter(
+                            paste0(
+                                isoInfo$direction,
+                                ' (',
+                                isoInfo$sig,
+                                ')'
+                            )
+                        )
+                    }
+                }
+            }
+            if(   optimizeForCombinedPlot ) {
+                ### Interpret direction
+                isoInfo$direction                                      <- 'Unchanged usage'
+                isoInfo$direction[which(isoInfo$dIF > dIFcutoff      & isoInfo$isoform_switch_q_value < min(alphas) )] <- 'Increased usage'
+                isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1 & isoInfo$isoform_switch_q_value < min(alphas) )] <- 'Decreased usage'
+            }
+
+            ### Make new name
+            nameDF$newTxName <- paste(
+                nameDF$newTxName,
+                '\n(',
+                isoInfo$direction[match(nameDF$oldTxName, isoInfo$isoform_id)],
+                ')',
+                sep = ''
+            )
+
+        }
+
+
+        ### Modify if sub-cell location is defined
         if( 'sub_cell_location' %in% colnames(isoInfo) ) {
             matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
 
@@ -893,12 +997,14 @@ switchPlotTranscript <- function(
                 nameDF$newTxName,
                 '\n(Location: ',
                 gsub('_',' ', isoInfo$sub_cell_location[match(
-                    nameDF$oldTxName,
+                    nameDF$newTxName,
                     isoInfo$isoform_id
                 )]),
                 ')'
             )
         }
+
+        ### Modify if  solubility location is defined
         if( 'solubility_status' %in% colnames(isoInfo) ) {
             matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
 
@@ -1322,6 +1428,7 @@ switchPlotTranscript <- function(
                 y = x,
                 yend = x
             )) # Base line
+
     }
     if (nrow(arrowlineDataArrows)) {
         myPlot <-
@@ -1338,14 +1445,18 @@ switchPlotTranscript <- function(
     }
 
     myPlot <- myPlot +
-        geom_rect(data = myTranscriptPlotData,
-                  aes(
-                      xmin = ymin,
-                      ymin = xmin,
-                      xmax = ymax,
-                      ymax = xmax,
-                      fill = Domain
-                  )) + # boxes that constitute transcript
+        geom_rect(
+            data = myTranscriptPlotData,
+            aes(
+                xmin = ymin,
+                ymin = xmin,
+                xmax = ymax,
+                ymax = xmax,
+                fill = Domain
+            )
+        )
+
+    myPlot <- myPlot +
         scale_fill_manual(
             breaks = domainsFound,
             values = correspondingColors
@@ -1376,6 +1487,31 @@ switchPlotTranscript <- function(
         myPlot <- myPlot + labs(x = chrName)
     }
 
+    if( ! optimizeForCombinedPlot ) {
+        if( isConditional ) {
+            if( any(grepl('^placeholder_1$|^placeholder_2$', c(condition1, condition2)) ) ) {
+                myPlot <- myPlot + labs(title = paste(
+                    'The isoform switch in',
+                    geneName,
+                    sep = ' '
+                ))
+            } else {
+                myPlot <- myPlot + labs(title = paste(
+                    'The isoform switch in',
+                    geneName,
+                    paste0(' (', condition1, ' vs ', condition2,')'),
+                    sep = ' '
+                ))
+            }
+        } else {
+            myPlot <- myPlot + labs(title = paste(
+                'The isoforms in',
+                geneName,
+                sep = ' '
+            ))
+        }
+    }
+
     if (plot) {
         suppressWarnings(print(myPlot))
     } else {
@@ -1385,7 +1521,7 @@ switchPlotTranscript <- function(
 
 
 expressionAnalysisPlot <- function(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
     condition1 = NULL,
@@ -1406,6 +1542,18 @@ expressionAnalysisPlot <- function(
         if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
+            )
+        }
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+            stop(
+                paste(
+                    'The switchAnalyzeRlist is made from pre-defined isoform switches',
+                    'which means it is made without defining conditions (as it should be).',
+                    '\nThis also means it cannot used to plot conditional expression -',
+                    'if that is your intention you need to create a new',
+                    'switchAnalyzeRlist with the importRdata() function and start over.',
+                    sep = ' '
+                )
             )
         }
 
@@ -1460,6 +1608,11 @@ expressionAnalysisPlot <- function(
 
             if (nrow(allConditionPairs) > 1) {
                 if (missing(condition1) | missing(condition2)) {
+                    stop(
+                        'Both the \'condition1\' and \'condition2\' arguments must be supplied (when there is more than two comparisons)'
+                    )
+                }
+                if (is.null(condition1) | is.null(condition2)) {
                     stop(
                         'Both the \'condition1\' and \'condition2\' arguments must be supplied (when there is more than two comparisons)'
                     )
@@ -1738,6 +1891,17 @@ expressionAnalysisPlot <- function(
             gsub("^\\s+|\\s+$", "", x)
         }
 
+
+        ### Extract gene name
+        if( 'gene_name' %in% colnames(switchAnalyzeRlist$isoformFeatures) ) {
+            gene_name <- switchAnalyzeRlist$isoformFeatures$gene_name[match(
+                gene_id, switchAnalyzeRlist$isoformFeatures$gene_id
+            )]
+        } else {
+            gene_name <- gene_id
+        }
+
+
     }
 
     ### Extract and make plots
@@ -1997,8 +2161,6 @@ expressionAnalysisPlot <- function(
 
             # add the rest
             g1 <- g1 +
-                facet_wrap( ~ Analyis, ncol = 1) +
-                labs(x = 'Condition', y = 'Gene Expression') +
                 localTheme + # modify to rotate labels
                 theme(strip.background = element_rect(
                     fill = "white",
@@ -2011,6 +2173,16 @@ expressionAnalysisPlot <- function(
             } else {
                 g1 <- g1 + coord_cartesian(ylim = c(ymin, yMax))
             }
+
+            if( ! optimizeForCombinedPlot ) {
+                g1 <- g1 +
+                    labs(x = 'Condition', y = 'Gene Expression', title = paste0('Expression of ', gene_name))
+            } else {
+                g1 <- g1 +
+                    facet_wrap( ~ Analyis, ncol = 1) +
+                    labs(x = 'Condition', y = 'Gene Expression')
+            }
+
 
             ### add to list
             plotList[['gene_expression']] <- g1
@@ -2293,7 +2465,6 @@ expressionAnalysisPlot <- function(
             g2 <- g2 +
                 scale_fill_manual(values = c('darkgrey', '#333333')) +
                 labs(x = 'Isoform', y = 'Isoform Expression') +
-                facet_wrap( ~ Analyis, ncol = 1) +
                 localTheme + # modify to tilt conditions
                 theme(strip.background = element_rect(
                     fill = "white",
@@ -2305,6 +2476,14 @@ expressionAnalysisPlot <- function(
                     coord_cartesian(ylim = c(ymin+1, yMax))
             } else {
                 g2 <- g2 + coord_cartesian(ylim = c(ymin, yMax))
+            }
+
+            if( ! optimizeForCombinedPlot ) {
+                g2 <- g2 + labs(x = 'Isoform', y = 'Isoform Expression', title = paste0('Isoform Expression in ', gene_name))
+            } else {
+                g2 <- g2 +
+                    facet_wrap( ~ Analyis, ncol = 1) +
+                    labs(x = 'Isoform', y = 'Isoform Expression')
             }
 
 
@@ -2418,13 +2597,20 @@ expressionAnalysisPlot <- function(
 
             g3 <- g3 +
                 scale_fill_manual(values = c('darkgrey', '#333333')) +
-                labs(x = 'Isoform', y = 'Isoform Usage (IF)') +
-                facet_wrap( ~ Analyis, ncol = 1) +
                 localTheme + # modify to tilt conditions
                 theme(strip.background = element_rect(
                     fill = "white",
                     size = 0.5)
                 )
+
+            if( ! optimizeForCombinedPlot ) {
+                g3 <- g3 +
+                    labs(x = 'Isoform', y = 'Isoform Fraction (IF)', title = paste0('Isoform Usage in ', gene_name))
+            } else {
+                g3 <- g3 +
+                    facet_wrap( ~ Analyis, ncol = 1) +
+                    labs(x = 'Isoform', y = 'Isoform Fraction (IF)')
+            }
 
 
             plotList[['isoform_usage']] <- g3
@@ -2439,12 +2625,14 @@ expressionAnalysisPlot <- function(
 }
 
 switchPlot <- function(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
     condition1,
     condition2,
     IFcutoff = 0.05,
+    dIFcutoff = 0.1,
+    alphas = c(0.05, 0.001),
     rescaleTranscripts = TRUE,
     reverseMinus = TRUE,
     addErrorbars = TRUE,
@@ -2458,6 +2646,16 @@ switchPlot <- function(
         if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
+            )
+        }
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+            stop(
+                paste(
+                    'The switchAnalyzeRlist is made from pre-defined isoform switches',
+                    'which means it is made without defining conditions (as it should be).',
+                    '\nTherefore a switchPlot cannot be made. Use switchPlotTranscript() instead.',
+                    sep = ' '
+                )
             )
         }
 
@@ -2691,6 +2889,8 @@ switchPlot <- function(
             optimizeForCombinedPlot         = TRUE,
             condition1                      = condition1,
             condition2                      = condition2,
+            dIFcutoff                       = dIFcutoff,
+            IFcutoff                        = IFcutoff,
             plot                            = FALSE,
             localTheme                      = localTheme
         )
@@ -2892,7 +3092,7 @@ switchPlot <- function(
             size = localTheme$text$size * 0.6,
             fontface = 'bold',
             label = paste(
-                'Isoform Usage in ',
+                'The isoform switch in ',
                 geneName ,
                 ' (' ,
                 condition1,
@@ -3034,7 +3234,7 @@ switchPlot <- function(
 }
 
 switchPlotGeneExp <- function(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     condition1 = NULL,
     condition2 = NULL,
@@ -3065,7 +3265,7 @@ switchPlotGeneExp <- function(
 }
 
 switchPlotIsoExp <- function(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
     condition1 = NULL,
@@ -3100,7 +3300,7 @@ switchPlotIsoExp <- function(
 }
 
 switchPlotIsoUsage <- function(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
     condition1 = NULL,

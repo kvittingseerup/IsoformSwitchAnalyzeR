@@ -6,7 +6,7 @@ Import expression data from Kallisto, Salmon, RSEM or StringTie into R.
 }
 
 \description{
-A general-purpose import function which imports isoform expression data from Kallisto, Salmon, RSEM or StringTie into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Importantly this import function also enables (and per default performs) inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files.
+A general-purpose import function which imports isoform expression data from Kallisto, Salmon, RSEM or StringTie into R. This is a wrapper for the tximport package with some extra functionalities and is meant to be used to import the data and afterwards a switchAnalyzeRlist can be created with \code{importRdata}. It is highly reccomended that both the imported TxPM and counts values are used both in the creation of the switchAnalyzeRlist with \code{importRdata} (through the "isoformCountMatrix" and "isoformRepExpression" arguments). Importantly this import function also enables (and per default performs) inter-library normalization (via edgeR) of the abundance estimates. Note that the pattern argument allows import of only a subset of files. Can be used together with isoformToGeneExp() to get gene expression.
 }
 
 \usage{
@@ -107,26 +107,35 @@ Kristoffer Vitting-Seerup
 # and not something you need to do - just supply the string e.g.
 # "mySalmonQuantifications/" or 'mySalmonQuantifications/file1.sf' to the function
 
-### Import via parentDir
-salmonQuant <- importIsoformExpression(parentDir = system.file("extdata/", package="IsoformSwitchAnalyzeR"))
+### Import all quantifications stored in a folder
+salmonQuant <- importIsoformExpression(
+    parentDir = system.file("extdata/", package="IsoformSwitchAnalyzeR")
+)
 
 names(salmonQuant)
-
 head(salmonQuant$abundance, 2)
 
 
-### Import via sampleVector
+### Import individual quantificaiton files
 myFiles <- c(
     system.file("extdata/Fibroblasts_0/quant.sf", package="IsoformSwitchAnalyzeR"),
     system.file("extdata/Fibroblasts_1/quant.sf", package="IsoformSwitchAnalyzeR")
 )
 names(myFiles) <- c('Fibroblasts_0','Fibroblasts_1')
 
-salmonQuant <- importIsoformExpression(sampleVector = myFiles)
+salmonQuant <- importIsoformExpression(
+    sampleVector = myFiles
+)
 
 names(salmonQuant)
-
 head(salmonQuant$abundance, 2)
 
 
+### Get gene expression/count from isoform expression/count
+geneRepCount <- isoformToGeneExp(
+    isoformRepExpression  = salmonQuant$counts, # just change to "salmonQuant$abundance" to get gene abundances
+    isoformGeneAnnotation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
+)
+
+head(geneRepCount, 2)
 }

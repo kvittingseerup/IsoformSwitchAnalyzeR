@@ -3068,14 +3068,14 @@ extractConsequenceEnrichmentComparison <- function(
 
     ### Plot
     if(plot) {
-        fisherRes2 <- fisherRes
-        fisherRes2$consequence <- gsub(' \\(paired','\n\\(paired', fisherRes2$consequence)
-        fisherRes2$consequence <- gsub('with ','with\n', fisherRes2$consequence)
-
-        fisherRes2 <- fisherRes2[which(fisherRes2$forPlotting),]
+        fisherRes2 <- fisherRes[which(fisherRes$forPlotting),]
         if(nrow(fisherRes2) == 0) {
             stop('No features left to plot after subsetting with \'minEventsForPlotting\'.')
         }
+
+        fisherRes2$consequence <- gsub(' \\(paired','\n\\(paired', fisherRes2$consequence)
+        fisherRes2$consequence <- gsub('with ','with\n', fisherRes2$consequence)
+
 
         if(countGenes) {
             xText <- 'Fraction of genes having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)'

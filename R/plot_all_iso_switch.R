@@ -37,6 +37,8 @@ switchPlotTopSwitches <- function(
             if (n < 1) {
                 stop('The argument supplied to \'n\' must larger than 0')
             }
+        } else {
+            n <- Inf
         }
 
         if (!is.logical(sortByQvals)) {
@@ -317,7 +319,7 @@ switchPlotTopSwitches <- function(
                     }
 
                     ### (potentially) subset
-                    if (!is.na(n)) {
+                    if (!is.infinite(n)) {
                         if (n > nrow(localDataSorted)) {
                             warning(
                                 'The chosen n was larger than the number of advailable genes, only advailable genes were considered'
@@ -384,11 +386,11 @@ switchPlotTopSwitches <- function(
                           gsub('/|:','-',aDF$gene_id),
                           sep = '')
 
-                if (!is.na(aDF$gene_name)) {
+                if (any(!is.na(aDF$gene_name))) {
                     fileName <- paste(
                         fileName,
                         '_aka_',
-                        gsub('/|:','-',aDF$gene_name),
+                        gsub('/|:','-',na.omit(aDF$gene_name)),
                         sep = ''
                     )
                 }

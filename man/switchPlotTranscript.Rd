@@ -9,7 +9,7 @@ This function plots the transcript structure of all (or selected) isoforms from 
 \usage{
 
 switchPlotTranscript(
-    switchAnalyzeRlist = NULL,
+    switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
     rescaleTranscripts = TRUE,
@@ -17,6 +17,7 @@ switchPlotTranscript(
     reverseMinus = TRUE,
     ifMultipleIdenticalAnnotation = "summarize",
     annotationImportance = c('signal_peptide','protein_domain','idr'),
+    IFcutoff = 0.05,
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -24,6 +25,8 @@ switchPlotTranscript(
     optimizeForCombinedPlot = FALSE,
     condition1 = NULL,
     condition2 = NULL,
+    dIFcutoff = 0.1,
+    alphas = c(0.05, 0.001),
     localTheme = theme_bw(),
     plot = TRUE
 )
@@ -60,6 +63,10 @@ This argument determines how to visually handle if multiple instances of the sam
 Since some of the annotation collected potentially overlap (mainly protein domains and IDR) but only one can be visualized this argument controls the importance of the respective annotations. Must be a vector of strings indicating the order of the annotations in decreasing importance. All annotation must be mentioned even if they have not been analyzed. Default is c('signal_peptide','protein_domain','idr') which means that if an IDR and a protein domain overlap the protein domain will be visualized.
 }
 
+\item{IFcutoff}{
+The cutoff used for the minimum contribution to gene expression (in at least one condition) for an isoforms must have to be plotted (measured as Isoform Fraction (IF) values). Default is 0.05 (which removes isoforms with minor contribution).
+}
+
   \item{rectHegith}{
 When drawing the transcripts what should be the size of the non-coding (and UTR) regions (if the total height of a transcript is larger than 1 they start to overlap).
 }
@@ -76,11 +83,18 @@ The size of arrowhead drawn in the intron of transcripts. Default is 0.2
 A logic indicating whether to optimize for use with \code{switchPlot()}. Default is FALSE
 }
   \item{condition1}{
-First condition of the comparison to analyze must be the name used in the switchAnalyzeRlist. Only needed if \code{optimizeForCombinedPlot=TRUE} and more than one comparisons is analyzed.
+First condition of the comparison to analyze must be the name used in the switchAnalyzeRlist. If specified text indicating change in isoform usage is also added to the plot.
 }
   \item{condition2}{
-Second condition of the comparison to analyze, must be the name used in the switchAnalyzeRlist. Only needed if \code{optimizeForCombinedPlot=TRUE} and more than one comparisons is analyzed.
+Second condition of the comparison to analyze, must be the name used in the switchAnalyzeRlist. If specified text indicating change in isoform usage is also added to the plot.
 }
+
+\item{dIFcutoff}{
+The dIF cutoff used to add usage to the transcript plot. Only considered if both \code{condition1} and \code{condition2} are defined. Default is 0.1.
+}
+
+\item{alphas}{A numeric vector of length two giving the significance levels represented in the usage text added to the plot. The numbers indicate the q-value cutoff for significant (*) and highly significant (***) respecitively. Only considered if both \code{condition1} and \code{condition2} are defined. Default is 0.1. Default 0.05 and 0.001 which should be interpret as q<0.05 and q<0.001 respectively). If q-values are higher than this they will be annotated as 'ns' (not significant).}
+
   \item{localTheme}{
 General ggplot2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
 }

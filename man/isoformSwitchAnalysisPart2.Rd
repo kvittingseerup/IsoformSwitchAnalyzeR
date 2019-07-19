@@ -4,7 +4,7 @@
 Isoform Switch Analysis Workflow Part 2: Plot All Isoform Switches and Their Annotation
 }
 \description{
-This high-level function adds the results of the extrenal sequence analysis supplied (if any), then proceeds to annotate intron ration. Then functional consequences of the isoform switches are identified and isoform switch analysis plots are created for the top \code{n} isoform switches. Lastly a plot summarizing the functional consequences is created. This function is meant to be used after \link{isoformSwitchAnalysisPart1} have been used.
+This high-level function adds the results of the extrenal sequence analysis supplied (if any), then proceeds to analyze alternative splicing. Then functional consequences of the isoform switches are identified and isoform switch analysis plots are created for the top \code{n} isoform switches. Lastly a plot summarizing the functional consequences is created. This function is meant to be used after \link{isoformSwitchAnalysisPart1} have been used.
 }
 \usage{
 isoformSwitchAnalysisPart2(

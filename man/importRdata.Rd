@@ -46,19 +46,20 @@ importRdata(
 \item{isoformRepExpression}{ Optional but highly recommended: A data.frame with unfiltered normalized independent biological (aka not technical) replicate isoform expression (see FAQ in vignette for more detials). Ideal for supplying quantification measured in Transcripts Per Million (TxPM) or RPKM/FPKM. Must have a column called 'isoform_id' that matches the isoform_id column in \code{isoformExonAnnoation}. The name of the expression columns must match the sample names in the \code{designMatrix} argument. If not supplied RPKM values are calcualted from the count matrix and used instead.}
 
 \item{designMatrix}{
-A data.frame with the information of which samples originate from which conditions. Must be a data.frame containing these two collums:
+A data.frame with the information of which samples originate from which conditions. Must be a data.frame containing at least these two collums:
 \itemize{
     \item{\code{Column 1}: called 'sampleID'. This column contains the sample names and must match the column names used in \code{isoformRepExpression}.}
     \item{\code{Column 2}: called 'condition'. This column indicates with a string which conditions the sample originate from. If sample 1-3 originate form the same condition they should all have the same string (for example 'ctrl', in this column).}
 }
-Additional columns can be used to describe other co-factors such as batch effects or patient ids (for paired sample analysis). Additional co-factors can only be handled by \code{isoformSwitchTestDEXSeq} and \code{isoformSwitchTestDRIMSeq}.
+Additional columns can be used to describe other co-factors such as batch effects or patient ids (for paired sample analysis). For more information see discussion of cofactors in vignette.
 }
 
 \item{isoformExonAnnoation}{
 Can either be:
 \itemize{
     \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "myAnnotation/myGenome/isoformsQuantified.gtf")}
-    \item{\code{2}: A \code{GRange} object (see \code{?GRanges}) containing one entry per exon per isoform with the genomic coordinat of that isoform. This \code{GRange} should furthmore contain two meta data columns called 'isoform_id' and 'gene_id' indicating both which isoform the exon belongs to as well as which gene the isoform belongs to. The 'isoform_id' column must match the isoform ids used in the 'isoform_id' column of the \code{isoformRepExpression} data.frame. If possible we suggest that a third columns called 'gene_name' with the corresponding gene names is also added. If not supplied gene_name will be annotated as NA.}
+    \item{\code{2}: A string indicating the full path to the (gziped or unpacked) RefSeq GFF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GFF file. Please note only GFF files from RefSeq downloaded from \url{ftp://ftp.ncbi.nlm.nih.gov/genomes/} are supported (see database FAQ in vignette for more info). An example could be "refSeq/isoformsQuantified.gff")}
+    \item{\code{3}: A \code{GRange} object (see \code{?GRanges}) containing one entry per exon per isoform with the genomic coordinat of that isoform. This \code{GRange} should furthmore contain two meta data columns called 'isoform_id' and 'gene_id' indicating both which isoform the exon belongs to as well as which gene the isoform belongs to. The 'isoform_id' column must match the isoform ids used in the 'isoform_id' column of the \code{isoformRepExpression} data.frame. If possible we suggest that a third columns called 'gene_name' with the corresponding gene names is also added. If not supplied gene_name will be annotated as NA.}
 }
 }
 

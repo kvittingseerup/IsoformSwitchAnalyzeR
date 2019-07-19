@@ -13,6 +13,7 @@ isoformSwitchAnalysisPart1 <- function(
     quiet = FALSE
 ) {
     isConditional <- switchAnalyzeRlist$sourceId != 'preDefinedSwitches'
+    hasQuant <- ! all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall))
 
     nrAnalysis <- 3
 
@@ -43,12 +44,14 @@ isoformSwitchAnalysisPart1 <- function(
 
 
     ### Run preFilter
-    switchAnalyzeRlist <-
-        preFilter(
-            switchAnalyzeRlist = switchAnalyzeRlist,
-            removeSingleIsoformGenes = TRUE,
-            quiet = TRUE
-        )
+    if(hasQuant) {
+        switchAnalyzeRlist <-
+            preFilter(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                removeSingleIsoformGenes = TRUE,
+                quiet = TRUE
+            )
+    }
 
     ### Test isoform switches
     if(TRUE) {
@@ -131,15 +134,16 @@ isoformSwitchAnalysisPart1 <- function(
     }
 
     ### Predict ORF
-    if (!quiet) {
-        message(paste(
-            'Step 2 of',
-            nrAnalysis,
-            ': Predicting open reading frames',
-            sep = ' '
-        ))
-    }
     if (all(names(switchAnalyzeRlist) != 'orfAnalysis') | overwriteORF) {
+        if (!quiet) {
+            message(paste(
+                'Step 2 of',
+                nrAnalysis,
+                ': Predicting open reading frames',
+                sep = ' '
+            ))
+        }
+
         switchAnalyzeRlist <-
             analyzeORF(
                 switchAnalyzeRlist = switchAnalyzeRlist,
@@ -177,7 +181,7 @@ isoformSwitchAnalysisPart1 <- function(
 
     ### Print summary
     if (!quiet) {
-        message('\nThe number of isoform swithces found were:')
+        message('\nThe number of isoform switches found were:')
         print(
             extractSwitchSummary(
                 switchAnalyzeRlist,
@@ -430,6 +434,8 @@ isoformSwitchAnalysisPart2 <- function(
                 )
             )
         }
+
+
         if (fileType == 'pdf') {
             pdf(
                 file = paste(
@@ -440,15 +446,6 @@ isoformSwitchAnalysisPart2 <- function(
                 width = 10,
                 height = 7
             )
-            extractConsequenceSummary(
-                switchAnalyzeRlist = switchAnalyzeRlist,
-                asFractionTotal = asFractionTotal,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
-                plot = TRUE,
-                returnResult = FALSE
-            )
-            dev.off()
         } else {
             png(
                 filename = paste(
@@ -459,22 +456,83 @@ isoformSwitchAnalysisPart2 <- function(
                 width = 1000,
                 height = 700
             )
-            extractConsequenceSummary(
-                switchAnalyzeRlist = switchAnalyzeRlist,
-                asFractionTotal = asFractionTotal,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
-                plot = TRUE,
-                returnResult = FALSE
-            )
-            dev.off()
         }
+        extractConsequenceSummary(
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            asFractionTotal = asFractionTotal,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            plot = TRUE,
+            returnResult = FALSE
+        )
+        dev.off()
+
+
+        if (fileType == 'pdf') {
+            pdf(
+                file = paste(
+                    pathToOutput,
+                    '/switch_consequences_enrichment.pdf',
+                    sep = ''
+                ),
+                width = 10,
+                height = 7
+            )
+        } else {
+            png(
+                filename = paste(
+                    pathToOutput,
+                    '/switch_consequences_enrichment.png',
+                    sep = ''
+                ),
+                width = 1000,
+                height = 700
+            )
+        }
+        extractConsequenceEnrichment(
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            plot=TRUE,
+            returnResult = FALSE
+        )
+        dev.off()
+
+        if (fileType == 'pdf') {
+            pdf(
+                file = paste(
+                    pathToOutput,
+                    '/splicing_enrichment.pdf',
+                    sep = ''
+                ),
+                width = 10,
+                height = 7
+            )
+        } else {
+            png(
+                filename = paste(
+                    pathToOutput,
+                    '/splicing_enrichment.png',
+                    sep = ''
+                ),
+                width = 1000,
+                height = 700
+            )
+        }
+        extractSplicingEnrichment(
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            plot=TRUE,
+            returnResult = FALSE
+        )
+        dev.off()
     }
 
     ### Print summary
     if (!quiet) {
         message(
-            '\nThe number of isoform swithces with functional consequences identified were:'
+            '\nThe number of isoform switches with functional consequences identified were:'
         )
         print(
             extractSwitchSummary(

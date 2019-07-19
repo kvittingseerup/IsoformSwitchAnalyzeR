@@ -2108,14 +2108,16 @@ extractSplicingEnrichment <- function(
         )
 
         ### Add in NMD
-        localNMD <- data.frame(
-            isoform_id=switchAnalyzeRlist$orfAnalysis$isoform_id,
-            AStype='NMD',
-            genomic_start=ifelse(switchAnalyzeRlist$orfAnalysis$PTC, '0,0', '0'),
-            genomic_end=ifelse(switchAnalyzeRlist$orfAnalysis$PTC, '0,0', '0'),
-            stringsAsFactors = FALSE
-        )
-        localAS <- rbind(localAS , localNMD)
+        if('orfAnalysis' %in% names(switchAnalyzeRlist)) {
+            localNMD <- data.frame(
+                isoform_id=switchAnalyzeRlist$orfAnalysis$isoform_id,
+                AStype='NMD',
+                genomic_start=ifelse(switchAnalyzeRlist$orfAnalysis$PTC, '0,0', '0'),
+                genomic_end=ifelse(switchAnalyzeRlist$orfAnalysis$PTC, '0,0', '0'),
+                stringsAsFactors = FALSE
+            )
+            localAS <- rbind(localAS , localNMD)
+        }
     }
 
     ### Add AS to pairs
@@ -2282,31 +2284,35 @@ extractSplicingEnrichment <- function(
             levels = myOrder
         )
 
-        ### Subset based on minEvents
-        gainLossBalance <- gainLossBalance[which(
-            (gainLossBalance$nUp + gainLossBalance$nDown) >= minEventsForPlotting
-        ),]
-        if(nrow(gainLossBalance) == 0) {
-            stop('No features left for ploting after filtering with via "minEventsForPlotting" argument.')
-        }
 
-        gainLossBalance$nTot <- gainLossBalance$nUp + gainLossBalance$nDown
     }
 
     ### Plot result
     if(plot) {
+
+        ### Subset based on minEvents
+        gainLossBalance2 <- gainLossBalance[which(
+            (gainLossBalance$nUp + gainLossBalance$nDown) >= minEventsForPlotting
+        ),]
+
+        gainLossBalance2$nTot <- gainLossBalance2$nUp + gainLossBalance2$nDown
+
+        if(nrow(gainLossBalance2) == 0) {
+            stop('No features left for ploting after filtering with via "minEventsForPlotting" argument.')
+        }
+
         if( countGenes ) {
             xText <- 'Fraction of Switching Genes Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         } else {
             xText <- 'Fraction of Switches Primarly\nResulting in Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         }
 
-        gainLossBalance$AStype2 <- paste(
-            gainLossBalance$AStype, 'gain',
-            '\n(paried with',gainLossBalance$AStype, 'loss)'
+        gainLossBalance2$AStype2 <- paste(
+            gainLossBalance2$AStype, 'gain',
+            '\n(paried with',gainLossBalance2$AStype, 'loss)'
         )
 
-        g1 <- ggplot(data=gainLossBalance, aes(y=AStype2, x=propUp, color=Significant)) +
+        g1 <- ggplot(data=gainLossBalance2, aes(y=AStype2, x=propUp, color=Significant)) +
             #geom_point(size=4) +
             geom_point(aes(size=nTot)) +
             geom_errorbarh(aes(xmax = propUpCiHi, xmin=propUpCiLo), height = .3) +
@@ -2331,7 +2337,6 @@ extractSplicingEnrichment <- function(
     ### Return data
     if(returnResult) {
         if(returnSummary) {
-            gainLossBalance$nTot <- NULL
             return(gainLossBalance)
         } else {
             localConseq5 <- localConseq3[,c('gene_id','gene_name','AStype','isoformUpregulated','isoformDownregulated','iso_ref_up','iso_ref_down','condition_1','condition_2')]
@@ -2475,15 +2480,14 @@ extractSplicingEnrichmentComparison <- function(
         fisherRes2 <- fisherRes[which(
             fisherRes$forPlotting
         ),]
+        if(nrow(fisherRes2) == 0) {
+            stop('No features left to plot after subsetting with \'minEventsForPlotting\'.')
+        }
 
         fisherRes2$AStype2 <- paste(
             fisherRes2$AStype, 'gain',
             '\n(paried with',fisherRes2$AStype, 'loss)'
         )
-
-        if(nrow(fisherRes2) == 0) {
-            stop('No features left to plot after subsetting with \'minEventsForPlotting\'.')
-        }
 
         if( countGenes ) {
             xText <- 'Fraction of Switching Genes Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'

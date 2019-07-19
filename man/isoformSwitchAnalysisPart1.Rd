@@ -4,7 +4,7 @@
 Isoform Switch Analysis Workflow Part 1: Extract Isoform Switches and Their Sequences
 }
 \description{
-This high-level function takes either a CuffSet object or a pre-existing switchAnalyzeRlist as input. If the input is a CuffSet object a switchAnalyzeRlist is created or else the function uses the provieded switchAnalyzeRlist. Then isoform switches are predicted (unless \code{switchTestMethod='none'}) and ORF are predicted if not already annotated. Lastly the function extracts the nucleotide sequence and the ORF AA sequences of the isoforms involved in isoform switches. Thes sequences are both saved to external files and added to the switchAnalyzeRlist to enable external and internal sequence analysis respectively.
+This high-level function takes a pre-existing switchAnalyzeRlist as input. Then part 1 of the workflow is performed. Specifically it is filtered to remove low expression, isoform switches are identified via the statistical methods (unless \code{switchTestMethod='none'}) and ORF are predicted if not already annotated. Lastly the function extracts the nucleotide sequence and the ORF AA sequences of the isoforms involved in isoform switches. These sequences are both saved to external files and added to the switchAnalyzeRlist to enable external and internal sequence analysis respectively.
 
 This function is meant to be used as part 1 of the isoform switch analysis workflow, which can be followed by the second step via \code{isoformSwitchAnalysisPart2}.
 }

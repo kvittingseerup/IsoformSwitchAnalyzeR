@@ -1035,6 +1035,10 @@ extractSequence <- function(
                     transcriptORFaaSeq <-
                         transcriptORFaaSeq[which(!names(transcriptORFaaSeq) %in% stopDataToRemove$isoform_id)]
 
+                    switchORFannotation <- switchORFannotation[which(
+                        ! switchORFannotation$isoform_id %in% stopDataToRemove$isoform_id
+                    ),]
+
                 } else {
                     warning(
                         paste(

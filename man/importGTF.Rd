@@ -4,7 +4,7 @@
 Import Transcripts from a GTF file into R
 }
 \description{
-Function for importing a GTF (can be either gziped or unpacked) into R as a \code{switchAnalyzeRlist}. This approach is well suited if you just want to annotate a transcriptome and are not interested in expression. If you are interested in expression estimates it is easier to use \link{importRdata}.
+Function for importing a (gziped or unpacked) GTF/GFF file into R as a \code{switchAnalyzeRlist}. This approach is well suited if you just want to annotate a transcriptome and are not interested in expression. If you are interested in expression estimates it is easier to use \link{importRdata}.
 }
 \usage{
 importGTF(
@@ -23,7 +23,13 @@ importGTF(
 )
 }
 \arguments{
-\item{pathToGTF}{ A string indicating the full path to the (gziped or unpacked) GTF that should be imported.}
+\item{pathToGTF}{
+Can either be:
+\itemize{
+    \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "myAnnotation/myGenome/isoformsQuantified.gtf")}
+    \item{\code{2}: A string indicating the full path to the (gziped or unpacked) RefSeq GFF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GFF file. Please note only GFF files from RefSeq downloaded from \url{ftp://ftp.ncbi.nlm.nih.gov/genomes/} are supported (see database FAQ in vignette for more info). An example could be "refSeq/isoformsQuantified.gff")}
+}
+}
 
 \item{isoformNtFasta}{
 A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucloetide (genomic) sequence of all isoforms quantified. This is usefull for: 1) people working with non-model organisms where extracting the sequnce from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index).

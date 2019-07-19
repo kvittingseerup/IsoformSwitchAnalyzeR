@@ -4,7 +4,7 @@
 Summarize isoform expression to gene level expression.
 }
 \description{
-This function extract gene expression from isoform expression by for each condition summing the expression of all isoforms belonging to a specific gene.
+This function extract gene count/expression from isoform count/expression by for each condition summing the expression of all isoforms belonging to a specific gene. It can automatically extract the isoform:gene reationship from multiple filetypes incuding GTF/GFF files and isoformSwitchAnalyzeRlists
 }
 \usage{
 isoformToGeneExp(
@@ -25,7 +25,13 @@ Importantly \code{isoformRepExpression} must contain isoform ids either as seper
 }
 
 \item{isoformGeneAnnotation}{
-A data.frame or GRange with two (meta) collumns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.
+Can be either of:
+\itemize{
+    \item{A data.frame with two columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.}
+    \item{A GRange with two meta-columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.}
+    \item{The path to a GTF}.
+    \item{A switchAnalyzeRlist}.
+    }
 }
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
@@ -55,14 +61,52 @@ Kristoffer Vitting-Seerup
 ### Import quantifications
 salmonQuant <- importIsoformExpression(system.file("extdata/", package="IsoformSwitchAnalyzeR"))
 
+### Summarize to gene level via GTF file
+geneRepCount <- isoformToGeneExp(
+    isoformRepExpression  = salmonQuant$counts,
+    isoformGeneAnnotation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
+)
 
-### Extract gene info
-localAnnotaion <- rtracklayer::import(system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"))[,c('transcript_id','gene_id')]
-colnames(localAnnotaion@elementMetadata)[1] <- 'isoform_id'
 
-### Summarize to gene level
+
+### Summarize to gene level via data.frame file
+# get data.frame
+localAnnotaion <- as.data.frame(
+    mcols(
+        rtracklayer::import(
+            system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
+        )
+    )[,c('transcript_id','gene_id')]
+)
+colnames(localAnnotaion)[1] <- 'isoform_id'
+
 geneRepCount <- isoformToGeneExp(
     isoformRepExpression  = salmonQuant$counts,
     isoformGeneAnnotation = localAnnotaion
 )
+
+
+### From switchAnalyzeRlist
+# create design
+myDesign <- data.frame(
+    sampleID = colnames(salmonQuant$abundance)[-1],
+    condition = gsub('_.*', '', colnames(salmonQuant$abundance)[-1])
+)
+
+# Create switchAnalyzeRlist
+aSwitchList <- importRdata(
+    isoformCountMatrix   = salmonQuant$counts,
+    isoformRepExpression = salmonQuant$abundance,
+    designMatrix         = myDesign,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"),
+    isoformNtFasta       = system.file("extdata/example_isoform_nt.fasta.gz", package="IsoformSwitchAnalyzeR")
+)
+
+
+geneRepCount <- isoformToGeneExp(
+    isoformRepExpression  = aSwitchList$isoformCountMatrix,
+    isoformGeneAnnotation = aSwitchList
+)
+
+
 }

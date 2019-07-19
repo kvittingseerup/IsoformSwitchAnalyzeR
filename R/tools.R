@@ -481,7 +481,7 @@ isoformToGeneExp <- function(
     isoformGeneAnnotation=NULL,
     quiet = FALSE
 ) {
-    ### Test input
+    ### Test and obtain input
     if(TRUE) {
         geneInfoInExp <- 'gene_id' %in% colnames(isoformRepExpression)
         geneInfoSeperately <- !is.null(isoformGeneAnnotation)
@@ -520,15 +520,46 @@ isoformToGeneExp <- function(
         if( geneInfoSeperately ) {
             if( 'GRanges' %in% class(isoformGeneAnnotation) ) {
                 isoAnnot <- unique(as.data.frame(mcols( isoformGeneAnnotation )[,c('gene_id','isoform_id')]))
+
             } else if( 'data.frame' %in% class(isoformGeneAnnotation) ) {
                 isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
-            } else{
+
+            } else if( is(isoformGeneAnnotation, 'character') ){
+                if (!quiet) {
+                    message('Importing GTF/GFF - this may take a while...')
+                }
+                localSwitchList <- importGTF(pathToGTF = isoformGeneAnnotation, addAnnotatedORFs = FALSE, quiet = TRUE)
+                isoAnnot <- unique(localSwitchList$isoformFeatures[,c('gene_id','isoform_id')])
+                if (!quiet) {
+                    message('Import of GTF/GFF done')
+                }
+
+            } else if( is(isoformGeneAnnotation, 'switchAnalyzeRlist') ) {
+                isoAnnot <- unique(isoformGeneAnnotation$isoformFeatures[,c('gene_id','isoform_id')])
+            } else {
                 stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
             }
 
+            isoAnnot <- isoAnnot[which( isoAnnot$isoform_id %in% isoformRepExpression$isoform_id),]
+
             ### Look into overlap
             if( jaccardSimilarity( isoAnnot$isoform_id, isoformRepExpression$isoform_id ) != 1 ) {
-                stop('All isoforms stored in the expression matrix must be in the provided annotation and vice versa')
+
+                expIso <- unique(isoformRepExpression$isoform_id)
+                onlyInExp <- setdiff(expIso, isoAnnot$isoform_id)
+
+                stop(
+                    paste(
+                        'The annotation and quantification (count/abundance matrix and isoform annotation)',
+                        'seems to be different.',
+                        '\nSpecifically:\n',
+                        length(expIso), 'isoforms were quantified.\n',
+                        length(unique(isoAnnot$isoform_id)), 'isoforms are annotated.\n',
+                        'Only', length(intersect(expIso, isoAnnot$isoform_id)), 'overlap.',
+                        sep=' '
+                    )
+                )
+
             }
         }
 
@@ -538,9 +569,9 @@ isoformToGeneExp <- function(
     if(TRUE) {
         if(geneInfoSeperately) {
             isoformRepExpression$gene_id <-
-                isoformGeneAnnotation$gene_id[match(
+                isoAnnot$gene_id[match(
                     isoformRepExpression$isoform_id,
-                    isoformGeneAnnotation$isoform_id
+                    isoAnnot$isoform_id
                 )]
         }
         if( ! 'gene_id' %in% colnames(isoformRepExpression) ) {
@@ -1109,9 +1140,7 @@ extractSwitchPairs <- function(
     switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
-    onlySigIsoforms = FALSE,
-    showProgress = TRUE,
-    quiet = FALSE
+    onlySigIsoforms = FALSE
 ) {
     ### Check input
     if (TRUE) {
@@ -1142,13 +1171,7 @@ extractSwitchPairs <- function(
         }
     }
 
-    if (showProgress & !quiet) {
-        progressBar <- 'text'
-    } else {
-        progressBar <- 'none'
-    }
-
-    ### Subset to relevant data
+    ### Extract and massage data
     if (TRUE) {
         localData <- switchAnalyzeRlist$isoformFeatures[
             which(
@@ -1173,107 +1196,94 @@ extractSwitchPairs <- function(
         localData$switchDirection[which(sign(localData$dIF) ==  1)] <- 'up'
         localData$switchDirection[which(sign(localData$dIF) == -1)] <- 'down'
 
-        ### split based on genes and conditions
-        localDataList <-
-            split(
-                localData[,c(
-                    'iso_ref',
-                    'gene_ref',
-                    'isoform_switch_q_value',
-                    'gene_switch_q_value',
-                    'dIF',
-                    'switchDirection'
-                )],
-                f = localData$gene_ref,
-                drop = TRUE
-            )
-
-        ### Extract pairs of isoforms passing the filters
-        pairwiseIsoComparisonList <-
-            plyr::llply(
-                .data = localDataList,
-                .progress = 'none',
-                .fun = function(aDF) {
-                    # aDF <- localDataList[[171]]
-                    isoResTest <-
-                        any(!is.na(
-                            switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-                        ))
-                    if (isoResTest) {
-                        sigIso <- aDF$iso_ref[which(
-                            aDF$isoform_switch_q_value < alpha &
-                                abs(aDF$dIF) > dIFcutoff
-                        )]
-                    } else {
-                        sigIso <- aDF$iso_ref[which(
-                            aDF$gene_switch_q_value < alpha &
-                                abs(aDF$dIF) > dIFcutoff
-                        )]
-                    }
-                    if (length(sigIso) == 0) {
-                        return(NULL)
-                    }
-
-                    ### reduce to significant if nessesary
-                    if (onlySigIsoforms) {
-                        aDF <- aDF[which(aDF$iso_ref %in% sigIso), ]
-                    }
-                    if (nrow(aDF) < 2) {
-                        return(NULL)
-                    }
-
-                    ### make sure there are both up and down
-                    if (!all(c('up', 'down') %in% aDF$switchDirection)) {
-                        return(NULL)
-                    }
-
-                    ### extract pairs of isoforms
-                    upIso   <-
-                        as.vector(aDF$iso_ref[which(
-                            aDF$switchDirection == 'up'
-                        )])
-                    downIso <-
-                        as.vector(aDF$iso_ref[which(
-                            aDF$switchDirection == 'down'
-                        )])
-
-                    allIsoCombinations <-
-                        setNames(
-                            base::expand.grid(
-                                upIso,
-                                downIso,
-                                stringsAsFactors = FALSE,
-                                KEEP.OUT.ATTRS = FALSE
-                            ),
-                            nm = c('iso_ref_up', 'iso_ref_down')
-                        )
-
-                    ### Reduce to those where at least one of them is significant
-                    allIsoCombinations <-
-                        allIsoCombinations[which(
-                            allIsoCombinations$iso_ref_up %in% sigIso |
-                                allIsoCombinations$iso_ref_down %in% sigIso
-                        ), ]
-
-                    ### Add gen ref
-                    allIsoCombinations$gene_ref    <- aDF$gene_ref[1]
-
-                    return(allIsoCombinations)
-                }
-            )
-
-        ### Remove empty entries
-        pairwiseIsoComparisonList <-
-            pairwiseIsoComparisonList[which(
-                ! sapply(pairwiseIsoComparisonList, is.null)
-            )]
-        if (length(pairwiseIsoComparisonList) == 0) {
-            stop('No candidate genes with the required cutoffs were found')
+        ### Annotate significant features
+        isoResTest <-
+            any(!is.na(
+                switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
+            ))
+        if (isoResTest) {
+            localData$isoSig <-
+                localData$isoform_switch_q_value < alpha &
+                abs(localData$dIF) > dIFcutoff
+        } else {
+            localData$isoSig <-
+                localData$gene_switch_q_value < alpha &
+                abs(localData$dIF) > dIFcutoff
         }
 
-        ### Conver to data.frame
-        pairwiseIsoComparison <-
-            myListToDf(pairwiseIsoComparisonList, addOrignAsColumn = FALSE)
+
+        if(onlySigIsoforms) {
+            localData <- localData[which( localData$isoSig ),]
+        }
+    }
+
+
+    ### Create data sub-sets of interest
+    if(TRUE) {
+        sigUpData <- localData[which(
+            localData$isoSig & localData$switchDirection == 'up'
+        ),c('iso_ref','gene_ref')]
+        sigDnData <- localData[which(
+            localData$isoSig & localData$switchDirection == 'down'
+        ),c('iso_ref','gene_ref')]
+
+        colnames(sigUpData)[1] <- c('iso_ref_up')
+        colnames(sigDnData)[1] <- c('iso_ref_down')
+
+
+        if( ! onlySigIsoforms ) {
+            justUpData <- localData[which(
+                localData$switchDirection == 'up'
+            ),c('iso_ref','gene_ref')]
+            justDnData <- localData[which(
+                localData$switchDirection == 'down'
+            ),c('iso_ref','gene_ref')]
+
+            colnames(justUpData)[1]  <- c('iso_ref_up')
+            colnames(justDnData)[1] <- c('iso_ref_down')
+        }
+    }
+
+    ### Join datasets to extract pairs
+    if(TRUE) {
+        if( onlySigIsoforms ) {
+            pairwiseIsoComparison <- dplyr::inner_join(
+                sigUpData,
+                sigDnData,
+                by= 'gene_ref'
+            )
+        } else {
+            ### Sig up and all down
+            upPairs <- dplyr::inner_join(
+                sigUpData,
+                justDnData,
+                by= 'gene_ref'
+            )
+            ### Sig down and all up
+            dnPairs <- dplyr::inner_join(
+                justUpData,
+                sigDnData,
+                by= 'gene_ref'
+            )
+
+            ### Combine
+            pairwiseIsoComparison <- unique(
+                rbind(
+                    upPairs,
+                    dnPairs
+                )
+            )
+            pairwiseIsoComparison <- pairwiseIsoComparison[,c(
+                'gene_ref','iso_ref_up','iso_ref_down'
+            )]
+
+            ### Reorder
+            pairwiseIsoComparison <- pairwiseIsoComparison[order(
+                pairwiseIsoComparison$gene_ref,
+                pairwiseIsoComparison$iso_ref_up,
+                pairwiseIsoComparison$iso_ref_down
+            ),]
+        }
     }
 
     ### Add in additional data
@@ -1307,6 +1317,6 @@ extractSwitchPairs <- function(
 
     }
 
-    return(pairwiseIsoComparison)
+    return( pairwiseIsoComparison )
 }
 

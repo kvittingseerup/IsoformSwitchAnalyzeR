@@ -24,7 +24,7 @@ analyzeNetSurfP2(
 A \code{switchAnalyzeRlist} object
 }
   \item{pathToNetSurfP2resultFile}{
-A string indicating the full path to the NetSurfP-2 result file. Can be gziped.
+A string indicating the full path to the NetSurfP-2 result file. Can be gziped. If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings.
 }
 
 \item{smoothingWindowSize}{
@@ -48,7 +48,7 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 \details{
 Intrinsically Disordered Regions (IDR) are regions of a protein which does not have a fixed three-dimentional structure (oposite protein domains). Such regions are thought to play important roles in all aspects of biolgiy (and when it goes wrong) through multiple different functional aspectcs - including facilitating protein interactions.
 
-The NetSurfP web-server currently have no restriction on the number of sequences in the file uploaded so we sugget using the combined aa fasta file. See \link{extractSequence} for info on how to split the amino acid fasta files.
+The NetSurfP web-server currently have a restriction of max 4000 sequences in the file uploaded. If you have more than that (one for each isoform in \code{summary( switchAnalyzeRlist)}) we reccomend multiple runs each with one of the the files containg subsets - else you can just run the combined fasta file. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools: \cr
 Use default paramters. If you want to use the webserver it is easily done as follows:
