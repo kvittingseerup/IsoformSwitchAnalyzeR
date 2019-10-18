@@ -44,7 +44,7 @@ The cutoff on isoform usage (measured as Isoform Fraction, see details) which is
 }
 
   \item{acceptedGeneBiotype}{
-A vector of strings indicating which gene biotypes (data typically optained from GTF files). Can be any biotype annotated, the most common beeing: "protein_coding", "lincRNA" and "antisense". Default is NULL.
+A vector of strings indicating which gene biotypes (data typically obtained from GTF files). Can be any biotype annotated, the most common being: "protein_coding", "lincRNA" and "antisense". Default is NULL.
 }
 
   \item{acceptedIsoformClassCode}{
@@ -59,7 +59,7 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 }
 
 \item{reduceFurtherToGenesWithConsequencePotential}{
-A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which have the potential to find isoform switches with predicted consequences. This argument is a more strict version of \code{reduceToSwitchingGenes} as it not only requires that at least one isoform is significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) but also that there is an isoform with the opposite effect size (e.g. used less if the first isoform is used more). The minimum effect size of the opposing isoform usage is also controled by \code{dIFcutoff}. The exsistence of such an opposing isoform means a switch pair can be formed. It is these pairs that can be analyzed for functional consequences further downstream in the IsoformSwitchAnalyzeR workflow. Enabling this will make the downstream analysis a even faster (than just using reduceToSwitchingGenes) since fewer genes needs to be analyzed. Requires that \code{reduceToSwitchingGenes=TRUE} to have any effect. Default is FALSE.
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which have the potential to find isoform switches with predicted consequences. This argument is a more strict version of \code{reduceToSwitchingGenes} as it not only requires that at least one isoform is significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) but also that there is an isoform with the opposite effect size (e.g. used less if the first isoform is used more). The minimum effect size of the opposing isoform usage is also controlled by \code{dIFcutoff}. The existence of such an opposing isoform means a switch pair can be formed. It is these pairs that can be analyzed for functional consequences further downstream in the IsoformSwitchAnalyzeR workflow. Enabling this will make the downstream analysis a even faster (than just using reduceToSwitchingGenes) since fewer genes needs to be analyzed. Requires that \code{reduceToSwitchingGenes=TRUE} to have any effect. Default is FALSE.
 }
 
 \item{onlySigIsoforms}{
@@ -67,11 +67,11 @@ A logic indicating whether both isoforms the pairs considered if \code{reduceFur
 }
 
 \item{keepIsoformInAllConditions}{
-A logic indicating whether the an isoform should be kept in all comparisons even if it is only passes the filters in one comparison. Defalt is FALSE.
+A logic indicating whether the an isoform should be kept in all comparisons even if it is only passes the filters in one comparison. Default is FALSE.
 }
 
   \item{alpha}{
-The cutoff which the (calibrated) fdr correct p-values must be smaller than for calling significant switches. Only considered if \code{reduceToSwitchingGenes=TRUE}. Defuault is 0.05.
+The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Only considered if \code{reduceToSwitchingGenes=TRUE}. Default is 0.05.
 }
 
 \item{dIFcutoff}{
@@ -84,7 +84,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 
 
 \details{
-The filtering works by first requiring that the average isoforms/genes expression/usage accross all samples is expressed above the cutoffs supplied, then the data is filtered for isoform classes and lastly for single-isoform genes.\cr
+The filtering works by first requiring that the average isoforms/genes expression/usage across all samples is expressed above the cutoffs supplied, then the data is filtered for isoform classes and lastly for single-isoform genes.\cr
 
 Especially the filter for gene expression can be important since a fundamental problem with the IF values (calculated as <isoform_exp> / <gene_exp>) is when the gene expression is low it causes the IF measure to loose precision. This can easily be illustrated with the following example: Lets consider a gene with two isoforms which are expressed so they contribute to the gene expression with 73.3\% and 26.7\%, if we have 100 RNA-seq reads to describe these the problem is easy and we recapitulate the 73\%/27\% ratio. If we only have 10 reads the measurements get a little more inaccurate since the estimates now will be 70\% vs 30\%. If the gene is even lower expressed say 5 reads the estimates become 80\%/20\%. Therefore we want to filter out these genes.
 

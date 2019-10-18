@@ -30,18 +30,18 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 }
 
 \details{
-A protein domain is a part of a protein which by itself can maintain a fixed three-dimentional structure. Protein domains are found in most proteins and usually have a specific function.
+A protein domain is a part of a protein which by itself can maintain a fixed three-dimensional structure. Protein domains are found in most proteins and usually have a specific function.
 
-The PFAM webserver is quite strict with regards to the number of sequences in the files uploaded so we sugget multiple runs each with one of the the files containg subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
+The PFAM webserver is quite strict with regards to the number of sequences in the files uploaded so we suggest multiple runs each with one of the the files containing subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools: \cr
-Use default paramters. If you want to use the webserver it is easily done as follows:.
+Use default parameters. If you want to use the webserver it is easily done as follows:.
 1) Go to \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan}
 2) Switch to the the "Upload a File" tab.
-3) Upload the amino acoid file (_AA) created with \code{extractSequence} file and add your mail adress - this is important beacue there is currently no way of downloading the web output so you need them to send the result to your email.
+3) Upload the amino avoid file (_AA) created with \code{extractSequence} file and add your mail address - this is important because there is currently no way of downloading the web output so you need them to send the result to your email.
 4) Check Pfam is selected in the "HMM database" window.
 5) Submit your job.
-6) Wait till you recieve the email with the result (usually quite fast).
+6) Wait till you receive the email with the result (usually quite fast).
 7) Copy/paste the result part of the (ONLY what is below the line starting with "seq id") into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)).
 8) Save the document and supply the path to that document to analyzePFAM()
 
@@ -53,7 +53,7 @@ Please note that the \code{analyzePFAM()} function will automatically only impor
 }
 
 \value{
-A colum called 'domain_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains any protein domains or not. Furthermore the data.frame 'domainAnalysis' is added to the \code{switchAnalyzeRlist} containing the details about domain names(s) and position for each transcript (where domain(s) were found).
+A column called 'domain_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains any protein domains or not. Furthermore the data.frame 'domainAnalysis' is added to the \code{switchAnalyzeRlist} containing the details about domain names(s) and position for each transcript (where domain(s) were found).
 
 The data.frame added have one row per isoform and contains the columns:
 \itemize{
@@ -68,10 +68,10 @@ The data.frame added have one row per isoform and contains the columns:
     \item{\code{transcriptEnd}: The transcript coordinate of the end of the domain.}
     \item{\code{pfamStarExon}: The exon index in which the start of the domain is located.}
     \item{\code{pfamEndExon}: The exon index in which the end of the domain is located.}
-    \item{\code{pfamStartGenomic}: The genomic coordinat of the start of the domain.}
-    \item{\code{pfamEndGenomic}:  The genomic coordinat of the end of the domain.}
+    \item{\code{pfamStartGenomic}: The genomic coordinate of the start of the domain.}
+    \item{\code{pfamEndGenomic}:  The genomic coordinate of the end of the domain.}
 }
-Furthermore depending on the exact tool used (local vs web-server) additional collums are added with inforation such as E score and type.
+Furthermore depending on the exact tool used (local vs web-server) additional columns are added with information such as E score and type.
 }
 
 \references{

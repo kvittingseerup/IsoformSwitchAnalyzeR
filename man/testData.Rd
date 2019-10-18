@@ -18,7 +18,6 @@ data("exampleSwitchList")
 data("exampleSwitchListIntermediary")
 
 data("exampleSwitchListAnalyzed")
-
 }
 
 \format{
@@ -35,7 +34,7 @@ The three example switchAnalyzeRlist are:
 }
 
 \source{
-exampleSwitchList and exampleSwitchListIntermediary is a modified subset of a dataset comparing human Embryonic Stemm Cells (hESC) vs induced Pluripotent Cells (iPS) and mature cells (Fibroblast) originally released with the cummeRbund package. This data is only included to provide examples for usage of function. As it is modified to illustrate the package it should not be considered real and no conclusions should be made from it.
+exampleSwitchList and exampleSwitchListIntermediary is a modified subset of a dataset comparing human Embryonic Stemm Cells (hESC) vs induced Pluripotent Cells (iPS) and mature cells (Fibroblast) originally released with the cummeRbund R package. This data is only included to provide examples for usage of function. As it is modified to illustrate the package it should not be considered real and no biological conclusions should be made from it.
 
 The exampleSwitchListAnalyzed is a subset of two of the TCGA Cancer types analyzed in Vitting-Seerup et al 2017 and are unmodified meaning results are real!
 }

@@ -1,10 +1,10 @@
 \name{isoformToGeneExp}
 \alias{isoformToGeneExp}
 \title{
-Summarize isoform expression to gene level expression.
+Sum transcript/isoform expression to gene get level expression.
 }
 \description{
-This function extract gene count/expression from isoform count/expression by for each condition summing the expression of all isoforms belonging to a specific gene. It can automatically extract the isoform:gene reationship from multiple filetypes incuding GTF/GFF files and isoformSwitchAnalyzeRlists
+This function extract gene count/expression from isoform count/expression by for each condition summing the expression of all isoforms belonging to a specific gene. It can automatically extract the isoform:gene relationship from multiple file-types including GTF/GFF files and isoformSwitchAnalyzeRlists
 }
 \usage{
 isoformToGeneExp(
@@ -16,12 +16,12 @@ isoformToGeneExp(
 
 \arguments{
 \item{isoformRepExpression}{
-A replicate isoform abundace matrix (not log-transformed). The isoform:gene relationship can be provided by either:
+A replicate isoform abundance matrix (not log-transformed) with genes as rows and samples as columns. The isoform:gene relationship can be provided by either:
 \itemize{
-    \item{Having \code{isoformRepExpression} contain two additional colmns 'isoform_id' and 'gene_id' indicating which isoforms are a part of which gene}
+    \item{Having \code{isoformRepExpression} contain two additional columns 'isoform_id' and 'gene_id' indicating which isoforms are a part of which gene}
     \item{Using the {isoformGeneAnnotation} argument}.
 }
-Importantly \code{isoformRepExpression} must contain isoform ids either as seperate colum called 'isoform_id' or as row.names. The function will figure it out by itself in what combination the annotation is supplied.
+Importantly \code{isoformRepExpression} must contain isoform ids either as separate column called 'isoform_id' or as row.names. The function will figure it out by itself in what combination the annotation is supplied.
 }
 
 \item{isoformGeneAnnotation}{
@@ -29,7 +29,7 @@ Can be either of:
 \itemize{
     \item{A data.frame with two columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.}
     \item{A GRange with two meta-columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.}
-    \item{The path to a GTF}.
+    \item{The path to a GTF file containing the annotation}.
     \item{A switchAnalyzeRlist}.
     }
 }
@@ -38,7 +38,7 @@ Can be either of:
 }
 
 \value{
-This function returns a data.frame where the first column is the gene id followed by the gene expression in all samples.
+This function returns a data.frame with gene expression from all samples. The gene_ids will be given in the same way they were presented in the \code{isoformRepExpression} input (as row.names or as a separate column (gene_id))
 }
 
 \references{

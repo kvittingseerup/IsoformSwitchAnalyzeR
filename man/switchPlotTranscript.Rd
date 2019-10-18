@@ -1,7 +1,7 @@
 \name{switchPlotTranscript}
 \alias{switchPlotTranscript}
 \title{
-Plot Transcript Structure and Annoation
+Plot Transcript Structure and Annotation
 }
 \description{
 This function plots the transcript structure of all (or selected) isoforms from a gene along with all the annotation added to the \code{switchAnalyzeRlist} including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains as well as annotated signal peptides.
@@ -44,7 +44,7 @@ Either the gene_id or the gene name of the gene to plot, alternatively one can u
 A vector of the id(s) of which isoform(s) (from the same gene) to plot, alternatively one can use the \code{gene_id} argument to plot all isoforms of a gene.
 }
   \item{rescaleTranscripts}{
-A Logical indicating whether all the isoforms should be rescaled to the squareroot of their original sizes. This feature is implemented because introns usually are much larger than exons making it difficult to see structural changes. This is very usefull for structural visualization but the scaling might distort actual intron and exon sizes. Default is TRUE.
+A Logical indicating whether all the isoforms should be rescaled to the square root of their original sizes. This feature is implemented because introns usually are much larger than exons making it difficult to see structural changes. This is very useful for structural visualization but the scaling might distort actual intron and exon sizes. Default is TRUE.
 }
 
   \item{plotXaxis}{
@@ -56,11 +56,11 @@ A logic indicating whether isoforms on minus strand should be inverted so they a
 }
 
   \item{ifMultipleIdenticalAnnotation}{
-This argument determines how to visually handle if multiple instances of the same domain is found, the options are A) \'summarize\' which will assign one color to all the domains (and adding the number of domains in a bracket in the legend). B) \'number\' which will add a number to each domain and give each domain a seperate color. Default is \'summarize\'. C) \'ignore\' which will cause IsoformSwitchAnalyzeR to just plot all of them in the same color but without highlighting differences in numbers.
+This argument determines how to visually handle if multiple instances of the same domain is found, the options are A) \'summarize\' which will assign one color to all the domains (and adding the number of domains in a bracket in the legend). B) \'number\' which will add a number to each domain and give each domain a separate color. Default is \'summarize\'. C) \'ignore\' which will cause IsoformSwitchAnalyzeR to just plot all of them in the same color but without highlighting differences in numbers.
 }
 
   \item{annotationImportance}{
-Since some of the annotation collected potentially overlap (mainly protein domains and IDR) but only one can be visualized this argument controls the importance of the respective annotations. Must be a vector of strings indicating the order of the annotations in decreasing importance. All annotation must be mentioned even if they have not been analyzed. Default is c('signal_peptide','protein_domain','idr') which means that if an IDR and a protein domain overlap the protein domain will be visualized.
+Since some of the annotation collected potentially overlap (mainly protein domains and IDR) but only one can be visualized for a given position in the transcript this argument controls the importance of the respective annotations. This argument is used to control which annotation is shown for a given position in the transcript. Must be a vector of strings indicating the order of the annotations in decreasing importance. All annotation must be mentioned even if they have not been analyzed. Default is c('signal_peptide','protein_domain','idr') which means that if an IDR and a protein domain partially overlap the protein domain will be visualized for the overlapping region (non-overlapping regions are not affected).
 }
 
 \item{IFcutoff}{
@@ -93,7 +93,7 @@ Second condition of the comparison to analyze, must be the name used in the swit
 The dIF cutoff used to add usage to the transcript plot. Only considered if both \code{condition1} and \code{condition2} are defined. Default is 0.1.
 }
 
-\item{alphas}{A numeric vector of length two giving the significance levels represented in the usage text added to the plot. The numbers indicate the q-value cutoff for significant (*) and highly significant (***) respecitively. Only considered if both \code{condition1} and \code{condition2} are defined. Default is 0.1. Default 0.05 and 0.001 which should be interpret as q<0.05 and q<0.001 respectively). If q-values are higher than this they will be annotated as 'ns' (not significant).}
+\item{alphas}{A numeric vector of length two giving the significance levels represented in the usage text added to the plot. The numbers indicate the q-value cutoff for significant (*) and highly significant (***) respectively. Only considered if both \code{condition1} and \code{condition2} are defined. Default is 0.1. Default 0.05 and 0.001 which should be interpret as q<0.05 and q<0.001 respectively). If q-values are higher than this they will be annotated as 'ns' (not significant).}
 
   \item{localTheme}{
 General ggplot2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
@@ -107,15 +107,15 @@ A Logical indicating whether the final plot should be plotted (TRUE) or returned
 This function generates a plot visualizing all the annotation for the transcripts gathered. The plot supports visualization of:
 \itemize{
 
-    \item \code{ORF} : Making the ORF part of the transcript thicker. Requires that ORF have been annotated (fx. via \code{analyzeORF}).
+    \item \code{ORF} : Making the ORF part of the transcript thicker. Requires that ORF have been annotated (e.g.. via \code{analyzeORF}).
 
     \item{\code{Coding Potential / NMD} : The transcripts will be plotted in 3 categories: 'Coding', 'Non-coding' and 'NMD-sensitive'. The annotation of 'Coding' and 'Non-coding' requires the result of an external CPAT analysis have been added with \code{analyzeCPAT}. The NMD sensitivity is added by the \code{analyzeORF}.}
 
     \item{\code{Protein domains} : By coloring the part of the ORF containing the protein domains. Requires the result of an external Pfam analysis have been added with \code{analyzePFAM}).}
 
-    \item{\code{Signal Peptide} : By coloring the part of the ORF containing the signal peptide. Requires the result of an external SignalIP analysis have been added with \code{analyzeSignalP).}
+    \item{\code{Signal Peptide} : By coloring the part of the ORF containing the signal peptide. Requires the result of an external SignalP analysis have been added with \code{analyzeSignalP).}
 
-    \item{\code{Transcript status} : Specificly from data imported from cufflinks/cuffdiff. The status (class code) of the transcript is added in brackets after the transcript name.}
+    \item{\code{Transcript status} : Specifically from data imported from cufflinks/cuffdiff. The status (class code) of the transcript is added in brackets after the transcript name.}
     }
 }
 }

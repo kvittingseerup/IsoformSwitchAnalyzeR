@@ -25,7 +25,7 @@ A \code{switchAnalyzeRlist} object.
 A logical indicating whether to filter for genes with functional consequences. Requires that analyzeSwitchConsequences() have been run on the switchAnalyzeRlist. The output will then be the number of significant genes and isoforms originating from genes with predicted consequences. Default is FALSE.
 }
   \item{alpha}{
-The cutoff which the (calibrated) fdr correct p-values must be smaller than for calling significant switches. Default is 0.05.
+The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
 }
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
@@ -36,7 +36,7 @@ A logic indicating whether the Venn diagram should be scaled (so the circle area
 }
 
 \value{
-A venn diagram which shows the number of isoforms and genes with a isoform switch.
+A Venn diagram which shows the number of isoforms and genes with a isoform switch.
 }
 
 \references{

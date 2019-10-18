@@ -2324,12 +2324,17 @@ extractSplicingEnrichment <- function(
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
             scale_color_manual(name = paste0('FDR < ', alpha), values=c('black','red'), drop=FALSE) +
-            scale_size_continuous(name = 'Observations') +
             guides(
                 color = guide_legend(order=1),
                 size = guide_legend(order=2)
             ) +
             coord_cartesian(xlim=c(0,1))
+
+        if( countGenes ) {
+            g1 <- g1 + scale_size_continuous(name = 'Genes')
+        } else {
+            g1 <- g1 + scale_size_continuous(name = 'Switches')
+        }
 
         print(g1)
     }
@@ -2505,7 +2510,6 @@ extractSplicingEnrichmentComparison <- function(
                 y='Comparison'
             ) +
             scale_color_manual(name = paste0('FDR across\ncomparisons\n< ', alpha), values=c('black','red'), drop=FALSE) +
-            scale_size_continuous(name = 'Observations') +
             guides(
                 color = guide_legend(order=1),
                 size = guide_legend(order=2)
@@ -2513,6 +2517,14 @@ extractSplicingEnrichmentComparison <- function(
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1), strip.text.y = element_text(angle = 0)) +
             coord_cartesian(xlim=c(0,1))
+
+        if( countGenes ) {
+            g1 <- g1 + scale_size_continuous(name = 'Genes')
+        } else {
+            g1 <- g1 + scale_size_continuous(name = 'Switches')
+        }
+
+
         print(g1)
     }
 

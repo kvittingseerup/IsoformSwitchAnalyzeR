@@ -4,7 +4,7 @@
 Calculate isoform fraction from isoform abundance matrix
 }
 \description{
-General purpose function to calculate isoform fraction (IF) matrix from isoform abundace (and potentially gene abundance) matrix.
+General purpose function to calculate isoform fraction (IF) matrix from isoform abundance (and potentially gene abundance) matrix.
 }
 \usage{
 isoformToIsoformFraction(
@@ -17,20 +17,20 @@ isoformToIsoformFraction(
 
 \arguments{
 \item{isoformRepExpression}{
-A replicate isoform abundace matrix (not log-transformed). The isoform:gene relationship can be provided by either:
+A replicate isoform abundance matrix (not log-transformed) with genes as rows and samples as columns. The isoform:gene relationship can be provided by either:
 \itemize{
-    \item{Having \code{isoformRepExpression} contain two additional colmns 'isoform_id' and 'gene_id' indicating which isoforms are a part of which gene}
+    \item{Having \code{isoformRepExpression} contain two additional columns 'isoform_id' and 'gene_id' indicating which isoforms are a part of which gene}
     \item{Using the {isoformGeneAnnotation} argument}.
 }
-Importantly \code{isoformRepExpression} must contain isoform ids either as seperate colum called 'isoform_id' or as row.names. The function will figure it out by itself in what combination the annotation is supplied.
+Importantly \code{isoformRepExpression} must contain isoform ids either as separate column called 'isoform_id' or as row.names. The function will figure it out by itself in what combination the annotation is supplied.
 }
 
 \item{geneRepExpression}{
-Optional. A gene replciate abundance matrix. Must contain gene ids either as seperate colum called 'gene_id' or as row.names.
+Optional. A gene replicate abundance matrix. Must contain gene ids either as separate column called 'gene_id' or as row.names.
 }
 
 \item{isoformGeneAnnotation}{
-A data.frame or GRange with two (meta) collumns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.
+A data.frame or GRange with two (meta) columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.
 }
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
@@ -40,8 +40,8 @@ A data.frame or GRange with two (meta) collumns: 'isoform_id' and 'gene_id' indi
 This function calculates isoform fractions from isoform abundances. If \code{geneRepExpression} is not supplied the function automatically calculate it by itself.
 
 Note that:
-1) isoform:gene relationship can be supplied as two columns either in the \code{isoformRepExpression} or as a seperate data.frame to \code{isoformGeneAnnotation}.
-2) The ids in \code{isoformRepExpression} and \code{geneRepExpression} can be supplied either as row.names or as seperate colums respectively called 'isoform_id' and 'gene_id'.
+1) isoform:gene relationship can be supplied as two columns either in the \code{isoformRepExpression} or as a separate data.frame to \code{isoformGeneAnnotation}.
+2) The ids in \code{isoformRepExpression} and \code{geneRepExpression} can be supplied either as row.names or as separate columns respectively called 'isoform_id' and 'gene_id'.
 }
 
 \value{

@@ -400,11 +400,8 @@ createSwitchAnalyzeRlist <- function(
                 countsSuppled <- !is.null(isoformCountMatrix)
                 abundSuppled <- !is.null(isoformRepExpression)
 
-                if( !( countsSuppled | abundSuppled) ) {
-                    warning('If neither \'isoformCountMatrix\' nor \'isoformRepExpression\' are supplied IsoformSwitchAnalyzeR cannot test for isoform switches.')
-                }
                 if( !countsSuppled ) {
-                    warning('Note that when no count matrix were supplied testing via DRIMSeq is not possible (the other testing options still are possible)')
+                    warning('Note that when no count matrix was given as input no statistical identification of isoform switches can be done')
                 }
 
                 if( countsSuppled ) {

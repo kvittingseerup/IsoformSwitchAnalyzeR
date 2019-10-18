@@ -29,25 +29,25 @@ A string indicating the full path to the summary SignalP result file(s). If mult
 }
 
 \details{
-A signal peptide is a short peptide sequence which indicate a protein is destined towards the secrotry pathway.
+A signal peptide is a short peptide sequence which indicate a protein is destined towards the secretory pathway.
 
-The SignalP web-server is less stringent than PFAM with regards to the number of sequences in the files uploaded so we sugget trying the combined fasta file first - and if that does not work try the files containg subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
+The SignalP web-server is less stringent than PFAM with regards to the number of sequences in the files uploaded so we suggest trying the combined fasta file first - and if that does not work try the files containing subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools:
-If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP should be run with the paramter "Short output (no figures)" under "Output format" and one should sepect the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results can be downloaded using the "Downloads" botton in the top-right conor where the user should select "Prediction summary" and supply the path to the resulting file to the pathToSignalPresultFile argument. If a stand-alone version was just supply the path to the summary result file.
+If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results can be downloaded using the "Downloads" bottom in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the pathToSignalPresultFile argument. If a stand-alone version was just supply the path to the summary result file.
 
 
 Please note that the \code{analyzeSignalP()} function will automatically only import the SignalP results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 }
 
 \value{
-A collum called 'signal_peptide_identified' is added to \code{isoformFeatures} containing a binary indiaction (yes/no) of whether a transcript contains a signal peptide or not. Furthermore the data.frame 'signalPeptideAnalysis' is added to the \code{switchAnalyzeRlist} containing the details of the signal peptide analysis.
+A column called 'signal_peptide_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains a signal peptide or not. Furthermore the data.frame 'signalPeptideAnalysis' is added to the \code{switchAnalyzeRlist} containing the details of the signal peptide analysis.
 
 The data.frame added have one row pr isoform and contains 6 columns:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{has_signal_peptide}: A text string indicating whether there is a signal peptide or not. Can be yes or no}
-    \item{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Refrence: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php}}
+    \item{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Reference: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php}}
     \item{\code{aa_removed}: A integer giving the number of amino acids removed when the signal peptide is cleaved off.}
     \item{\code{transcriptClevageAfter}: The transcript position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
     \item{\code{genomicClevageAfter}: The genomic position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}

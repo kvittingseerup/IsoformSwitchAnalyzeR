@@ -1,7 +1,7 @@
 \name{extractSplicingSummary}
 \alias{extractSplicingSummary}
 \title{
-Exracts alternative splicing summary
+Extracts alternative splicing summary
 }
 \description{
 This functions function summarizes the individual alternative splicing events for each gene or switches and plots and/or returns a data.frame with the information. Please note this summarizes the overall number of splicing events - for looking into differences between the isoforms in a switch please use \link{extractSplicingEnrichment}.
@@ -26,13 +26,13 @@ extractSplicingSummary(
 A \code{switchAnalyzeRlist} object where \code{analyzeSwitchConsequences()} have been run to identify consequences of isoform switches
 }
 \item{splicingToAnalyze}{
-A string indicating which consequnces should be considered. See details for description. Default is all.
+A string indicating which consequences should be considered. See details for description. Default is all.
 }
   \item{asFractionTotal}{
 A logic indicating whether the consequences should be summarized calculated as numbers (if FALSE) or as a fraction of the total number of switches/genes (as indicated by \code{plotGenes}). Default is FALSE.
 }
 \item{alpha}{
-The cutoff which the (callibrated) fdr correct p-values must be smaller than for calling significant switches. Default is 0.05.
+The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
 }
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
@@ -73,7 +73,7 @@ The alternative splicing types, which can be passed to \code{splicingToAnalyze} 
 
     \item \code{ES} : Exon Skipping.
 
-    \item \code{MES} : Multiple Exon Skipping. Skipping of >1 consequtive exons.
+    \item \code{MES} : Multiple Exon Skipping. Skipping of >1 consecutive exons.
 
     \item \code{MEE} : Mutually Exclusive Exons.
 

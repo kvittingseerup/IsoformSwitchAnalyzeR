@@ -3347,6 +3347,12 @@ importRdata <- function(
 
     ### Giver proper R names
     if(TRUE) {
+        ### Double check order
+        designMatrix <- designMatrix[,c(
+            match( c('sampleID','condition'), colnames(designMatrix) ),
+            which( ! colnames(designMatrix) %in% c('sampleID','condition') )
+        )]
+
         tmp <- designMatrix
 
         for( i in 2:ncol(designMatrix) ) { # i <- 2
@@ -3957,6 +3963,9 @@ importRdata <- function(
                 ! duplicated(names(isoformNtSeq))
             )]
 
+            if(length(isoformNtSeq) == 0) {
+                stop('No sequences in the fasta files had IDs matching the expression data.')
+            }
 
             if( ! all( isoformRepExpression$isoform_id %in% names(isoformNtSeq) ) ) {
                 warning(
@@ -3976,9 +3985,9 @@ importRdata <- function(
                         'This problem might be solvable using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
                         '    3 Examples from expression matrix are :',
-                        paste0( sample(unique(isoformRepExpression$isoform_id), 3), collapse = ', '),'\n',
+                        paste0( sample(unique(isoformRepExpression$isoform_id), min(c(3, length(isoformRepExpression$isoform_id))) ), collapse = ', '),'\n',
                         '    3 Examples of sequence annotation are :',
-                        paste0( sample(names(isoformNtSeq), 3), collapse = ', '),'\n',
+                        paste0( sample(names(isoformNtSeq), min(c(3, length( isoformNtSeq ))) ), collapse = ', '),'\n',
 
                         '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
                         '1) The files do not fit together (different databases versions)',
@@ -4299,7 +4308,7 @@ preFilter <- function(
                     'Running preFilter() might not be what you want.',
                     '\nIf expression info was manually added afterwards',
                     'please ignore this warning.',
-                    sep=''
+                    sep=' '
                 )
             )
         }

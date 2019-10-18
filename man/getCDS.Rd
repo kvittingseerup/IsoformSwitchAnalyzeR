@@ -21,7 +21,7 @@
 }
 
 \value{
-    A \code{CDSSet} containing the annotated CDSs. For a description of the dataframe, see \code{\link{CDSSet}}.
+    A \code{CDSSet} containing the annotated CDSs. For a description of the data.frame, see \code{\link{CDSSet}}.
 }
 
 \author{

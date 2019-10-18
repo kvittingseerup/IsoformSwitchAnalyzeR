@@ -459,6 +459,7 @@ analyzePFAM <- function(
                 )
             }
         ))
+        myPfamResult <- unique(myPfamResult)
 
         ### read in pfam resut result
         if (nrow(myPfamResult) == 0) {
@@ -882,6 +883,7 @@ analyzeSignalP <- function(
                 colnames(singalPresults) <- gsub('\\.$','', colnames(singalPresults))
                 colnames(singalPresults) <- gsub('\\.','_', colnames(singalPresults))
 
+                singalPresults <- unique(singalPresults)
             }
 
             ### Sanity check that it is a SignalIP result file
@@ -977,6 +979,9 @@ analyzeSignalP <- function(
                 if (nrow(singalPresults) == 0) {
                     stop('No signial peptides were found')
                 }
+
+                singalPresults <- unique(singalPresults)
+
 
                 t1 <- all(singalPresults$V3 == 'Cleavage')
                 t2 <- all(singalPresults$V4 == 'site')
@@ -1187,6 +1192,7 @@ analyzeNetSurfP2 <- function(
                     )
                 }
             ))
+
         )
 
         ### Sanity check
@@ -1202,6 +1208,7 @@ analyzeNetSurfP2 <- function(
                 )]
         ),]
 
+        netSurf <- unique(netSurf)
     }
 
     ### Reduce to those with IDR
@@ -1247,6 +1254,8 @@ analyzeNetSurfP2 <- function(
 
         disRes <- disRes[,c('isoform_id','orf_aa_start','orf_aa_end','length')]
 
+        ### Add type
+        disRes$idr_type <- 'IDR'
     }
 
     ### Convert from AA coordinats to transcript and genomic coordinats
@@ -1377,6 +1386,478 @@ analyzeNetSurfP2 <- function(
             sep = ''
         ))
     }
+    return(switchAnalyzeRlist)
+}
+
+analyzeIUPred2A <- function(
+    switchAnalyzeRlist,
+    pathToIUPred2AresultFile,
+    smoothingWindowSize = 5,
+    probabilityCutoff = 0.5,
+    minIdrSize = 30,
+    annotateBindingSites = TRUE,
+    minIdrBindingSize = 15,
+    minIdrBindingOverlapFrac = 0.8,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Test input
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+            stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+        }
+
+        # file
+        if (class(pathToIUPred2AresultFile) != 'character') {
+            stop(
+                'The \'pathToIUPred2AresultFile\' argument must be a string pointing to the PFAM result file'
+            )
+        }
+        if (! all( file.exists(pathToIUPred2AresultFile)) ) {
+            stop('(At least on of) the file(s) \'pathToIUPred2AresultFile\' points to does not exist')
+        }
+
+        if( smoothingWindowSize %% 2 != 1 | !is(smoothingWindowSize, 'numeric') ) {
+            stop('The \'smoothingWindowSize\' argument must be an odd integer')
+        }
+
+        totalAnalysisNr <- 3 + as.integer(annotateBindingSites)
+        analysisNr <- 1
+    }
+
+    if (showProgress & !quiet) {
+        progressBar <- 'text'
+    } else {
+        progressBar <- 'none'
+    }
+
+    ### Read result file
+    if(TRUE) {
+        if (!quiet) {
+            message(
+                paste(
+                    'Step', analysisNr, 'of', totalAnalysisNr,
+                    ': Reading results into R...'
+                )
+            )
+        }
+
+        ### Read in file
+        suppressWarnings(
+            iupred2a <- do.call(rbind, plyr::llply(
+                pathToIUPred2AresultFile,
+                .fun = function(
+                    aFile
+                ) {
+                    read.table(
+                        file = aFile,
+                        header = FALSE,
+                        sep = '\t',
+                        stringsAsFactors = FALSE,
+                        fill = TRUE
+                    )
+                }
+            ))
+        )
+
+        ### Massage into tidy format
+        if(TRUE) {
+            myNames <- gsub(
+                '^>',
+                '',
+                iupred2a$V1[which(is.na(iupred2a$V3))]
+            )
+
+            ### Sanity check
+            if( ! any( myNames %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
+                stop('The \'pathToIUPred2AresultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
+            }
+
+            if( annotateBindingSites ) {
+                if( ncol( iupred2a) != 4 ) {
+                    stop(
+                        paste(
+                            'It appears the file pointed to by by pathToIUPred2AresultFile',
+                            'does not contain the ANCHOR2 Predictions.',
+                            'Please ensure the "context-dependent predictions" is turned on and set to ANCHOR2'
+                        )
+                    )
+                }
+            }
+
+            ### Create id vector
+            myIndex <- c(which(grepl('^>', iupred2a$V1)), nrow(iupred2a)+1)
+            newIdDf <- data.frame(
+                start = myIndex[-length(myIndex)],
+                end = myIndex[-1] -1,
+                newId = myNames,
+                stringsAsFactors = FALSE
+            )
+            newIdDf$length <- newIdDf$end - newIdDf$start + 1
+
+            iupred2a$newId <- rep(
+                x = newIdDf$newId,
+                times = newIdDf$length
+            )
+            if( any(is.na(iupred2a$newId)) ) {
+                stop('Something went wrong in the convertion of to table format. Please contact developers with reproducible example')
+            }
+
+            ### Extract the parts of of interest
+            iupred2a <- iupred2a[which( ! grepl('^>', iupred2a$V1)),]
+            iupred2a <- iupred2a[,c(5,1:4)]
+
+            colnames(iupred2a) <- c('isoform_id','position','residue','iupred_score','anchor_score')
+
+            iupred2a$position <- as.integer(iupred2a$position)
+
+            ### Sanity checks
+            if(TRUE) {
+                problemsFound <- FALSE
+                if( ! is(iupred2a$iupred_score, 'numeric') ) {
+                    problemsFound <- TRUE
+                }
+                if( ! is(iupred2a$anchor_score, 'numeric') ) {
+                    problemsFound <- TRUE
+                }
+                if( ! all( iupred2a$residue %in% Biostrings::AA_ALPHABET ) ){
+                    problemsFound <- TRUE
+                }
+                if(problemsFound) {
+                    stop('The file(s) provided to "pathToIUPred2AresultFile" does not appear to be the result file from IUPred2A')
+                }
+            }
+
+        }
+
+        ### Subset to relecant features
+        iupred2a <- iupred2a[which(
+            iupred2a$isoform_id %in%
+                switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                    !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                )]
+        ),]
+
+        iupred2a <- unique(iupred2a)
+
+        analysisNr <- analysisNr + 1
+    }
+
+    ### Extract IDR regions of interest
+    if(TRUE) {
+        if (!quiet) {
+            message(
+                paste(
+                    'Step', analysisNr, 'of', totalAnalysisNr,
+                    ': Extracting regions of interest...'
+                )
+            )
+        }
+
+        ### Helper function
+        if(TRUE) {
+            extractRegionsAboveCutoff <- function(
+                scoreList,
+                scoreCutoff,
+                minSize,
+                smoothingWindowSize
+            ) {
+                scoreRle <- RleList( scoreList )
+
+                ### Apply spliding window
+                scoreRle <- runmean(scoreRle, k=smoothingWindowSize, endrule = 'drop')
+                nRemovedByDrop <- (smoothingWindowSize-1) / 2
+
+                ### Convert to binary
+                scoreRle <- scoreRle > scoreCutoff
+
+                ### Loop over and extract result
+                regionRes <- plyr::ldply(scoreRle, .progress = progressBar, function(localRle) {
+                    ### Extract start and stop
+                    rleDf <- data.frame(
+                        classification=localRle@values,
+                        length=localRle@lengths,
+                        orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
+                    )
+                    rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
+
+                    ### Subset to disordered of length X
+                    rleDf <- rleDf[which(
+                        rleDf$classification &
+                            rleDf$length >= minSize
+                    ),]
+
+                    rleDf$classification <- NULL
+
+                    return(rleDf)
+                })
+                colnames(regionRes)[1] <- 'isoform_id'
+
+                regionRes <- regionRes[,c('isoform_id','orf_aa_start','orf_aa_end','length')]
+                return(regionRes)
+            }
+        }
+
+        ### Extract IUPred2 IDR regions
+        if(TRUE) {
+            disRes <- extractRegionsAboveCutoff(
+                scoreList = split(
+                    iupred2a$iupred_score,
+                    iupred2a$isoform_id
+                ),
+                scoreCutoff = probabilityCutoff,
+                minSize = minIdrSize,
+                smoothingWindowSize = smoothingWindowSize
+            )
+
+            disRes$idr_type <- 'IDR'
+        }
+
+        ### Extract ANCHOR2 IDR binding regions
+        if( annotateBindingSites ) {
+            bindRes <- extractRegionsAboveCutoff(
+                scoreList = split(
+                    iupred2a$anchor_score,
+                    iupred2a$isoform_id
+                ),
+                scoreCutoff = probabilityCutoff,
+                minSize = minIdrBindingSize,
+                smoothingWindowSize = smoothingWindowSize
+            )
+        }
+
+        analysisNr <- analysisNr + 1
+    }
+
+    ### Integrate the prediction of disordered regions and binding sites
+    if( annotateBindingSites ) {
+        if (!quiet) {
+            message(
+                paste(
+                    'Step', analysisNr, 'of', totalAnalysisNr,
+                    ': Integrating IDR with binding site predictions...'
+                )
+            )
+        }
+
+        disRes$rowId <- 1:nrow(disRes)
+
+        ### Convert to GRanges
+        disResGr <- GRanges(
+            disRes$isoform_id,
+            IRanges(
+                disRes$orf_aa_start,
+                disRes$orf_aa_end
+            ),
+            rowId = disRes$rowId
+        )
+        bindResGr <- GRanges(
+            bindRes$isoform_id,
+            IRanges(
+                bindRes$orf_aa_start,
+                bindRes$orf_aa_end
+            )
+        )
+
+        ### Find overlap
+        suppressWarnings(
+            myOverlap <- findOverlaps(
+                query   = disResGr,
+                subject = bindResGr
+            )
+        )
+
+        ### Intersect overlapping
+        overlapIntersect <- suppressWarnings(
+            pintersect(
+                disResGr [queryHits(   myOverlap )],
+                bindResGr[subjectHits( myOverlap )]
+            )
+        )
+        ### Calculate fraction overlap (as fraction of binding region size)
+        overlapIntersect$overlapFrac <- round(
+            width(overlapIntersect) /
+                width(bindResGr[subjectHits(myOverlap)]),
+            digits = 3
+        )
+
+        ### Extract summary
+        overlapFracList <- split(
+            overlapIntersect$overlapFrac,
+            overlapIntersect$rowId
+        )
+        overlapCount <- sapply(
+            overlapFracList,
+            length
+        )
+        overlapSize <- sapply(
+            overlapFracList,
+            max
+        )
+
+        ### Annotate overlap
+        disRes$nr_idr_binding_region_overlapping <- NA
+        overlapIndex <- match( names(overlapCount), disRes$rowId)
+        disRes$nr_idr_binding_region_overlapping[ overlapIndex ] <- overlapCount
+
+        disRes$max_fraction_of_idr_binding_region_overlapping <- NA
+        overlapIndex <- match( names(overlapSize), disRes$rowId)
+        disRes$max_fraction_of_idr_binding_region_overlapping[ overlapIndex ] <- overlapSize
+
+        ### Chage type
+        disRes$idr_type[which(
+            disRes$max_fraction_of_idr_binding_region_overlapping > minIdrBindingOverlapFrac
+        )] <- 'IDR_w_binding_region'
+
+        ### Remove IDR id
+        disRes$rowId <- NULL
+
+        analysisNr <- analysisNr + 1
+    }
+
+    ### Convert from AA coordinats to transcript and genomic coordinats
+    if (TRUE) {
+        if (!quiet) {
+            message(
+                paste(
+                    'Step', analysisNr, 'of', totalAnalysisNr,
+                    ': Converting AA coordinats to transcript and genomic coordinats...'
+                )
+            )
+        }
+
+        ### convert from codons to transcript position
+        orfStartDF <-
+            unique(
+                switchAnalyzeRlist$orfAnalysis[
+                    which( !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+                    c('isoform_id', 'orfTransciptStart')
+                    ]
+            )
+        disRes$transcriptStart <-
+            (disRes$orf_aa_start  * 3 - 2) +
+            orfStartDF[
+                match(
+                    x = disRes$isoform_id,
+                    table = orfStartDF$isoform_id
+                ),
+                2] - 1
+        disRes$transcriptEnd <-
+            (disRes$orf_aa_end * 3) +
+            orfStartDF[
+                match(
+                    x = disRes$isoform_id,
+                    table = orfStartDF$isoform_id
+                ),
+                2] - 1
+
+        ### convert from transcript to genomic coordinats
+        # extract exon data
+        myExons <-
+            as.data.frame(switchAnalyzeRlist$exons[which(
+                switchAnalyzeRlist$exons$isoform_id %in% disRes$isoform_id
+            ), ])
+        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
+        disResDf <-
+            plyr::ddply(
+                disRes,
+                .progress = progressBar,
+                .variables = 'isoform_id',
+                .fun = function(aDF) {
+                    # aDF <- disRes[which(disRes$isoform_id == 'uc001isa.1'),]
+
+                    transcriptId <- aDF$isoform_id[1]
+                    localExons <-
+                        as.data.frame(myExonsSplit[[transcriptId]])
+
+                    # extract domain allignement
+                    localORFalignment <- aDF
+                    colnames(localORFalignment)[match(
+                        x = c('transcriptStart', 'transcriptEnd'),
+                        table = colnames(localORFalignment)
+                    )] <- c('start', 'end')
+
+                    # loop over domain alignment (migh be several)
+                    orfPosList <- list()
+                    for (j in 1:nrow(localORFalignment)) {
+                        domainInfo <-
+                            convertCoordinatsTranscriptToGenomic(
+                                transcriptCoordinats =  localORFalignment[j, ],
+                                exonStructure = localExons
+                            )
+
+                        orfPosList[[as.character(j)]] <- domainInfo
+
+                    }
+                    orfPosDf <- do.call(rbind, orfPosList)
+
+                    return(cbind(aDF, orfPosDf))
+                }
+            )
+
+        colnames(disResDf) <- gsub(
+            'pfam',
+            'idr',
+            colnames(disResDf)
+        )
+
+        disResDf$length <- NULL
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        # sort
+        disResDf <-
+            disResDf[order(
+                disResDf$isoform_id,
+                disResDf$transcriptStart
+            ), ]
+
+        #disResDf$idrStarExon <- NULL
+        #disResDf$idrEndExon <- NULL
+
+        # add the results to the switchAnalyzeRlist object
+        switchAnalyzeRlist$idrAnalysis <- disResDf
+
+        # add indication to transcriptDf
+        switchAnalyzeRlist$isoformFeatures$idr_identified <- 'no'
+        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+        )] <- NA # sets NA for those not analyzed
+
+        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                disResDf$isoform_id
+        )] <- 'yes'
+    }
+
+    ### Repport result
+    if(TRUE) {
+        n <- length(unique(disResDf$isoform_id))
+        p <-
+            round(n / length(unique(
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+            )) * 100, digits = 2)
+
+        if (!quiet) {
+            message(paste(
+                'Added IDR information to ',
+                n,
+                ' (',
+                p,
+                '%) transcripts',
+                sep = ''
+            ))
+        }
+    }
+
     return(switchAnalyzeRlist)
 }
 

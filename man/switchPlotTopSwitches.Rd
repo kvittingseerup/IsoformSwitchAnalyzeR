@@ -5,7 +5,7 @@
 Creating the Isoform Switch Analysis Plot for the Top Switches
 }
 \description{
-This function outputs the top n (defined by \code{n}) Isoform Switch Analysis Plot (see \link{switchPlot}) for genes with significant isoform switches (as defined by \code{alpha} and \code{dIFcutoff}) to a specific folder (controlled by \code{pathToOutput}. The plots are automatically sorted by decreasing significance or switche size (as controled by \code{sortByQvals}). The plots can furthermore be created in sub-folders based both which conditions are compared and whether any consequences of the switch have been predicted. In summary it facilitates an easy and prioritized, (but comprehensive), manual analysis of isoform switches.
+This function outputs the top n (defined by \code{n}) Isoform Switch Analysis Plot (see \link{switchPlot}) for genes with significant isoform switches (as defined by \code{alpha} and \code{dIFcutoff}) to a specific folder (controlled by \code{pathToOutput}. The plots are automatically sorted by decreasing significance or switch size (as controlled by \code{sortByQvals}). The plots can furthermore be created in sub-folders based both which conditions are compared and whether any consequences of the switch have been predicted. In summary it facilitates an easy and prioritized, (but comprehensive), manual analysis of isoform switches.
 }
 \usage{
 switchPlotTopSwitches(
@@ -31,7 +31,7 @@ A \code{switchAnalyzeRlist} containing all the annotation for the isoforms.
 }
 
   \item{alpha}{
-The cutoff which the (callibrated) fdr correct p-values must be smaller than for calling significant switches. Defualit is 0.05.
+The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
 }
 
 \item{dIFcutoff}{
@@ -39,7 +39,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 }
 
 \item{n}{
-The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be generated in each subfolder indicated by \code{splitComparison} and \code{splitFunctionalConsequences}. Use Inf to create all (NA will internally be conveted to Inf for backward compatability). Default is 10.
+The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be generated in each sub-folder indicated by \code{splitComparison} and \code{splitFunctionalConsequences}. Use Inf to create all (NA will internally be converted to Inf for backward comparability). Default is 10.
 }
 
 \item{sortByQvals}{
@@ -47,7 +47,7 @@ A logic indicating whether to the top \code{n} features are sorted by decreasing
 }
 
   \item{filterForConsequences}{
-A logic indicating whether to only plot gene with predicted consequences of the isoform switch. Requires that predicted consequences have been annotated (via \link{analyzeSwitchConsequences}. Defalut is FALSE.
+A logic indicating whether to only plot gene with predicted consequences of the isoform switch. Requires that predicted consequences have been annotated (via \link{analyzeSwitchConsequences}. Default is FALSE.
 }
 
   \item{pathToOutput}{
@@ -55,11 +55,11 @@ A path to the folder in which the plots should be made. Default is working direc
 }
 
 \item{splitComparison}{
-A logic indicating whether to create a subfolder for each comparison. If splitComparison is TRUE the subfolders will be created else all isoform switch analyzer plots will saved in the same folder. Default is TRUE.
+A logic indicating whether to create a sub-folder for each comparison. If splitComparison is TRUE the sub-folders will be created else all isoform switch analyzer plots will saved in the same folder. Default is TRUE.
 }
 
   \item{splitFunctionalConsequences}{
-A logic indicating whether to create a subfolder for those switches with predicted consequences and another subfolder for those without. Requires that \link{analyzeSwitchConsequences} have been run. If \code{splitComparison=TRUE} the subfolders from this argument will be created within the comparison subfolders. Default is TRUE.
+A logic indicating whether to create a sub-folder for those switches with predicted consequences and another sub-folder for those without. Requires that \link{analyzeSwitchConsequences} have been run. If \code{splitComparison=TRUE} the sub-folders from this argument will be created within the comparison sub-folders. Default is TRUE.
 }
 
 \item{IFcutoff}{
@@ -81,11 +81,11 @@ A named list arguments passed to the \code{switchPlot} function which creates th
 \details{
 Changes in isoform usage are measure as the difference in isoform fraction (dIF) values, where isoform fraction (IF) values are calculated as <isoform_exp> / <gene_exp>.\cr
 
-For a list of the top swiching genes see ?extractTopSwitches.
+For a list of the top switching genes see ?extractTopSwitches.
 }
 
 \value{
-An Isoform Switch Analysis Plot (as produce by \code{switchPlot}) for each of the top n switches in each comparison where a gene have a signicant isoform switch is generated in the folder supplied by \code{pathToOutput}
+An Isoform Switch Analysis Plot (as produce by \code{switchPlot}) for each of the top n switches in each comparison where a gene have a significant isoform switch is generated in the folder supplied by \code{pathToOutput}
 }
 \references{
 Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).

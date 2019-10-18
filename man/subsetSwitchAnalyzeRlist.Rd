@@ -2,11 +2,11 @@
 \alias{subsetSwitchAnalyzeRlist}
 
 \title{
-A function which subset all enteries in a switchAnalyzeRlist.
+A function which subset all entries in a switchAnalyzeRlist.
 }
 
 \description{
-This function allows the user to remove data from all entereis in a switchAnalyzeRlist about isoforms that are no longer of interest. Note that it retain replicate isoforms information for all isoforms assocaited with genes containing isoforms in the subset (to enable correction for confounding factors when testing with isoformSwitchTestDEXSeq()).
+This function allows the user to remove data from all entries in a switchAnalyzeRlist about isoforms that are no longer of interest. Note that it retain replicate isoforms information for all isoforms associated with genes containing isoforms in the subset (to enable correction for confounding factors when testing with isoformSwitchTestDEXSeq()).
 }
 
 \usage{
@@ -24,7 +24,7 @@ subsetSwitchAnalyzeRlist(
 }
 
 \value{
-A SwitchAnalyzeRlist only containing information about the isoforms (in their specific comparisons) indeicated with TRUE in the .
+A SwitchAnalyzeRlist only containing information about the isoforms (in their specific comparisons) indicated with TRUE in the .
 }
 
 \references{

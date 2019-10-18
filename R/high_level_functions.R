@@ -212,12 +212,13 @@ isoformSwitchAnalysisPart2 <- function(
     switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
-    n = NA,
+    n = Inf,
     codingCutoff = NULL,
     removeNoncodinORFs,
     pathToCPATresultFile = NULL,
     pathToCPC2resultFile = NULL,
     pathToPFAMresultFile = NULL,
+    pathToIUPred2AresultFile = NULL,
     pathToNetSurfP2resultFile = NULL,
     pathToSignalPresultFile = NULL,
     consequencesToAnalyze = c(
@@ -227,6 +228,7 @@ isoformSwitchAnalysisPart2 <- function(
         'NMD_status',
         'domains_identified',
         'IDR_identified',
+        'IDR_type',
         'signal_peptide_identified'
     ),
     pathToOutput = getwd(),
@@ -270,6 +272,15 @@ isoformSwitchAnalysisPart2 <- function(
             if (is.null(codingCutoff)) {
                 codingCutoff <- 0.5
             }
+        }
+
+        if (!is.null(pathToNetSurfP2resultFile) & !is.null(pathToIUPred2AresultFile) ) {
+            stop(
+                paste(
+                    'Since NetSurfP2 and IUPred2A performs the same type of analysis results should only be suppled to ONE of the \'pathToIUPred2AresultFile\' and \'pathToNetSurfP2resultFile\' arguments.',
+                    sep = ' '
+                )
+            )
         }
 
     }
@@ -319,6 +330,14 @@ isoformSwitchAnalysisPart2 <- function(
             analyzePFAM(
                 switchAnalyzeRlist = switchAnalyzeRlist,
                 pathToPFAMresultFile = pathToPFAMresultFile,
+                quiet = TRUE
+            )
+    }
+    if (!is.null(pathToIUPred2AresultFile)) {
+        switchAnalyzeRlist <-
+            analyzeIUPred2A(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                pathToIUPred2AresultFile = pathToIUPred2AresultFile,
                 quiet = TRUE
             )
     }

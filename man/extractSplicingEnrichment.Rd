@@ -4,7 +4,7 @@
 Analyze data for enrichment of specific type of alternative splicing
 }
 \description{
-This functions function analyzes (the number of and) enrichment of specific splice events by for each set of opposing event (fx. exon skipping gain vs loss), by analyzing the fraction of events belonging to each type of consequence. Please note this summarizes the differences between the isoforms in a switch - for an overview of the total number of AS events please use \link{extractSplicingSummary}.
+This functions function analyzes (the number of and) enrichment of specific splice events by for each set of opposing event (e.g.. exon skipping gain vs loss), by analyzing the fraction of events belonging to each type of consequence. Please note this summarizes the differences between the isoforms in a switch - for an overview of the total number of AS events please use \link{extractSplicingSummary}.
 }
 \usage{
 extractSplicingEnrichment(
@@ -27,10 +27,10 @@ extractSplicingEnrichment(
 A \code{switchAnalyzeRlist} object where \code{analyzeSwitchConsequences()} have been run to identify consequences of isoform switches
 }
 \item{splicingToAnalyze}{
-A string indicating which consequnces should be considered. See details for description. Default is all.
+A string indicating which consequences should be considered. See details for description. Default is all.
 }
 \item{alpha}{
-The cutoff which the (callibrated) fdr correct p-values must be smaller than for calling significant switches. Default is 0.05.
+The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
 }
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
@@ -39,7 +39,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 }
 
 \item{countGenes}{
-A logic indicating whether it is the number of genes (if TRUE) or isoform switches (if FALSE) which primarly result in gain/loss that are counted. Default is TRUE.
+A logic indicating whether it is the number of genes (if TRUE) or isoform switches (if FALSE) which primary result in gain/loss that are counted. Default is TRUE.
 }
 
   \item{plot}{
@@ -52,7 +52,7 @@ General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for
 }
 
   \item{minEventsForPlotting}{
-The minimum number of events (total gain/loss) must be pressent before the result is visualized. Default is 10.
+The minimum number of events (total gain/loss) must be present before the result is visualized. Default is 10.
 }
   \item{returnResult}{
 A logic indicating whether the analysis should be returned as a data.frame. Default is TRUE.
@@ -81,7 +81,7 @@ The alternative splicing types, which can be passed to \code{splicingToAnalyze} 
 
     \item \code{ES} : Exon Skipping.
 
-    \item \code{MES} : Multiple Exon Skipping. Skipping of >1 consequtive exons.
+    \item \code{MES} : Multiple Exon Skipping. Skipping of >1 consecutive exons.
 
     \item \code{MEE} : Mutually Exclusive Exons.
 }
@@ -93,7 +93,7 @@ The significance test is performed with R's build in \code{prop.test()} with def
 }
 
 \value{
-If \code{returnResult=TRUE} a data.frame with the statisitcal summary for each oposing consequences in each comparison. If \code{plot=TRUE} a plot summarizing the proportions is also created of switches with specific consequences is created.
+If \code{returnResult=TRUE} a data.frame with the statistical summary for each opposing consequences in each comparison. If \code{plot=TRUE} a plot summarizing the proportions is also created of switches with specific consequences is created.
 }
 
 \references{

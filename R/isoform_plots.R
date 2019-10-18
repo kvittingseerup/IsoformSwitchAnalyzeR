@@ -261,7 +261,7 @@ switchPlotTranscript <- function(
 
     }
 
-    ### Extract the isoform data
+    ### Extract the isoform and annotation data
     if (TRUE) {
         ### Extract iso annoation
         if(TRUE) {
@@ -303,7 +303,7 @@ switchPlotTranscript <- function(
                 unique(switchAnalyzeRlist$isoformFeatures[
                     rowsToExtract,
                     columnsToExtract
-            ])
+                    ])
 
             ### Subset to used isoforms
             if(hasQuant) {
@@ -352,13 +352,13 @@ switchPlotTranscript <- function(
 
             if(nrow(orfInfo) == 0) {
                 warning(
-                     paste(
-                         'There might somthing wrong with the switchAnalyzeRlist',
-                         '- there are no ORF annoation matching the isoforms of interest:',
-                         paste(isoform_id, collapse = ', '),
-                         '. These isoforoms will be plotted as non-coding.',
-                         sep=' '
-                     )
+                    paste(
+                        'There might somthing wrong with the switchAnalyzeRlist',
+                        '- there are no ORF annoation matching the isoforms of interest:',
+                        paste(isoform_id, collapse = ', '),
+                        '. These isoforoms will be plotted as non-coding.',
+                        sep=' '
+                    )
                 )
 
                 ### Add NAs manually
@@ -473,7 +473,7 @@ switchPlotTranscript <- function(
                         factor(idrAnalysis$isoform_id,
                                levels = unique(isoInfo$isoform_id))
 
-                    idrAnalysis$idrName <- 'IDR'
+                    #idrAnalysis$idrName <- 'IDR'
                     idrAnalysis$id <- 1:nrow(idrAnalysis)
 
 
@@ -507,70 +507,9 @@ switchPlotTranscript <- function(
                         factor(signalPanalysis$isoform_id,
                                levels = unique(isoInfo$isoform_id))
 
-                   annotationList$signal_peptide <- signalPdata
+                    annotationList$signal_peptide <- signalPdata
                 }
             }
-        }
-
-        # Remove overlapping annotations according to annotationImportance
-        if(TRUE) {
-            ### Filter
-            annotationList <- lapply(annotationList, function(x) {
-                x[which(
-                    apply(x[,c(2,3)],1, function(x) !any(is.na(x)))
-                ),]
-            })
-            annotationList <- annotationList[which(sapply(annotationList, nrow) > 0)]
-
-            if(length(annotationList) > 1) {
-                ### Reorder after importance
-                annotationImportance <- annotationImportance[which(
-                    annotationImportance %in% names(annotationList)
-                )]
-                annotationList <- annotationList[match(
-                    annotationImportance , names(annotationList)
-                )]
-
-
-                ### Make ranges
-                isMinus <- as.integer( all( annotationList[[1]][,2] > annotationList[[1]][,3]) )
-                annotationListGR <- lapply(annotationList, function(x){
-                    GRanges(
-                        x$isoform_id,
-                        IRanges(
-                            x[,2 + isMinus],
-                            x[,3 - isMinus]
-                        ),
-                        id=x$id
-                    )
-                })
-
-                ### Remover overlap starting from the back
-                for(i in length(annotationListGR):2) { # i <- 2
-                    annotationListGR[[i]] <- annotationListGR[[i]][which(
-                        ! overlapsAny( annotationListGR[[i]] , annotationListGR[[i-1]])
-                    )]
-                }
-
-                ### Remove annotation
-                if( 'protein_domain' %in% names(annotationListGR) ) {
-                    DomainAnalysis <- DomainAnalysis[which(
-                        DomainAnalysis$id %in% annotationListGR$protein_domain$id
-                    ),]
-                }
-                if( 'idr' %in% names(annotationListGR) ) {
-                    idrAnalysis <- idrAnalysis[which(
-                        idrAnalysis$id %in% annotationListGR$idr$id
-                    ),]
-                }
-                if( 'signal_peptide' %in% names(annotationListGR) ) {
-                    signalPanalysis <- signalPanalysis[which(
-                        signalPanalysis$isoform_id %in% annotationListGR$signal_peptide$id
-                    ),]
-                }
-            }
-
-
         }
 
         ### Domain sites
@@ -645,10 +584,12 @@ switchPlotTranscript <- function(
         ### IDR Sites
         if(TRUE) {
             if (inclIdrAnalysis) {
-                if (any(
-                    isoInfo$isoform_id %in%
-                    switchAnalyzeRlist$idrAnalysis$isoform_id
-                )) {
+                if(
+                    any(
+                        isoInfo$isoform_id %in%
+                        switchAnalyzeRlist$idrAnalysis$isoform_id
+                    )
+                ) {
                     idrStart <-
                         split(
                             idrAnalysis$idrStartGenomic,
@@ -660,7 +601,7 @@ switchPlotTranscript <- function(
                               idrAnalysis$isoform_id,
                               drop = FALSE)
                     idrName  <-
-                        split(idrAnalysis$idrName,
+                        split(idrAnalysis$idr_type,
                               idrAnalysis$isoform_id,
                               drop = FALSE)
 
@@ -834,13 +775,13 @@ switchPlotTranscript <- function(
             for (j in 1:length(localDomainStart)) {
                 coordinatPair <- c(localDomainStart[j], localDomainEnd[j])
                 if( all( !is.na(coordinatPair)) ) {
-                domainRange <-
-                    IRanges(min(coordinatPair), max(coordinatPair))
-                localExonsDevided$Domain[queryHits(findOverlaps(
-                    subject = domainRange,
-                    query = ranges(localExonsDevided),
-                    type = 'within'
-                ))] <- domainName[[transcriptName]][j]
+                    domainRange <-
+                        IRanges(min(coordinatPair), max(coordinatPair))
+                    localExonsDevided$Domain[queryHits(findOverlaps(
+                        subject = domainRange,
+                        query = ranges(localExonsDevided),
+                        type = 'within'
+                    ))] <- domainName[[transcriptName]][j]
                 }
             }
         }
@@ -973,8 +914,8 @@ switchPlotTranscript <- function(
             if(   optimizeForCombinedPlot ) {
                 ### Interpret direction
                 isoInfo$direction                                      <- 'Unchanged usage'
-                isoInfo$direction[which(isoInfo$dIF > dIFcutoff      & isoInfo$isoform_switch_q_value < min(alphas) )] <- 'Increased usage'
-                isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1 & isoInfo$isoform_switch_q_value < min(alphas) )] <- 'Decreased usage'
+                isoInfo$direction[which(isoInfo$dIF > dIFcutoff      & isoInfo$isoform_switch_q_value < max(alphas) )] <- 'Increased usage'
+                isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1 & isoInfo$isoform_switch_q_value < max(alphas) )] <- 'Decreased usage'
             }
 
             ### Make new name
@@ -1130,7 +1071,7 @@ switchPlotTranscript <- function(
         match(myTranscriptPlotData$transcript ,
               unique(myTranscriptPlotData$transcript))
 
-    ### Convert coordiants to rectangels coordinats (for plotting)
+    ### Convert coordiants to rectangels coordinats (for plotting) and order them according to draw order
     if (TRUE) {
         ### calculate rectangle coordinates
         myTranscriptPlotData$ymin <- myTranscriptPlotData$start
@@ -1149,6 +1090,41 @@ switchPlotTranscript <- function(
         myTranscriptPlotData$xmax[codingIndex] <-
             myTranscriptPlotData$idNr[codingIndex] +
             (rectHegith * codingWidthFactor)
+
+
+        ### Change order to reflect annotationImportance
+        if(TRUE) {
+            ### Create vector with supposed ordering
+            annotNameList <- list(
+                transcript = ' transcript',
+                notAnalyzed = "Not Analyzed"
+            )
+            if(!is.null(domainStart)) {
+                annotNameList$protein_domain <- unique(unlist(domainName))
+            }
+            if(!is.null(idrStart)) {
+                annotNameList$idr <- unique(unlist(idrName))
+            }
+            if(!is.null(cleaveageAfter)) {
+                annotNameList$signal_peptide <- 'Signal Peptide'
+            }
+
+            annotNameListOrdered <- unlist( annotNameList[c(
+                'transcript',
+                'notAnalyzed',
+                rev(annotationImportance)
+            )] )
+
+            ### Reorder data
+            myTranscriptPlotData$DomainRanking <- match(myTranscriptPlotData$Domain, annotNameListOrdered)
+
+            myTranscriptPlotData <- myTranscriptPlotData[order(
+                myTranscriptPlotData$DomainRanking,
+                myTranscriptPlotData$seqnames,
+                myTranscriptPlotData$transcript,
+                decreasing = FALSE
+            ),]
+        }
 
     }
 
@@ -1297,7 +1273,7 @@ switchPlotTranscript <- function(
 
         ### Fix order
         if( "Not Analyzed" %in% myTranscriptPlotData$Domain ) {
-        domainsFound <- c(domainsFound, "Not Analyzed")
+            domainsFound <- c(domainsFound, "Not Analyzed")
 
             correspondingColors <- c(
                 "#161616", # for ' transcript'
@@ -1365,7 +1341,7 @@ switchPlotTranscript <- function(
         maxCharacter <-
             max(c(
                 sapply(allLabels, analyzeStrandCompositionInWhiteSpaces) ,
-                30
+                50
             ))
 
         ### Modify names to match length
@@ -1518,7 +1494,6 @@ switchPlotTranscript <- function(
         return(myPlot)
     }
 }
-
 
 expressionAnalysisPlot <- function(
     switchAnalyzeRlist,
@@ -1973,6 +1948,99 @@ expressionAnalysisPlot <- function(
                     switchAnalyzeRlist$isoformFeatures$condition_2   ==
                     condition2
             )
+
+            ### Condition char
+            ### Extract size of condition lavel
+            allLabels <- c( condition1, condition2 )
+
+            if ('domainAnalysis' %in% names(switchAnalyzeRlist)) {
+                localDomains <-
+                    switchAnalyzeRlist$domainAnalysis[
+                        which(
+                            switchAnalyzeRlist$domainAnalysis$isoform_id
+                            %in% isoform_id
+                        ),
+                        c('isoform_id', 'hmm_name')
+                        ]
+                domianList <-
+                    split(
+                        localDomains$hmm_name,
+                        f = localDomains$isoform_id
+                    )
+                domainNames <-
+                    unique(unlist(lapply(domianList, function(aVec) {
+                        nameTable <- as.data.frame(
+                            table(aVec), stringsAsFactors = FALSE
+                        )
+                        # only modify those with mutiple instances
+                        nameTable$newName <- nameTable$aVec
+                        modifyIndex <- which(nameTable$Freq > 1)
+                        nameTable$newName[modifyIndex] <-
+                            paste(nameTable$aVec[modifyIndex],
+                                  ' (x',
+                                  nameTable$Freq[modifyIndex],
+                                  ')',
+                                  sep = '')
+
+                        newVec <-
+                            nameTable$newName[match(aVec, nameTable$aVec)]
+                        return(newVec)
+                    })))
+                allLabels <- c(allLabels, domainNames)
+            }
+            if ('idrAnalysis' %in% names(switchAnalyzeRlist)) {
+                localIdrs <-
+                    switchAnalyzeRlist$idrAnalysis[
+                        which(
+                            switchAnalyzeRlist$idrAnalysis$isoform_id
+                            %in% isoform_id
+                        ),
+                        c('isoform_id', 'idr_type')
+                        ]
+                idrList <-
+                    split(
+                        localIdrs$idr_type,
+                        f = localIdrs$isoform_id
+                    )
+                idrNames <-
+                    unique(unlist(lapply(idrList, function(aVec) {
+                        nameTable <- as.data.frame(
+                            table(aVec), stringsAsFactors = FALSE
+                        )
+                        # only modify those with mutiple instances
+                        nameTable$newName <- nameTable$aVec
+                        modifyIndex <- which(nameTable$Freq > 1)
+                        nameTable$newName[modifyIndex] <-
+                            paste(nameTable$aVec[modifyIndex],
+                                  ' (x',
+                                  nameTable$Freq[modifyIndex],
+                                  ')',
+                                  sep = '')
+
+                        newVec <-
+                            nameTable$newName[match(aVec, nameTable$aVec)]
+                        return(newVec)
+                    })))
+                allLabels <- c(allLabels, idrNames)
+            }
+
+            if ('signalPeptideAnalysis' %in% names(switchAnalyzeRlist)) {
+                if (any(
+                    isoform_id %in%
+                    switchAnalyzeRlist$signalPeptideAnalysis$isoform_id
+                )) {
+                    allLabels <- c(allLabels, 'Signal Peptide')
+                }
+            }
+
+            conditionMaxCharacter <-
+                max(c(
+                    sapply(
+                        allLabels,
+                        analyzeStrandCompositionInWhiteSpaces
+                    ),
+                    50
+                ))
         }
 
         # Gene expression
@@ -2116,12 +2184,24 @@ expressionAnalysisPlot <- function(
 
             ### Build Plot
             g1 <-
-                ggplot(data = geneExpressionCombined, aes(x = Condition)) +
-                geom_bar(
-                    aes(y = gene_expression + additionFactor),
-                    stat = "identity",
-                    position = 'dodge'
-                )
+                ggplot(data = geneExpressionCombined, aes(x = Condition))
+
+            if( optimizeForCombinedPlot ) {
+                g1 <- g1 +
+                    geom_bar(
+                        aes(y = gene_expression + additionFactor, fill = Condition),
+                        stat = "identity",
+                        position = 'dodge'
+                    )
+            } else {
+                g1 <- g1 +
+                    geom_bar(
+                        aes(y = gene_expression + additionFactor),
+                        stat = "identity",
+                        position = 'dodge'
+                    )
+            }
+
 
             # errorbar
             if (addErrorbars) {
@@ -2166,6 +2246,12 @@ expressionAnalysisPlot <- function(
                     fill = "white",
                     size = 0.5)
                 )
+
+            if( optimizeForCombinedPlot ) {
+                g1 <- g1 +
+                    scale_fill_manual(values = c('darkgrey', '#333333')) +
+                    guides(fill=FALSE)
+            }
 
             if (logYaxis) {
                 g1 <- g1 + scale_y_log10() +
@@ -2217,63 +2303,6 @@ expressionAnalysisPlot <- function(
                 isoExpression$isoform_id <-
                     modifyNames(aVec = isoExpression$isoform_id,
                                 extendToLength = maxNrCharacters)
-
-                ### Extract size of condition lavel
-                allLabels <- c(isoExpression$condition_1[1],
-                               isoExpression$condition_2[1])
-
-                if ('domainAnalysis' %in% names(switchAnalyzeRlist)) {
-                    localDomains <-
-                        switchAnalyzeRlist$domainAnalysis[
-                            which(
-                                switchAnalyzeRlist$domainAnalysis$isoform_id
-                                %in% isoform_id
-                            ),
-                            c('isoform_id', 'hmm_name')
-                        ]
-                    domianList <-
-                        split(
-                            localDomains$hmm_name,
-                            f = localDomains$isoform_id
-                        )
-                    domainNames <-
-                        unique(unlist(lapply(domianList, function(aVec) {
-                            nameTable <- as.data.frame(
-                                table(aVec), stringsAsFactors = FALSE
-                            )
-                            # only modify those with mutiple instances
-                            nameTable$newName <- nameTable$aVec
-                            modifyIndex <- which(nameTable$Freq > 1)
-                            nameTable$newName[modifyIndex] <-
-                                paste(nameTable$aVec[modifyIndex],
-                                      ' (',
-                                      nameTable$Freq[modifyIndex],
-                                      ')',
-                                      sep = '')
-
-                            newVec <-
-                                nameTable$newName[match(aVec, nameTable$aVec)]
-                            return(newVec)
-                        })))
-                    allLabels <- c(allLabels, domainNames)
-                }
-                if ('signalPeptideAnalysis' %in% names(switchAnalyzeRlist)) {
-                    if (any(
-                        isoform_id %in%
-                        switchAnalyzeRlist$signalPeptideAnalysis$isoform_id
-                    )) {
-                        allLabels <- c(allLabels, 'Signal Peptide')
-                    }
-                }
-
-                conditionMaxCharacter <-
-                    max(c(
-                        sapply(
-                            allLabels,
-                            analyzeStrandCompositionInWhiteSpaces
-                        ),
-                        30
-                    ))
 
                 isoExpression$condition_1 <-
                     modifyNames(aVec = isoExpression$condition_1,
@@ -3180,19 +3209,21 @@ switchPlot <- function(
 
 
     ### Plot everything together
-    nColToUse <- 12
+    plotAreaSize <- 10
+    legendSize <- 3
+    nColToUse <- plotAreaSize + legendSize
 
-    expPlotLast <- nColToUse - 2
-    lastTwoCols <- (nColToUse - 1):nColToUse
+    expPlotLast <- nColToUse - legendSize
+    lastTwoCols <- (nColToUse - legendSize + 1):nColToUse
 
     # set up veiwport
     grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow = 15, ncol = nColToUse)))
+    pushViewport(viewport(layout = grid.layout(nrow = 16, ncol = nColToUse)))
 
     # print header
     print(myTitle, vp = viewport(
         layout.pos.row = 1,
-        layout.pos.col = 1:(nColToUse - 1)
+        layout.pos.col = 1:(nColToUse - legendSize)
     ))
 
     # transctipt plot
@@ -3203,12 +3234,8 @@ switchPlot <- function(
             layout.pos.col = 1:expPlotLast
         )
     ))
-    print(transcriptLegend,
-          vp = viewport(layout.pos.row = 2:8, layout.pos.col = lastTwoCols))
 
     # expression
-    print(expressionLegend,
-          vp = viewport(layout.pos.row = 9:15, layout.pos.col = lastTwoCols))
     print(
         expressionPlots2$isoform_usage + guides(fill = FALSE),
         vp = viewport(
@@ -3230,6 +3257,13 @@ switchPlot <- function(
             layout.pos.col = 1:2
         )
     )
+
+    # Legends
+    print(expressionLegend,
+          vp = viewport(layout.pos.row = 9:15, layout.pos.col = lastTwoCols))
+    print(transcriptLegend,
+          vp = viewport(layout.pos.row = 2:8, layout.pos.col = lastTwoCols))
+
 
 }
 

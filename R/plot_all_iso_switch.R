@@ -400,15 +400,15 @@ switchPlotTopSwitches <- function(
                     if (fileType == 'pdf') {
                         pdf(
                             file = paste(fileName, '.pdf', sep = ''),
-                            height = 5,
-                            width = 8,
+                            height = 6,
+                            width = 9,
                             onefile = FALSE
                         )
                     } else {
                         png(
                             filename = paste(fileName, '.png', sep = ''),
-                            height = 5,
-                            width = 8,
+                            height = 6,
+                            width = 9,
                             units = 'in',
                             res = 300
                         )

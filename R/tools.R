@@ -191,255 +191,6 @@ myListToDf <- function(
     return(df)
 }
 
-extractExpressionMatrix <- function(
-    switchAnalyzeRlist,
-    feature = 'isoformUsage',
-    addInfo = FALSE,
-    na.rm = TRUE
-) {
-    ### Test input
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
-        stop(
-            'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
-        )
-    }
-    if (!feature %in% c('geneExp', 'isoformExp', 'isoformUsage')) {
-        stop(
-            'The \'feature\' argument must be either \'geneExp\' or \'isoformExp\' or \'IF\'.'
-        )
-    }
-
-    if (feature == 'geneExp') {
-        localData1 <-
-            unique(switchAnalyzeRlist$isoformFeatures[, c(
-                'gene_id', 'condition_1', 'gene_value_1'
-            )])
-        localData2 <-
-            unique(switchAnalyzeRlist$isoformFeatures[, c(
-                'gene_id', 'condition_2', 'gene_value_2'
-            )])
-
-        recast1 <-
-            reshape2::dcast(
-                localData1,
-                gene_id ~ condition_1,
-                value.var = 'gene_value_1'
-            )
-        recast2 <-
-            reshape2::dcast(
-                localData2,
-                gene_id ~ condition_2,
-                value.var = 'gene_value_2'
-            )
-
-        notIn1 <-
-            recast2[, c(
-                'gene_id', setdiff(colnames(recast2), colnames(recast1))
-            )]
-
-        combinedData <-
-            unique(
-                dplyr::inner_join(
-                    recast1,
-                    notIn1,
-                    by = 'gene_id'
-                )
-            )
-
-        if (na.rm) {
-            combinedData <-
-                combinedData[which(apply(combinedData, 1, function(x) {
-                    !any(is.na(x))
-                })), ]
-        }
-
-        # potentially add info
-        if (addInfo) {
-            # extract info
-            geneInfo <-
-                unique(switchAnalyzeRlist$isoformFeatures[, which(
-                    colnames(switchAnalyzeRlist$isoformFeatures) %in%
-                        c('gene_id', 'gene_name')
-                )])
-            # merge
-            combinedData <-
-                dplyr::inner_join(combinedData, geneInfo, by = 'gene_id')
-        } else {
-            rownames(combinedData) <- combinedData$gene_id
-            combinedData$gene_id <- NULL
-        }
-
-    } else if (feature == 'isoformExp') {
-        localData1 <-
-            unique(switchAnalyzeRlist$isoformFeatures[, c(
-                'isoform_id', 'condition_1', 'iso_value_1'
-            )])
-        localData2 <-
-            unique(switchAnalyzeRlist$isoformFeatures[, c(
-                'isoform_id', 'condition_2', 'iso_value_2'
-            )])
-
-        recast1 <-
-            reshape2::dcast(
-                localData1,
-                isoform_id ~ condition_1,
-                value.var = 'iso_value_1'
-            )
-        recast2 <-
-            reshape2::dcast(
-                localData2,
-                isoform_id ~ condition_2,
-                value.var = 'iso_value_2'
-            )
-
-        notIn1 <-
-            recast2[, c(
-                'isoform_id', setdiff(colnames(recast2), colnames(recast1))
-            )]
-
-        combinedData <-
-            unique(dplyr::inner_join(recast1, notIn1, by = 'isoform_id'))
-
-        if (na.rm) {
-            combinedData <-
-                combinedData[which(apply(combinedData, 1, function(x) {
-                    !any(is.na(x))
-                })), ]
-        }
-
-        # potentially add info
-        if (addInfo) {
-            # extract iso info
-            isoInfo <-
-                unique(switchAnalyzeRlist$isoformFeatures[, which(
-                    colnames(switchAnalyzeRlist$isoformFeatures) %in%
-                        c(
-                            'isoform_id',
-                            'gene_id',
-                            'gene_name',
-                            'nearest_ref_id',
-                            'class_code',
-                            'length',
-                            'IR',
-                            'signal_peptide_identified',
-                            'codingPotentialValue',
-                            'codingPotential',
-                            'domain_identified',
-                            'subcellularOrign'
-                        )
-                )])
-            # extract ORF
-            orfInfo <-
-                unique(switchAnalyzeRlist$orfAnalysis[, which(
-                    colnames(switchAnalyzeRlist$orfAnalysis) %in%
-                        c(
-                            'isoform_id',
-                            'orfTransciptStart',
-                            'orfTransciptEnd',
-                            'orfTransciptLength',
-                            'orfStartGenomic',
-                            'orfEndGenomic',
-                            'PTC'
-                        )
-                )])
-            # merge
-            isoInfo <- dplyr::inner_join(x=isoInfo, y=orfInfo, by = 'isoform_id')
-
-            # merge
-            combinedData <-
-                dplyr::inner_join(x=combinedData, y=isoInfo, by = 'isoform_id')
-        } else {
-            rownames(combinedData) <- combinedData$isoform_id
-            combinedData$isoform_id <- NULL
-        }
-    } else {
-        localData1 <-
-            unique(switchAnalyzeRlist$isoformFeatures[,c(
-                'isoform_id', 'condition_1', 'IF1'
-            )])
-        localData2 <-
-            unique(switchAnalyzeRlist$isoformFeatures[,c(
-                'isoform_id', 'condition_2', 'IF2'
-            )])
-
-        recast1 <-
-            reshape2::dcast(
-                localData1,
-                isoform_id ~ condition_1,
-                value.var = 'IF1'
-            )
-        recast2 <-
-            reshape2::dcast(
-                localData2,
-                isoform_id ~ condition_2,
-                value.var = 'IF2'
-            )
-
-        notIn1 <-
-            recast2[, c(
-                'isoform_id', setdiff(colnames(recast2), colnames(recast1))
-            )]
-
-        combinedData <-
-            unique(dplyr::inner_join(recast1, notIn1, by = 'isoform_id'))
-
-        if (na.rm) {
-            combinedData <-
-                combinedData[which(apply(combinedData, 1, function(x) {
-                    !any(is.na(x))
-                })), ]
-        }
-
-        # potentially add info
-        if (addInfo) {
-            # extract iso info
-            isoInfo <-
-                unique(switchAnalyzeRlist$isoformFeatures[, which(
-                    colnames(switchAnalyzeRlist$isoformFeatures) %in%
-                        c(
-                            'isoform_id',
-                            'gene_id',
-                            'gene_name',
-                            'nearest_ref_id',
-                            'class_code',
-                            'length',
-                            'IR',
-                            'signal_peptide_identified',
-                            'codingPotentialValue',
-                            'codingPotential',
-                            'domain_identified',
-                            'subcellularOrign'
-                        )
-                )])
-            # extract ORF
-            orfInfo <-
-                unique(switchAnalyzeRlist$orfAnalysis[, which(
-                    colnames(switchAnalyzeRlist$orfAnalysis) %in%
-                        c(
-                            'isoform_id',
-                            'orfTransciptStart',
-                            'orfTransciptEnd',
-                            'orfTransciptLength',
-                            'orfStartGenomic',
-                            'orfEndGenomic',
-                            'PTC'
-                        )
-                )])
-            # merge
-            isoInfo <- dplyr::inner_join(isoInfo, orfInfo, by = 'isoform_id')
-
-            # merge
-            combinedData <-
-                dplyr::inner_join(combinedData, isoInfo, by = 'isoform_id')
-        } else {
-            rownames(combinedData) <- combinedData$isoform_id
-            combinedData$isoform_id <- NULL
-        }
-    }
-
-    return(combinedData)
-}
-
 allPairwiseFeatures <- function(aNameVec1, forceNonOverlap = FALSE) {
     if( is(aNameVec1, 'factor') ) {
         aNameVec1 <- levels(aNameVec1)
@@ -519,9 +270,17 @@ isoformToGeneExp <- function(
         ### Extract annotation info
         if( geneInfoSeperately ) {
             if( 'GRanges' %in% class(isoformGeneAnnotation) ) {
+                if( ! all( c('gene_id','isoform_id') %in% colnames(mcols( isoformGeneAnnotation )) ) ) {
+                    stop('The GRange supplied to the "isoformGeneAnnotation" argument must contain the following two collumns "gene_id", "isoform_id".')
+                }
+
                 isoAnnot <- unique(as.data.frame(mcols( isoformGeneAnnotation )[,c('gene_id','isoform_id')]))
 
             } else if( 'data.frame' %in% class(isoformGeneAnnotation) ) {
+                if( ! all( c('gene_id','isoform_id') %in% colnames(isoformGeneAnnotation ) ) ) {
+                    stop('The data.frame supplied to the "isoformGeneAnnotation" argument must contain the following two collumns "gene_id", "isoform_id".')
+                }
+
                 isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
 
             } else if( is(isoformGeneAnnotation, 'character') ){
@@ -540,7 +299,10 @@ isoformToGeneExp <- function(
                 stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
             }
 
-            isoAnnot <- isoAnnot[which( isoAnnot$isoform_id %in% isoformRepExpression$isoform_id),]
+            if( length( intersect( isoAnnot$isoform_id, isoformRepExpression$isoform_id )) ) {
+                isoAnnot <- isoAnnot[which( isoAnnot$isoform_id %in% isoformRepExpression$isoform_id),]
+            }
+
 
             ### Look into overlap
             if( jaccardSimilarity( isoAnnot$isoform_id, isoformRepExpression$isoform_id ) != 1 ) {
@@ -668,6 +430,13 @@ isoformToIsoformFraction <- function(
                 isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
             } else{
                 stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
+            }
+
+            isoAnnot <- isoAnnot[which(
+                isoAnnot$isoform_id %in% isoformRepExpression$isoform_id
+            ),]
+            if(nrow(isoAnnot) == 0) {
+                stop('There were no overlap between the annotation and the isoforms quantified')
             }
 
             ### Look into overlap

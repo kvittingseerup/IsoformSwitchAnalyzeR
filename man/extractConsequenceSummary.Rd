@@ -27,7 +27,7 @@ extractConsequenceSummary(
 A \code{switchAnalyzeRlist} object where \code{analyzeSwitchConsequences()} have been run to identify consequences of isoform switches
 }
 \item{consequencesToAnalyze}{
-A string indicating which consequnces should be considered. See detail section of \code{\link{analyzeSwitchConsequences}} for describtion . Default is all consequences analyzed with \code{analyzeSwitchConsequences}.
+A string indicating which consequences should be considered. See detail section of \code{\link{analyzeSwitchConsequences}} for description . Default is all consequences analyzed with \code{analyzeSwitchConsequences}.
 }
 \item{includeCombined}{
 A logic indicating whether an analysis of how many (how large a fraction) of genes have any type of functional consequence.
@@ -36,7 +36,7 @@ A logic indicating whether an analysis of how many (how large a fraction) of gen
 A logic indicating whether the consequences should be summarized calculated as numbers (if FALSE) or as a fraction of the total number of switches/genes (as indicated by \code{plotGenes}). Default is FALSE.
 }
 \item{alpha}{
-The cutoff which the (callibrated) fdr correct p-values must be smaller than for calling significant switches. Default is 0.05.
+The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
 }
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
@@ -45,11 +45,11 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 A logic indicting whether the summarized results should be plotted. Default is TRUE.
 }
   \item{plotGenes}{
-A logic indicating whether to plot the number/fraction of genes with (if TRUE) or isoforms (if FALSE) involeved with isoform switches with functional consequences (both filtered via \code{alpha} and \code{dIFcutoff}.
+A logic indicating whether to plot the number/fraction of genes with (if TRUE) or isoforms (if FALSE) involved with isoform switches with functional consequences (both filtered via \code{alpha} and \code{dIFcutoff}.
 }
 
 \item{simplifyLocation}{
-A logic indicating whether to simplify the switches involved in changes in sub-celluar localizations (due the the hundreds of posibilites). Done by only considering where the isoform used more has a location switch to. Default is TRUE.
+A logic indicating whether to simplify the switches involved in changes in sub-cellular localizations (due the the hundreds of possible combinations). Done by only considering where the isoform used more has a location switch to. Default is TRUE.
 }
 
   \item{localTheme}{

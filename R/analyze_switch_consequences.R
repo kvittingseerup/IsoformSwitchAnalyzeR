@@ -8,6 +8,7 @@ analyzeSwitchConsequences <- function(
         'NMD_status',
         'domains_identified',
         'IDR_identified',
+        'IDR_type',
         'signal_peptide_identified'
     ),
     alpha = 0.05,
@@ -85,6 +86,8 @@ analyzeSwitchConsequences <- function(
 
             # IDR
             'IDR_identified',
+            'IDR_length',
+            'IDR_type',
 
             # sub cell
             'sub_cell_location',
@@ -173,11 +176,16 @@ analyzeSwitchConsequences <- function(
                 )
             }
         }
-        if ('IDR_identified'  %in% consequencesToAnalyze) {
+        if ( any(c('IDR_identified','IDR_type')  %in% consequencesToAnalyze)) {
             if (is.null(switchAnalyzeRlist$idrAnalysis)) {
                 stop(
                     'To test differences in IDR, the result of the NetSurfP2 analysis must be advailable. Please run analyzeNetSurfP2() and try again,'
                 )
+            }
+        }
+        if( 'IDR_type' %in% consequencesToAnalyze ) {
+            if( ! 'idr_type' %in% colnames(switchAnalyzeRlist$idrAnalysis) ) {
+                stop('To analyse IDR_type the IDR analysis must have been done using IUPred2A and imported with the analyzeIUPred2A() function.')
             }
         }
 
@@ -296,7 +304,7 @@ analyzeSwitchConsequences <- function(
             .inform = TRUE,
             .progress = progressBar,
             .fun = function(aDF) {
-                # aDF <- pairwiseIsoComparisonUniq[267,]
+                # aDF <- pairwiseIsoComparisonUniq[246,]
                 compareAnnotationOfTwoIsoforms(
                     switchAnalyzeRlist    = minimumSwitchList,
                     consequencesToAnalyze = consequencesToAnalyze,
@@ -515,6 +523,8 @@ compareAnnotationOfTwoIsoforms <- function(
             'signal_peptide_identified',
             # IDR
             'IDR_identified',
+            'IDR_length',
+            'IDR_type',
             # DeepLoc3
             'sub_cell_location',
             'solubility_status'
@@ -737,6 +747,8 @@ compareAnnotationOfTwoIsoforms <- function(
                 'domain_length',
                 'signal_peptide_identified',
                 'IDR_identified',
+                'IDR_length',
+                'IDR_type',
                 'solubility_status',
                 'sub_cell_location'
             ) %in% consequencesToAnalyze
@@ -891,7 +903,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ( 'IDR_identified' %in% consequencesToAnalyze ) {
+        if ( any( c('IDR_identified','IDR_type','IDR_length') %in% consequencesToAnalyze ) ) {
             idrData <-
                 switchAnalyzeRlist$idrAnalysis[which(
                     switchAnalyzeRlist$idrAnalysis$isoform_id %in%
@@ -902,7 +914,10 @@ compareAnnotationOfTwoIsoforms <- function(
             idrDataSplit <-
                 split(idrData[, c(
                     'idrStartGenomic',
-                    'idrEndGenomic'
+                    'idrEndGenomic',
+                    'orf_aa_start',
+                    'orf_aa_end',
+                    'idr_type'
                 )], f = idrData$isoform_id)
 
             ### Remove those overlapping trimmed regions
@@ -1052,7 +1067,7 @@ compareAnnotationOfTwoIsoforms <- function(
 
     ### Analyze differences
     if (TRUE) {
-        ### Makre result data.frame
+        ### Make result data.frame
         isoComparison <-
             data.frame(
                 isoformUpregulated = upIso,
@@ -1904,83 +1919,126 @@ compareAnnotationOfTwoIsoforms <- function(
 
         if ('domain_length'             %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
-                commonDomains <-
-                    table(unlist(lapply(domanDataSplit, function(x)
-                        x$hmm_name)))
-                commonDomains <-
-                    commonDomains[which(commonDomains == 2)]
+                domanDataSplit
 
-                # Any common domains
-                if (length(commonDomains)) {
-                    # for ecah domain analyze legth differences
-                    domainTruncationStatus <-
-                        unique(sapply(names(commonDomains), function(aDomain) {
-                            localDomian <-
-                                plyr::ldply(
-                                    domanDataSplit,
-                                    .fun = function(x)
-                                        x[which(x$hmm_name == aDomain), ]
-                                )
-                            localDomian$length <-
-                                localDomian$orf_aa_end -
-                                localDomian$orf_aa_start + 1
 
-                            domainLengthDifferent <-
-                                abs(diff(localDomian$length)) > AaCutoff
-
-                            if (!is.null(AaFracCutoff)) {
-                                maxIndex <- which.max(localDomian$length)
-                                fractionDifference <-
-                                    abs(diff(localDomian$length)) /
-                                    localDomian$length[maxIndex] > AaFracCutoff
-                                domainLengthDifferent <-
-                                    domainLengthDifferent & fractionDifference
-                            }
-
-                            if (domainLengthDifferent) {
-                                if (addDescription) {
-                                    shortIso <- localDomian$.id[which.min(
-                                        localDomian$length
-                                    )]
-
-                                    if (shortIso == upIso) {
-                                        domianLegnthStatus <-
-                                            'Domain length gain'
-                                    } else {
-                                        domianLegnthStatus <-
-                                            'Domain length loss'
-                                    }
-                                } else {
-                                    domianLegnthStatus <- TRUE
-                                }
-
-                            } else {
-                                domianLegnthStatus <- NA
-                            }
-
-                            return(domianLegnthStatus)
-                        }))
-
-                    ### Summarize differences
-                    localIndex <-
-                        which(isoComparison$featureCompared == 'domain_length')
-                    if (all(is.na(domainTruncationStatus))) {
-                        isoComparison$isoformsDifferent[localIndex] <- FALSE
-                    } else if (length(na.omit(domainTruncationStatus)) == 2) {
-                        isoComparison$isoformsDifferent[localIndex] <- TRUE
-
-                        if (addDescription) {
-                            isoComparison$switchConsequence[localIndex] <-
-                                'Domain length gain and loss'
-                        }
-                    } else if (length(na.omit(domainTruncationStatus)) == 1) {
-                        isoComparison$isoformsDifferent[localIndex] <- TRUE
-                        if (addDescription) {
-                            isoComparison$switchConsequence[localIndex] <-
-                                na.omit(domainTruncationStatus)
-                        }
+                domanDataSplit <- lapply(
+                    domanDataSplit,
+                    function(x) {
+                        x$length <- x$orf_aa_end - x$orf_aa_start + 1
+                        return(x)
                     }
+                )
+
+                ### Analyze overlap
+                nDom <- sapply(domanDataSplit, nrow)
+                if( all(nDom) ) {
+                    domainRanges <- lapply(
+                        domanDataSplit,
+                        function(x) {
+                            if( x$pfamStartGenomic[1] < x$pfamEndGenomic[1]) {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$pfamStartGenomic,
+                                        end   = x$pfamEndGenomic
+                                    ),
+                                    hmm_name  = x$hmm_name,
+                                    orfLength = x$length
+                                )
+                            } else {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$pfamEndGenomic,
+                                        end   = x$pfamStartGenomic
+                                    ),
+                                    hmm_name  = x$hmm_name,
+                                    orfLength = x$length
+                                )
+                            }
+
+                        }
+                    )
+
+                    ### Calculate overlap
+                    localOverlap <- findOverlaps(
+                        query   = domainRanges[[ upIso   ]],
+                        subject = domainRanges[[ downIso ]]
+                    )
+
+                    if(length(localOverlap)) {
+
+                        localOverlapDf <- as.data.frame(localOverlap)
+                        localOverlapDf$upName <- domainRanges[[ upIso   ]]$hmm_name[queryHits   (localOverlap)]
+                        localOverlapDf$dnName <- domainRanges[[ downIso ]]$hmm_name[subjectHits (localOverlap)]
+                        localOverlapDf$upLength <- domainRanges[[ upIso   ]]$orfLength[queryHits   (localOverlap)]
+                        localOverlapDf$dnLength <- domainRanges[[ downIso ]]$orfLength[subjectHits (localOverlap)]
+
+                        ### Subset to same domain
+                        localOverlapDf <- localOverlapDf[which(
+                            localOverlapDf$upName == localOverlapDf$dnName
+                        ),]
+
+                        localOverlapDf$lengthDiff <-
+                            abs(localOverlapDf$upLength - localOverlapDf$dnLength) > AaCutoff
+
+                        if (!is.null(AaFracCutoff)) {
+                            localOverlapDf$minLength <- apply(localOverlapDf[,c('upLength','dnLength')], 1, min)
+                            localOverlapDf$maxLength <- apply(localOverlapDf[,c('upLength','dnLength')], 1, max)
+
+                            localOverlapDf$lengthDiff <-
+                                localOverlapDf$minLength / localOverlapDf$maxLength < AaFracCutoff & localOverlapDf$lengthDiff
+
+                        }
+
+                        localOverlapDfDiff <- localOverlapDf[which(
+                            localOverlapDf$lengthDiff
+                        ),]
+
+                        differentDomainLength <- nrow(localOverlapDfDiff) > 0
+
+                        localIndex <-
+                            which(isoComparison$featureCompared == 'domain_length')
+                        isoComparison$isoformsDifferent[localIndex] <-
+                            differentDomainLength
+
+                    } else {
+                        differentDomainLength <- FALSE
+                    }
+
+                } else {
+                    differentDomainLength <- FALSE
                 }
+
+                ### Repport if any difference
+                if (differentDomainLength & addDescription) {
+
+                    localOverlapDfDiff$maxIsUp <- localOverlapDfDiff$maxLength == localOverlapDfDiff$upLength
+
+                    ### Deside consequence
+                    if(
+                        all( c(TRUE, FALSE) %in% localOverlapDfDiff$maxIsUp )
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            #'IDR length gain and loss'
+                            'Mixed Domain length differences'
+                    } else if(
+                        all(localOverlapDfDiff$maxIsUp)
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Domain length gain'
+                    } else if(
+                        all( ! localOverlapDfDiff$maxIsUp )
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Domain length loss'
+                    } else {
+                        stop('Something with Domain length analysis went wrong')
+                    }
+
+                }
+
             }
         }
 
@@ -2058,6 +2116,219 @@ compareAnnotationOfTwoIsoforms <- function(
                                 'IDR loss'
                         }
                     }
+                }
+            }
+        }
+
+        if ('IDR_type'                  %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+
+                nIdr <- sapply(idrDataSplit, nrow)
+                if( all(nIdr) ) {
+                    idrRanges <- lapply(
+                        idrDataSplit,
+                        function(x) {
+                            if( x$idrStartGenomic[1] < x$idrEndGenomic[1]) {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$idrStartGenomic,
+                                        end   = x$idrEndGenomic
+                                    ),
+                                    type  = x$idr_type
+                                )
+                            } else {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$idrEndGenomic,
+                                        end   = x$idrStartGenomic
+                                    ),
+                                    type  = x$idr_type
+                                )
+                            }
+
+                        }
+                    )
+
+                    ### Calculate overlap
+                    localOverlap <- findOverlaps(
+                        query   = idrRanges[[ upIso   ]],
+                        subject = idrRanges[[ downIso ]]
+                    )
+
+                    if(length(localOverlap)) {
+                        localOverlapDf <- as.data.frame(localOverlap)
+                        localOverlapDf$upType <- idrRanges[[ upIso   ]]$type[queryHits   (localOverlap)]
+                        localOverlapDf$dnType <- idrRanges[[ downIso ]]$type[subjectHits (localOverlap)]
+
+                        differentIdrType <- any( na.omit(
+                            localOverlapDf$upType != localOverlapDf$dnType
+                        ))
+
+                        localIndex <-
+                            which(isoComparison$featureCompared == 'IDR_type')
+                        isoComparison$isoformsDifferent[localIndex] <-
+                            differentIdrType
+                    } else {
+                        differentIdrType <- FALSE
+                    }
+                } else {
+                    differentIdrType <- FALSE
+                }
+
+                if (differentIdrType & addDescription) {
+
+                    localOverlapDf <- localOverlapDf[which(
+                        localOverlapDf$upType != localOverlapDf$dnType
+                    ),]
+
+                    localOverlapDf$bindingGain <-
+                        localOverlapDf$dnType == 'IDR' & localOverlapDf$upType == 'IDR_w_binding_region'
+
+                    localOverlapDf$bindingLoss <-
+                        localOverlapDf$dnType == 'IDR_w_binding_region' & localOverlapDf$upType == 'IDR'
+
+                    ### Deside consequence
+                    if(
+                        any( localOverlapDf$bindingGain) &
+                        any(localOverlapDf$bindingLoss)
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'IDR w binding region switch'
+                    } else if(
+                          any( localOverlapDf$bindingGain ) &
+                        ! any( localOverlapDf$bindingLoss )
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'IDR w binding region gain'
+                    } else if(
+                        ! any( localOverlapDf$bindingGain ) &
+                        any( localOverlapDf$bindingLoss )
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'IDR w binding region loss'
+                    } else {
+                        stop('Something with idr binding regions went wrong')
+                    }
+
+                }
+            }
+        }
+
+        if ('IDR_length'                %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+
+                idrDataSplit <- lapply(
+                    idrDataSplit,
+                    function(x) {
+                        x$length <- x$orf_aa_end - x$orf_aa_start + 1
+                        return(x)
+                    }
+                )
+
+                ### Analyze overlap
+                nIdr <- sapply(idrDataSplit, nrow)
+                if( all(nIdr) ) {
+                    idrRanges <- lapply(
+                        idrDataSplit,
+                        function(x) {
+                            if( x$idrStartGenomic[1] < x$idrEndGenomic[1]) {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$idrStartGenomic,
+                                        end   = x$idrEndGenomic
+                                    ),
+                                    type  = x$idr_type,
+                                    orfLength = x$length
+                                )
+                            } else {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$idrEndGenomic,
+                                        end   = x$idrStartGenomic
+                                    ),
+                                    type  = x$idr_type,
+                                    orfLength = x$length
+                                )
+                            }
+
+                        }
+                    )
+
+                    ### Calculate overlap
+                    localOverlap <- findOverlaps(
+                        query   = idrRanges[[ upIso   ]],
+                        subject = idrRanges[[ downIso ]]
+                    )
+
+                    if(length(localOverlap)) {
+
+                        localOverlapDf <- as.data.frame(localOverlap)
+                        localOverlapDf$upLength <- idrRanges[[ upIso   ]]$orfLength[queryHits   (localOverlap)]
+                        localOverlapDf$dnLength <- idrRanges[[ downIso ]]$orfLength[subjectHits (localOverlap)]
+
+
+                        localOverlapDf$lengthDiff <-
+                            abs(localOverlapDf$upLength - localOverlapDf$dnLength) > AaCutoff
+
+                        if (!is.null(AaFracCutoff)) {
+                            localOverlapDf$minLength <- apply(localOverlapDf[,c('upLength','dnLength')], 1, min)
+                            localOverlapDf$maxLength <- apply(localOverlapDf[,c('upLength','dnLength')], 1, max)
+
+                            localOverlapDf$lengthDiff <-
+                                localOverlapDf$minLength / localOverlapDf$maxLength < AaFracCutoff & localOverlapDf$lengthDiff
+
+                        }
+
+
+                        localOverlapDfDiff <- localOverlapDf[which(
+                            localOverlapDf$lengthDiff
+                        ),]
+
+                        differentIdrLength <- nrow(localOverlapDfDiff) > 0
+
+                        localIndex <-
+                            which(isoComparison$featureCompared == 'IDR_length')
+                        isoComparison$isoformsDifferent[localIndex] <-
+                            differentIdrLength
+
+                    } else {
+                        differentIdrType <- FALSE
+                    }
+
+                } else {
+                    differentIdrType <- FALSE
+                }
+
+                ### Repport if any difference
+                if (differentIdrType & addDescription) {
+
+                    localOverlapDfDiff$maxIsUp <- localOverlapDfDiff$maxLength == localOverlapDfDiff$upLength
+
+                    ### Deside consequence
+                    if(
+                        all( c(TRUE, FALSE) %in% localOverlapDfDiff$maxIsUp )
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            #'IDR length gain and loss'
+                            'Mixed IDR length differences'
+                    } else if(
+                        all(localOverlapDfDiff$maxIsUp)
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'IDR length gain'
+                    } else if(
+                        all( ! localOverlapDfDiff$maxIsUp )
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'IDR length loss'
+                    } else {
+                        stop('Something with idr length went wrong')
+                    }
+
                 }
             }
         }
@@ -2235,7 +2506,6 @@ extractConsequenceSummary <- function(
             'tts',
             'last_exon',
             'isoform_length',
-            'isoform_seq_similarity',
             'exon_number',
             'intron_structure',
             'intron_retention',
@@ -2247,6 +2517,8 @@ extractConsequenceSummary <- function(
             'ORF_length',
             '5_utr_length',
             '3_utr_length',
+            # seq similarity
+            'isoform_seq_similarity',
             'ORF_seq_similarity',
             '5_utr_seq_similarity',
             '3_utr_seq_similarity',
@@ -2256,8 +2528,18 @@ extractConsequenceSummary <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
+
             # SignalIP
-            'signal_peptide_identified'
+            'signal_peptide_identified',
+
+            # IDR
+            'IDR_identified',
+            'IDR_length',
+            'IDR_type',
+
+            # sub cell
+            'sub_cell_location',
+            'solubility_status'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -2543,7 +2825,6 @@ extractConsequenceEnrichment <- function(
             'tts',
             'last_exon',
             'isoform_length',
-            'isoform_seq_similarity',
             'exon_number',
             'intron_structure',
             'intron_retention',
@@ -2555,6 +2836,8 @@ extractConsequenceEnrichment <- function(
             'ORF_length',
             '5_utr_length',
             '3_utr_length',
+            # seq similarity
+            'isoform_seq_similarity',
             'ORF_seq_similarity',
             '5_utr_seq_similarity',
             '3_utr_seq_similarity',
@@ -2564,8 +2847,15 @@ extractConsequenceEnrichment <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
+
             # SignalIP
             'signal_peptide_identified',
+
+            # IDR
+            'IDR_identified',
+            'IDR_length',
+            'IDR_type',
+
             # sub cell
             'sub_cell_location',
             'solubility_status'
@@ -2628,8 +2918,10 @@ extractConsequenceEnrichment <- function(
             NMD_status=c('NMD sensitive','NMD insensitive'),
             coding_potential=c('Transcript is coding','Transcript is Noncoding'),
             domains_identified=c('Domain gain','Domain loss'),
-            IDR_identified = c('IDR gain','IDR loss'),
             domain_length=c('Domain length gain','Domain length loss'),
+            IDR_identified = c('IDR gain','IDR loss'),
+            IDR_length = c('IDR length gain', 'IDR length loss'),
+            IDR_type = c('IDR w binding region gain', 'IDR w binding region loss'),
             signal_peptide_identified=c('Signal peptide gain','Signal peptide loss'),
             solubility_status = c('Membrane tethering gain','Membrane tethering loss')
         )
@@ -2926,12 +3218,17 @@ extractConsequenceEnrichment <- function(
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
             scale_color_manual(name = paste0('FDR < ', alpha), values=c('black','red'), drop=FALSE) +
-            scale_size_continuous(name = 'Observations') +
             guides(
                 color = guide_legend(order=1),
                 size = guide_legend(order=2)
             ) +
             coord_cartesian(xlim=c(0,1))
+
+        if( countGenes ) {
+            g1 <- g1 + scale_size_continuous(name = 'Genes')
+        } else {
+            g1 <- g1 + scale_size_continuous(name = 'Switches')
+        }
 
         print(g1)
     }
@@ -3076,7 +3373,6 @@ extractConsequenceEnrichmentComparison <- function(
         fisherRes2$consequence <- gsub(' \\(paired','\n\\(paired', fisherRes2$consequence)
         fisherRes2$consequence <- gsub('with ','with\n', fisherRes2$consequence)
 
-
         if(countGenes) {
             xText <- 'Fraction of genes having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)'
         } else {
@@ -3092,7 +3388,6 @@ extractConsequenceEnrichmentComparison <- function(
             labs(x=xText, y='Comparison') +
             #scale_color_manual('Fraction in\nComparisons\nSignifcantly different', values=c('black','red'), drop=FALSE) +
             scale_color_manual(name = paste0('FDR across\ncomparisons\n< ', alpha), values=c('black','red'), drop=FALSE) +
-            scale_size_continuous(name = 'Observations') +
             guides(
                 color = guide_legend(order=1),
                 size = guide_legend(order=2)
@@ -3100,6 +3395,12 @@ extractConsequenceEnrichmentComparison <- function(
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1), strip.text.y = element_text(angle = 0)) +
             coord_cartesian(xlim=c(0,1))
+
+        if( countGenes ) {
+            g1 <- g1 + scale_size_continuous(name = 'Genes')
+        } else {
+            g1 <- g1 + scale_size_continuous(name = 'Switches')
+        }
 
         print(g1)
 

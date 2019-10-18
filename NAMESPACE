@@ -88,6 +88,7 @@ export('analyzeCPC2')
 export('analyzePFAM')
 export('analyzeSignalP')
 export('analyzeNetSurfP2')
+export('analyzeIUPred2A')
 
 # Splicing analysis
 export('analyzeAlternativeSplicing')
@@ -121,7 +122,6 @@ export('isoformSwitchAnalysisPart2')
 export('isoformSwitchAnalysisCombined')
 
 # other tools
-export('extractExpressionMatrix')
 export('isoformToGeneExp')
 export('isoformToIsoformFraction')
 

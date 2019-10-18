@@ -26,7 +26,7 @@ isoformSwitchTestDEXSeq(
 \item{switchAnalyzeRlist}{ A \code{switchAnalyzeRlist} object. }
 
 \item{alpha}{
-The cutoff which the (calibrated) fdr correct p-values must be smaller than for calling significant switches. Defuault is 0.05.
+The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
 }
 
 \item{dIFcutoff}{
@@ -34,11 +34,11 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 }
 
 \item{correctForConfoundingFactors}{
-A logic indicating whether IsoformSwitchAnalyzeR to use limma to correct for any confounding effects (e.g. batch effects) as indicated in the design matrix (as additional columns (appart from the two default columns)). Default is TRUE.
+A logic indicating whether IsoformSwitchAnalyzeR to use limma to correct for any confounding effects (e.g. batch effects) as indicated in the design matrix (as additional columns (apart from the two default columns)). Default is TRUE.
 }
 
 \item{overwriteIFvalues}{
-A logic indicating whether to overwrite the IF and dIF stored in the switchAnalyzeRlist with the corrected IF and dIF values - if no counfounding effects are pressent in the design matrix this will not change anything. Default is TRUE.
+A logic indicating whether to overwrite the IF and dIF stored in the switchAnalyzeRlist with the corrected IF and dIF values - if no confounding effects are present in the design matrix this will not change anything. Default is TRUE.
 }
 
 \item{reduceToSwitchingGenes}{
@@ -46,7 +46,7 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 }
 
 \item{reduceFurtherToGenesWithConsequencePotential}{
-A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which have the potential to find isoform switches with predicted consequences. This argument is a more strict version of \code{reduceToSwitchingGenes} as it not only requires that at least one isoform is significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) but also that there is an isoform with the opposite effect size (e.g. used less if the first isoform is used more). The minimum effect size of the opposing isoform usage is also controled by \code{dIFcutoff}. The exsistence of such an opposing isoform means a switch pair can be formed. It is these pairs that can be analyzed for functional consequences further downstream in the IsoformSwitchAnalyzeR workflow. Enabling this will make the downstream analysis a even faster (than just using reduceToSwitchingGenes) since fewer genes needs to be analyzed. Requires that \code{reduceToSwitchingGenes=TRUE} to have any effect. Default is TRUE.
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which have the potential to find isoform switches with predicted consequences. This argument is a more strict version of \code{reduceToSwitchingGenes} as it not only requires that at least one isoform is significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) but also that there is an isoform with the opposite effect size (e.g. used less if the first isoform is used more). The minimum effect size of the opposing isoform usage is also controlled by \code{dIFcutoff}. The existence of such an opposing isoform means a switch pair can be formed. It is these pairs that can be analyzed for functional consequences further downstream in the IsoformSwitchAnalyzeR workflow. Enabling this will make the downstream analysis a even faster (than just using reduceToSwitchingGenes) since fewer genes needs to be analyzed. Requires that \code{reduceToSwitchingGenes=TRUE} to have any effect. Default is TRUE.
 }
 
 \item{onlySigIsoforms}{
@@ -59,9 +59,9 @@ A logic indicating whether both isoforms the pairs considered if \code{reduceFur
 }
 
 \details{
-This function uses DEXSeq to test for differential isoform usage using the replicate count matrix. This is done by for each pariwise comparison building and testing one model (building one combined model and testing each pariwise comparison from that is not supported by DEXSeq).
+This function uses DEXSeq to test for differential isoform usage using the replicate count matrix. This is done by for each pairwise comparison building and testing one model (building one combined model and testing each pairwise comparison from that is not supported by DEXSeq).
 
-isoformSwitchTestDEXSeq also allows for estimation of effect sizes (IF and dIF) corrected for counfounding effects (controled by \code{correctForConfoundingFactors = TRUE}) (recomended). Counfounding effects (stored as additional column(s) in the design matrix ( switchAnalyzeRlist$designMatrix )) is done by by performing a batch correction on the isoform abundance matrix with limma::removeBatchEffect() and afterwards recalculate the IF matrix and summarize the IF and dIF values. These new estimates can be added to the switchAnalyzeRlist (overwriting the existing values) by setting \code{overwriteIFvalues = TRUE}.
+isoformSwitchTestDEXSeq also allows for estimation of effect sizes (IF and dIF) corrected for confounding effects (controlled by \code{correctForConfoundingFactors = TRUE}) (recommended). Confounding effects (stored as additional column(s) in the design matrix ( switchAnalyzeRlist$designMatrix )) is done by by performing a batch correction on the isoform abundance matrix with limma::removeBatchEffect() and afterwards recalculate the IF matrix and summarize the IF and dIF values. These new estimates can be added to the switchAnalyzeRlist (overwriting the existing values) by setting \code{overwriteIFvalues = TRUE}.
 
 Note that the actual testing via DEXSeq always will take confounding effects into account (a full model including all confounding effects are always made).
 }
@@ -70,14 +70,14 @@ Note that the actual testing via DEXSeq always will take confounding effects int
 \value{
 A \code{switchAnalyzeRlist} where the following have been modified:
 \itemize{
-    \item{\code{1}: Two collumns, \code{isoform_switch_q_value} and \code{gene_switch_q_value} in the \code{isoformFeatures} entry have overwritten with the result of the test.}
+    \item{\code{1}: Two columns, \code{isoform_switch_q_value} and \code{gene_switch_q_value} in the \code{isoformFeatures} entry have overwritten with the result of the test.}
     \item{\code{2}: A \code{data.frame} containing the details of the analysis have been added (called 'isoformSwitchAnalysis').}
 }
 
 The data.frame added have one row per isoform per comparison of condition and contains the following columns:
 \itemize{
-    \item{\code{iso_ref} : A unique refrence to a specific isoform in a specific comaprison of conditions. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
-    \item{\code{gene_ref} : A unique refrence to a specific gene in a specific comaprison of conditions. Enables esay handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
+    \item{\code{iso_ref} : A unique reference to a specific isoform in a specific comparison of conditions. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
+    \item{\code{gene_ref} : A unique reference to a specific gene in a specific comparison of conditions. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{condition_1}: Condition 1 - the condition used as baseline.}
     \item{\code{condition_2}: Condition 2.}

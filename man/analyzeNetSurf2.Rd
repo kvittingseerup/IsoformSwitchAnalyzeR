@@ -28,15 +28,15 @@ A string indicating the full path to the NetSurfP-2 result file. Can be gziped. 
 }
 
 \item{smoothingWindowSize}{
-An integer indicating how large a sliding window should be used to calculate a smoothed (via mean) disordered probability score of a particular position in a peptide. This has as a smoothing effect which prevents IDRs from not being detected (or from being split into sub-IDRs) by a single residue with low probability. The tradeoff is worse accuracy of detecting the exact edges of the IDRs. To turn of smoothing simply set to 1. Default is 5 amino acids.
+An integer indicating how large a sliding window should be used to calculate a smoothed (via mean) disordered probability score of a particular position in a peptide. This has as a smoothing effect which prevents IDRs from not being detected (or from being split into sub-IDRs) by a single residue with low probability. The trade off is worse accuracy of detecting the exact edges of the IDRs. To turn of smoothing simply set to 1. Default is 5 amino acids.
 }
 
 \item{probabilityCutoff}{
-A doubble indicating the cutoff applied to the (smoothed) disordered probability score (see "smoothingWindowSize" argument above) for calling a residue as "disordered". The default, 30 amino acids, is an accepted standard for long IDRs.
+A double indicating the cutoff applied to the (smoothed) disordered probability score (see "smoothingWindowSize" argument above) for calling a residue as "disordered". The default, 30 amino acids, is an accepted standard for long IDRs.
 }
 
 \item{minIdrSize}{
-An integer indicating how long a strech of disordered amino acid constiture the "region" part of the Intrinsically Disordered Region definition. The default, 30 amino acids, is an accepted standard for long IDRs.
+An integer indicating how long a stretch of disordered amino acid constitute the "region" part of the Intrinsically Disordered Region (IDR) definition. The default, 30 amino acids, is an accepted standard for long IDRs.
 }
 
 \item{showProgress}{
@@ -46,17 +46,17 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 }
 
 \details{
-Intrinsically Disordered Regions (IDR) are regions of a protein which does not have a fixed three-dimentional structure (oposite protein domains). Such regions are thought to play important roles in all aspects of biolgiy (and when it goes wrong) through multiple different functional aspectcs - including facilitating protein interactions.
+Intrinsically Disordered Regions (IDR) are regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). Such regions are thought to play important roles in all aspects of biology (and when it goes wrong) through multiple different functional aspects - including facilitating protein interactions.
 
-The NetSurfP web-server currently have a restriction of max 4000 sequences in the file uploaded. If you have more than that (one for each isoform in \code{summary( switchAnalyzeRlist)}) we reccomend multiple runs each with one of the the files containg subsets - else you can just run the combined fasta file. See \link{extractSequence} for info on how to split the amino acid fasta files.
+The NetSurfP web-server currently have a restriction of max 4000 sequences in the file uploaded. If you have more than that (one for each isoform in \code{summary( switchAnalyzeRlist)}) we recommend multiple runs each with one of the the files containing subsets - else you can just run the combined fasta file. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools: \cr
-Use default paramters. If you want to use the webserver it is easily done as follows:
+Use default parameters. If you want to use the webserver it is easily done as follows:
 1) Go to \url{http://www.cbs.dtu.dk/services/NetSurfP-2.0/}
-2) Upload the amino acoid file (_AA) created with \code{extractSequence}.
+2) Upload the amino avoid file (_AA) created with \code{extractSequence}.
 3) Submit your job.
-4) Wait till job is finished (if you submit your email you will recieve a notification).
-5) In the top-right conor of the result site use the "Export All" botton to download the results as a CNV file.
+4) Wait till job is finished (if you submit your email you will receive a notification).
+5) In the top-right corner of the result site use the "Export All" bottom to download the results as a CNV file.
 6) Supply a string indicating the path to the downloaded cnv file directly to the "pathToNetSurfP2resultFile" argument.
 
 If you run NetSurfP-2 locally just use the "--csv" argument and provide the resulting csv file to the \code{pathToNetSurfP2resultFile} argument.
@@ -68,19 +68,20 @@ Please note that the \code{analyzeNetSurfP2()} function will automatically only 
 }
 
 \value{
-A colum called 'idr_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains any protein domains or not. Furthermore the data.frame 'idrAnalysis' is added to the \code{switchAnalyzeRlist} containing positional data of each IDR identified.
+A column called 'idr_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains any protein domains or not. Furthermore the data.frame 'idrAnalysis' is added to the \code{switchAnalyzeRlist} containing positional data of each IDR identified.
 
 The data.frame added have one row per isoform and contains the columns:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{orf_aa_start}: The start coordinate given as amino acid position (of the ORF).}
     \item{\code{orf_aa_end}: The end coordinate given as amino acid position (of the ORF).}
+    \item{\code{idr_type}: A text string indicating the IDR type (one of 'IDR' or 'IDR_w_binding_region'.}
     \item{\code{transcriptStart}: The transcript coordinate of the start of the IDR.}
     \item{\code{transcriptEnd}: The transcript coordinate of the end of the IDR.}
     \item{\code{idrStarExon}: The exon index in which the start of the IDR is located.}
     \item{\code{idrEndExon}: The exon index in which the end of the IDR is located.}
-    \item{\code{idrStartGenomic}: The genomic coordinat of the start of the IDR.}
-    \item{\code{idrEndGenomic}:  The genomic coordinat of the end of the IDR.}
+    \item{\code{idrStartGenomic}: The genomic coordinate of the start of the IDR.}
+    \item{\code{idrEndGenomic}:  The genomic coordinate of the end of the IDR.}
 }
 }
 
@@ -100,18 +101,6 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzePFAM}}\cr
+\code{\link{analyzeIUPred2A}}\cr
 \code{\link{analyzeSwitchConsequences}}
-}
-\examples{
-### Load example data (matching the result files also store in IsoformSwitchAnalyzeR)
-data("exampleSwitchListIntermediary")
-exampleSwitchListIntermediary
-
-### Add NetSurfP-2 analysis
-exampleSwitchListAnalyzed <- analyzeNetSurfP2(
-    switchAnalyzeRlist = exampleSwitchListIntermediary,
-    pathToNetSurfP2resultFile = system.file("extdata/netsurfp2_results.csv.gz", package = "IsoformSwitchAnalyzeR")
-)
-
-exampleSwitchListAnalyzed
 }

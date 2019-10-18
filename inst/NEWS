@@ -1,3 +1,26 @@
+Changes in version 1.7.2 (2019-10-18)
+- Update type: Major.
+- analyzeIUPred2A() for analyzing intrincially disordered regions (and binding sites therein) was introduced. To enable this the following changes were also made:
+    * analyzeNetSurfP2() was extended to also create the idr_type column in the result
+    * analyzeSwitchConsequences() was extended to handle idr_type. Also it was upgrated to handle large differences in IDR lengths.
+    * The data included in the "exampleSwitchListAnalyzed" object was updated to include the result of an IUPred2A analysis (instead of the NetSurfP2 analysis)
+    * The build in data file for analysis of NetSurfP-2 in relation to exampleSwitchListIntermediary was replaced by the corresponding data for the IUPred2A analysis.
+    * switchPlotTranscript() (which is used by switchPlot() internally) was extended to also handle IDR types
+    * the switchPlot() layout was re-optimied for the new annotation.
+    * isoformSwitchAnalysisPart2() was updated to also handle IUPred2A input.
+    * The vignette was updated accordingly.
+- switchPlotTranscript() (and thereby also switchPlot) now use the annotationImportance in a much nicer way. Instead of removing the annotation (which could cause problems when comparing computational analysis to visual output) it now uses annotationImportance to plot the data as layers with the most important on top - meaning no annotation is skipped.
+- switchPlotGeneExp() was updated to follow the condition coloring used by switchPlotIsoExp() and switchPlotIsoUsage() when used by the switchPlot() function.
+- Corrected a bug in switPlot() which caused the interpretation of the "increased/decreased usage" added to the plot to be the min instead of max of the supplied alphas.
+- Corrected a bug in analyzeSwitchConsequences() that could cause the "domain_length" consequnce type to give wrong results. Now the 'domain_length' test transcripts for differences in the length of overlapping domains of the same type (same hmm_name)
+- isoformSwitchAnalysisPart2() now also uses n=Inf to create all plots (NA have same function for backward compatability).
+- importRdata now ensures the order of columns in the designmatrix is always.
+- All functions for importing external analysis, which supports multiple files, now automatically remove duplicated interies.
+- The extractExpressionMatrix function was depreciated.
+- All function documentation was spell-checked.
+- Various documentation improvements.
+- Error message improvements.
+
 Changes in version 1.7.1 (2019-07-19)
 - Update type: Minor.
 - Version bump due to Bioconductor release.
