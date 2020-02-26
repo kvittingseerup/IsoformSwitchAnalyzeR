@@ -655,7 +655,6 @@ createSwitchAnalyzeRlist <- function(
         stringsAsFactors = FALSE
     )
 
-
     ### Create switchList
     localSwitchList <- new(
         "switchAnalyzeRlist",
@@ -677,7 +676,11 @@ createSwitchAnalyzeRlist <- function(
     }
 
     ### Add runInfo
-    localSwitchList$runInfo <- list()
+    localSwitchList$runInfo <- list(
+        IsoformSwitchAnalyzeR = list(
+            version = package.version('IsoformSwitchAnalyzeR')
+        )
+    )
 
     ### Subset if nessesary
     if(length(genesToRemove)) {

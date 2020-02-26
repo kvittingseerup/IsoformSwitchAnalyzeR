@@ -545,6 +545,8 @@ isoformSwitchTestDEXSeq <- function(
     showProgress = TRUE,
     quiet = FALSE
 ) {
+    tStart <- Sys.time()
+
     ### Test input
     if (TRUE) {
         ### Tjek arguments
@@ -1209,6 +1211,7 @@ isoformSwitchTestDEXSeq <- function(
     }
 
     if (!quiet) {
+        message(paste('Total runtime:' ,round( difftime(Sys.time(), tStart, units = 'min'), digits = 2), 'min', sep=' '))
         message('Done')
     }
     return(switchAnalyzeRlist)

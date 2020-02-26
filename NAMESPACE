@@ -54,7 +54,7 @@ importFrom("dplyr","group_by")
 importFrom("dplyr","summarise_all")
 importFrom("stringr","str_c")
 importFrom("magrittr","%>%")
-importFrom('readr', 'read_tsv', 'read_csv','cols_only','col_character','col_integer','col_double')
+importFrom('readr', 'read_tsv', 'read_csv', 'fwf_empty','read_fwf','cols_only','col_character','col_integer','col_double')
 
 
 ### Export functions from IsoformSwitchAnalyzeR

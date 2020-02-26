@@ -105,7 +105,8 @@ Kristoffer Vitting-Seerup
 # "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
 # specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
 # and not something you need to do - just supply the string e.g.
-# "mySalmonQuantifications/" or 'mySalmonQuantifications/file1.sf' to the function
+# parentDir = "/path/to/mySalmonQuantifications/" or
+# sampleVector = c('mySalmonQuantifications/file1.sf', 'mySalmonQuantifications/file2.sf') to the function
 
 ### Import all quantifications stored in a folder
 salmonQuant <- importIsoformExpression(

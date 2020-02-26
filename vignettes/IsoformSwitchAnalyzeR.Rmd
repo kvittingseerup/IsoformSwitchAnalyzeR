@@ -338,7 +338,7 @@ For the purpose of illustrating importing data into R let us use some data quant
 # "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
 # specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
 # and not something  you need to do - just supply the string e.g.
-# "/path/to/mySalmonQuantifications/" pointing to the parent directory (where 
+# parentDir = "/path/to/mySalmonQuantifications/" pointing to the parent directory (where
 # each sample is a separate sub-directory) to the function.
 
 ### Import quantifications
@@ -406,7 +406,7 @@ Since we now have all the data we can use the importRdata() function to import a
 # "system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")"" is
 # specialiced way of accessing the example data in the IsoformSwitchAnalyzeR package
 # and not somhting you need to do - just supply the string e.g.
-# "/myAnnotation/myQuantified.gtf" to the isoformExonAnnoation argument
+# isoformExonAnnoation="/myAnnotation/myQuantified.gtf" to the isoformExonAnnoation argument
 
 ### Create switchAnalyzeRlist
 aSwitchList <- importRdata(
@@ -444,7 +444,6 @@ We can now run the first part of the isoform switch analysis workflow which filt
 ```{r, results = "hide", message = FALSE, warning=FALSE}
 exampleSwitchList <- isoformSwitchAnalysisPart1(
     switchAnalyzeRlist   = exampleSwitchList,
-    dIFcutoff            = 0.3, # Cutoff for finding switches - set high for short runtime in example data
     # pathToOutput = 'path/to/where/output/should/be/'
     outputSequences      = FALSE, # change to TRUE whan analyzing your own data 
     prepareForWebServers = FALSE  # change to TRUE if you will use webservers for external sequence analysis
@@ -463,10 +462,7 @@ Note that:
 The number of switching features is easily summarized as follows:
 
 ```{r}
-extractSwitchSummary(
-    exampleSwitchList,
-    dIFcutoff = 0.3 # the same cutoff to the summary function as used above
-)
+extractSwitchSummary( exampleSwitchList )
 ```
 
 <br />
@@ -486,7 +482,7 @@ The second part of the isoform switch analysis workflow, which includes importin
 
 exampleSwitchList <- isoformSwitchAnalysisPart2(
   switchAnalyzeRlist        = exampleSwitchList, 
-  dIFcutoff                 = 0.3,   # Cutoff for finding switches - set high for short runtime in example data
+  dIFcutoff                 = 0.3,   # Cutoff for defining switch size - set high for short runtime in example data
   n                         = 10,    # if plotting was enabled, it would only output the top 10 switches
   removeNoncodinORFs        = TRUE,  # Because ORF was predicted de novo
   pathToCPC2resultFile      = system.file("extdata/cpc2_result.txt"         , package = "IsoformSwitchAnalyzeR"),
@@ -940,7 +936,7 @@ importCufflinksFiles() can both be used by pointing to the parent directory (whe
 # "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
 # specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
 # and not something  you need to do - just supply the string e.g.
-# "/mySalmonQuantifications/" pointing to the parent directory (where 
+# parentDir = "/mySalmonQuantifications/" pointing to the parent directory (where 
 # each sample is a seperate sub-directory) to the function.
 
 ### Import Salmon example data in R package
@@ -988,6 +984,13 @@ myDesign <- data.frame(
     sampleID = colnames(salmonQuant$abundance)[-1],
     condition = gsub('_.*', '', colnames(salmonQuant$abundance)[-1])
 )
+
+### Please note
+# The way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# and not something  you need to do - just supply the string e.g.:
+# isoformExonAnnoation = "/myAnnotations/annotation.gtf".
 
 ### Create switchAnalyzeRlist
 aSwitchList <- importRdata(
@@ -1044,7 +1047,7 @@ library(cummeRbund) # where the example data is stored
 # "system.file('pathToFile', package="cummeRbund") is
 # specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
 # and not something  you need to do - just supply the string e.g.
-# "/myCuffdiffFiles/myFile.filetype" to the argument
+# pathToGeneDEanalysis = "/myCuffdiffFiles/gene_exp.diff" to the argument.
 
 testSwitchList <- importCufflinksFiles(
     pathToGTF                      = system.file('extdata/chr1_snippet.gtf',             package = "cummeRbund"),
@@ -1463,7 +1466,6 @@ exampleSwitchListAnalyzed <- analyzeCPAT(
 exampleSwitchListAnalyzed <- analyzeCPC2(
     switchAnalyzeRlist   = exampleSwitchListAnalyzed,
     pathToCPC2resultFile = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
-    codingCutoff         = 0.725, # the coding potential cutoff we suggested for human
     removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
 )
 
@@ -1544,7 +1546,7 @@ consequencesOfInterest <- c('intron_retention','coding_potential','NMD_status','
 exampleSwitchListAnalyzed <- analyzeSwitchConsequences(
     exampleSwitchListAnalyzed,
     consequencesToAnalyze = consequencesOfInterest, 
-    dIFcutoff = 0.4, # very high cutoff for fast runtimes
+    dIFcutoff = 0.4, # very high cutoff for fast runtimes - you should use the default (0.1)
     showProgress=FALSE
 )
 
@@ -1633,16 +1635,17 @@ Note that since there is only one comparison in the switchAnalyzeRlist (after th
 
 One advantage of the Isoform Switch Analysis Plot is that it contains all information needed to judge the potential impact of an isoform switch. This also means a systematic screening of the top isoform switches can be made by generating this plot for each of those genes.
 
-To facilitate such screening we have implemented _switchPlotTopSwitches()_ which will extract the top _n_ genes (controlled by the _n_ argument) with significant switches (as defined by _alpha_ and _dIFcutoff_) and output a pdf or png version of the corresponding switch plot to the directory given by the _outputDestination_ argument. The function automatically ranks (by p-value or switch size) the switches and supports to either filter for isoform switches with predicted functional consequences or to output those with and those without consequences to separate folders.
+To facilitate such screening we have implemented _switchPlotTopSwitches()_ which will extract the top _n_ genes (controlled by the _n_ argument) with significant switches (as defined by _alpha_ and _dIFcutoff_) and output a pdf or png version of the corresponding switch plot to the directory given by the _pathToOutput_ argument. The function automatically ranks (by p-value or switch size) the switches and supports to either filter for isoform switches with predicted functional consequences or to output those with and those without consequences to separate folders.
 
     switchPlotTopSwitches(
         switchAnalyzeRlist = exampleSwitchListAnalyzed, 
-        n = 10,
-        filterForConsequences = FALSE, 
-        splitFunctionalConsequences = TRUE
+        n = 10,                                             # Set to Inf for all
+        filterForConsequences = TRUE,
+        fileType = "pdf",                                   # alternative is "png"
+        pathToOutput = "/insert/path/to/outout/directory/"
     )
 
-If you want to output a plot for all significant genes simply set "n=NA".
+If you want to output a plot for all significant genes simply set "n=Inf".
 
 Back to [Table of Content]
 
@@ -2075,7 +2078,8 @@ But why not do both since you already have the data?
 
 Generally speaking there are two different ways to obtain gene/transcript quantification and which to choose boils down to whether you **A)** trust the available transcript annotation or **B)** You think you RNA-seq data contains important additional isoforms not included in the available annotations.
 
-**Option A):** If you generally trust the transcript annotation, state-of-the-art quantifications can be obtained directly from the raw sequence files (FASTQ) via Salmon or Kallisto. These methods give much more accurate quantifications (and are a lot faster) than for example first mapping to the genome and afterwards quantifying with Cufflinks. You can find more information in the [Kallisto paper](http://www.nature.com/doifinder/10.1038/nbt.3519). For comparison here is the link to the [Salmon paper](https://www.nature.com/articles/nmeth.4197) but please not the comparison in figure 1 is a special case - under normal circumstances Kallisto and Salmon performs quite similarly and choice is up to personal preference. IsoformSwitchAnalyzeR directly supports the quantifications of both tools (and more) via the importIsoformExpression() function - see [Importing Data Into R]. Kallisto can be downloaded from [here](https://pachterlab.github.io/kallisto/download) and the manual for running Kallisto can be found [here](http://pachterlab.github.io/kallisto/manual.html). Salmon can be downloaded from [here](https://github.com/COMBINE-lab/salmon/releases) and a manual for running Salmon can be found [here](https://salmon.readthedocs.io/en/latest/salmon.html). For long-read data people have been using Salon for the quantification of known transcripts/genes but you probably want to use option B.2 instead (since that is probably still the main reason to use long-read RNASeq data).
+**Option A):** If you generally trust the transcript annotation, state-of-the-art quantifications can be obtained directly from the raw sequence files (FASTQ) via Salmon or Kallisto. These methods give much more accurate quantifications (and are a lot faster) than for example first mapping to the genome and afterwards quantifying with Cufflinks. You can find more information in the [Kallisto paper](http://www.nature.com/doifinder/10.1038/nbt.3519). For comparison here is the link to the [Salmon paper](https://www.nature.com/articles/nmeth.4197) but please not the comparison in figure 1 is a special case - under normal circumstances Kallisto and Salmon performs quite similarly and choice is up to personal preference. IsoformSwitchAnalyzeR directly supports the quantifications of both tools (and more) via the importIsoformExpression() function - see [Importing Data Into R]. Kallisto can be downloaded from [here](https://pachterlab.github.io/kallisto/download) and the manual for running Kallisto can be found [here](http://pachterlab.github.io/kallisto/manual.html). Salmon can be downloaded from [here](https://github.com/COMBINE-lab/salmon/releases) and a manual for running Salmon can be found [here](https://salmon.readthedocs.io/en/latest/salmon.html). An alternative is to map reads to the genome using STAR specifying that start should also generate a transcriptome sam file which can then be quantified with Salmon. For more info see section 6 in the [STARmanual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf and the [Salmon documentation](https://salmon.readthedocs.io/en/latest/salmon.html#quantifying-in-alignment-based-mode). 
+For long-read data some have been using Salon for the quantification of known transcripts/genes but you probably want to use option B.2 instead (since that is probably still the main reason to use long-read RNASeq data).
 
 **Option B.1):** If have short-read (standard) RNASeq data and you do not have any (trustworthy) annotation, or want to improve it (find novel transcripts), you need to do a transcript deconvolution aka predicting novel transcripts from the RNAseq data. A transcript deconvolution can be described as a 4-step process:
 

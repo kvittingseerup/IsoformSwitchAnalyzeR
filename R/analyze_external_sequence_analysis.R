@@ -449,13 +449,28 @@ analyzePFAM <- function(
             .fun = function(
                 aFile
             ) {
-                read.table(
-                    file = aFile,
-                    stringsAsFactors = FALSE,
-                    fill = TRUE,
-                    header = FALSE,
-                    col.names = 1:16,
-                    skip = skipLine
+                # read.table(
+                #     file = aFile,
+                #     stringsAsFactors = FALSE,
+                #     fill = TRUE,
+                #     header = FALSE,
+                #     col.names = 1:16,
+                #     skip = skipLine
+                # )
+                suppressMessages(
+                    suppressWarnings(
+                        readr::read_fwf(
+                            file = aFile,
+                            col_positions =fwf_empty(
+                                file = aFile,
+                                col_names = paste0('X',1:16),
+                                skip = skipLine,
+                                comment = '#'
+                            ),
+                            skip = skipLine,
+                            comment = '#'
+                        )
+                    )
                 )
             }
         ))
@@ -529,10 +544,42 @@ analyzePFAM <- function(
         test1 <-
             ncol(myPfamResult) == 15 |
             ncol(myPfamResult) == 16 # the output have 15 or 16 collumns depending on whther active sites are predicted
+
+        if( any(is.na(myPfamResult$hmm_acc)) ) {
+            naIndex <- which(
+                is.na(myPfamResult$hmm_acc) | is.na(myPfamResult$type)
+            )
+
+            problemSize <- length(naIndex)
+
+            exampleProblems <- sample(
+                myPfamResult$hmm_name[naIndex],
+                size = min(3, problemSize)
+            )
+
+            warning(
+                paste(
+                    'There are',
+                    problemSize,
+                    'enteries in the pfam results files where there are missing values.',
+                    '\nMost likely these will not affect the analysis done with IsoformSwitchAnalyzeR',
+                    '\nbut we recomend the user to figure out why there are missing data in the first place.',
+                    '\nExamples of hmm_names with missing data are:',
+                    paste(exampleProblems, collapse = ', '),
+                    sep = ' '
+                )
+            )
+
+            nonNaIndex <- which(
+                ! is.na(myPfamResult$hmm_acc)
+            )
+        } else {
+            nonNaIndex <- 1:nrow(myPfamResult)
+        }
         test2 <-
             all(grepl(
                 pattern = '^PF|^PB' ,
-                myPfamResult$hmm_acc,
+                myPfamResult$hmm_acc[nonNaIndex],
                 ignore.case = FALSE
             ))                # All pfam hmm starts with PF
 
@@ -843,7 +890,7 @@ analyzeSignalP <- function(
 
     ### Obtain signalP result
     if (TRUE) {
-        ### Figure out which signal p it is
+        ### Figure out which version of signal-p was used
         fileHead <- read.table(
             pathToSignalPresultFile,
             nrows = 2,
@@ -858,7 +905,7 @@ analyzeSignalP <- function(
 
         ### SignalP5
         if( isSignalP5 ) {
-            if( ! grepl('Eukarya', fileHead$V2[1]) ){
+            if( ! grepl('Eukarya|euk', fileHead$V2[1]) ){
                 warning('It seems SignalP was run as Non-Eukaryote - was that on purpouse?')
             }
 
@@ -920,6 +967,36 @@ analyzeSignalP <- function(
 
                     )
                 ),]
+
+                ### Also subset on those with cleaveage site annotated
+                singalPresults <- singalPresults[which(
+                    grepl('CS pos:', singalPresults$CS_Position)
+                ),]
+
+                ### Remove fragment
+                singalPresults <- singalPresults[which(
+                    ! grepl('CS pos: \\?. Probable protein fragment', singalPresults$CS_Position)
+                ),]
+
+                ### Test prob
+                maxProb <- max(
+                    c(
+                        singalPresults[,na.omit(match(peptideCols, colnames(singalPresults))), drop=TRUE],
+                        singalPresults$OTHER
+                    )
+                )
+                if(maxProb > 1) {
+                    warning(
+                        paste(
+                            'Please note that some probabilities in the SignalP results',
+                            '\nseems to be larger than 1 - which probabilities cannot be.',
+                            '\nThis could cause the \'minSignalPeptideProbability\' cutoff to not work probably.',
+                            '\nPlease contact the authors of SignalP with regards to this problem.',
+                            sep = ' '
+                        )
+                    )
+                }
+
 
                 # Analyzed with ORF
                 singalPresults <- singalPresults[which(

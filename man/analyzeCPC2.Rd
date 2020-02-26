@@ -65,7 +65,6 @@ exampleSwitchListIntermediary
 exampleSwitchListAnalyzed <- analyzeCPC2(
     switchAnalyzeRlist   = exampleSwitchListIntermediary,
     pathToCPC2resultFile = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
-    codingCutoff         = 0.725, # the coding potential cutoff we suggested for human
     removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
 )
 

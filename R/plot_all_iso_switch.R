@@ -377,7 +377,19 @@ switchPlotTopSwitches <- function(
             .progress = 'text',
             .inform = TRUE,
             .fun = function(aDF) {
-                # aDF <- localDataRanked[12,]
+                # aDF <- localDataRanked[72,]
+
+                if( nrow(aDF) != 1) {
+                    stop(
+                        paste0(
+                            'Something went wrong with the gene_id/gene_name selection.',
+                            '\nPlease make sure your switchAnalyzeRlist was created with',
+                            ' the newest version of IsoformSwitchAnalyzeR and try again.',
+                            '\nElse contact developer with reproducible example.'
+                        )
+                    )
+                }
+
                 ### Build file name
                 fileName <-
                     paste(aDF$outputName,

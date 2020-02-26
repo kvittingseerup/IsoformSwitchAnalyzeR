@@ -9,6 +9,7 @@ importCufflinksFiles <- function(
     pathToSplicingAnalysis = NULL,
     pathToReadGroups,
     pathToRunInfo,
+    isoformNtFasta = NULL,
     fixCufflinksAnnotationProblem = TRUE,
     addIFmatrix = TRUE,
     quiet = FALSE
@@ -46,6 +47,34 @@ importCufflinksFiles <- function(
         if (!file.exists(pathToGTF)) {
             stop('The \'pathToGTF\' argument does not point to an acutal file')
         }
+        if( !is.null(isoformNtFasta)) {
+            if( !is.character( isoformNtFasta)) {
+                stop('The \'isoformNtFasta\' argument must be a charachter string.')
+            }
+
+            if( any(isoformNtFasta == '') ) {
+                stop(
+                    paste(
+                        'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+                        'to import your own data? The system.file() should only be used',
+                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+                        'To access your own data simply provide the string to the directory with the data as:',
+                        '"path/to/quantification/".',
+                        sep=' '
+                    )
+                )
+            }
+
+            if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
+                stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
+            }
+
+            if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
+                stop('The file pointed to via the \'isoformNtFasta\' argument does not seem to be a fasta file...')
+            }
+        }
+
         # DE
         if (!file.exists(pathToGeneDEanalysis))    {
             stop('The \'pathToGeneDEanalysis\' argument does not point to an acutal file')
@@ -715,6 +744,86 @@ importCufflinksFiles <- function(
         )
     }
 
+    ### import nulceotide fasta file
+    if(TRUE) {
+        addIsoformNt <- FALSE
+
+        if( !is.null(isoformNtFasta) ) {
+            isoformNtSeq <- do.call(
+                c,
+                lapply(isoformNtFasta, function(aFile) {
+                    Biostrings::readDNAStringSet(
+                        filepath = isoformNtFasta, format = 'fasta'
+                    )
+                })
+            )
+
+            if(!is(isoformNtSeq, "DNAStringSet")) {
+                stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
+            }
+
+            ### Remove preceeding ref|
+            if(
+                sum(grepl('^ref\\|', names(isoformNtSeq))) == length( isoformNtSeq )
+            ) {
+                names(isoformNtSeq) <- gsub('^ref\\|', '', names(isoformNtSeq))
+            }
+
+            ### Remove potential name duplication
+            isoformNtSeq <- isoformNtSeq[which(
+                ! duplicated(names(isoformNtSeq))
+            )]
+
+            if( ! all(isoformData$isoform_id %in% names(isoformNtSeq)) ) {
+                warning(
+                    paste(
+                        'The fasta file supplied to \'isoformNtFasta\' does not contain the',
+                        'nucleotide (DNA) sequence for all isoforms annotated and will not be added!',
+                        '\nSpecifically:\n',
+                        length(unique(isoformData$isoform_id)), 'isoforms were annotated in the GTF\n',
+                        length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
+                        'Only', length(intersect(names(isoformNtSeq), isoformData$isoform_id)), 'overlap.\n',
+                        length(setdiff(unique(isoformData$isoform_id), names(isoformNtSeq))), 'annoated isoforms isoforms had no corresponding nucleotide sequence\n',
+
+                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
+                        '1) The files do not fit together (different databases, versions etc)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+                        '    3 Examples from GTF are :',
+                        paste0( sample(unique(isoformData$isoform_id), min(3, nrow(isoformData)) ), collapse = ', '),'\n',
+                        '    3 Examples of isoform sequence are  :',
+                        paste0( sample(names(isoformNtSeq), min(3, length(isoformNtSeq)) ), collapse = ', '),'\n',
+
+
+                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+                        '1) The files do not fit together (different databases versions)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
+                        'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
+                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
+                        sep = ' '
+                    )
+                )
+            } else {
+                addIsoformNt <- TRUE
+            }
+
+            ### Subset to annotated isoforms
+            isoformNtSeq <- isoformNtSeq[which(
+                names(isoformNtSeq) %in% isoformData$isoform_id
+            )]
+            #if( !length(isoformNtSeq) ) {
+            #    addIsoformNt <- FALSE
+            #}
+        }
+    }
+
     ### Check it is the same transcripts in transcript structure and expression info
     if (TRUE) {
         myUnion     <-
@@ -1014,6 +1123,12 @@ importCufflinksFiles <- function(
         )]
 
         switchAnalyzeRlist$isoformRepIF <- ifMatrix
+    }
+
+    if(addIsoformNt) {
+        switchAnalyzeRlist$ntSequence <- isoformNtSeq[which(
+            names(isoformNtSeq) %in% switchAnalyzeRlist$isoformFeatures$isoform_id
+        )]
     }
 
     if (!quiet) {
@@ -2174,6 +2289,10 @@ importGTF <- function(
                 )
             }
 
+            ### Subset to those in GTF file
+            isoformNtSeq <- isoformNtSeq[which(
+                names(isoformNtSeq) %in% myIsoAnot$isoform_id
+            )]
 
             if( ! all(myIsoAnot$isoform_id %in% names(isoformNtSeq)) ) {
                 warning(
@@ -2204,7 +2323,10 @@ importGTF <- function(
                         '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
                         'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
                         '3) One file could contain non-chanonical chromosomes while the other do not',
-                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n\n',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
                         sep = ' '
                     )
                 )
@@ -2216,9 +2338,9 @@ importGTF <- function(
             isoformNtSeq <- isoformNtSeq[which(
                 names(isoformNtSeq) %in% myIsoAnot$isoform_id
             )]
-            if( length(isoformNtSeq) ) {
-                addIsoformNt <- FALSE
-            }
+            #if( length(isoformNtSeq) ) {
+            #    addIsoformNt <- FALSE
+            #}
         }
     }
 
@@ -3710,7 +3832,10 @@ importRdata <- function(
                         '2) If you are using Ensembl data you have supplied the GTF without phaplotyps. You need to supply the',
                         '<Ensembl_version>.chr_patch_hapl_scaff.gtf file - NOT the <Ensembl_version>.chr.gtf\n',
                         '3) One file could contain non-chanonical chromosomes while the other do not',
-                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n\n',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
 
                         '\nFor more info see the FAQ in the vignette.\n',
                         sep=' '
@@ -3995,7 +4120,10 @@ importRdata <- function(
                         '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
                         'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
                         '3) One file could contain non-chanonical chromosomes while the other do not',
-                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n\n',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
                         sep = ' '
                     )
                 )

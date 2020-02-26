@@ -48,7 +48,7 @@ A vector of strings indicating which gene biotypes (data typically obtained from
 }
 
   \item{acceptedIsoformClassCode}{
-A vector of strings indicating which cufflinks class codes are accepted. Can only be used if data origins from cufflinks. For an updated list with full description see \url{http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/#transfrag-class-codes}. Set to NULL to disable. Default is NULL.
+A vector of strings indicating which cufflinks class codes are accepted. Can only be used if data origins from cufflinks. For an updated list with full description see the bottom of this website: \url{http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/#tracking-transfrags-through-multiple-samples-outprefixtracking}. Set to NULL to disable. Default is NULL.
 }
 
   \item{removeSingleIsoformGenes}{

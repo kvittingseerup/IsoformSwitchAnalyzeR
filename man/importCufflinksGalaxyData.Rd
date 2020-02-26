@@ -18,6 +18,7 @@ importCufflinksFiles(
     pathToSplicingAnalysis=NULL,
     pathToReadGroups,
     pathToRunInfo,
+    isoformNtFasta = NULL,
     fixCufflinksAnnotationProblem=TRUE,
     addIFmatrix = TRUE,
     quiet=FALSE
@@ -54,6 +55,11 @@ A string indicating the path to the file "Read groups" file (downloaded from e.g
   \item{pathToRunInfo}{
 A string indicating the path to the file "Run details" file (downloaded from e.g. galaxy).
 }
+
+\item{isoformNtFasta}{
+A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 1) people working with non-model organisms where extracting the sequence from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index). Please note this different from a fasta file with the sequences of the entire genome.
+}
+
   \item{fixCufflinksAnnotationProblem}{
 A logic indicating whether to fix the problem with Cufflinks gene symbol annotation. Please see the details for additional information. Default is TRUE.
 }

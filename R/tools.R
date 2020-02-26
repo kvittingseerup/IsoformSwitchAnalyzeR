@@ -269,55 +269,95 @@ isoformToGeneExp <- function(
 
         ### Extract annotation info
         if( geneInfoSeperately ) {
-            if( 'GRanges' %in% class(isoformGeneAnnotation) ) {
+            if( is(isoformGeneAnnotation, 'GRanges') ) {
                 if( ! all( c('gene_id','isoform_id') %in% colnames(mcols( isoformGeneAnnotation )) ) ) {
                     stop('The GRange supplied to the "isoformGeneAnnotation" argument must contain the following two collumns "gene_id", "isoform_id".')
                 }
 
                 isoAnnot <- unique(as.data.frame(mcols( isoformGeneAnnotation )[,c('gene_id','isoform_id')]))
 
-            } else if( 'data.frame' %in% class(isoformGeneAnnotation) ) {
+            }
+            if( is(isoformGeneAnnotation, 'data.frame') ) {
                 if( ! all( c('gene_id','isoform_id') %in% colnames(isoformGeneAnnotation ) ) ) {
                     stop('The data.frame supplied to the "isoformGeneAnnotation" argument must contain the following two collumns "gene_id", "isoform_id".')
                 }
 
                 isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
 
-            } else if( is(isoformGeneAnnotation, 'character') ){
+            }
+            if( is(isoformGeneAnnotation, 'character') ){
                 if (!quiet) {
                     message('Importing GTF/GFF - this may take a while...')
                 }
-                localSwitchList <- importGTF(pathToGTF = isoformGeneAnnotation, addAnnotatedORFs = FALSE, quiet = TRUE)
+                localSwitchList <- importGTF(
+                    pathToGTF = isoformGeneAnnotation,
+                    addAnnotatedORFs = FALSE,
+                    removeTECgenes=FALSE,
+                    quiet = TRUE)
                 isoAnnot <- unique(localSwitchList$isoformFeatures[,c('gene_id','isoform_id')])
                 if (!quiet) {
                     message('Import of GTF/GFF done')
                 }
 
-            } else if( is(isoformGeneAnnotation, 'switchAnalyzeRlist') ) {
+            }
+            if( is(isoformGeneAnnotation, 'switchAnalyzeRlist') ) {
                 isoAnnot <- unique(isoformGeneAnnotation$isoformFeatures[,c('gene_id','isoform_id')])
-            } else {
+            }
+            if( ! exists("isoAnnot")) {
                 stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
             }
 
+            ### Subset annotation to those quantified
             if( length( intersect( isoAnnot$isoform_id, isoformRepExpression$isoform_id )) ) {
                 isoAnnot <- isoAnnot[which( isoAnnot$isoform_id %in% isoformRepExpression$isoform_id),]
             }
 
-
             ### Look into overlap
-            if( jaccardSimilarity( isoAnnot$isoform_id, isoformRepExpression$isoform_id ) != 1 ) {
+            onlyInExp <- setdiff(unique(isoformRepExpression$isoform_id), isoAnnot$isoform_id)
 
+            j1 <- jaccardSimilarity( isoAnnot$isoform_id, isoformRepExpression$isoform_id )
+            if( j1 != 1 ) {
                 expIso <- unique(isoformRepExpression$isoform_id)
                 onlyInExp <- setdiff(expIso, isoAnnot$isoform_id)
 
+                options(warning.length = 2000L)
                 stop(
                     paste(
                         'The annotation and quantification (count/abundance matrix and isoform annotation)',
                         'seems to be different.',
                         '\nSpecifically:\n',
-                        length(expIso), 'isoforms were quantified.\n',
+                        length(unique(expIso)), 'isoforms were quantified.\n',
                         length(unique(isoAnnot$isoform_id)), 'isoforms are annotated.\n',
-                        'Only', length(intersect(expIso, isoAnnot$isoform_id)), 'overlap.',
+                        'Only', length(intersect(expIso, isoAnnot$isoform_id)), 'overlap.\n',
+                        length(setdiff(unique(expIso), isoAnnot$isoform_id)), 'isoforms quantifed isoforms had no corresponding annoation\n',
+                        '\nThis combination cannot be analyzed since it will',
+                        'cause discrepencies between quantification and annotation thereby skewing the analysis.\n',
+
+                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
+                        '1) The files do not fit together (e.g. different databases, versions, etc)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+                        '    Examples from expression matrix are :',
+                        paste0( sample(expIso, min(c(3, length(expIso)))), collapse = ', '),'\n',
+                        '    Examples of annoation are :',
+                        paste0( sample(isoAnnot$isoform_id, min(c(3, length(isoAnnot$isoform_id)))), collapse = ', '),'\n',
+                        '    Examples of isoforms which were only found im the quantification are  :',
+                        paste0( sample(onlyInExp, min(c(3, length(onlyInExp)))), collapse = ', '),'\n',
+
+                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+                        '1) The files do not fit together (e.g different databases versions etc.)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) If you are using Ensembl data you have supplied the GTF without phaplotyps. You need to supply the',
+                        '<Ensembl_version>.chr_patch_hapl_scaff.gtf file - NOT the <Ensembl_version>.chr.gtf\n',
+                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
+
+                        '\nFor more info see the FAQ in the vignette.\n',
                         sep=' '
                     )
                 )

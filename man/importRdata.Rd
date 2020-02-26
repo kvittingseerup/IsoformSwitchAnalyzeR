@@ -64,7 +64,7 @@ Can either be:
 }
 
 \item{isoformNtFasta}{
-A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 1) people working with non-model organisms where extracting the sequence from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index). Please note this different from a fasta file with the sequences of the entire genome.
+A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 1) people working with non-model organisms where extracting the sequence from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index). The file(s) will automatically be subsetted to the isoforms found in the expression matrix so additional sequences (such as decoys) does not need to be manually removed. Please note this different from a fasta file with the sequences of the entire genome.
 }
 
 \item{comparisonsToMake}{
@@ -85,8 +85,7 @@ Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indi
 
 \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
-\item{removeTECgenes}{A logic indicating whether to remove genes marked as "To be Experimentally Confirmed" (if annotation is available). The default is TRUE aka to remove them which is in line
-with Gencode recommendations (TEC are not in Gencode annotations). For more info about TEC see \url{https://www.gencodegenes.org/pages/biotypes.html}.}
+\item{removeTECgenes}{A logic indicating whether to remove genes marked as "To be Experimentally Confirmed" (if annotation is available). The default is TRUE aka to remove them which is in line with Gencode recommendations (TEC are not in Gencode annotations). For more info about TEC see \url{https://www.gencodegenes.org/pages/biotypes.html}.}
 
 \item{PTCDistance}{Only used if a GTF file is supplied to \code{isoformExonAnnoation} and \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
 
@@ -150,7 +149,7 @@ Kristoffer Vitting-Seerup
 #       "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
 #       specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
 #       and not something you need to do - just supply the string e.g.
-#       "myAnnotation/isoformsQuantified.gtf" to the functions
+#       isoformExonAnnoation = "myAnnotation/isoformsQuantified.gtf" to the functions
 # 2) importRdata directly supports import of a GTF file - just supply the
 #       path (e.g. "myAnnotation/isoformsQuantified.gtf") to the isoformExonAnnoation argument
 

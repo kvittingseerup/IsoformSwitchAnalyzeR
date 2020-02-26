@@ -1,3 +1,16 @@
+Changes in version 1.9.1 (2019-10-18)
+- (Version bump due to Bioconductor release)
+- Update type: Minor.
+- importCufflinksFiles() was updated to have the isoformNtFasta option making it easier to work with non-model organisms.
+- importGTF() was updated to allow the fasta file pointed to by the isoformNtFasta argument to contain extra sequences (which are then just ignored). This is what importRdata() already did.
+- Corrected a copy/paste mistake where analyzeCPC2 was suggested to be run with a codingCutoff of 0.725. This have now been corrected to 0.5 - which was the default value all the time.
+- A bug in isoformToGeneExp() which could cause problems when using Gencode data was fixed. It was also updated to give better warning message in case of different ids in the quantification and annotation.
+- Due to the repport of pfam results whith missing data (which should not affect its usage within IsoformSwitchAnalyzeR) analyzePFAM() now uses readr::read_fwf() in combination with readr::fwf_empty() instead of read.table() to import the fixed width file (fwf) with the pfam results into R. analyzePFAM() will give warnings if it finds missing data.
+- analyzeSignalP() was updated to better handle stand-alone versions of SignalP-5 as well as edge case senarios from SignalP-5 predictions.
+- Various documentation updates.
+- switchPlotTopSwitches() was updated to give better warnings for edge case senarios.
+- the createSwitchAnalyzeRlist() was updated add the version number of IsoformSwitchAnalyzeR when the switchAnalyzeRlist was created.
+
 Changes in version 1.7.2 (2019-10-18)
 - Update type: Major.
 - analyzeIUPred2A() for analyzing intrincially disordered regions (and binding sites therein) was introduced. To enable this the following changes were also made:
