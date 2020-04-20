@@ -84,7 +84,7 @@ This function performs the first part of a Isoform Analysis Workflow by
     \item The isoform nucleotide and ORF amino acid sequences are extracted and saved to fasta files as well as added to the switchAnalyzeRlist enabling external sequence analysis with CPAT, Pfam and SignalP (see vignette for more info).
 }
 
-if \code{prepareForWebServers=TRUE} both the "filterAALength" and "alsoSplitFastaFile" will be enabled in the \code{extractSequence} function.
+if \code{prepareForWebServers=TRUE} both the "removeLongAAseq" and "alsoSplitFastaFile" will be enabled in the \code{extractSequence} function.
 }
 
 \value{

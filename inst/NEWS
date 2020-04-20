@@ -1,3 +1,11 @@
+Changes in version 1.9.2 (2019-10-18)
+- Update type: Minor
+- analyzeSignalP and its documentation was further updated to handle edge case senarios from SignalP-5 predictions.
+- In extractSequence() the 'filterAALength' argument which removed to short and long sequences were split into to arguments: 'removeShortAAseq' (default is TRUE) and 'removeLongAAseq' (default is FALSE) to allow more nuanced control.
+- Fixed a problem in extractSequence() where the onlySwitchingGenes did not work if the nuclotide/amino acid sequences was already stored in the switchAnalyzeRlist.
+- extractConsequenceSummary() was modified to now also plot consequences analyzed but where no differences was found. This behaviour can be controled with the 'removeEmptyConsequences' argument.
+- Small documentation improvements.
+
 Changes in version 1.9.1 (2019-10-18)
 - (Version bump due to Bioconductor release)
 - Update type: Minor.

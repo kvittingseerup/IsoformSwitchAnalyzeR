@@ -57,7 +57,7 @@ analyzeSwitchConsequences(
 
     \item{AaJCsimCutoff}{An numeric (between 0 and 1) indicating the cutoff on Jaccard Similarity (JCsim) (see details) between the overlap of two amino acid (AA) sequences. If the measured JCsim is smaller than this cutoff the sequences are considered different and reported as such. This cutoff affect the result of the 'ORF_seq_similarity' analysis. Default is 0.9}
 
-    \item{removeNonConseqSwitches}{A logic indicating whether to remove the comparison of isoforms where no consequences were found (if TRUE) or to keep then (if FALSE). Defaults is TRUE.}
+    \item{removeNonConseqSwitches}{A logic indicating whether to, in the "switchConsequence" entry added to the switchAnalyzeRList, remove the comparison of isoforms where no consequences were found (if TRUE) or to keep then (if FALSE). Defaults is TRUE.}
 
     \item{showProgress}{A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.}
 

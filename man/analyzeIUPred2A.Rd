@@ -63,7 +63,7 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 \details{
 Intrinsically Disordered Regions (IDR) are regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). Such regions are thought to play important roles in all aspects of biology (and when it goes wrong) through multiple different functional aspects. One such functional aspect is facilitating protein interactions via regions called Intrinsically Disordered Binding Regions (IDBR).
 
-The PFAM webserver is quite strict with regards to the number of sequences in the files uploaded so we suggest multiple runs each with one of the the files contain subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
+The IUPred2A webserver is somewhat strict with regards to the number of sequences in the files uploaded so we suggest multiple runs each with one of the the files contain subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the webserver: \cr
 1) Go to \url{https://iupred2a.elte.hu}

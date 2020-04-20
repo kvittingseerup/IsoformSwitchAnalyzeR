@@ -2309,7 +2309,7 @@ extractSplicingEnrichment <- function(
 
         gainLossBalance2$AStype2 <- paste(
             gainLossBalance2$AStype, 'gain',
-            '\n(paried with',gainLossBalance2$AStype, 'loss)'
+            '\n(paired with',gainLossBalance2$AStype, 'loss)'
         )
 
         g1 <- ggplot(data=gainLossBalance2, aes(y=AStype2, x=propUp, color=Significant)) +

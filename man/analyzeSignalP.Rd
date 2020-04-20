@@ -36,8 +36,9 @@ The SignalP web-server is less stringent than PFAM with regards to the number of
 Notes for how to run the external tools:
 If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results can be downloaded using the "Downloads" bottom in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the pathToSignalPresultFile argument. If a stand-alone version was just supply the path to the summary result file.
 
-
 Please note that the \code{analyzeSignalP()} function will automatically only import the SignalP results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
+
+Also note that analyzeSignalP automatically subset SignalP results to only contain predictions with an annotated cleavage site (CS pos) and "Probable protein fragment" results are also removed.
 }
 
 \value{

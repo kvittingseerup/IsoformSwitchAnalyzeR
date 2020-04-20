@@ -17,6 +17,7 @@ extractConsequenceSummary(
     plot=TRUE,
     plotGenes=FALSE,
     simplifyLocation = TRUE,
+    removeEmptyConsequences = FALSE,
     localTheme=theme_bw(),
     returnResult=FALSE
 )
@@ -50,6 +51,10 @@ A logic indicating whether to plot the number/fraction of genes with (if TRUE) o
 
 \item{simplifyLocation}{
 A logic indicating whether to simplify the switches involved in changes in sub-cellular localizations (due the the hundreds of possible combinations). Done by only considering where the isoform used more has a location switch to. Default is TRUE.
+}
+
+\item{removeEmptyConsequences}{
+A logic indicating whether to remove consequenses analyzed but where no differences was found (those showing zero in the plot). Default is FALSE.
 }
 
   \item{localTheme}{

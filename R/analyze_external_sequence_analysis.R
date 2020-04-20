@@ -909,7 +909,7 @@ analyzeSignalP <- function(
                 warning('It seems SignalP was run as Non-Eukaryote - was that on purpouse?')
             }
 
-            ### Read in predictions
+            ### Read in SignalP predictions
             if(TRUE) {
                 singalPresults <- do.call(rbind, plyr::llply(
                     pathToSignalPresultFile,
@@ -979,22 +979,21 @@ analyzeSignalP <- function(
                 ),]
 
                 ### Test prob
-                maxProb <- max(
-                    c(
-                        singalPresults[,na.omit(match(peptideCols, colnames(singalPresults))), drop=TRUE],
-                        singalPresults$OTHER
-                    )
-                )
-                if(maxProb > 1) {
+                toLargeProb <- unique( c(
+                    which( singalPresults[,na.omit(match(peptideCols, colnames(singalPresults))), drop=TRUE] > 1),
+                    which( singalPresults$OTHER > 1)
+                ))
+                if(length(toLargeProb)) {
                     warning(
                         paste(
-                            'Please note that some probabilities in the SignalP results',
-                            '\nseems to be larger than 1 - which probabilities cannot be.',
-                            '\nThis could cause the \'minSignalPeptideProbability\' cutoff to not work probably.',
-                            '\nPlease contact the authors of SignalP with regards to this problem.',
+                            'Please note that', length(toLargeProb),
+                            'SignalP results had probabilities ',
+                            '\nlarger than 1 - which probabilities cannot be.',
+                            '\nThese enteries were removed.',
                             sep = ' '
                         )
                     )
+                    singalPresults <- singalPresults[setdiff( 1:nrow(singalPresults), toLargeProb),]
                 }
 
 

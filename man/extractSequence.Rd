@@ -15,7 +15,8 @@ extractSequence(
     dIFcutoff = 0.1,
     extractNTseq = TRUE,
     extractAAseq = TRUE,
-    filterAALength = FALSE,
+    removeShortAAseq = TRUE,
+    removeLongAAseq  = FALSE,
     alsoSplitFastaFile = FALSE,
     removeORFwithStop=TRUE,
     addToSwitchAnalyzeRlist = TRUE,
@@ -49,8 +50,11 @@ A logical indicating whether the nucleotide sequence of the transcripts should b
   \item{extractAAseq}{
 A logical indicating whether the amino acid (AA) sequence of the annotated open reading frames (ORF) should be extracted (necessary for pfam and SignalP analysis). The ORF can be annotated with the \code{analyzeORF} function. Default is TRUE.
 }
-  \item{filterAALength}{
-A logical indicating whether to filter on the resulting sequences based on their length. This option exist to allows for easier usage of the Pfam and SignalP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be > 5 AA and < 1000 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is FALSE.
+  \item{removeShortAAseq}{
+A logical indicating whether to remove sequences based on their length. This option exist to allows for easier usage of the Pfam and SignalP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be > 5 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is TRUE.
+}
+  \item{removeLongAAseq}{
+A logical indicating whether to removesequences based on their length. This option exist to allows for easier usage of the Pfam and SignalP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be < 1000 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is FALSE.
 }
 
 \item{alsoSplitFastaFile}{

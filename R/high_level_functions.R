@@ -173,7 +173,7 @@ isoformSwitchAnalysisPart1 <- function(
         extractAAseq = TRUE,
         addToSwitchAnalyzeRlist = TRUE,
         writeToFile = outputSequences,
-        filterAALength = prepareForWebServers,
+        removeLongAAseq = prepareForWebServers,
         alsoSplitFastaFile = prepareForWebServers,
         pathToOutput = pathToOutput,
         quiet = TRUE

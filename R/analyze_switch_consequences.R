@@ -2459,6 +2459,7 @@ extractConsequenceSummary <- function(
     plot = TRUE,
     plotGenes = FALSE,
     simplifyLocation = TRUE,
+    removeEmptyConsequences = FALSE,
     localTheme = theme_bw(),
     returnResult = FALSE
 ) {
@@ -2580,6 +2581,7 @@ extractConsequenceSummary <- function(
         stop('No swithces with consequences were found')
     }
 
+    ### Subset to those with switches
     localSwitchConsequences <-
         localSwitchConsequences[which(!is.na(
             localSwitchConsequences$switchConsequence
@@ -2664,6 +2666,48 @@ extractConsequenceSummary <- function(
                 )
             }
         )
+
+    ### Add those analyzed but with zero consequences
+    if( ! removeEmptyConsequences ) {
+        notInData <- setdiff(
+            consequencesAnalyzed,
+            unique(myNumbers$featureCompared)
+        )
+        if(length(notInData)) {
+
+            missingData <- unique(
+                switchAnalyzeRlist$switchConsequence[
+                    which(switchAnalyzeRlist$switchConsequence$featureCompared %in% notInData),
+                    c('condition_1','condition_2','featureCompared','switchConsequence')
+                ]
+            )
+
+            missingData$Comparison <-
+                paste(
+                    missingData$condition_1,
+                    'vs',
+                    missingData$condition_2,
+                    sep = ' '
+                )
+
+            missingData$switchConsequence <- 'Any consequence'
+
+            missingData <- missingData[,c(
+                'switchConsequence',
+                'Comparison',
+                'featureCompared'
+            )]
+
+            missingData$nrGenesWithConsequences <- 0
+            missingData$nrIsoWithConsequences <- 0
+
+            myNumbers <- rbind(
+                myNumbers,
+                missingData
+            )
+        }
+    }
+
 
     myNumbers$featureCompared <-
         startCapitalLetter(gsub('_', ' ', myNumbers$featureCompared))
