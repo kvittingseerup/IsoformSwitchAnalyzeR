@@ -19,6 +19,7 @@ importGTF(
     ignoreAfterPeriod=FALSE,
     removeTECgenes = TRUE,
     PTCDistance=50,
+    removeFusionTranscripts = TRUE,
     quiet=FALSE
 )
 }
@@ -54,6 +55,9 @@ A logic indicating whether the nucleotide sequence imported via \code{isoformNtF
 \item{removeTECgenes}{A logic indicating whether to remove genes marked as "To be Experimentally Confirmed" (if annotation is available). The default is TRUE aka to remove them which is in line with Gencode recommendations (TEC are not in Gencode annotations). For more info about TEC see \url{https://www.gencodegenes.org/pages/biotypes.html}.}
 
 \item{PTCDistance}{ Only considered if \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
+
+\item{removeFusionTranscripts}{A logic indicating whether to remove genes with cross-chromosome fusion transcripts as IsoformSwitchAnalyzeR cannot handle them.}
+
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
 }
 

@@ -1,4 +1,9 @@
-Changes in version 1.9.2 (2019-10-18)
+Changes in version 1.9.3 (2020-04-20)
+- Update type: Minor.
+- The creation of the switchAnalyzeRlist was updated to better handle cases where multiple isoforms have the same isoform_id (which could potentially be fusion transcripts). This was done by introducing the "removeFusionTranscripts" argument in both importGTF() and createSwitchAnalyzeRlist().
+- Update date for version 1.9.3 was updated.
+
+Changes in version 1.9.2 (2020-04-20)
 - Update type: Minor
 - analyzeSignalP and its documentation was further updated to handle edge case senarios from SignalP-5 predictions.
 - In extractSequence() the 'filterAALength' argument which removed to short and long sequences were split into to arguments: 'removeShortAAseq' (default is TRUE) and 'removeLongAAseq' (default is FALSE) to allow more nuanced control.

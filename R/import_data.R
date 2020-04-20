@@ -1150,6 +1150,7 @@ importGTF <- function(
     ignoreAfterPeriod = FALSE,
     removeTECgenes = TRUE,
     PTCDistance = 50,
+    removeFusionTranscripts = TRUE,
     quiet = FALSE
 ) {
     ### Test files
@@ -2409,6 +2410,7 @@ importGTF <- function(
         exons = myExons,
         designMatrix = designMatrix,
         isoformCountMatrix = repExp,
+        removeFusionTranscripts = removeFusionTranscripts,
         sourceId = 'gtf'
     )
 
@@ -3559,6 +3561,7 @@ importRdata <- function(
                         ignoreAfterPeriod = ignoreAfterPeriod,
                         removeTECgenes = FALSE,
                         PTCDistance = PTCDistance,
+                        removeFusionTranscripts = FALSE,
                         quiet = TRUE
                     )
                 )

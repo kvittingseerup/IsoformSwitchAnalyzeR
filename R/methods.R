@@ -302,7 +302,8 @@ createSwitchAnalyzeRlist <- function(
     designMatrix,
     isoformCountMatrix=NULL,
     isoformRepExpression=NULL,
-    sourceId
+    sourceId,
+    removeFusionTranscripts = TRUE
 ){
     ### Test input
     if(TRUE) {
@@ -386,8 +387,8 @@ createSwitchAnalyzeRlist <- function(
                 isoformsToRemove <- names(idLength)[which(idLength > 1)]
             } else {
                 stop(paste(
-                    'The gene_ids must be uniqe - we identified multiple',
-                    'instances of the same gene_id on different chromosomes.',
+                    'The isoform_ids must be uniqe - we identified multiple',
+                    'instances of the same isoform_id on different chromosomes.',
                     'This typically occures because the annotation have',
                     'multiple version of the same region.',
                     'If annotated transcipts were imported please consider',
@@ -682,31 +683,32 @@ createSwitchAnalyzeRlist <- function(
         )
     )
 
+    ### Convert isoforms to remove to gene ids
+    if(length(isoformsToRemove)) {
+        additionalGenesToRemove <- localSwitchList$isoformFeatures$gene_id[which(
+            localSwitchList$isoformFeatures$isoform_id %in% isoformsToRemove
+        )]
+
+        genesToRemove <- unique(c(
+            genesToRemove,
+            additionalGenesToRemove
+        ))
+    }
+
     ### Subset if nessesary
-    if(length(genesToRemove)) {
+    if(length(genesToRemove) & removeFusionTranscripts) {
         localSwitchList <- subsetSwitchAnalyzeRlist(
             localSwitchList,
             ! localSwitchList$isoformFeatures$gene_id %in% genesToRemove
         )
         warning(paste(
-            'The gene_ids were not unique - we identified multiple instances',
-            'of the same gene_id on different chromosomes.',
-            'To solve this we removed', length(genesToRemove), 'genes.',
+            'The gene_ids or isoform_ids were not unique - we identified multiple instances',
+            'of the same gene_id/isoform_id on different chromosomes.',
+            'To solve this we removed', length(genesToRemove), 'gene_id.',
             'Please note there might still be duplicated gene_id located',
-            'on the same chromosome.'
-        ))
-    }
-    if(length(isoformsToRemove)) {
-        localSwitchList <- subsetSwitchAnalyzeRlist(
-            localSwitchList,
-            ! localSwitchList$isoformFeatures$isoform_id %in% isoformsToRemove
-        )
-        warning(paste(
-            'The gene_ids were not unique - we identified multiple instances',
-            'of the same gene_id on different chromosomes.',
-            'To solve this we removed', length(genesToRemove), 'genes.',
-            'Please note there might still be duplicated gene_id located',
-            'on the same chromosome.'
+            'on the same chromosome.',
+            'Some of these could be due to fusion transcripts',
+            'which IsoformSwitchAnalyzeR cannot handle.'
         ))
     }
 
