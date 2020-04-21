@@ -3595,9 +3595,25 @@ importRdata <- function(
                         ! gtfSwichList$isoformFeatures$isoform_id %in% nonChanonicalChrsIso
                     )
 
-                    isoformsToRemove <- c(
+                    isoformsToRemove <- unique(c(
                         isoformsToRemove,
                         nonChanonicalChrsIso
+                    ))
+                }
+
+                ### Make sure to remove all isoforms from genes which are to be removed
+                if(length(isoformsToRemove)) {
+                    genesToRemove <- gtfSwichList$isoformFeatures$gene_id[which(
+                        gtfSwichList$isoformFeatures$isoform_id %in% isoformsToRemove
+                    )]
+
+                    isoformsToRemove <- gtfSwichList$isoformFeatures$isoform_id[which(
+                        gtfSwichList$isoformFeatures$gene_id %in% genesToRemove
+                    )]
+
+                    gtfSwichList <- subsetSwitchAnalyzeRlist(
+                        gtfSwichList,
+                        ! gtfSwichList$isoformFeatures$isoform_id %in% isoformsToRemove
                     )
                 }
 
@@ -3638,8 +3654,6 @@ importRdata <- function(
                     unique(gtfSwichList$isoformFeatures[,na.omit(
                         match(colsToExtract , colnames(gtfSwichList$isoformFeatures))
                     )])
-
-
 
                 if (addAnnotatedORFs & gtfImported) {
                     isoORF <- gtfSwichList$orfAnalysis

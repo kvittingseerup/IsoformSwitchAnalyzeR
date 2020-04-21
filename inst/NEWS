@@ -1,3 +1,7 @@
+Changes in version 1.9.4 (2020-04-21)
+- Update type: Minor.
+- importRdata() was also updated to handle edge-case fusion transcripts.
+
 Changes in version 1.9.3 (2020-04-20)
 - Update type: Minor.
 - The creation of the switchAnalyzeRlist was updated to better handle cases where multiple isoforms have the same isoform_id (which could potentially be fusion transcripts). This was done by introducing the "removeFusionTranscripts" argument in both importGTF() and createSwitchAnalyzeRlist().
