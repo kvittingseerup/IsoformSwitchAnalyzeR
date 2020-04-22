@@ -16,8 +16,8 @@ createSwitchAnalyzeRlist(
     designMatrix,
     isoformCountMatrix=NULL,
     isoformRepExpression=NULL,
-    removeFusionTranscripts = TRUE,
-    sourceId
+    sourceId,
+    removeFusionTranscripts = TRUE
 )
 }
 
@@ -30,9 +30,9 @@ createSwitchAnalyzeRlist(
 
 	\item{isoformRepExpression}{ A data.frame with unfiltered biological (not technical) replicate isoform abundances. Must have a column called 'isoform_id' with the isoform_id that matches \code{isoformFeatures}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated abundances.}
 
-	\item{removeFusionTranscripts}{A logic indicating whether to remove genes with cross-chromosome fusion transcripts as IsoformSwitchAnalyzeR cannot handle them.}
-
 	\item{sourceId}{A character stating the origin of the data used to create the switchAnalyzeRlist.}
+
+	\item{removeFusionTranscripts}{A logic indicating whether to remove genes with cross-chromosome fusion transcripts as IsoformSwitchAnalyzeR cannot handle them.}
 }
 
 

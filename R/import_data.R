@@ -3531,8 +3531,7 @@ importRdata <- function(
 
                 if (length(isoformExonAnnoation) != 1) {
                     stop(paste(
-                        'The path supplied to isoformExonAnnoation',
-                        'must be of length 1'
+                        'You can only supply 1 file to isoformExonAnnoation'
                     ))
                 }
                 if (!file.exists(isoformExonAnnoation)) {
@@ -3575,13 +3574,6 @@ importRdata <- function(
                             gtfSwichList$isoformFeatures$gene_biotype == 'TEC'
                         )])
                     )
-
-                    ### Remove TEC from GTF switchList
-                    gtfSwichList <- subsetSwitchAnalyzeRlist(
-                        gtfSwichList,
-                        gtfSwichList$isoformFeatures$gene_biotype != 'TEC'
-                    )
-
                 }
                 if( removeNonConvensionalChr ) {
                     nonChanonicalChrsIso <- unique(
@@ -3590,18 +3582,13 @@ importRdata <- function(
                         )]
                     )
 
-                    gtfSwichList <- subsetSwitchAnalyzeRlist(
-                        gtfSwichList,
-                        ! gtfSwichList$isoformFeatures$isoform_id %in% nonChanonicalChrsIso
-                    )
-
                     isoformsToRemove <- unique(c(
                         isoformsToRemove,
                         nonChanonicalChrsIso
                     ))
                 }
 
-                ### Make sure to remove all isoforms from genes which are to be removed
+                ### Make sure to remove all isoforms from genes which have isoforms to remove
                 if(length(isoformsToRemove)) {
                     genesToRemove <- gtfSwichList$isoformFeatures$gene_id[which(
                         gtfSwichList$isoformFeatures$isoform_id %in% isoformsToRemove
@@ -3618,27 +3605,15 @@ importRdata <- function(
                 }
 
                 ### If nessesary remove TEC and non-charnonical from rep exp data
-                if( countsSuppled & length(isoformsToRemove) ) {
+                if( countsSuppled & length(isoformsToRemove ) ) {
                     isoformCountMatrix <- isoformCountMatrix[which(
                         ! isoformCountMatrix$isoform_id %in% isoformsToRemove
                     ),]
                 }
-                if ( abundSuppled & length(isoformsToRemove) ) {
+                if( abundSuppled  & length(isoformsToRemove ) ) {
                     isoformRepExpression <- isoformRepExpression[which(
                         ! isoformRepExpression$isoform_id %in% isoformsToRemove
                     ),]
-
-                }
-
-                ### Reduce to the genes quantified
-                genesQuantified <- gtfSwichList$isoformFeatures$gene_id[which(
-                    gtfSwichList$isoformFeatures$isoform_id %in% isoformRepExpression$isoform_id
-                )]
-                if(length(genesQuantified) ) {
-                    gtfSwichList <- subsetSwitchAnalyzeRlist(
-                        gtfSwichList,
-                        gtfSwichList$isoformFeatures$gene_id %in% genesQuantified
-                    )
                 }
 
                 ### Extract wanted annotation files form the switchAnalyzeR object
@@ -3811,7 +3786,7 @@ importRdata <- function(
 
         jcCutoff <- 0.925
 
-        onlyInExp <- setdiff(unique(expIso), isoformAnnotation$isoform_id)
+        onlyInExp <- setdiff(expIso, isoformAnnotation$isoform_id)
 
         if (j1 != 1 ) {
             if( j1 < jcCutoff | length(onlyInExp) ) {

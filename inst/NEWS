@@ -1,3 +1,8 @@
+Changes in version 1.9.5 (2020-04-22)
+- Update type: Minor.
+- Update of createSwitchAnalyzeRlist() documentation.
+- Clean up of code for removal of fusion transcripts in importRdata()
+
 Changes in version 1.9.4 (2020-04-21)
 - Update type: Minor.
 - importRdata() was also updated to handle edge-case fusion transcripts.
