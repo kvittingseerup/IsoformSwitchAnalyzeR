@@ -1,3 +1,10 @@
+Changes in version 1.11.1 (2020-05-05)
+- (Version bump due to Bioconductor release).
+- Update type: Minor.
+- Update of code comments in importRdata()
+- Update of printed message in importIsoformExpression()
+- Update of analyzePFAM() to enable more robust import of fwf files with and without headers included. It also handles the mistake in pfam files with regards to the fixed width of files when the "coiled-coil" type are included.
+
 Changes in version 1.9.5 (2020-04-22)
 - Update type: Minor.
 - Update of createSwitchAnalyzeRlist() documentation.

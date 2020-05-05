@@ -439,11 +439,30 @@ analyzePFAM <- function(
             stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
         }
         if (grepl('^<seq|^seq', temp[1, 1])) {
-            skipLine <- 1
+            tmp2 <-
+                readLines(
+                    con = pathToPFAMresultFile[1],
+                    n = 50
+                )
+            skipLine <- which(grepl('^<seq|^seq', tmp2))[1]
+
+            temp3 <-
+                read.table(
+                    file = pathToPFAMresultFile[1],
+                    stringsAsFactors = FALSE,
+                    fill = TRUE,
+                    header = FALSE,
+                    nrows = 1,
+                    skip = skipLine
+                )
+
+            activeResidueIncluded <- ncol(temp3) == 16
+
         } else {
             skipLine <- 0
-        }
 
+            activeResidueIncluded <- ncol(temp) == 16
+        }
         myPfamResult <- do.call(rbind, plyr::llply(
             pathToPFAMresultFile,
             .fun = function(
@@ -457,21 +476,32 @@ analyzePFAM <- function(
                 #     col.names = 1:16,
                 #     skip = skipLine
                 # )
+
+                ### Fix the mistake in the fixed width file
+                fileVector <- readLines(pathToPFAMresultFile)
+                fileVector <- gsub('Coiled-coil',' Coiled', fileVector)
+
                 suppressMessages(
                     suppressWarnings(
-                        readr::read_fwf(
-                            file = aFile,
-                            col_positions =fwf_empty(
-                                file = aFile,
-                                col_names = paste0('X',1:16),
+                        localPfamRes <- readr::read_fwf(
+                            file = fileVector,
+                            col_positions = readr::fwf_empty(
+                                file = fileVector,
+                                col_names = paste0(
+                                    'X',
+                                    1:(15+ activeResidueIncluded)
+                                ),
                                 skip = skipLine,
-                                comment = '#'
+                                comment = '#',
+                                n = 1000L
                             ),
                             skip = skipLine,
                             comment = '#'
                         )
                     )
                 )
+
+                return(localPfamRes)
             }
         ))
         myPfamResult <- unique(myPfamResult)
@@ -524,18 +554,25 @@ analyzePFAM <- function(
 
         ### Old style
         if (class(myPfamResult$X8) == 'character') {
-            colnames(myPfamResult) <- oldColnames
-            myPfamResult$residue[which(myPfamResult$residue == '')] <-
-                NA
+            colnames(myPfamResult) <- oldColnames[1:ncol(myPfamResult)]
 
-            ### New style
+            if( 'residue' %in% colnames(myPfamResult) ) {
+                myPfamResult$residue[which(myPfamResult$residue == '')] <-
+                    NA
+            }
+
+        ### New style
         } else if (class(myPfamResult$X8) == 'integer') {
-            colnames(myPfamResult) <- newColNames
+            colnames(myPfamResult) <- newColNames[1:ncol(myPfamResult)]
             myPfamResult$clan[which(myPfamResult$clan == '')] <- NA
 
         } else {
             stop('The file(s) supplied is not recogniced as a pfam output.')
         }
+
+        ### Revert the coiled name
+        myPfamResult$type <- gsub('Coiled','Coiled_coil', myPfamResult$type)
+
     }
 
     ### Sanity check that it is a PFAM result file

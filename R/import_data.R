@@ -3024,7 +3024,7 @@ importIsoformExpression <- function(
     if(interLibNormTxPM) {
         if( ncol(localDataList$abundance) >= 2) {
             if (!quiet) {
-                message('Step 3 of 3: Normalizing FPKM/TxPM values via edgeR...')
+                message('Step 3 of 3: Normalizing abundance values (not counts) via edgeR...')
             }
 
             okIso <- rownames(localDataList$abundance)[which(
@@ -3565,7 +3565,7 @@ importRdata <- function(
                     )
                 )
 
-                ### Extract isoforms to remove (and remove from GTF if nessesary)
+                ### Extract isoforms to remove
                 isoformsToRemove <- character()
                 if( removeTECgenes & any(!is.na( gtfSwichList$isoformFeatures$gene_biotype)) ) {
                     isoformsToRemove <- c(
@@ -3588,7 +3588,7 @@ importRdata <- function(
                     ))
                 }
 
-                ### Make sure to remove all isoforms from genes which have isoforms to remove
+                ### Remove all isoforms from genes which have isoforms to remove
                 if(length(isoformsToRemove)) {
                     genesToRemove <- gtfSwichList$isoformFeatures$gene_id[which(
                         gtfSwichList$isoformFeatures$isoform_id %in% isoformsToRemove

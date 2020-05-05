@@ -14,7 +14,8 @@ This can be done by running the following in an R terminal:
 if (!requireNamespace("BiocManager", quietly = TRUE)){
     install.packages("BiocManager")
 }
-BiocManager::install("IsoformSwitchAnalyzeR", version = "3.9")
+BiocManager::install(version='devel')
+BiocManager::install("IsoformSwitchAnalyzeR")
 ```
 
 Alternatively IsoformSwitchAnalyzeR can be installed from github by running the following in an R terminal:
