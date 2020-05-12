@@ -1,3 +1,9 @@
+Changes in version 1.11.2 (2020-XX-XX)
+- Update type: Minor.
+- A bug was corrected in extractSequence() which caused an error: "object 'filterShortAALength' not found".
+- In extractSequence() the minimul length kept when using the "removeShortAAseq" argument was raised to 11 amino acids to match the pfam website.
+- An error in importRdata was fixed to re-enable removal of isoforms only found in annotation.
+
 Changes in version 1.11.1 (2020-05-05)
 - (Version bump due to Bioconductor release).
 - Update type: Minor.

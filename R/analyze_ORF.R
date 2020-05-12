@@ -710,11 +710,11 @@ extractSequence <- function(
             stop('The \'alsoSplitFastaFile\' argument must be either TRUE or FALSE')
         }
         if( alsoSplitFastaFile ) {
-            if( ! filterShortAALength ) {
-                warning('Since you are using the alsoSplitFastaFile you probably also want to use the \'filterShortAALength\' option.')
+            if( ! removeShortAAseq ) {
+                warning('Since you are using the alsoSplitFastaFile you probably also want to use the \'removeShortAAseq\' option.')
             }
-            if( ! filterLongAALength ) {
-                warning('Since you are using the alsoSplitFastaFile you probably also want to use the \'filterLongAALength\' option.')
+            if( ! removeLongAAseq ) {
+                warning('Since you are using the alsoSplitFastaFile you probably also want to use the \'removeLongAAseq\' option.')
             }
         }
 
@@ -918,9 +918,9 @@ extractSequence <- function(
             transcriptSequencesDNAstring <-
                 DNAStringSet(c(myPlusExonSequences, myMinusExonSequences))
 
-            startOfAnalysis <- startOfAnalysis + 1
         }
 
+        startOfAnalysis <- startOfAnalysis + 1
     }
 
     ### Extract protein sequence of the identified ORFs
@@ -939,28 +939,32 @@ extractSequence <- function(
         }
 
         ### Extract switchAnalyzeRlist ORF annotation and filter for those I need
-        switchORFannotation <-
-            unique(data.frame(switchAnalyzeRlist$orfAnalysis[, c(
-                'isoform_id',
-                "orfTransciptStart",
-                'orfTransciptEnd',
-                "orfTransciptLength",
-                "PTC"
-            )]))
-        switchORFannotation <-
-            switchORFannotation[which(!is.na(switchORFannotation$PTC)), ]
-        switchORFannotation <-
-            switchORFannotation[which(
-                switchORFannotation$isoform_id %in%
-                    names(transcriptSequencesDNAstring)), ]
-        switchORFannotation <-
-            switchORFannotation[which(
-                switchORFannotation$orfTransciptStart != 0
-            ), ]
+        if(TRUE) {
+            switchORFannotation <-
+                unique(data.frame(switchAnalyzeRlist$orfAnalysis[, c(
+                    'isoform_id',
+                    "orfTransciptStart",
+                    'orfTransciptEnd',
+                    "orfTransciptLength",
+                    "PTC"
+                )]))
+            switchORFannotation <-
+                switchORFannotation[which(!is.na(switchORFannotation$PTC)), ]
+            switchORFannotation <-
+                switchORFannotation[which(
+                    switchORFannotation$isoform_id %in%
+                        names(transcriptSequencesDNAstring)), ]
+            switchORFannotation <-
+                switchORFannotation[which(
+                    switchORFannotation$orfTransciptStart != 0
+                ), ]
 
-        if( aaAlreadyInSwitchList ) {
+        }
+
+        ### Extract AA sequences
+        if(   aaAlreadyInSwitchList ) {
             transcriptORFaaSeq <- switchAnalyzeRlist$aaSequence[which(
-                names(transcriptORFaaSeq) %in% names(transcriptSequencesDNAstring)
+                names(switchAnalyzeRlist$aaSequence) %in% names(transcriptSequencesDNAstring)
             )]
         }
         if( ! aaAlreadyInSwitchList ) {
@@ -1068,15 +1072,15 @@ extractSequence <- function(
             }
 
 
-            startOfAnalysis <- startOfAnalysis + 1
 
         }
 
+        startOfAnalysis <- startOfAnalysis + 1
 
     }
 
 
-    ### If enabled make fasta file(s)
+    ### If enabled write fasta file(s) (after filteri g)
     seqWasTrimmed <- FALSE
     if (writeToFile) {
         if (!quiet) {
@@ -1116,6 +1120,7 @@ extractSequence <- function(
         # Amino Acids
         if (extractAAseq) {
 
+            ### Filter if nessesary
             if (removeLongAAseq | removeShortAAseq) {
 
                 switchORFannotation$toBeTrimmed <- FALSE
@@ -1213,7 +1218,7 @@ extractSequence <- function(
                 if( removeShortAAseq ) {
                     transcriptORFaaSeq2 <-
                         transcriptORFaaSeq2[which(
-                            width(transcriptORFaaSeq2) >= 6
+                            width(transcriptORFaaSeq2) > 10
                         )]
                 }
 
@@ -1233,7 +1238,8 @@ extractSequence <- function(
                 transcriptORFaaSeq2 <- transcriptORFaaSeq
             }
 
-            if( alsoSplitFastaFile ) {
+            ### Write file(s)
+            if(   alsoSplitFastaFile ) {
                 ### Make index
                 l <- length(transcriptORFaaSeq2)
                 indexVec <- unique( c( seq(
@@ -1281,7 +1287,8 @@ extractSequence <- function(
                     ),
                     format = 'fasta'
                 )
-            } else {
+            }
+            if( ! alsoSplitFastaFile ) {
                 ### Write full
                 writeXStringSet(
                     transcriptORFaaSeq2,
@@ -1295,8 +1302,6 @@ extractSequence <- function(
                 )
             }
 
-
-
         }
     }
 
@@ -1304,7 +1309,7 @@ extractSequence <- function(
         message('Done')
     }
 
-    ### Add sequences
+    ### Add sequences to switchAnalyzeRlist
     if (addToSwitchAnalyzeRlist) {
         if (extractNTseq) {
             switchAnalyzeRlist$ntSequence <- transcriptSequencesDNAstring

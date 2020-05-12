@@ -3565,8 +3565,10 @@ importRdata <- function(
                     )
                 )
 
-                ### Extract isoforms to remove
+
                 isoformsToRemove <- character()
+
+                ### Extract isoforms to remove due to non chanonical nature
                 if( removeTECgenes & any(!is.na( gtfSwichList$isoformFeatures$gene_biotype)) ) {
                     isoformsToRemove <- c(
                         isoformsToRemove,
@@ -3601,6 +3603,17 @@ importRdata <- function(
                     gtfSwichList <- subsetSwitchAnalyzeRlist(
                         gtfSwichList,
                         ! gtfSwichList$isoformFeatures$isoform_id %in% isoformsToRemove
+                    )
+                }
+
+                ### Extract isoforms to remove due to no quantification
+                if(TRUE) {
+                    isoformsToRemove <- c(
+                        isoformsToRemove,
+                        setdiff(
+                            gtfSwichList$isoformFeatures$isoform_id,
+                            isoformCountMatrix$isoform_id
+                        )
                     )
                 }
 
@@ -3801,7 +3814,7 @@ importRdata <- function(
                         length(unique(expIso)), 'isoforms were quantified.\n',
                         length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
                         'Only', length(intersect(expIso, isoformAnnotation$isoform_id)), 'overlap.\n',
-                        length(setdiff(unique(expIso), isoformAnnotation$isoform_id)), 'isoforms quantifed isoforms had no corresponding annoation\n',
+                        length(setdiff(unique(expIso), isoformAnnotation$isoform_id)), 'isoforms quantifed had no corresponding annoation\n',
                         '\nThis combination cannot be analyzed since it will',
                         'cause discrepencies between quantification and annotation thereby skewing all analysis.\n',
 
