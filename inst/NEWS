@@ -1,4 +1,9 @@
-Changes in version 1.11.2 (2020-XX-XX)
+Changes in version 1.11.3 (2020-05-14)
+- Update type: Minor.
+- importRdata was updated to handle GTF files with a lot of additional information.
+- analyzeSignalP and analyzePFAM was updated to fix a problem with handling multiple files.
+
+Changes in version 1.11.2 (2020-05-12)
 - Update type: Minor.
 - A bug was corrected in extractSequence() which caused an error: "object 'filterShortAALength' not found".
 - In extractSequence() the minimul length kept when using the "removeShortAAseq" argument was raised to 11 amino acids to match the pfam website.

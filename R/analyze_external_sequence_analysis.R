@@ -478,7 +478,7 @@ analyzePFAM <- function(
                 # )
 
                 ### Fix the mistake in the fixed width file
-                fileVector <- readLines(pathToPFAMresultFile)
+                fileVector <- readLines(aFile)
                 fileVector <- gsub('Coiled-coil',' Coiled', fileVector)
 
                 suppressMessages(
@@ -929,7 +929,7 @@ analyzeSignalP <- function(
     if (TRUE) {
         ### Figure out which version of signal-p was used
         fileHead <- read.table(
-            pathToSignalPresultFile,
+            pathToSignalPresultFile[1],
             nrows = 2,
             fill = TRUE,
             header = FALSE,
