@@ -153,13 +153,15 @@ importCufflinksFiles <- function(
                     stringsAsFactors = FALSE
                 )
         )
-        suppressMessages(
-            cuffSplicing         <-
-                readr::read_tsv(
-                    file = pathToSplicingAnalysis,
-                    col_names = TRUE
-                )
-        )
+        if( !is.null(pathToSplicingAnalysis) ) {
+            suppressMessages(
+                cuffSplicing         <-
+                    readr::read_tsv(
+                        file = pathToSplicingAnalysis,
+                        col_names = TRUE
+                    )
+            )
+        }
 
         suppressMessages(
             readGroup <-
@@ -305,30 +307,33 @@ importCufflinksFiles <- function(
         }
 
         ### splicing analysis
-        q1 <-
-            !all(
-                colnames(cuffSplicing) %in% c(
-                    "test_id",
-                    "gene_id",
-                    "gene",
-                    "locus",
-                    "sample_1",
-                    "sample_2",
-                    "status",
-                    "value_1",
-                    "value_2",
-                    "sqrt(JS)",
-                    "test_stat",
-                    "p_value",
-                    "q_value",
-                    "significant"
+        if( !is.null(pathToSplicingAnalysis) ) {
+            q1 <-
+                !all(
+                    colnames(cuffSplicing) %in% c(
+                        "test_id",
+                        "gene_id",
+                        "gene",
+                        "locus",
+                        "sample_1",
+                        "sample_2",
+                        "status",
+                        "value_1",
+                        "value_2",
+                        "sqrt(JS)",
+                        "test_stat",
+                        "p_value",
+                        "q_value",
+                        "significant"
+                    )
                 )
-            )
-        if (q1) {
-            stop(
-                'The file supplied to cuffSplicing does not appear to be the',
-                'result of the CuffDiff differential analysis of alternative splicing.'
-            )
+            if (q1) {
+                stop(
+                    'The file supplied to cuffSplicing does not appear to be the',
+                    'result of the CuffDiff differential analysis of alternative splicing.'
+                )
+            }
+
         }
 
         ### Read grous
@@ -1110,8 +1115,10 @@ importCufflinksFiles <- function(
         sourceId = paste("cufflinks", cuffVersion , sep = '_')
     )
 
-    if (!is.null(pathToSplicingAnalysis) & nrow(cuffSplicing)) {
-        switchAnalyzeRlist$isoformSwitchAnalysis <- as.data.frame(cuffSplicing)
+    if (!is.null(pathToSplicingAnalysis)) {
+        if( nrow(cuffSplicing) ) {
+            switchAnalyzeRlist$isoformSwitchAnalysis <- as.data.frame(cuffSplicing)
+        }
     }
 
     if( addIFmatrix ) {

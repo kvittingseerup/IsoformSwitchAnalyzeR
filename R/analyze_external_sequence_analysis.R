@@ -426,152 +426,214 @@ analyzePFAM <- function(
 
     ### Import result data
     if(TRUE) {
-        ### Test wither headers are included
-        temp <-
-            read.table(
-                file = pathToPFAMresultFile[1],
-                stringsAsFactors = FALSE,
-                fill = TRUE,
-                header = FALSE,
-                nrows = 1
-            )
-        if (nrow(temp) == 0) {
-            stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
-        }
-        if (grepl('^<seq|^seq', temp[1, 1])) {
-            tmp2 <-
-                readLines(
-                    con = pathToPFAMresultFile[1],
-                    n = 50
-                )
-            skipLine <- which(grepl('^<seq|^seq', tmp2))[1]
-
-            temp3 <-
+        ### Figure out header and lines to skip
+        if(TRUE) {
+            ### Test whether headers are included
+            temp <-
                 read.table(
                     file = pathToPFAMresultFile[1],
                     stringsAsFactors = FALSE,
                     fill = TRUE,
                     header = FALSE,
-                    nrows = 1,
-                    skip = skipLine
+                    nrows = 1
                 )
-
-            activeResidueIncluded <- ncol(temp3) == 16
-
-        } else {
-            skipLine <- 0
-
-            activeResidueIncluded <- ncol(temp) == 16
-        }
-        myPfamResult <- do.call(rbind, plyr::llply(
-            pathToPFAMresultFile,
-            .fun = function(
-                aFile
-            ) {
-                # read.table(
-                #     file = aFile,
-                #     stringsAsFactors = FALSE,
-                #     fill = TRUE,
-                #     header = FALSE,
-                #     col.names = 1:16,
-                #     skip = skipLine
-                # )
-
-                ### Fix the mistake in the fixed width file
-                fileVector <- readLines(aFile)
-                fileVector <- gsub('Coiled-coil',' Coiled', fileVector)
-
-                suppressMessages(
-                    suppressWarnings(
-                        localPfamRes <- readr::read_fwf(
-                            file = fileVector,
-                            col_positions = readr::fwf_empty(
-                                file = fileVector,
-                                col_names = paste0(
-                                    'X',
-                                    1:(15+ activeResidueIncluded)
-                                ),
-                                skip = skipLine,
-                                comment = '#',
-                                n = 1000L
-                            ),
-                            skip = skipLine,
-                            comment = '#'
-                        )
-                    )
-                )
-
-                return(localPfamRes)
+            if (nrow(temp) == 0) {
+                stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
             }
-        ))
-        myPfamResult <- unique(myPfamResult)
+            headerIncluded <- grepl('^<seq|^seq', temp[1, 1])
+
+            ### Figure out number of lines to skip
+            if(   headerIncluded) {
+                tmp2 <-
+                    readLines(
+                        con = pathToPFAMresultFile[1],
+                        n = 50
+                    )
+                skipLine <- which(grepl('^<seq|^seq', tmp2))[1]
+
+                temp3 <-
+                    read.table(
+                        file = pathToPFAMresultFile[1],
+                        stringsAsFactors = FALSE,
+                        fill = TRUE,
+                        header = FALSE,
+                        nrows = 1,
+                        skip = skipLine
+                    )
+
+                activeResidueIncluded <- ncol(temp3) == 16
+
+            }
+            if( ! headerIncluded) {
+                skipLine <- 0
+
+                activeResidueIncluded <- ncol(temp) == 16
+            }
+        }
+
+        ### Read in file
+        myPfamResult <- unique(
+            do.call(
+                rbind,
+                plyr::llply(
+                    pathToPFAMresultFile,
+                    .fun = function(
+                        aFile
+                    ) {
+                        # aFile <- pathToPFAMresultFile[1]
+
+                        ### Try reading it as a space seperated
+                        localPfamRes <- read.table(
+                            file = aFile,
+                            stringsAsFactors = FALSE,
+                            fill = TRUE,
+                            header = FALSE,
+                            col.names = 1:16,
+                            skip = skipLine
+                        )
+
+                        ### Test shifted values
+                        try1problems <- unique(c(
+                            which(is.na( localPfamRes[,14]     )),              # via "significant" column (will either be NA or a clan indication)
+                            which(       localPfamRes[,14] != 1 ),              # via "significant" column (will either be NA or a clan indication)
+                            which( ! stringr::str_detect(localPfamRes[,6], '^PF|^PB') ),  # via pfam_hmm id which should start with PF or PB
+                            which( localPfamRes[,ncol(localPfamRes)] == '' )
+                        ))
+
+                        ### If any NAs - try reading it as a tab seperated
+                        if( length(try1problems) ) {
+                            ### Fix the mistake in the fixed width file
+                            suppressWarnings(
+                                fileVector <- readLines(aFile)
+                            )
+                            fileVector <- gsub('Coiled-coil',' Coiled', fileVector)
+
+                            suppressMessages(
+                                suppressWarnings(
+                                    localPfamRes2 <- readr::read_fwf(
+                                        file = fileVector,
+                                        col_positions = readr::fwf_empty(
+                                            file = fileVector,
+                                            col_names = paste0(
+                                                'X',
+                                                1:(15+ activeResidueIncluded)
+                                            ),
+                                            skip = skipLine,
+                                            comment = '#',
+                                            n = 1000L
+                                        ),
+                                        skip = skipLine,
+                                        comment = '#'
+                                    )
+                                )
+                            )
+                            localPfamRes2 <- as.data.frame(localPfamRes2)
+
+                            ### Test shifted values via "significant" column (will either be NA or a clan indication)
+                            try2problems <- unique(c(
+                                which(is.na( localPfamRes2[,14]     )),              # via "significant" column (will either be NA or a clan indication)
+                                which(       localPfamRes2[,14] != 1 ),              # via "significant" column (will either be NA or a clan indication)
+                                which( ! stringr::str_detect(localPfamRes2$X6, '^PF|^PB') ),  # via pfam_hmm id which should start with PF or PB
+                                which( localPfamRes2[,ncol(localPfamRes2)] == '' )
+                            ))
+
+                            ### overwrite if fewer problems
+                            if( length(try2problems) < length(try1problems) ) {
+                                localPfamRes <- localPfamRes2
+                            }
+                        }
+
+
+                        return(localPfamRes)
+                    }
+                )
+            )
+        )
 
         ### read in pfam resut result
         if (nrow(myPfamResult) == 0) {
             stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
         }
 
-        ### Identify which type of PFAM file is supplied
-        # Colnames for pfam result
-        oldColnames <-
-            c(
-                'seq_id',
-                'alignment_start',
-                'alignment_end',
-                'envelope_start',
-                'envelope_end',
-                'hmm_acc',
-                'hmm_name',
-                'type',
-                'hmm_start',
-                'hmm_end',
-                'hmm_length',
-                'bit_score',
-                'E_value',
-                'significant',
-                'clan',
-                'residue'
-            )
-        newColNames <-
-            c(
-                'seq_id',
-                'alignment_start',
-                'alignment_end',
-                'envelope_start',
-                'envelope_end',
-                'hmm_acc',
-                'hmm_name',
-                'hmm_start',
-                'hmm_end',
-                'hmm_length',
-                'bit_score',
-                'Individual_E_value',
-                'Conditional_E_value',
-                'significant',
-                'outcompeted',
-                'clan'
-            )
-
-        ### Old style
-        if (class(myPfamResult$X8) == 'character') {
-            colnames(myPfamResult) <- oldColnames[1:ncol(myPfamResult)]
-
-            if( 'residue' %in% colnames(myPfamResult) ) {
-                myPfamResult$residue[which(myPfamResult$residue == '')] <-
-                    NA
+        ### Identify they style of PFAM file(s) is supplied
+        if(TRUE) {
+            ### Define Colnames for pfam file types
+            if(TRUE) {
+                oldColnames <-
+                    c(
+                        'seq_id',
+                        'alignment_start',
+                        'alignment_end',
+                        'envelope_start',
+                        'envelope_end',
+                        'hmm_acc',
+                        'hmm_name',
+                        'type', # 8
+                        'hmm_start',
+                        'hmm_end',
+                        'hmm_length',
+                        'bit_score',
+                        'E_value',
+                        'significant', # 14
+                        'clan',
+                        'residue'
+                    )
+                newColNames <-
+                    c(
+                        'seq_id',
+                        'alignment_start',
+                        'alignment_end',
+                        'envelope_start',
+                        'envelope_end',
+                        'hmm_acc',
+                        'hmm_name',
+                        'hmm_start', # 8
+                        'hmm_end',
+                        'hmm_length',
+                        'bit_score',
+                        'Individual_E_value',
+                        'Conditional_E_value',
+                        'significant', # 14
+                        'outcompeted',
+                        'clan'
+                    )
             }
 
-        ### New style
-        } else if (class(myPfamResult$X8) == 'integer') {
-            colnames(myPfamResult) <- newColNames[1:ncol(myPfamResult)]
-            myPfamResult$clan[which(myPfamResult$clan == '')] <- NA
+            ### Define style via clan column
+            oldStyle <- any(grepl('^CL', myPfamResult[,15]))
+            if(ncol(myPfamResult) == 16 ) {
+                newStyle <- any(grepl('^CL', myPfamResult[,16]))
+            } else {
+                newStyle <- FALSE
+            }
 
-        } else {
-            stop('The file(s) supplied is not recogniced as a pfam output.')
+            ### Old style
+            if ( oldStyle & !newStyle ) {
+                colnames(myPfamResult) <- oldColnames[1:ncol(myPfamResult)]
+
+                if( 'residue' %in% colnames(myPfamResult) ) {
+                    myPfamResult$residue[which(myPfamResult$residue == '')] <-
+                        NA
+                }
+            }
+
+            ### New style
+            if ( ! oldStyle & newStyle ) {
+                colnames(myPfamResult) <- newColNames[1:ncol(myPfamResult)]
+                myPfamResult$clan[which(myPfamResult$clan == '')] <- NA
+
+            }
+
+            ### Other combinations
+            if( oldStyle == newStyle ) {
+                stop('The file(s) supplied is not recogniced as a pfam output.')
+            }
         }
 
         ### Revert the coiled name
-        myPfamResult$type <- gsub('Coiled','Coiled_coil', myPfamResult$type)
+        if('type' %in% colnames(myPfamResult)) {
+            myPfamResult$type <- gsub('^Coiled$','Coiled_coil', myPfamResult$type)
+        }
 
     }
 
@@ -618,7 +680,7 @@ analyzePFAM <- function(
                 pattern = '^PF|^PB' ,
                 myPfamResult$hmm_acc[nonNaIndex],
                 ignore.case = FALSE
-            ))                # All pfam hmm starts with PF
+            ))                # All pfam hmm starts with PF or PB
 
         if (!all(test1, test2)) {
             stop('The file pointed to by \'pathToPFAMresultFile\' is not a PFAM result file')

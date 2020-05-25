@@ -1,7 +1,10 @@
-Changes in version 1.11.3 (2020-05-14)
+Changes in version 1.11.3 (2020-05-20)
 - Update type: Minor.
 - importRdata was updated to handle GTF files with a lot of additional information.
 - analyzeSignalP and analyzePFAM was updated to fix a problem with handling multiple files.
+- analyzePFAM was updated to attempt to handle both fixed width files and broken fixed width files.
+- isoformSwitchTestDEXSeq() and isoformSwitchTestDRIMSeq() was updated with the "keepIsoformInAllConditions" argument which allows data for an isoform to be kept in all comparisons even if it is only deemed significant in one comparison. TRUE by default.
+- importCufflinksData() was updated to handle when pathToSplicingAnalysis was not used.
 
 Changes in version 1.11.2 (2020-05-12)
 - Update type: Minor.

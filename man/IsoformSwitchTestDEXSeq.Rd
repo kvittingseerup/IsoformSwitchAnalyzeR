@@ -17,6 +17,7 @@ isoformSwitchTestDEXSeq(
     reduceToSwitchingGenes = TRUE,
     reduceFurtherToGenesWithConsequencePotential = TRUE,
     onlySigIsoforms = FALSE,
+    keepIsoformInAllConditions = TRUE,
     showProgress = TRUE,
     quiet = FALSE
 )
@@ -51,6 +52,10 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 
 \item{onlySigIsoforms}{
 A logic indicating whether both isoforms the pairs considered if \code{reduceFurtherToGenesWithConsequencePotential=TRUE} should be significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Default is FALSE (aka only one of the isoforms in a pair should be significantly differential used).
+}
+
+\item{keepIsoformInAllConditions}{
+A logic indicating whether the an isoform should be kept in all comparisons even if it is only deemed significant (as defined by the \code{alpha} and \code{dIFcutoff} parameters) in one comparison. This will not affect downstream runtimes only make the switchAnalyzeRlist use slightly more memmory (scaling with the number of conditions compared). Default is TRUE.
 }
 
 \item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Defaults is FALSE.}

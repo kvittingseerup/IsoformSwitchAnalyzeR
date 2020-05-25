@@ -7,6 +7,7 @@ isoformSwitchTestDRIMSeq <- function(
     reduceToSwitchingGenes = TRUE,
     reduceFurtherToGenesWithConsequencePotential = TRUE,
     onlySigIsoforms = FALSE,
+    keepIsoformInAllConditions = TRUE,
     dmFilterArgs=list(
         min_feature_expr = 4,
         min_samps_feature_expr = min(
@@ -509,6 +510,7 @@ isoformSwitchTestDRIMSeq <- function(
                             abs(switchAnalyzeRlist$isoformFeatures$dIF) > dIFcutoff
                     )]
             }
+
         }
 
         if (length(combinedGeneIDsToKeep) == 0) {
@@ -519,11 +521,24 @@ isoformSwitchTestDRIMSeq <- function(
             ))
         }
 
-        switchAnalyzeRlist <-
-            subsetSwitchAnalyzeRlist(
-                switchAnalyzeRlist,
+        if(   keepIsoformInAllConditions ) {
+            combinedGeneIDsToKeep <- switchAnalyzeRlist$isoformFeatures$gene_id[which(
                 switchAnalyzeRlist$isoformFeatures$gene_ref %in% combinedGeneIDsToKeep
-            )
+            )]
+
+            switchAnalyzeRlist <-
+                subsetSwitchAnalyzeRlist(
+                    switchAnalyzeRlist,
+                    switchAnalyzeRlist$isoformFeatures$gene_id %in% combinedGeneIDsToKeep
+                )
+        }
+        if( ! keepIsoformInAllConditions ) {
+            switchAnalyzeRlist <-
+                subsetSwitchAnalyzeRlist(
+                    switchAnalyzeRlist,
+                    switchAnalyzeRlist$isoformFeatures$gene_ref %in% combinedGeneIDsToKeep
+                )
+        }
     }
 
     if (!quiet) {
@@ -542,6 +557,7 @@ isoformSwitchTestDEXSeq <- function(
     reduceToSwitchingGenes = TRUE,
     reduceFurtherToGenesWithConsequencePotential = TRUE,
     onlySigIsoforms = FALSE,
+    keepIsoformInAllConditions = TRUE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -622,7 +638,7 @@ isoformSwitchTestDEXSeq <- function(
         abundAvailable <- !is.null( switchAnalyzeRlist$isoformRepExpression )
         ifAvailable <- ! is.null ( switchAnalyzeRlist$isoformRepIF )
 
-        recalcIF <- (haveBatchEffect & correctForConfoundingFactors)
+        recalcIF <- (haveBatchEffect & correctForConfoundingFactors) | (! ifAvailable)
 
         if( ! countsAvailable ) {
             stop('isoformSwitchTestDEXSeq requires count data to work. Please remake switchAnalyzeRlist and try again')
@@ -1203,11 +1219,24 @@ isoformSwitchTestDEXSeq <- function(
             ))
         }
 
-        switchAnalyzeRlist <-
-            subsetSwitchAnalyzeRlist(
-                switchAnalyzeRlist,
+        if(   keepIsoformInAllConditions ) {
+            combinedGeneIDsToKeep <- switchAnalyzeRlist$isoformFeatures$gene_id[which(
                 switchAnalyzeRlist$isoformFeatures$gene_ref %in% combinedGeneIDsToKeep
-            )
+            )]
+
+            switchAnalyzeRlist <-
+                subsetSwitchAnalyzeRlist(
+                    switchAnalyzeRlist,
+                    switchAnalyzeRlist$isoformFeatures$gene_id %in% combinedGeneIDsToKeep
+                )
+        }
+        if( ! keepIsoformInAllConditions ) {
+            switchAnalyzeRlist <-
+                subsetSwitchAnalyzeRlist(
+                    switchAnalyzeRlist,
+                    switchAnalyzeRlist$isoformFeatures$gene_ref %in% combinedGeneIDsToKeep
+                )
+        }
     }
 
     if (!quiet) {

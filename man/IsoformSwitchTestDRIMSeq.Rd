@@ -16,6 +16,7 @@ isoformSwitchTestDRIMSeq(
     reduceToSwitchingGenes = TRUE,
     reduceFurtherToGenesWithConsequencePotential = TRUE,
     onlySigIsoforms = FALSE,
+    keepIsoformInAllConditions = TRUE,
     dmFilterArgs=list(
         min_feature_expr = 4,
         min_samps_feature_expr = min(
@@ -62,6 +63,9 @@ A logic indicating whether the switchAnalyzeRlist should be reduced to the genes
 A logic indicating whether both isoforms the pairs considered if \code{reduceFurtherToGenesWithConsequencePotential=TRUE} should be significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Default is FALSE (aka only one of the isoforms in a pair should be significantly differential used).
 }
 
+\item{keepIsoformInAllConditions}{
+A logic indicating whether the an isoform should be kept in all comparisons even if it is only deemed significant (as defined by the \code{alpha} and \code{dIFcutoff} parameters) in one comparison. This will not affect downstream runtimes only make the switchAnalyzeRlist use slightly more memmory (scaling with the number of conditions compared). Default is TRUE.
+}
     %\item{nCores}{ An inter indicating the number of cores to be used in parallel processing. Defaults is FALSE.}
     \item{dmFilterArgs}{Offers a way to pass additional arguments to the \code{DRIMSeq::dmFilter()} function enabling filtering based on replicate data. Must be supplied as a named list. Default is 4 counts in at least as many libraries as there are replicates in the smallest condition}
 

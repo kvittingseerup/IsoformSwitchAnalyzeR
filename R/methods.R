@@ -32,6 +32,10 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
 
     ### Based on which isoforms are left subset other features
     isoformsToKeep <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
+    genesToKeep <- unique( switchAnalyzeRlist$isoformFeatures$gene_id[which(
+        switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoformsToKeep
+    )] )
+
     allIsoformsAssociated <- unique(
         switchAnalyzeRlist$exons$isoform_id[which(
             switchAnalyzeRlist$exons$gene_id %in%
