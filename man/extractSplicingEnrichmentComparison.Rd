@@ -42,7 +42,7 @@ A logic indicating whether it is the number of genes (if TRUE) or isoform switch
 }
 
   \item{plot}{
-A logic indicting whether the analysis should be plotted. Default is TRUE.
+A logic indicting whether the analysis should be plotted. If TRUE and \code{returnResult = FALSE} the ggplot2 object will be returned instead. Default is TRUE.
 }
   \item{localTheme}{
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw(base_size = 14).
@@ -53,7 +53,7 @@ The minimum number of events (total gain/loss) must be present before the result
 }
 
   \item{returnResult}{
-A logic indicating whether the analysis should be returned as a data.frame. Default is FALSE.
+A logic indicating whether the analysis should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is FLASE.
 }
 }
 

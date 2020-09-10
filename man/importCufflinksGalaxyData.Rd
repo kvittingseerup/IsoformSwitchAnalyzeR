@@ -9,19 +9,23 @@ This function enables users to run Cufflinks/Cuffdiff and then afterwards import
 
 \usage{
 importCufflinksFiles(
+    ### Core arguments
     pathToGTF,
     pathToGeneDEanalysis,
     pathToIsoformDEanalysis,
     pathToGeneFPKMtracking,
     pathToIsoformFPKMtracking,
     pathToIsoformReadGroupTracking,
-    pathToSplicingAnalysis=NULL,
+    pathToSplicingAnalysis = NULL,
     pathToReadGroups,
     pathToRunInfo,
     isoformNtFasta = NULL,
-    fixCufflinksAnnotationProblem=TRUE,
+
+    ### Advanced arguments
+    fixCufflinksAnnotationProblem = TRUE,
     addIFmatrix = TRUE,
-    quiet=FALSE
+    estimateDifferentialGeneRange = TRUE,
+    quiet = FALSE
 )
 
 }
@@ -68,6 +72,10 @@ A logic indicating whether to fix the problem with Cufflinks gene symbol annotat
 A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE) or not (if FALSE). Keeping it will make testing with limma faster but will also make the switchAnalyzeRlist larger - so it is a trade-off for speed vs memory. For most experimental setups we expect that keeping it will be the better solution. Default is TRUE.
 }
 
+\item{estimateDifferentialGeneRange}{
+A logic indicating whether to make a very quick estimate of the number of genes with differential isoform usage. Please note this number should be taken as a pilot and cannot be trusted. It merely servers to indcate what could be expected if the data is analyzed with the rest of the IsoformSwitchAnalyzeR. See details for more information. Default is TRUE.
+}
+
 \item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
 }
 
@@ -76,6 +84,8 @@ A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE
 One problem with cufflinks is that it considers islands of overlapping transcripts - this means that sometimes multiple genes (defined by gene short name) as combined into one cufflinks gene (XLOC_XXXXXX) and this gene is quantified and tested for differential expression. Setting fixCufflinksAnnotationProblem to TRUE will make the import function modify the data so that false conclusions are not made in downstream analysis. More specifically this cause the function to re-calculate expression values, set gene standard error (of mean) to NA and the p-value and q-value of the differential expression analysis to 1 whereby false conclusions can be prevented.
 
 Cuffdiff performs a statistical test for changes in alternative splicing between transcripts that utilize the same transcription start site (TSS). If evidence for alternative splicing, resulting in alternative isoforms, are found within a gene then there must per definition also be isoform switching occurring within that gene. Therefore we have implemented the \code{addCufflinksSwichTest} parameter which will add the FDR corrected p-value (q-value) of CuffDiffs splicing test as the gene-level evidence for isoform switching (the \code{gene_switch_q_value} column). By coupling this evidence with a cutoff on minimum switch size (which is measured a gene-level and controlled via \code{dIFcutoff}) in the downstream analysis, switches that are not negligible at gene-level will be ignored. Note that CuffDiff have a parameter ('-min-reps-for-js-test) which controls how many replicates (default is 3) are needed for the test of alternative splicing is performed and that the test requires TSSs are annotated in the GTF file supplied to Cuffmerge via the '-g/-ref-gtf' parameter.
+
+The guestimate produced by setting \code{estimateDifferentialGeneRange = TRUE} is created by subsetting a lot on data (both on samples, conditions and genes) and running a fast but unreliable DTU method. The resulting number is then multiplied by a factor to caclulate back what would be expected by running the IsoformSwitchAnalyzeR pipeline. It should go without saying due to all these factors the acutal guestimate is just that - and estimate which cannot be trusted but merely indicate the expected range. It is to be expected the acutal results from running the IsoformSwitchAnalyzeR pipeline differs from the guestimate in which case the guestimate should not be trusted.
 }
 \value{
 A \code{switchAnalyzeRlist} containing all the gene and transcript information as well as the isoform structure. See ?switchAnalyzeRlist for more details. If \code{addCufflinksSwichTest=TRUE} a data.frame with the result of CuffDiffs test for alternative splicing is also added to the switchAnalyzeRlist under the entry 'isoformSwitchAnalysis' (only if analysis was performed).

@@ -2,6 +2,7 @@ switchPlotTopSwitches <- function(
     switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
+    onlySigIsoforms = FALSE,
     n=10,
     sortByQvals=TRUE,
     filterForConsequences = FALSE,
@@ -86,13 +87,23 @@ switchPlotTopSwitches <- function(
         }
     }
 
-
     ### Extract genes with switches (passing all filters) and prepare the data
     if (!quiet) { message('Extracting data...') }
     if (TRUE) {
-        ### Extract signifcant isoforms (and then use the associated gene_id to make the plots) (and the feature to sort after)
-        if (!sortByQvals) {
-            ### Extract data
+        ### Extract data
+        if(TRUE) {
+            ### Extract Iso pairs
+            pairwiseIsoComparison <- extractSwitchPairs(
+                switchAnalyzeRlist,
+                alpha = alpha,
+                dIFcutoff = dIFcutoff,
+                onlySigIsoforms = onlySigIsoforms
+            )
+            if (nrow(pairwiseIsoComparison) == 0) {
+                stop('No significant isoform switches were found with the given cutoffs')
+            }
+
+            ### Extract corresponding data
             collumnsToExtract <-
                 c(
                     'gene_ref',
@@ -110,38 +121,20 @@ switchPlotTopSwitches <- function(
                     colnames(switchAnalyzeRlist$isoformFeatures)
                 ))
 
-            isoResTest <-
-                any(!is.na(
-                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-                ))
-            if (isoResTest) {
-                idsToExtract <-
-                    switchAnalyzeRlist$isoformFeatures$gene_ref[which(
-                        switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value  <
-                            alpha &
-                            abs(switchAnalyzeRlist$isoformFeatures$dIF) >
-                            dIFcutoff
-                    )]
-            } else {
-                idsToExtract <-
-                    switchAnalyzeRlist$isoformFeatures$gene_ref[which(
-                        switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <
-                            alpha &
-                            abs(switchAnalyzeRlist$isoformFeatures$dIF) >
-                            dIFcutoff
-                    )]
-            }
-            if (length(idsToExtract) == 0) {
-                stop('No significant isoform switches were found with the given cutoffs')
-            }
-
             localData <- switchAnalyzeRlist$isoformFeatures[
                 which(
-                    switchAnalyzeRlist$isoformFeatures$gene_ref %in% idsToExtract
+                    switchAnalyzeRlist$isoformFeatures$gene_ref %in% pairwiseIsoComparison$gene_ref
                 ),
                 collumnsToExtract
-            ]
+                ]
 
+            if( ! 'switchConsequencesGene' %in% colnames(localData)) {
+                localData$switchConsequencesGene <- FALSE
+            }
+        }
+
+        ### Extract signifcant isoforms (and then use the associated gene_id to make the plots) (and the feature to sort after)
+        if ( ! sortByQvals ) {
 
             ### Calculate combined dIF-value
             combinedDif <-
@@ -151,59 +144,12 @@ switchPlotTopSwitches <- function(
             ### Add to df
             localData$combinedDIF <-
                 combinedDif[match(localData$gene_ref , names(combinedDif))]
-
-            # reduce to gene level information
-            localData$gene_ref <- NULL
-            localData$dIF <- NULL
-            localData <- unique(localData)
-
-        } else {
-            collumnsToExtract <-
-                c(
-                    'gene_id',
-                    'gene_name',
-                    'condition_1',
-                    'condition_2',
-                    'gene_switch_q_value',
-                    'switchConsequencesGene'
-                )
-            collumnsToExtract <-
-                na.omit(match(
-                    collumnsToExtract,
-                    colnames(switchAnalyzeRlist$isoformFeatures)
-                ))
-
-            isoResTest <-
-                any(!is.na(
-                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value
-                ))
-            if (isoResTest) {
-                rowsToExtract     <- which(
-                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <
-                        alpha &
-                        abs(switchAnalyzeRlist$isoformFeatures$dIF) >
-                        dIFcutoff
-                )
-            } else {
-                rowsToExtract     <- which(
-                    switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <
-                        alpha &
-                        abs(switchAnalyzeRlist$isoformFeatures$dIF) >
-                        dIFcutoff
-                )
-            }
-
-            # reduce to gene level information
-            localData <-
-                unique(switchAnalyzeRlist$isoformFeatures[
-                    rowsToExtract ,
-                    collumnsToExtract
-                ])
-
-            if( ! 'switchConsequencesGene' %in% colnames(localData)) {
-                localData$switchConsequencesGene <- FALSE
-            }
         }
+
+        ### reduce to gene level information
+        localData$gene_ref <- NULL
+        localData$dIF <- NULL
+        localData <- unique(localData)
 
         # Possible extra filter
         if (filterForConsequences) {

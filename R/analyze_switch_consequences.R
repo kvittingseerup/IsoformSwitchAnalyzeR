@@ -48,7 +48,7 @@ analyzeSwitchConsequences <- function(
             switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
         ))) {
             stop(
-                'The analsis of isoform switching must be performed before functional consequences can be analyzed. Please run ?detectIsoformSwitching and try again.'
+                'The analsis of isoform switching must be performed before functional consequences can be analyzed. Please run any of the isoformSwitchTest*() functions and try again.'
             )
         }
 
@@ -2801,13 +2801,17 @@ extractConsequenceSummary <- function(
                 vjust = 1
             ))
 
-        print(g1)
-
         myNumbers$plotComparison <- NULL
     }
 
     if (returnResult) {
+        print(g1)
+
         return(myNumbers)
+    } else {
+        if(plot) {
+            return(g1)
+        }
     }
 
 }
@@ -3100,7 +3104,7 @@ extractConsequenceEnrichment <- function(
 
             if(nrow(localNumber) == 2) {
                 localTest <- suppressWarnings(
-                    prop.test(localNumber$Freq[1], sum(localNumber$Freq))
+                    stats::binom.test(localNumber$Freq[1], sum(localNumber$Freq))
                 )
 
                 localRes <- data.frame(
@@ -3167,7 +3171,7 @@ extractConsequenceEnrichment <- function(
 
                         if(nrow(localNumber) == 2) {
                             localTest <- suppressWarnings(
-                                prop.test(localNumber$Freq[1], sum(localNumber$Freq))
+                                stats::binom.test(localNumber$Freq[1], sum(localNumber$Freq))
                             )
 
                             localRes <- data.frame(
@@ -3219,7 +3223,7 @@ extractConsequenceEnrichment <- function(
     ### Plot result
     if(plot) {
         if(countGenes) {
-            xText <- 'Fraction of Genes Having the Consequence Indicated\n(of Switches Affected by Either of Opposing Consequences)\n(With 95% Confidence Interval)'
+            xText <- 'Fraction of Genes Having the Consequence Indicated\n(of Genes Affected by Either of Opposing Consequences)\n(With 95% Confidence Interval)'
         } else {
             xText <- 'Fraction of Switches Having the Consequence Indicated\n(of Switches Affected by Either of Opposing Consequences)\n(With 95% Confidence Interval)'
         }
@@ -3273,11 +3277,13 @@ extractConsequenceEnrichment <- function(
         } else {
             g1 <- g1 + scale_size_continuous(name = 'Switches')
         }
-
-        print(g1)
     }
 
     if(returnResult) {
+        if(plot) {
+            print(g1)
+        }
+
         if(returnSummary) {
             consequenceBalance$Comparison <- NULL
 
@@ -3285,6 +3291,12 @@ extractConsequenceEnrichment <- function(
 
         } else {
             return(localConseq)
+        }
+
+
+    } else {
+        if(plot) {
+            return(g1)
         }
     }
 }
@@ -3418,7 +3430,7 @@ extractConsequenceEnrichmentComparison <- function(
         fisherRes2$consequence <- gsub('with ','with\n', fisherRes2$consequence)
 
         if(countGenes) {
-            xText <- 'Fraction of genes having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)'
+            xText <- 'Fraction of genes having the consequence indicated\n(of the genes affected by either of opposing consequences)\n(with 95% confidence interval)'
         } else {
             xText <- 'Fraction of switches having the consequence indicated\n(of the switches affected by either of opposing consequences)\n(with 95% confidence interval)'
         }
@@ -3445,12 +3457,13 @@ extractConsequenceEnrichmentComparison <- function(
         } else {
             g1 <- g1 + scale_size_continuous(name = 'Switches')
         }
-
-        print(g1)
-
     }
 
     if(returnResult) {
+        if(plot) {
+            print(g1)
+        }
+
         fisherRes$nTot <- NULL
 
         fisherRes$pair <- stringr::str_c('propUp_comparison_', fisherRes$pair)
@@ -3469,6 +3482,10 @@ extractConsequenceEnrichmentComparison <- function(
         colnames(fisherRes2)[1] <- 'comparisonsCompared'
         fisherRes2$comparisonsCompared <- gsub('\\n', ' ', fisherRes2$comparisonsCompared)
         return(fisherRes2)
+    } else {
+        if(plot) {
+            return(g1)
+        }
     }
 
 }
@@ -3794,8 +3811,8 @@ extractConsequenceGenomeWide <- function(
 
                     myResult <- data.frame(
                         n = length(data1),
-                        medianIF1 = median(data1),
-                        medianIF2 = median(data2)
+                        medianIF1 = median(data1, na.rm = TRUE),
+                        medianIF2 = median(data2, na.rm = TRUE)
                     )
                     myResult$medianDIF <-
                         myResult$medianIF2 - myResult$medianIF1
@@ -3900,12 +3917,14 @@ extractConsequenceGenomeWide <- function(
                     mySigTest$comparison2
                 )) - 2)
             ))))
-
-        print(p1)
     }
 
     ### Return result
     if (returnResult) {
+        if(plot) {
+            print(p1)
+        }
+
         mySigTest2 <-
             mySigTest[, c(
                 'comparison',
@@ -3924,6 +3943,10 @@ extractConsequenceGenomeWide <- function(
                              mySigTest2$category,
                              mySigTest2$isoform_feature), ]
         return(mySigTest2)
+    } else {
+        if(plot) {
+            return(p1)
+        }
     }
 }
 

@@ -40,7 +40,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 \item{onlySigIsoforms}{ A logic indicating whether to only consider significant isoforms, meaning only analyzing genes where at least two isoforms which both have significant usage changes in opposite direction (quite strict) Naturally this only works if the isoform switch test used have isoform resolution (which the build in \link{isoformSwitchTestDEXSeq} has). If FALSE all isoforms with an absolute dIF value larger than \code{dIFcutoff} in a gene with significant switches (defined by \code{alpha} and \code{dIFcutoff}) are included in the pairwise comparison. Default is FALSE (non significant isoforms are also considered based on the logic that if one isoform changes it contribution - there must be an equivalent opposite change in usage in the other isoforms from that gene).
 }
   \item{plot}{
-A logic indicting whether the summarized results should be plotted. Default is TRUE.
+A logic indicting whether the summarized results should be plotted. If TRUE and \code{returnResult = FALSE} the ggplot2 object will be returned instead. Default is TRUE.
 }
   \item{plotGenes}{
 A logic indicating whether to plot the number/fraction of genes (if TRUE) or switches (if FALSE) with functional consequences should be plotted.
@@ -49,7 +49,7 @@ A logic indicating whether to plot the number/fraction of genes (if TRUE) or swi
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
 }
   \item{returnResult}{
-A logic indicating whether the summarized results should be returned as a data.frame. Default is FALSE.
+A logic indicating whether the summarized results should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
 }
 }
 

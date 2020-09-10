@@ -1634,6 +1634,9 @@ analyzeIUPred2A <- function(
                         header = FALSE,
                         sep = '\t',
                         stringsAsFactors = FALSE,
+                        strip.white = TRUE,
+                        comment.char = '#',
+                        blank.lines.skip = TRUE,
                         fill = TRUE
                     )
                 }
@@ -1642,6 +1645,18 @@ analyzeIUPred2A <- function(
 
         ### Massage into tidy format
         if(TRUE) {
+            ### Fix fails in reading in files
+            if(TRUE) {
+                ### Remove comments
+                iupred2a <- iupred2a[which(
+                    ! grepl('^#', iupred2a$V1)
+                ),]
+                ### Remove blank lines
+                iupred2a <- iupred2a[which(
+                    ! iupred2a$V1 == ''
+                ),]
+            }
+
             myNames <- gsub(
                 '^>',
                 '',
@@ -1707,7 +1722,6 @@ analyzeIUPred2A <- function(
                     stop('The file(s) provided to "pathToIUPred2AresultFile" does not appear to be the result file from IUPred2A')
                 }
             }
-
         }
 
         ### Subset to relecant features

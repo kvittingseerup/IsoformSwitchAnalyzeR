@@ -9,13 +9,16 @@ This function plots the transcript structure of all (or selected) isoforms from 
 \usage{
 
 switchPlotTranscript(
+    ### Core arguments
     switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
+
+    ### Advanced arguments
     rescaleTranscripts = TRUE,
     plotXaxis = !rescaleTranscripts,
     reverseMinus = TRUE,
-    ifMultipleIdenticalAnnotation = "summarize",
+    ifMultipleIdenticalAnnotation = 'summarize',
     annotationImportance = c('signal_peptide','protein_domain','idr'),
     IFcutoff = 0.05,
     rectHegith = 0.2,
@@ -27,8 +30,7 @@ switchPlotTranscript(
     condition2 = NULL,
     dIFcutoff = 0.1,
     alphas = c(0.05, 0.001),
-    localTheme = theme_bw(),
-    plot = TRUE
+    localTheme = theme_bw()
 )
 
 }
@@ -98,9 +100,6 @@ The dIF cutoff used to add usage to the transcript plot. Only considered if both
   \item{localTheme}{
 General ggplot2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
 }
-  \item{plot}{
-A Logical indicating whether the final plot should be plotted (TRUE) or returned (FALSE). Default is TRUE.
-}
 }
 
 \details{
@@ -121,10 +120,7 @@ This function generates a plot visualizing all the annotation for the transcript
 }
 
 \value{
-\itemize{
-    \item{If \code{plot=TRUE} : Plots the visualization described in the \code{details} section}
-    \item{If \code{plot=FALSE} : Returns the gg object which can then be modified or plotted in a different setting}.
-}
+Returns the gg object which can then be modified or plotted in a different setting.
 }
 
 \references{

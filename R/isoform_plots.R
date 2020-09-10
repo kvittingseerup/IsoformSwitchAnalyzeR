@@ -1,7 +1,10 @@
 switchPlotTranscript <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
+
+    ### Advanced arguments
     rescaleTranscripts = TRUE,
     plotXaxis = !rescaleTranscripts,
     reverseMinus = TRUE,
@@ -17,8 +20,7 @@ switchPlotTranscript <- function(
     condition2 = NULL,
     dIFcutoff = 0.1,
     alphas = c(0.05, 0.001),
-    localTheme = theme_bw(),
-    plot = TRUE
+    localTheme = theme_bw()
 ) {
     ### Check input
     if (TRUE) {
@@ -41,9 +43,6 @@ switchPlotTranscript <- function(
 
         if (!is.logical(rescaleTranscripts)) {
             stop('The \'transformCoordinats\' argument must be either be TRUE or FALSE')
-        }
-        if (!is.logical(plot)) {
-            stop('The \'plot\' argument must be either be TRUE or FALSE')
         }
         if (!ifMultipleIdenticalAnnotation %in% c('summarize', 'number','ignore')) {
             stop(
@@ -878,13 +877,12 @@ switchPlotTranscript <- function(
         }
 
         if ( isConditional ) {
+            ### Interpret direction
+            isoInfo$direction                                      <- 'Unchanged usage'
+            isoInfo$direction[which(isoInfo$dIF > dIFcutoff     )] <- 'Increased usage'
+            isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1)] <- 'Decreased usage'
 
             if( ! optimizeForCombinedPlot ) {
-                ### Interpret direction
-                isoInfo$direction                                      <- 'Unchanged usage'
-                isoInfo$direction[which(isoInfo$dIF > dIFcutoff     )] <- 'Increased usage'
-                isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1)] <- 'Decreased usage'
-
                 ### Add dIF
                 if( ! all(isoInfo$dIF %in% c(0, Inf, -Inf)) ) {
                     isoInfo$direction  <- paste(
@@ -910,12 +908,6 @@ switchPlotTranscript <- function(
                         )
                     }
                 }
-            }
-            if(   optimizeForCombinedPlot ) {
-                ### Interpret direction
-                isoInfo$direction                                      <- 'Unchanged usage'
-                isoInfo$direction[which(isoInfo$dIF > dIFcutoff      & isoInfo$isoform_switch_q_value < max(alphas) )] <- 'Increased usage'
-                isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1 & isoInfo$isoform_switch_q_value < max(alphas) )] <- 'Decreased usage'
             }
 
             ### Make new name
@@ -1488,11 +1480,7 @@ switchPlotTranscript <- function(
         }
     }
 
-    if (plot) {
-        suppressWarnings(print(myPlot))
-    } else {
-        return(myPlot)
-    }
+    return(myPlot)
 }
 
 expressionAnalysisPlot <- function(
@@ -2654,11 +2642,14 @@ expressionAnalysisPlot <- function(
 }
 
 switchPlot <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     gene = NULL,
     isoform_id = NULL,
     condition1,
     condition2,
+
+    ### Advanced arguments
     IFcutoff = 0.05,
     dIFcutoff = 0.1,
     alphas = c(0.05, 0.001),
@@ -2920,7 +2911,6 @@ switchPlot <- function(
             condition2                      = condition2,
             dIFcutoff                       = dIFcutoff,
             IFcutoff                        = IFcutoff,
-            plot                            = FALSE,
             localTheme                      = localTheme
         )
     }
@@ -3295,7 +3285,7 @@ switchPlotGeneExp <- function(
         optimizeForCombinedPlot = FALSE
     )
 
-    print(expressionPlots$gene_expression)
+    return(expressionPlots$gene_expression)
 }
 
 switchPlotIsoExp <- function(
@@ -3330,7 +3320,7 @@ switchPlotIsoExp <- function(
         optimizeForCombinedPlot = FALSE
     )
 
-    print(expressionPlots$isoform_expression)
+    return(expressionPlots$isoform_expression)
 }
 
 switchPlotIsoUsage <- function(
@@ -3363,5 +3353,5 @@ switchPlotIsoUsage <- function(
         optimizeForCombinedPlot = FALSE
     )
 
-    print(expressionPlots$isoform_usage)
+    return(expressionPlots$isoform_usage)
 }

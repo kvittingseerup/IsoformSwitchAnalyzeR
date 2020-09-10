@@ -32,7 +32,7 @@ preFilter(
 A \code{switchAnalyzeRlist} object.
 }
   \item{geneExpressionCutoff}{
-The expression cutoff (most likely in RPKM/FPKM) which genes must be expressed more than, in at least one conditions of a comparison. NULL disables the filter. Default is 1 FPKM/TPM/RPKM.).
+The expression cutoff (most likely in TPM/RPKM/FPKM) which the average expression in BOTH condisions must be higher than. NULL disables the filter (Not recomended). Default is 1 FPKM/TPM/RPKM.).
 }
 
   \item{isoformExpressionCutoff}{

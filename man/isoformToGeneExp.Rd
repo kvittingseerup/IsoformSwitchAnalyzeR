@@ -27,8 +27,8 @@ Importantly \code{isoformRepExpression} must contain isoform ids either as separ
 \item{isoformGeneAnnotation}{
 Can be either of:
 \itemize{
-    \item{A data.frame with two columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.}
-    \item{A GRange with two meta-columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene.}
+    \item{A data.frame with two columns : 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene. If a gene_name column is pressent the function checks for annoation problems commonly occuring when transcript assembly is done.}
+    \item{A GRange with two meta-columns: 'isoform_id' and 'gene_id' indicating the relationship between isoforms and parent gene. If a gene_name column is pressent the function checks for annoation problems commonly occuring when transcript assembly is done.}
     \item{The path to a GTF file containing the annotation}.
     \item{A switchAnalyzeRlist}.
     }
@@ -102,11 +102,15 @@ aSwitchList <- importRdata(
     isoformNtFasta       = system.file("extdata/example_isoform_nt.fasta.gz", package="IsoformSwitchAnalyzeR")
 )
 
-
 geneRepCount <- isoformToGeneExp(
-    isoformRepExpression  = aSwitchList$isoformCountMatrix,
+    isoformRepExpression  = salmonQuant$counts,
     isoformGeneAnnotation = aSwitchList
 )
 
+# alternatively use
+geneRepCount <- extractGeneExpression(
+    aSwitchList,
+    extractCounts = TRUE
+)
 
 }

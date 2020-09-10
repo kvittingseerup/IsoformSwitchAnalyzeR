@@ -1946,11 +1946,12 @@ extractSplicingSummary <- function(
                 hjust = 0,
                 vjust = 1
             ))
-
-        print(g1)
     }
 
     if (returnResult) {
+        if(plot) {
+            print(g1)
+        }
         myNumbers$isoRegulation <- NULL
         myNumbers$plotComparison <- NULL
 
@@ -1960,6 +1961,10 @@ extractSplicingSummary <- function(
         )]
 
         return(myNumbers2)
+    } else {
+        if(plot) {
+            return(g1)
+        }
     }
 
 }
@@ -2234,7 +2239,7 @@ extractSplicingEnrichment <- function(
 
             if( localRes$nUp > 0 | localRes$nDown > 0 ) {
                 localTest <- suppressWarnings(
-                    prop.test(localRes$nUp, localRes$nUp + localRes$nDown)
+                    stats::binom.test(localRes$nUp, localRes$nUp + localRes$nDown)
                 )
 
                 localRes$propUp <- localTest$estimate
@@ -2271,6 +2276,23 @@ extractSplicingEnrichment <- function(
             sep='\n'
         )
 
+        ### Massage splicing type name
+        if(TRUE) {
+            gainLossBalance$AStype <- paste0(
+                gainLossBalance$AStype, ' gain ',
+                '(paired with ',gainLossBalance$AStype, ' loss)'
+            )
+
+            gainLossBalance$AStype <- gsub('MES gain', 'MES', gainLossBalance$AStype)
+            gainLossBalance$AStype <- gsub('MES loss', 'MEI', gainLossBalance$AStype)
+
+            gainLossBalance$AStype <- gsub('ES gain', 'ES', gainLossBalance$AStype)
+            gainLossBalance$AStype <- gsub('ES loss', 'EI', gainLossBalance$AStype)
+
+            #gainLossBalance$AStype <- gsub('IR gain', 'IR', gainLossBalance$AStype)
+            #gainLossBalance$AStype <- gsub('IR loss', 'IS', gainLossBalance$AStype)
+        }
+
         myOrder <- plyr::ddply(
             gainLossBalance,
             .variables = 'AStype',
@@ -2283,13 +2305,10 @@ extractSplicingEnrichment <- function(
             gainLossBalance$AStype,
             levels = myOrder
         )
-
-
     }
 
     ### Plot result
     if(plot) {
-
         ### Subset based on minEvents
         gainLossBalance2 <- gainLossBalance[which(
             (gainLossBalance$nUp + gainLossBalance$nDown) >= minEventsForPlotting
@@ -2302,17 +2321,12 @@ extractSplicingEnrichment <- function(
         }
 
         if( countGenes ) {
-            xText <- 'Fraction of Switching Genes Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
+            xText <- 'Fraction of Genes with Switches Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         } else {
             xText <- 'Fraction of Switches Primarly\nResulting in Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         }
 
-        gainLossBalance2$AStype2 <- paste(
-            gainLossBalance2$AStype, 'gain',
-            '\n(paired with',gainLossBalance2$AStype, 'loss)'
-        )
-
-        g1 <- ggplot(data=gainLossBalance2, aes(y=AStype2, x=propUp, color=Significant)) +
+        g1 <- ggplot(data=gainLossBalance2, aes(y=AStype, x=propUp, color=Significant)) +
             #geom_point(size=4) +
             geom_point(aes(size=nTot)) +
             geom_errorbarh(aes(xmax = propUpCiHi, xmin=propUpCiLo), height = .3) +
@@ -2335,12 +2349,13 @@ extractSplicingEnrichment <- function(
         } else {
             g1 <- g1 + scale_size_continuous(name = 'Switches')
         }
-
-        print(g1)
     }
 
     ### Return data
     if(returnResult) {
+        if(plot) {
+            print(g1)
+        }
         if(returnSummary) {
             return(gainLossBalance)
         } else {
@@ -2363,6 +2378,10 @@ extractSplicingEnrichment <- function(
             )
 
             return(localConseq5)
+        }
+    } else {
+        if(plot) {
+            return(g1)
         }
     }
 
@@ -2489,13 +2508,14 @@ extractSplicingEnrichmentComparison <- function(
             stop('No features left to plot after subsetting with \'minEventsForPlotting\'.')
         }
 
-        fisherRes2$AStype2 <- paste(
-            fisherRes2$AStype, 'gain',
-            '\n(paried with',fisherRes2$AStype, 'loss)'
+        fisherRes2$AStype2 <- gsub(
+            ' \\(paired',
+            '\n(paried',
+            fisherRes2$AStype
         )
 
         if( countGenes ) {
-            xText <- 'Fraction of Switching Genes Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
+            xText <- 'Fraction of Genes with Switches Primarly\nResulting in The Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         } else {
             xText <- 'Fraction of Switches Primarly\nResulting in Alternative Splicing Event Indicated\n(With 95% Confidence Interval)'
         }
@@ -2523,12 +2543,13 @@ extractSplicingEnrichmentComparison <- function(
         } else {
             g1 <- g1 + scale_size_continuous(name = 'Switches')
         }
-
-
-        print(g1)
     }
 
     if(returnResult) {
+        if(plot) {
+            print(g1)
+        }
+
         fisherRes$nTot <- NULL
 
         fisherRes$pair <- stringr::str_c('propUp_comparison_', fisherRes$pair)
@@ -2543,6 +2564,10 @@ extractSplicingEnrichmentComparison <- function(
         colnames(fisherRes2)[1] <- 'comparisonsCompared'
         fisherRes2$comparisonsCompared <- gsub('\\n', ' ', fisherRes2$comparisonsCompared)
         return(fisherRes2)
+    } else {
+        if(plot) {
+            return(g1)
+        }
     }
 
 }
@@ -2744,8 +2769,8 @@ extractSplicingGenomeWide <- function(
 
                     myResult <- data.frame(
                         n = length(data1),
-                        medianIF1 = median(data1),
-                        medianIF2 = median(data2)
+                        medianIF1 = median(data1, na.rm = TRUE),
+                        medianIF2 = median(data2, na.rm = TRUE)
                     )
                     myResult$medianDIF <-
                         myResult$medianIF2 - myResult$medianIF1
@@ -2850,12 +2875,14 @@ extractSplicingGenomeWide <- function(
                     mySigTest$comparison2
                 )) - 2)
             ))))
-
-        print(p1)
     }
 
     ### Return result
     if (returnResult) {
+        if(plot) {
+            print(p1)
+        }
+
         mySigTest2 <-
             mySigTest[, c(
                 'comparison',
@@ -2874,5 +2901,9 @@ extractSplicingGenomeWide <- function(
                              mySigTest2$category,
                              mySigTest2$isoform_feature), ]
         return(mySigTest2)
+    } else {
+        if(plot) {
+            return(p1)
+        }
     }
 }

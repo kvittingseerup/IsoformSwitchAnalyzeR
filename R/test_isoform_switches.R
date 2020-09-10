@@ -549,9 +549,12 @@ isoformSwitchTestDRIMSeq <- function(
 
 ### Test via DEXSeq
 isoformSwitchTestDEXSeq <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
+
+    ### Advanced arguments
     correctForConfoundingFactors=TRUE,
     overwriteIFvalues=TRUE,
     reduceToSwitchingGenes = TRUE,
@@ -1503,7 +1506,10 @@ extractSwitchOverlap <- function(
     filterForConsequences = FALSE,
     alpha = 0.05,
     dIFcutoff = 0.1,
-    scaleVennIfPossible=TRUE
+    scaleVennIfPossible=TRUE,
+    plotIsoforms = TRUE,
+    plotSwitches = TRUE,
+    plotGenes = TRUE
 ) {
     ### Test input
     if (TRUE) {
@@ -1551,7 +1557,11 @@ extractSwitchOverlap <- function(
             stop('Venn Diagrams unfortunatly only support up to 5 comparisons')
         }
         if( nCon < 2 ) {
-            stop('One cannot make a Venn Diagram with only one condition')
+            stop('One cannot make a Venn Diagram with only one comparison')
+        }
+
+        if( sum(c(plotIsoforms, plotSwitches, plotGenes)) < 1) {
+            stop('You need to to plot at least one plot')
         }
 
     }
@@ -1562,25 +1572,12 @@ extractSwitchOverlap <- function(
         hcl(h=hues, l=65, c=100)[1:n]
     }
 
-    backUpDf <-
-        unique(switchAnalyzeRlist$isoformFeatures[, c(
-            'condition_1', 'condition_2'
-        )])
-    backUpDf <-
-        data.frame(
-            Comparison = paste(
-                backUpDf$condition_1,
-                backUpDf$condition_2, sep = ' vs '),
-            nrIsoforms = 0,
-            nrGenes = 0,
-            stringsAsFactors = FALSE
-        )
-
-    ### Extract data needed
+    ### Extract and massage data
     if(TRUE) {
         columnsToExtract <-
             c(
                 'isoform_id',
+                'gene_ref',
                 'gene_id',
                 'condition_1',
                 'condition_2',
@@ -1617,29 +1614,64 @@ extractSwitchOverlap <- function(
             return(backUpDf)
         }
 
+        isoPairs <- extractSwitchPairs(
+            switchAnalyzeRlist,
+            alpha = alpha,
+            dIFcutoff = dIFcutoff,
+            onlySigIsoforms = FALSE
+        )
+
         if (filterForConsequences) {
             dataDF <- dataDF[which(dataDF$switchConsequencesGene), ]
             if (nrow(dataDF) == 0) {
+
+                backUpDf <-
+                    unique(switchAnalyzeRlist$isoformFeatures[, c(
+                        'condition_1', 'condition_2'
+                    )])
+                backUpDf <-
+                    data.frame(
+                        Comparison = paste(
+                            backUpDf$condition_1,
+                            backUpDf$condition_2, sep = ' vs '),
+                        nrIsoforms = 0,
+                        nrSwitches = 0,
+                        nrGenes = 0,
+                        stringsAsFactors = FALSE
+                    )
                 return(backUpDf)
             }
+
+            isoPairs <- isoPairs[which(
+                isoPairs$gene_ref %in% dataDF$gene_ref
+            ),]
         }
+
+        isoPairs$switch <- stringr::str_c(
+            isoPairs$isoformDownregulated,
+            isoPairs$isoformUpregulated
+        )
+
+        isoPairs$comparison <- stringr::str_c(
+            isoPairs$condition_1,
+            '\nvs\n',
+            isoPairs$condition_2
+        )
+
+        dataDF$comparison <- stringr::str_c(
+            dataDF$condition_1,
+            '\nvs\n',
+            dataDF$condition_2
+        )
+
+        geneList <- split(dataDF$gene_id   , dataDF$comparison)
+        isoList  <- split(
+            stringr::str_c(dataDF$isoform_id, sign(dataDF$dIF)),
+            dataDF$comparison
+        )
+        switchList <- split(isoPairs$switch   , isoPairs$comparison)
+
     }
-
-    ### Make venn diagrams
-    dataDF$comparison <- stringr::str_c(
-        dataDF$condition_1,
-        '\nvs\n',
-        dataDF$condition_2
-    )
-
-    geneList <- split(dataDF$gene_id   , dataDF$comparison)
-    isoList  <- split(
-        stringr::str_c(dataDF$isoform_id, sign(dataDF$dIF)),
-        dataDF$comparison
-    )
-
-    geneList <- lapply(geneList, unique)
-    isoList <- lapply(isoList, unique)
 
     ### Assign colors and alpha
     n <- length(isoList)
@@ -1649,37 +1681,88 @@ extractSwitchOverlap <- function(
     ### Suppress venn log files
     futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
 
-    isoVenn <- VennDiagram::venn.diagram(
-        x = isoList,
-        euler.d=scaleVennIfPossible,
-        scale=scaleVennIfPossible,
-        col='transparent',
-        alpha=localAlpha,
-        fill=vennColors,
-        filename=NULL,
-        main='Overlap in Switching Isoforms'
-    )
-    geneVenn <- VennDiagram::venn.diagram(
-        x = geneList,
-        euler.d=scaleVennIfPossible,
-        scale=scaleVennIfPossible,
-        col='transparent',
-        alpha=localAlpha,
-        fill=vennColors,
-        filename=NULL,
-        main='Overlap in Switching Genes'
+    ### Make venn diagrams
+    if(TRUE) {
+        switchVenn <- VennDiagram::venn.diagram(
+            x = switchList,
+            euler.d=scaleVennIfPossible,
+            scale=scaleVennIfPossible,
+            col='transparent',
+            alpha=localAlpha,
+            fill=vennColors,
+            filename=NULL,
+            main='Overlap in Switches'
+        )
+        geneVenn <- VennDiagram::venn.diagram(
+            x = geneList,
+            euler.d=scaleVennIfPossible,
+            scale=scaleVennIfPossible,
+            col='transparent',
+            alpha=localAlpha,
+            fill=vennColors,
+            filename=NULL,
+            main='Overlap in Switching Genes'
+        )
+        isoVenn <- VennDiagram::venn.diagram(
+            x = isoList,
+            euler.d=scaleVennIfPossible,
+            scale=scaleVennIfPossible,
+            col='transparent',
+            alpha=localAlpha,
+            fill=vennColors,
+            filename=NULL,
+            main='Overlap in Isoforms'
+        )
+
+    }
+
+    ### Figure out plot size
+    nPlots <- sum(c(plotIsoforms, plotSwitches, plotGenes))
+    nCols <- 3*nPlots + nPlots - 1
+    positionToStart <- 1
+
+    ### Set up viewport
+    grid::grid.newpage()
+    grid::pushViewport(
+        grid::plotViewport(
+            layout=grid::grid.layout(1, nCols)
+        )
     )
 
-    ### Plot them together.
-    grid.newpage()
-    pushViewport(plotViewport(layout=grid.layout(1, 7)))
-    pushViewport(plotViewport(layout.pos.col=1:3))
-    grid.draw(isoVenn)
-    popViewport()
-    pushViewport(plotViewport(layout.pos.col=5:7))
-    grid.draw(geneVenn)
-    popViewport()
+    ### Plot venn diagrams
+    if(plotIsoforms) {
+        grid::pushViewport(
+            grid::plotViewport(
+                layout.pos.col = positionToStart:(positionToStart+2)
+            )
+        )
+        grid::grid.draw(isoVenn)
+        grid::popViewport()
 
+        positionToStart <- positionToStart + 4
+    }
+
+    if(plotSwitches) {
+        grid::pushViewport(
+            grid::plotViewport(
+                layout.pos.col = positionToStart:(positionToStart+2)
+            )
+        )
+        grid::grid.draw(switchVenn)
+        grid::popViewport()
+
+        positionToStart <- positionToStart + 4
+    }
+
+    if(plotGenes) {
+        grid::pushViewport(
+            grid::plotViewport(
+                layout.pos.col = positionToStart:(positionToStart+2)
+            )
+        )
+        grid::grid.draw(geneVenn)
+        grid::popViewport()
+    }
 
 }
 

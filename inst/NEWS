@@ -1,3 +1,24 @@
+Changes in version 1.11.4 (2020-XX-XX)
+- Update type: Medium.
+- importRdata() was updated to give examples of sequence names when no overlap between fasta file and expression data was found.
+- importRdata() was updated to try and rescue missing gene_name annoations (must likely due to novel transcripts) and split merged genes (a problem often occuring when doing transcript assembly with tools such as Cufflinks/StringTie).
+- importRdata() and importCufflinksFiles() was udated with an option to print a guesstimate on the number of genes with differential isoform usage.
+- isoformToGeneExp() and importGTF() was updated to look for the annotation problems fixed by importRdata() and give warnings if pressent.
+- The example data (from individual files) was updated to include CDS.
+- extractGeneExpression(), a function that extracts gene level counts/expression from a switchAnalyzeRlist was introduced.
+- prepareSalmonFileDataFrame() and importSalmonData() was introduced. Jointly these functions enable import of Salmon data via tximeta thereby omitting the manual integration of annotation data (gtf/fasta)
+- isoformSwitchAnalysisPart2() was updated to only do enrichment analysis if enough events were found.
+- preFilter() was updated to apply the gene expression to both conditions instead of the average across all samples thereby better filtering out untrustworthy genes.
+- extractSplicingGenomeWide() and extractConsequenceGenomeWide() was updated to handle missing values when calculating summary statistics.
+- extractSplicingEnrichment(), extractSplicingEnrichmentComparison(), extractConsequenceEnrichment(), extractConsequenceEnrichmentComparison() was updated to use binom.test() instead of prop.test() as this test more apporpriate when analyzing smaller number of events.
+- extractSplicingEnrichment() and extractSplicingEnrichmentComparison() was updated to have more easily interpretable descriptions.
+- extractSwitchOverlap() was updated to also plot overlap in isoform switches and now allows for control of which venn diagrams to make.
+- switchPlot() was updated to only consider the dIFcutoff when classifying the "increased/decrease/unchanged usage".
+- switchPlotGeneExp(), switchPlotIsoExp(), switchPlotIsoUsage() and switchPlotTranscript() was updated to enable return of the ggplot2 object (instead of printing it)
+- all extractConsequence*() and extractSplicing*() functions was updated to enable return of the ggplot2 object (instead of printing it)
+- switchPlotTopSwitches() was updated to also have the onlySigIsoforms argument.
+- Various documentation updates.
+
 Changes in version 1.11.3 (2020-05-20)
 - Update type: Minor.
 - importRdata was updated to handle GTF files with a lot of additional information.

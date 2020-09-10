@@ -43,7 +43,7 @@ The cutoff which the FDR correct p-values must be smaller than for calling signi
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
 }
   \item{plot}{
-A logic indicting whether the summarized results should be plotted. Default is TRUE.
+A logic indicting whether the analysis should be plotted. If TRUE and \code{returnResult = FALSE} the ggplot2 object will be returned instead. Default is TRUE.
 }
   \item{plotGenes}{
 A logic indicating whether to plot the number/fraction of genes with (if TRUE) or isoforms (if FALSE) involved with isoform switches with functional consequences (both filtered via \code{alpha} and \code{dIFcutoff}.
@@ -61,7 +61,7 @@ A logic indicating whether to remove consequenses analyzed but where no differen
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
 }
   \item{returnResult}{
-A logic indicating whether the summarized results should be returned as a data.frame. Default is FALSE.
+A logic indicating whether the summarized results should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is FALSE.
 }
 }
 

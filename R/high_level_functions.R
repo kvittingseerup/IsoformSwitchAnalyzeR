@@ -454,98 +454,147 @@ isoformSwitchAnalysisPart2 <- function(
             )
         }
 
+        ### Summary
+        if(TRUE) {
+            if (fileType == 'pdf') {
+                pdf(
+                    file = paste(
+                        pathToOutput,
+                        '/common_switch_consequences.pdf',
+                        sep = ''
+                    ),
+                    width = 10,
+                    height = 7
+                )
+            } else {
+                png(
+                    filename = paste(
+                        pathToOutput,
+                        '/common_switch_consequences.png',
+                        sep = ''
+                    ),
+                    width = 1000,
+                    height = 700
+                )
+            }
+            extractConsequenceSummary(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                asFractionTotal = asFractionTotal,
+                alpha = alpha,
+                dIFcutoff = dIFcutoff,
+                plot = TRUE,
+                returnResult = FALSE
+            )
+            dev.off()
 
-        if (fileType == 'pdf') {
-            pdf(
-                file = paste(
-                    pathToOutput,
-                    '/common_switch_consequences.pdf',
-                    sep = ''
-                ),
-                width = 10,
-                height = 7
-            )
-        } else {
-            png(
-                filename = paste(
-                    pathToOutput,
-                    '/common_switch_consequences.png',
-                    sep = ''
-                ),
-                width = 1000,
-                height = 700
-            )
         }
-        extractConsequenceSummary(
-            switchAnalyzeRlist = switchAnalyzeRlist,
-            asFractionTotal = asFractionTotal,
-            alpha = alpha,
-            dIFcutoff = dIFcutoff,
-            plot = TRUE,
-            returnResult = FALSE
-        )
-        dev.off()
+
+        ### Consequence enrichment
+        if(TRUE) {
+            ### test numbers found
+            testNumbers <- extractConsequenceEnrichment(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                alpha = alpha,
+                dIFcutoff = dIFcutoff,
+                plot=FALSE,
+                returnResult = TRUE
+            )
+
+            enougthEvents <- any(
+                testNumbers$nUp + testNumbers$nDown >= 10
+            )
+
+            if(enougthEvents) {
+                if (fileType == 'pdf') {
+                    pdf(
+                        file = paste(
+                            pathToOutput,
+                            '/switch_consequences_enrichment.pdf',
+                            sep = ''
+                        ),
+                        width = 10,
+                        height = 7
+                    )
+                } else {
+                    png(
+                        filename = paste(
+                            pathToOutput,
+                            '/switch_consequences_enrichment.png',
+                            sep = ''
+                        ),
+                        width = 1000,
+                        height = 700
+                    )
+                }
+                extractConsequenceEnrichment(
+                    switchAnalyzeRlist = switchAnalyzeRlist,
+                    alpha = alpha,
+                    dIFcutoff = dIFcutoff,
+                    plot=TRUE,
+                    returnResult = FALSE
+                )
+                dev.off()
+            } else {
+                warning(
+                    'extractConsequenceEnrichment() could not be run because to few consequences were detected.'
+                )
+            }
 
 
-        if (fileType == 'pdf') {
-            pdf(
-                file = paste(
-                    pathToOutput,
-                    '/switch_consequences_enrichment.pdf',
-                    sep = ''
-                ),
-                width = 10,
-                height = 7
-            )
-        } else {
-            png(
-                filename = paste(
-                    pathToOutput,
-                    '/switch_consequences_enrichment.png',
-                    sep = ''
-                ),
-                width = 1000,
-                height = 700
-            )
         }
-        extractConsequenceEnrichment(
-            switchAnalyzeRlist = switchAnalyzeRlist,
-            alpha = alpha,
-            dIFcutoff = dIFcutoff,
-            plot=TRUE,
-            returnResult = FALSE
-        )
-        dev.off()
 
-        if (fileType == 'pdf') {
-            pdf(
-                file = paste(
-                    pathToOutput,
-                    '/splicing_enrichment.pdf',
-                    sep = ''
-                ),
-                width = 10,
-                height = 7
+        ### Splicing enrichment
+        if(TRUE) {
+            testNumbers <- extractSplicingEnrichment(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                alpha = alpha,
+                dIFcutoff = dIFcutoff,
+                plot=FALSE,
+                returnResult = TRUE
             )
-        } else {
-            png(
-                filename = paste(
-                    pathToOutput,
-                    '/splicing_enrichment.png',
-                    sep = ''
-                ),
-                width = 1000,
-                height = 700
+
+            enougthEvents <- any(
+                testNumbers$nUp + testNumbers$nDown >= 10
             )
+
+            if(enougthEvents) {
+                if (fileType == 'pdf') {
+                    pdf(
+                        file = paste(
+                            pathToOutput,
+                            '/splicing_enrichment.pdf',
+                            sep = ''
+                        ),
+                        width = 10,
+                        height = 7
+                    )
+                } else {
+                    png(
+                        filename = paste(
+                            pathToOutput,
+                            '/splicing_enrichment.png',
+                            sep = ''
+                        ),
+                        width = 1000,
+                        height = 700
+                    )
+                }
+                extractSplicingEnrichment(
+                    switchAnalyzeRlist = switchAnalyzeRlist,
+                    alpha = alpha,
+                    dIFcutoff = dIFcutoff,
+                    plot=TRUE,
+                    returnResult = FALSE
+                )
+                dev.off()
+            } else {
+                warning(
+                    'extractSplicingEnrichment() could not be run because to few splicing differences were detected.'
+                )
+            }
+
+
         }
-        extractSplicingEnrichment(
-            switchAnalyzeRlist = switchAnalyzeRlist,
-            alpha = alpha,
-            dIFcutoff = dIFcutoff,
-            plot=TRUE,
-            returnResult = FALSE
-        )
-        dev.off()
     }
 
     ### Print summary

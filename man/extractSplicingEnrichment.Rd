@@ -43,7 +43,7 @@ A logic indicating whether it is the number of genes (if TRUE) or isoform switch
 }
 
   \item{plot}{
-A logic indicting whether the analysis should be plotted. Default is TRUE.
+A logic indicting whether the analysis should be plotted. If TRUE and \code{returnResult = FALSE} the ggplot2 object will be returned instead. Default is TRUE.
 }
 
 
@@ -55,10 +55,10 @@ General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for
 The minimum number of events (total gain/loss) must be present before the result is visualized. Default is 10.
 }
   \item{returnResult}{
-A logic indicating whether the analysis should be returned as a data.frame. Default is TRUE.
+A logic indicating whether the analysis should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
 }
  \item{returnSummary}{
-A logic indicating whether to return the statistical summary (if TRUE) or the underlying data (if FALSE). Default is TRUE.
+A logic indicating whether to return the statistical summary (if TRUE) or the underlying data (if FALSE). If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
 }
 }
 
@@ -79,9 +79,9 @@ The alternative splicing types, which can be passed to \code{splicingToAnalyze} 
 
     \item \code{ATTS} : Alternative Transcription Termination Site.
 
-    \item \code{ES} : Exon Skipping.
+    \item \code{ES} : Exon Skipping (EI means Exon Inclusion).
 
-    \item \code{MES} : Multiple Exon Skipping. Skipping of >1 consecutive exons.
+    \item \code{MES} : Multiple Exon Skipping. Skipping of >1 consecutive exons. (MEI means Multiple Exon Inclusion).
 
     \item \code{MEE} : Mutually Exclusive Exons.
 }
@@ -93,7 +93,22 @@ The significance test is performed with R's build in \code{prop.test()} with def
 }
 
 \value{
-If \code{returnResult=TRUE} a data.frame with the statistical summary for each opposing consequences in each comparison. If \code{plot=TRUE} a plot summarizing the proportions is also created of switches with specific consequences is created.
+If \code{plot=TRUE} a plot summarizing the proportions is also created of switches with specific consequences is created.
+
+
+If \code{returnResult=TRUE} a data.frame with the statistical summary for each opposing consequences in each comparison. This data.frame will have the following collumns:
+\itemize{
+    \item{condition_1: Condition 1.}
+    \item{condition_2: Condition 2.}
+    \item{AStype: The type of splicing considered.}
+    \item{nUp: The number of genes with a gain of the splicing type described in the AStype column.}
+    \item{nDown: The number of genes with a loss of the splicing type described in the AStype column.}
+    \item{propUp: Proportion of total number of genes (of genes with either loss or gain of the splice type described in the AStype column) being having a gain.}
+    \item{propUpCiLo: The lower boundary of the confidence interval of the propUp.}
+    \item{propUpCiLo: The high boundary of the confidence interval of the propUp.}
+    \item{propUpPval: The p-value associated with the null hypothesis that propUp is 0.5.}
+    \item{propUpQval: The q-values resulting when p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).}
+}
 }
 
 \references{

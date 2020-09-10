@@ -11,8 +11,11 @@ A general-purpose import function which imports isoform expression data from Kal
 
 \usage{
 importIsoformExpression(
+    ### Core arguments
     parentDir = NULL,
     sampleVector = NULL,
+
+    ### Advanced arguments
     calculateCountsFromAbundance=TRUE,
     addIsofomIdAsColumn=TRUE,
     interLibNormTxPM=TRUE,
@@ -44,9 +47,9 @@ importIsoformExpression(
 
 \item{pattern}{ Only used in combination with \code{parentDir}. A character string containing a regular expression for which files to import (applied to full path). Default is "" corresponding to all. See base::grepl for more details.}
 
-\item{invertPattern}{ Only used in combination with \code{parentDir}. A Logical. If TRUE return indices or values for elements that do not match..}
+\item{invertPattern}{ Only used in combination with \code{parentDir}. A Logical. If TRUE only use files which do not match the \code{pattern} argument.}
 
-\item{ignore.case}{ Only used in combination with \code{parentDir}. A logical. if FALSE, the pattern matching is case sensitive and if TRUE, case is ignored during matching.}
+\item{ignore.case}{ Only used in combination with \code{parentDir}. A logical. If TRUE case is ignored duing matching with the \code{pattern} argument. If FALSE the matching with the \code{pattern} argument is case sensitive.}
 
 \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
 

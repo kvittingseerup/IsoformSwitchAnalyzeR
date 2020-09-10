@@ -9,9 +9,12 @@ This function utilizes DEXSeq to test isoforms (isoform resolution) for differen
 }
 \usage{
 isoformSwitchTestDEXSeq(
+    ### Core arguments
     switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
+
+    ### Advanced arguments
     correctForConfoundingFactors=TRUE,
     overwriteIFvalues=TRUE,
     reduceToSwitchingGenes = TRUE,

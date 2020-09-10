@@ -12,6 +12,7 @@ switchPlotTopSwitches(
     switchAnalyzeRlist,
     alpha = 0.05,
     dIFcutoff = 0.1,
+    onlySigIsoforms = FALSE,
     n=10,
     sortByQvals=TRUE,
     filterForConsequences = FALSE,
@@ -37,6 +38,8 @@ The cutoff which the FDR correct p-values must be smaller than for calling signi
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
 }
+
+\item{onlySigIsoforms}{ A logic indicating whether to only consider significant isoforms, meaning only analyzing genes where at least two isoforms which both have significant usage changes in opposite direction (quite strict). Naturally this only works if the isoform switch test used have isoform resolution (which the build in \link{isoformSwitchTestDEXSeq} has). If FALSE all isoforms with an absolute dIF value larger than \code{dIFcutoff} in a gene with significant switches (defined by \code{alpha} and \code{dIFcutoff}) are included in the pairwise comparison. Default is FALSE (non significant isoforms are also considered based on the logic that if one isoform changes it contribution - there must be an equivalent opposite change in usage in the other isoforms from that gene).}
 
 \item{n}{
 The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be generated in each sub-folder indicated by \code{splitComparison} and \code{splitFunctionalConsequences}. Use Inf to create all (NA will internally be converted to Inf for backward comparability). Default is 10.

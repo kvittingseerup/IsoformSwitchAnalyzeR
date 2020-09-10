@@ -13,7 +13,10 @@ extractSwitchOverlap(
     filterForConsequences = FALSE,
     alpha = 0.05,
     dIFcutoff = 0.1,
-    scaleVennIfPossible=TRUE
+    scaleVennIfPossible=TRUE,
+    plotIsoforms = TRUE,
+    plotSwitches = TRUE,
+    plotGenes = TRUE
 )
 }
 
@@ -33,6 +36,19 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 \item{scaleVennIfPossible}{
 A logic indicating whether the Venn diagram should be scaled (so the circle area and overlap size reflect the number of features) if possible. Only available for 2- and 3-way Venn Diagrams. Default is TRUE.
 }
+
+\item{plotIsoforms}{
+A logic indicating whether the Venn diagram of differentially used isoforms should be plotted. Default is TRUE.
+}
+
+\item{plotSwitches}{
+A logic indicating whether the Venn diagram of identified isoform switches should be plotted. Default is TRUE.
+}
+
+\item{plotGenes}{
+A logic indicating whether the Venn diagram of genes containing differentially used isoforms should be plotted. Default is TRUE.
+}
+
 }
 
 \value{

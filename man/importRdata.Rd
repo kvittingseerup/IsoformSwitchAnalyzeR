@@ -6,36 +6,54 @@ Create SwitchAnalyzeRlist From Standard R Objects
 }
 
 \description{
-A general-purpose interface to constructing a switchAnalyzeRlist from Standard R objects containing expression and annotation information. The data needed for this function are
+A general-purpose interface to constructing a switchAnalyzeRlist. The data needed for this function are
 \itemize{
-    \item{\code{1}: Normalized biological replicate isoform expression data, preferentially both counts and abundances but either will do. See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
-    \item{\code{2}: Isoform annotation (both genomic exon coordinates and which gene the isoform belongs to). This can also be supplied as the path to a GTF file where the information can be found.}
-    \item{\code{3}: A design matrix indicating which samples belong to which condition}
+    \item{\code{1}: An isoform count expression matrix (nessesary). See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
+    \item{\code{2}: Optional. Normalized biological replicate isoform abundances. See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
+    \item{\code{3}: Isoform annotation (both genomic exon coordinates and which gene the isoform belongs to). This can also be supplied as the path to a GTF file from which the data is then extracted.}
+    \item{\code{4}: A design matrix indicating which samples belong to which condition}
 }
 
-Furthermore it's possible to specify which comparisons to make using the \code{comparisonsToMake} (default is all possible pairwise of the once indicated by the design matrix).
+Please note that
+\itemize{
+    \item{\code{1}
+    It is possible to specify which comparisons to make using the \code{comparisonsToMake} (default is all possible pairwise of the once indicated by the design matrix).
+    }
+    \item{\code{2}
+    The importRdata() also includes an extended algorithm to correct some of the annoation problems frequently occuring when doing transcript assembly via tools such as StringTie/Cufflinks (gene merging and unassigned novel isoforms). These can be controlled via the fixStringTie* arguments.
+    }
+}
 }
 
 \usage{
 importRdata(
+    ### Core arguments
     isoformCountMatrix,
-    isoformRepExpression,
+    isoformRepExpression = NULL,
     designMatrix,
     isoformExonAnnoation,
     isoformNtFasta = NULL,
-    comparisonsToMake=NULL,
-    addAnnotatedORFs=TRUE,
-    onlyConsiderFullORF=FALSE,
-    removeNonConvensionalChr=FALSE,
+    comparisonsToMake = NULL,
+
+    ### Advanced arguments
+    addAnnotatedORFs = TRUE,
+    onlyConsiderFullORF = FALSE,
+    removeNonConvensionalChr = FALSE,
     ignoreAfterBar = TRUE,
     ignoreAfterSpace = TRUE,
     ignoreAfterPeriod = FALSE,
     removeTECgenes = TRUE,
-    PTCDistance=50,
-    foldChangePseudoCount=0.01,
-    addIFmatrix= TRUE,
-    showProgress=TRUE,
-    quiet=FALSE
+    PTCDistance = 50,
+    foldChangePseudoCount = 0.01,
+    addIFmatrix = TRUE,
+    fixStringTieAnnotationProblem = TRUE,
+    fixStringTieViaOverlapInMultiGenes = TRUE,
+    fixStringTieMinOverlapSize = 50,
+    fixStringTieMinOverlapFrac = 0.2,
+    fixStringTieMinOverlapLog2RatioToContender = 0.65,
+    estimateDifferentialGeneRange = TRUE,
+    showProgress = TRUE,
+    quiet = FALSE
 )
 }
 
@@ -95,6 +113,35 @@ Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indi
 A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE) or not (if FALSE). Keeping it will make testing with isoformSwitchTestDEXSeq faster but will also make the switchAnalyzeRlist larger - so it is a trade off for speed vs memory. For most experimental setups we expect that keeping it will be the better solution. Default is TRUE.
 }
 
+\item{fixStringTieAnnotationProblem}{
+A logic indicating whether to try and fix the following two annoation problems.
+\itemize{
+    \item{\code{1}: Fix the problem where novel isoforms are not assigned a gene_name. This is done by assigning the gene_name of the parrent gene_id, but only when the gene_id is associated with a single gene_name.}
+    \item{\code{2}: Fix the problem where multiple genes (as indicated by gene_name) are merged into a single gene_id. This can only be done when all isoforms are assigned a gene_name. The gene_id is simply split into multiple gene_ids via the gene_names. Genes with this problem, which could not be fixed, are removed since such constallations might result in untrustworthy switches (where the isoforms are acutally from different genes).}
+}
+Default is TRUE.
+}
+
+\item{fixStringTieViaOverlapInMultiGenes}{
+A logic indicating whether the IsoformSwitchAnalyzeR should also try to assign gene_names to novel isoforms within gene_ids with multiple gene_names associated. This is done by comparing the genomic overlap of exons in novel isoforms to exons in known isoforms. This is only done if all of the \code{fixStringTieViaOverlap*} cutoffs are met and \code{fixStringTieAnnotationProblem=TRUE}. Default is TRUE.
+}
+
+\item{fixStringTieMinOverlapSize}{
+The minimum number of nucleotide a novel isoform must overlap with a known isoform for gene_name transfer. This argument modulates the process described in the \code{fixStringTieViaOverlapInMultiGenes} argument. Default is 50.
+}
+
+\item{fixStringTieMinOverlapFrac}{
+The minimum fraction of a novel isoform must overlap with a known isoform for gene_name transfer. This argument modulates the process described in the \code{fixStringTieViaOverlapInMultiGenes} argument. Default is 0.2.
+}
+
+\item{fixStringTieMinOverlapLog2RatioToContender}{
+A log2 ratio which describes how much larger the overlap between a novel isoform and a known isoform must be for gene_name transfer in cases where overlap with known isoforms from multiple gene_names occure. Set to Inf to turn off to only consider cases where overlap with a single gene_name occure. Set to 1 to trun off. Default is 0.65 (corresponding to approx 1.57 fold).
+}
+
+\item{estimateDifferentialGeneRange}{
+A logic indicating whether to make a very quick estimate of the number of genes with differential isoform usage. Please note this number should be taken as a pilot and cannot be trusted. It merely servers to indcate what could be expected if the data is analyzed with the rest of the IsoformSwitchAnalyzeR. See details for more information. Default is TRUE.
+}
+
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.
 }
@@ -107,6 +154,8 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 For each gene in each replicate sample the expression of all isoforms belonging to that gene (as annotated in \code{isoformExonAnnoation}) are summed to get the gene expression. It is therefore very important that the \code{isoformRepExpression} is unfiltered. For each gene/isoform in each condition (as indicate by \code{designMatrix}) the mean and standard error (of mean (measurement), s.e.m) are calculated. Since all samples are considered it is very important the \code{isoformRepExpression} does not contain technical replicates. The comparison indicated \code{comparisonsToMake} (or all pairwise if not supplied) is then constructed and the mean gene and isoform expression values are then used to calculate log2 fold changes (using \code{foldChangePseudoCount}) and Isoform Fraction (IF) values. The whole analysis is then wrapped in a SwitchAnalyzeRlist.\cr
 
 Changes in isoform usage are measure as the difference in isoform fraction (dIF) values, where isoform fraction (IF) values are calculated as <isoform_exp> / <gene_exp>.
+
+The guestimate produced by setting \code{estimateDifferentialGeneRange = TRUE} is created by subsetting a lot on data (both on samples, conditions and genes) and running a fast but unreliable DTU method. The resulting number is then multiplied by a factor to caclulate back what would be expected by running the IsoformSwitchAnalyzeR pipeline. It should go without saying due to all these factors the acutal guestimate is just that - and estimate which cannot be trusted but merely indicate the expected range. It is to be expected the acutal results from running the IsoformSwitchAnalyzeR pipeline differs from the guestimate in which case the guestimate should not be trusted.
 }
 
 \value{

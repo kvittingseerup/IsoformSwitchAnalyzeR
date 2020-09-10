@@ -274,34 +274,44 @@ isoformToGeneExp <- function(
                     stop('The GRange supplied to the "isoformGeneAnnotation" argument must contain the following two collumns "gene_id", "isoform_id".')
                 }
 
-                isoAnnot <- unique(as.data.frame(mcols( isoformGeneAnnotation )[,c('gene_id','isoform_id')]))
-
+                isoAnnot <-
+                    isoformGeneAnnotation %>%
+                    mcols() %>%
+                    as.data.frame() %>%
+                    select(any_of( c('gene_id','isoform_id','gene_name') ) ) %>%
+                    distinct()
             }
             if( is(isoformGeneAnnotation, 'data.frame') ) {
                 if( ! all( c('gene_id','isoform_id') %in% colnames(isoformGeneAnnotation ) ) ) {
                     stop('The data.frame supplied to the "isoformGeneAnnotation" argument must contain the following two collumns "gene_id", "isoform_id".')
                 }
 
-                isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
+                isoAnnot <-
+                    isoformGeneAnnotation %>%
+                    select(any_of( c('gene_id','isoform_id','gene_name') ) ) %>%
+                    distinct()
 
             }
             if( is(isoformGeneAnnotation, 'character') ){
                 if (!quiet) {
                     message('Importing GTF/GFF - this may take a while...')
                 }
-                localSwitchList <- importGTF(
-                    pathToGTF = isoformGeneAnnotation,
-                    addAnnotatedORFs = FALSE,
-                    removeTECgenes=FALSE,
-                    quiet = TRUE)
-                isoAnnot <- unique(localSwitchList$isoformFeatures[,c('gene_id','isoform_id')])
+                suppressWarnings(
+                    localSwitchList <- importGTF(
+                        pathToGTF = isoformGeneAnnotation,
+                        addAnnotatedORFs = FALSE,
+                        removeTECgenes=FALSE,
+                        quiet = TRUE
+                    )
+                )
+                isoAnnot <- unique(localSwitchList$isoformFeatures[,c('gene_id','isoform_id','gene_name')])
                 if (!quiet) {
                     message('Import of GTF/GFF done')
                 }
 
             }
             if( is(isoformGeneAnnotation, 'switchAnalyzeRlist') ) {
-                isoAnnot <- unique(isoformGeneAnnotation$isoformFeatures[,c('gene_id','isoform_id')])
+                isoAnnot <- unique(isoformGeneAnnotation$isoformFeatures[,c('gene_id','isoform_id','gene_name')])
             }
             if( ! exists("isoAnnot")) {
                 stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
@@ -310,6 +320,39 @@ isoformToGeneExp <- function(
             ### Subset annotation to those quantified
             if( length( intersect( isoAnnot$isoform_id, isoformRepExpression$isoform_id )) ) {
                 isoAnnot <- isoAnnot[which( isoAnnot$isoform_id %in% isoformRepExpression$isoform_id),]
+            }
+
+            ### Test for annoation problems
+            if('gene_name' %in% colnames(isoAnnot)) {
+                geneSummary <-
+                    isoAnnot %>%
+                    select(gene_id, gene_name) %>%
+                    distinct() %>%
+                    group_by(gene_id) %>%
+                    summarise(
+                        n_gene_names = length(na.omit(gene_name)),
+                        have_missing_gene_name = any(is.na(gene_name))
+                    )
+
+                missingGeneProblem <- any(
+                    geneSummary$n_gene_names > 0 & geneSummary$have_missing_gene_name
+                )
+                mergedGeneProblem <- any(
+                    geneSummary$n_gene_names > 1
+                )
+
+                if( missingGeneProblem | mergedGeneProblem ) {
+                    warning(
+                        paste0(
+                            '\nThe annotaion seems to have probelems that commonly occure',
+                            '\n  when transcript assembly is done (gene merging and unassigned novel isoforms).',
+                            '\n  These can be fixed and/or rescued by using the importRdata() function instead.',
+                            '\n  From the resulting switchAnalyzeRlist you can use extractGeneExpression() to',
+                            '\n  get gene counts/expression corrected for these problems.',
+                            '\n'
+                        )
+                    )
+                }
             }
 
             ### Look into overlap
@@ -604,6 +647,34 @@ isoformToIsoformFraction <- function(
     return(ifRepExpression)
 }
 
+extractGeneExpression <- function(
+    switchAnalyzeRlist,
+    extractCounts = TRUE
+) {
+    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        stop(
+            'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+        )
+    }
+
+    if(extractCounts) {
+        return(
+            isoformToGeneExp(
+                isoformRepExpression  = switchAnalyzeRlist$isoformCountMatrix,
+                isoformGeneAnnotation = switchAnalyzeRlist,
+                quiet = TRUE
+            )
+        )
+    } else {
+        return(
+            isoformToGeneExp(
+                isoformRepExpression  = switchAnalyzeRlist$isoformRepExpression,
+                isoformGeneAnnotation = switchAnalyzeRlist,
+                quiet = TRUE
+            )
+        )
+    }
+}
 
 evalSig <- function(pValue, alphas) {
     sapply(pValue, function(x) {
@@ -785,6 +856,343 @@ convertCoordinatsTranscriptToGenomic <- function(
         )
     )
 
+}
+
+analyseCds <- function(
+    myCDS,
+    localExons,
+    onlyConsiderFullORF,
+    mfGTF,
+    PTCDistance
+) {
+    ### Sort
+    myCDS <- sort(myCDS)
+
+    localExons <-
+        localExons[order(
+            localExons$isoform_id,
+            start(localExons),
+            end(localExons)
+        ), ]
+
+    ### Subset
+    localExons <- localExons[which(
+        localExons$isoform_id %in% myCDS$isoform_id
+    ),]
+
+    ### Extract edges
+    myCDSedges <-
+        suppressMessages(unlist(range(
+            split(myCDS[, 0], f = myCDS$isoform_id)
+        )))  # Extract EDGEs
+    myCDSedges$id <- names(myCDSedges)
+    names(myCDSedges) <- NULL
+
+    if (onlyConsiderFullORF) {
+        fullyAnnoated <-
+            as.data.frame(sort(
+                mfGTF[which(
+                    mfGTF$type %in% c('start_codon', 'stop_codon')),
+                    c('isoform_id', 'type')]))
+        fullyAnnoatedSplit <-
+            split(as.character(fullyAnnoated$type),
+                  f = fullyAnnoated$isoform_id)
+        fullyAnnoatedCount <-
+            sapply(fullyAnnoatedSplit, function(x)
+                length(unique(x)))
+        toKeep <-
+            names(fullyAnnoatedCount[which(fullyAnnoatedCount == 2)])
+
+
+        myCDSedges <-
+            myCDSedges[which(myCDSedges$id %in% toKeep), ]
+    }
+
+    localExons$exon_id <-
+        paste('exon_', 1:length(localExons), sep = '')
+
+    ### Extract strand specific ORF info
+    cds <- as.data.frame(myCDSedges)
+
+    # start
+    plusIndex <- which(cds$strand == '+')
+    annoatedStartGRangesPlus <-
+        GRanges(
+            cds$seqnames[plusIndex],
+            IRanges(
+                start = cds$start[plusIndex],
+                end = cds$start[plusIndex]),
+            strand = cds$strand[plusIndex],
+            id = cds$id[plusIndex]
+        )
+    minusIndex <- which(cds$strand == '-')
+    annoatedStartGRangesMinus <-
+        GRanges(
+            cds$seqnames[minusIndex],
+            IRanges(
+                start = cds$end[minusIndex],
+                end = cds$end[minusIndex]),
+            strand = cds$strand[minusIndex],
+            id = cds$id[minusIndex]
+        )
+
+    annoatedStartGRanges <-
+        c(annoatedStartGRangesPlus,
+          annoatedStartGRangesMinus)
+    annoatedStartGRanges$orf_id <-
+        paste('cds_', 1:length(annoatedStartGRanges), sep = '')
+
+    # end
+    annoatedEndGRangesPlus  <-
+        GRanges(
+            cds$seqnames[plusIndex],
+            IRanges(
+                start = cds$end[plusIndex],
+                end = cds$end[plusIndex]),
+            strand = cds$strand[plusIndex],
+            id = cds$id[plusIndex]
+        )
+    annoatedEndGRangesMinus <-
+        GRanges(
+            cds$seqnames[minusIndex],
+            IRanges(
+                start = cds$start[minusIndex],
+                end = cds$start[minusIndex]),
+            strand = cds$strand[minusIndex],
+            id = cds$id[minusIndex]
+        )
+
+    annoatedEndGRanges <-
+        c(annoatedEndGRangesPlus, annoatedEndGRangesMinus)
+    annoatedEndGRanges$orf_id <-
+        paste('stop_', 1:length(annoatedEndGRanges), sep = '')
+
+    # combine
+    annotatedORFGR <-
+        c(annoatedStartGRanges, annoatedEndGRanges)
+
+
+    ### Idenetify overlapping CDS and exons as well as the annoate transcript id
+    suppressWarnings(overlappingAnnotStart <-
+                         as.data.frame(
+                             findOverlaps(
+                                 query = localExons,
+                                 subject = annotatedORFGR,
+                                 ignore.strand = FALSE
+                             )
+                         ))
+    if (!nrow(overlappingAnnotStart)) {
+        stop(
+            'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
+        )
+    }
+
+    # Annoate overlap ids
+    overlappingAnnotStart$isoform_id <-
+        localExons$isoform_id[overlappingAnnotStart$queryHits]
+    overlappingAnnotStart$exon_id <- localExons$exon_id[
+        overlappingAnnotStart$queryHits
+        ]
+
+    overlappingAnnotStart$cdsTranscriptID <- annotatedORFGR$id[
+        overlappingAnnotStart$subjectHits
+        ]
+    overlappingAnnotStart$orf_id <- annotatedORFGR$orf_id[
+        overlappingAnnotStart$subjectHits
+        ]
+
+    # subset to annoateted overlap
+    overlappingAnnotStart <-
+        overlappingAnnotStart[which(
+            overlappingAnnotStart$isoform_id ==
+                overlappingAnnotStart$cdsTranscriptID
+        ), c('isoform_id',
+             'exon_id',
+             'cdsTranscriptID',
+             'orf_id')]
+
+    # annoate with genomic site
+    overlappingAnnotStart$orfGenomic <-
+        start(annotatedORFGR)[match(
+            overlappingAnnotStart$orf_id, annotatedORFGR$orf_id
+        )]
+
+
+    ### Enrich exon information
+    myExons <-
+        as.data.frame(localExons[which(
+            localExons$isoform_id %in%
+                overlappingAnnotStart$isoform_id),])
+
+    # Strand
+    myExonPlus <- myExons[which(myExons$strand == '+'), ]
+    myExonMinus <- myExons[which(myExons$strand == '-'), ]
+
+    plusSplit <-
+        split(myExonPlus$width, myExonPlus$isoform_id)
+    minusSplit <-
+        split(myExonMinus$width, myExonMinus$isoform_id)
+
+    # cumsum
+    myExonPlus$cumSum <-
+        unlist(sapply(plusSplit , function(aVec) {
+            cumsum(c(0, aVec))[1:(length(aVec))]
+        }))
+    myExonMinus$cumSum <-
+        unlist(sapply(minusSplit, function(aVec) {
+            cumsum(c(0, rev(aVec)))[(length(aVec)):1] # reverse
+        }))
+
+    # exon number
+    myExonPlus$nrExon <-
+        unlist(sapply(plusSplit, function(aVec) {
+            1:length(aVec)
+        }))
+    myExonMinus$nrExon <-
+        unlist(sapply(minusSplit, function(aVec) {
+            1:length(aVec)
+        }))
+
+    # total nr exons
+    myExonPlus$lastExonIndex <-
+        unlist(sapply(plusSplit, function(aVec) {
+            rep(length(aVec), length(aVec))
+        }))
+    myExonMinus$lastExonIndex <-
+        unlist(sapply(minusSplit, function(aVec) {
+            rep(1, length(aVec))
+        }))
+
+    # final exon exon junction trancipt position
+    myExonPlus$finalJunctionPos <-
+        unlist(sapply(plusSplit , function(aVec) {
+            rep(cumsum(c(0, aVec))[length(aVec)], times = length(aVec))
+        }))
+    myExonMinus$finalJunctionPos <-
+        unlist(sapply(minusSplit, function(aVec) {
+            rep(cumsum(c(0, rev(
+                aVec
+            )))[length(aVec)], times = length(aVec))
+        }))
+
+    myExons2 <- rbind(myExonPlus, myExonMinus)
+
+    ### Annoate with exon information
+    matchIndex <-
+        match(overlappingAnnotStart$exon_id, myExons2$exon_id)
+    overlappingAnnotStart$strand <- myExons2$strand[matchIndex]
+    overlappingAnnotStart$exon_start <- myExons2$start[matchIndex]
+    overlappingAnnotStart$exon_end <- myExons2$end[matchIndex]
+    overlappingAnnotStart$exon_cumsum <- myExons2$cumSum[matchIndex]
+    overlappingAnnotStart$exon_nr <- myExons2$nrExon[matchIndex]
+    overlappingAnnotStart$lastExonIndex <-
+        myExons2$lastExonIndex[matchIndex]
+    overlappingAnnotStart$finalJunctionPos <-
+        myExons2$finalJunctionPos[matchIndex]
+
+    ### Annoate with transcript coordinats
+    overlappingAnnotStartPlus <-
+        overlappingAnnotStart[which(
+            overlappingAnnotStart$strand == '+'), ]
+    overlappingAnnotStartPlus$orfTranscript <-
+        overlappingAnnotStartPlus$exon_cumsum + (
+            overlappingAnnotStartPlus$orfGenomic -
+                overlappingAnnotStartPlus$exon_start
+        ) + 1
+    overlappingAnnotStartPlus$junctionDistance <-
+        overlappingAnnotStartPlus$finalJunctionPos -
+        overlappingAnnotStartPlus$orfTranscript + 3 # +3 because the ORF does not include the stop codon - but it should in this calculation
+
+    overlappingAnnotStartMinus <-
+        overlappingAnnotStart[which(
+            overlappingAnnotStart$strand == '-'), ]
+    overlappingAnnotStartMinus$orfTranscript <-
+        overlappingAnnotStartMinus$exon_cumsum + (
+            overlappingAnnotStartMinus$exon_end -
+                overlappingAnnotStartMinus$orfGenomic
+        ) + 1
+    overlappingAnnotStartMinus$junctionDistance <-
+        overlappingAnnotStartMinus$finalJunctionPos -
+        overlappingAnnotStartMinus$orfTranscript + 3 # +3 because the ORF does not include the stop codon - but it should in this calculation
+
+    overlappingAnnotStart2 <-
+        rbind(overlappingAnnotStartPlus,
+              overlappingAnnotStartMinus)
+    overlappingAnnotStart2 <-
+        overlappingAnnotStart2[order(
+            overlappingAnnotStart2$isoform_id,
+            overlappingAnnotStart2$exon_start,
+            overlappingAnnotStart2$exon_end
+        ), ]
+
+    ### devide into start and stop
+    starInfo <-
+        overlappingAnnotStart2[which(
+            grepl('^cds', overlappingAnnotStart2$orf_id)), ]
+    stopInfo <-
+        overlappingAnnotStart2[which(
+            grepl('^stop', overlappingAnnotStart2$orf_id)), ]
+
+    ### predict PTC
+    stopInfo$PTC <-
+        stopInfo$exon_nr != stopInfo$lastExonIndex &
+        stopInfo$junctionDistance > PTCDistance
+
+    ### Merge the data
+    starInfo2 <-
+        unique(starInfo[, c('isoform_id',
+                            'orfGenomic',
+                            'exon_nr',
+                            'orfTranscript')])
+    colnames(starInfo2) <-
+        c('isoform_id',
+          'orfStartGenomic',
+          'orfStarExon',
+          'orfTransciptStart')
+
+    stopInfo2 <-
+        unique(stopInfo[, c(
+            'isoform_id',
+            'orfGenomic',
+            'exon_nr',
+            'orfTranscript',
+            'junctionDistance',
+            'lastExonIndex',
+            'PTC'
+        )])
+    colnames(stopInfo2) <-
+        c(
+            'isoform_id',
+            'orfEndGenomic',
+            'orfEndExon',
+            'orfTransciptEnd',
+            'stopDistanceToLastJunction',
+            'stopIndex',
+            'PTC'
+        )
+
+    orfInfo <- dplyr::inner_join(starInfo2, stopInfo2, by = 'isoform_id')
+    orfInfo$orfTransciptLength  <-
+        orfInfo$orfTransciptEnd - orfInfo$orfTransciptStart + 1
+
+    # reorder
+    orfInfo <-
+        orfInfo[, c(
+            'isoform_id',
+            'orfTransciptStart',
+            'orfTransciptEnd',
+            'orfTransciptLength',
+            'orfStarExon',
+            'orfEndExon',
+            'orfStartGenomic',
+            'orfEndGenomic',
+            'stopDistanceToLastJunction',
+            'stopIndex',
+            'PTC'
+        )]
+
+
+    return(orfInfo)
 }
 
 grangesFracOverlap <- function(gr1, gr2) {
@@ -1127,5 +1535,310 @@ extractSwitchPairs <- function(
     }
 
     return( pairwiseIsoComparison )
+}
+
+estimateDifferentialRange <- function(
+    switchAnalyzeRlist
+)  {
+    ### Define test parameters
+    alpha = 0.05
+    dIFcutoff = 0.1
+    subsampleFraction = 0.1
+    subsampleMin = 100
+    subsampleMax = 1000
+    maxComparisons = 3
+    maxSamples = 10
+    analyzeExpression = FALSE
+
+    ### Tjek Input
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+            stop(paste(
+                'The object supplied to \'switchAnalyzeRlist\'',
+                'must be a \'switchAnalyzeRlist\''
+            ))
+        }
+        if (dIFcutoff < 0 | dIFcutoff > 1) {
+            stop('The dIFcutoff must be in the interval [0,1].')
+        }
+
+    }
+
+    ### Subset on conditions
+    if(TRUE) {
+        ### Setup progress bar
+        comaprisonsToMake <- unique(switchAnalyzeRlist$isoformFeatures[, c(
+            'condition_1', 'condition_2'
+        )])
+
+        ### Subset on comparisons
+        if(nrow(comaprisonsToMake) > maxComparisons) {
+            comaprisonsToMake <- comaprisonsToMake[sample(
+                1:nrow(comaprisonsToMake),
+                maxComparisons
+            ),]
+
+            switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
+                switchAnalyzeRlist,
+                switchAnalyzeRlist$isoformFeatures$condition_1 %in% comaprisonsToMake$condition_1 &
+                    switchAnalyzeRlist$isoformFeatures$condition_2 %in% comaprisonsToMake$condition_2
+            )
+        }
+    }
+
+    ### Prefilter to ensure expression
+    switchAnalyzeRlist <- preFilter(switchAnalyzeRlist, quiet = TRUE)
+
+    ### Subset on genes
+    if(TRUE) {
+        ### Determine number of genes to subsample to
+        nGenes <- length(unique(switchAnalyzeRlist$isoformFeatures$gene_id))
+        subsampleNumber <- nGenes * subsampleFraction
+        if(subsampleNumber < subsampleMin) {
+            subsampleNumber <- min(nGenes, subsampleMin)
+        }
+        if(subsampleNumber > subsampleMax) {
+            subsampleNumber <- min(nGenes, subsampleMax)
+        }
+        actualSubsampleFraction <- subsampleNumber / nGenes
+
+        ### Subsample
+        selectedGenes <- sample(
+            unique(switchAnalyzeRlist$isoformFeatures$gene_id),
+            subsampleNumber
+        )
+        switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
+            switchAnalyzeRlist,
+            switchAnalyzeRlist$isoformFeatures$gene_id %in% selectedGenes
+        )
+    }
+
+    ### Extract expression matrix
+    if(TRUE) {
+        if(analyzeExpression) {
+            em <- switchAnalyzeRlist$isoformRepExpression
+            if( is.null(em) ) {
+                stop('No expression matrix found in the switchAnalyzeRlist')
+            }
+        } else {
+            em <- switchAnalyzeRlist$isoformCountMatrix
+            if( is.null(em) ) {
+                stop('No count matrix found in the switchAnalyzeRlist')
+            }
+        }
+        rownames(em) <- em$isoform_id
+        em$isoform_id <- NULL
+    }
+
+    ### Subset on number of within condition sample numbers
+    if(TRUE) {
+        ### Extract design
+        localDesign <-switchAnalyzeRlist$designMatrix
+
+        ### Look into max samples
+        sampleCounts <- table(localDesign$condition)
+
+        ### if nessesary extract samples to keep
+        if(any(sampleCounts > maxSamples)) {
+            samplesToKeep <- unlist(
+                lapply(
+                    names(sampleCounts),
+                    function(aCond) {
+                        correspondingSamples <- switchAnalyzeRlist$designMatrix$sampleID[which(
+                            switchAnalyzeRlist$designMatrix$condition == aCond
+                        )]
+
+                        toKeep <- sample(
+                            correspondingSamples,
+                            size = min(c(length(correspondingSamples), maxSamples))
+                        )
+
+                        return(toKeep)
+                    }
+                )
+            )
+
+            ### Subset data
+            localDesign <- localDesign[which(
+                localDesign$sampleID %in% samplesToKeep
+            ),]
+
+            em <- em[,localDesign$sampleID]
+        }
+    }
+
+    ### Build one combined model
+    if(TRUE) {
+        ### Make model matrix (which also take additional factors into account)
+        if(TRUE) {
+            ### Convert group of interest to factors
+            localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
+
+            ### Check co-founders for group vs continous variables
+            if( ncol(localDesign) > 2 ) {
+                for(i in 3:ncol(localDesign) ) { # i <- 4
+                    if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+                        if( uniqueLength( localDesign[,i] ) * 2 < length(localDesign[,i]) ) {
+                            localDesign[,i] <- factor(localDesign[,i])
+                        }
+                    }
+                }
+            }
+
+            ### Make formula for model
+            localFormula <- '~ 0 + condition'
+            if (ncol(localDesign) > 2) {
+                localFormula <- paste(
+                    localFormula,
+                    '+',
+                    paste(
+                        colnames(localDesign)[3:ncol(localDesign)],
+                        collapse = ' + '
+                    ),
+                    sep=' '
+                )
+            }
+            localFormula <- as.formula(localFormula)
+
+            ### Make model
+            localModel <- model.matrix(localFormula, data = localDesign)
+            indexToModify <- 1:length(unique( localDesign$condition ))
+            colnames(localModel)[indexToModify] <- gsub(
+                pattern =  '^condition',
+                replacement =  '',
+                x =  colnames(localModel)[indexToModify]
+            )
+        }
+
+        ### Make contrasts
+        contrastCoefs <- paste(
+            comaprisonsToMake$condition_2,
+            '-',
+            comaprisonsToMake$condition_1, sep=' '
+        )
+        localContrast <- limma::makeContrasts(
+            contrasts = contrastCoefs,
+            levels=colnames(localModel)
+        )
+
+        ### Fit model
+        if( ! analyzeExpression ) {
+            ### Normalize with edgeR
+            localDGE <- edgeR::DGEList(counts = em )
+            localDGE <- edgeR::calcNormFactors(localDGE, method='TMM')
+
+            ### Use woom to estimate precission weigths
+            localVoom <- voom(
+                counts = localDGE,
+                design = localModel,
+                normalize.method = "none", # done with edgeR above
+                plot=FALSE
+            )
+            #localVoom <- voomWithQualityWeights(
+            #    counts = localDGE,
+            #    design = localModel,
+            #    normalize.method = "none", # done with edgeR above
+            #    plot=FALSE
+            #)
+
+            suppressWarnings(
+                ifFit <- lmFit(
+                    localVoom,
+                    design = localModel,
+                    method = 'ls'
+                )
+            )
+        }
+        if(   analyzeExpression ) {
+            ### Fit model
+            suppressWarnings(
+                ifFit <- limma::lmFit(
+                    object = log2( em + 1),
+                    design = localModel,
+                    method='ls'
+                )
+            )
+        }
+
+
+        ### Refit with contrasts
+        suppressWarnings(
+            ifFitContrast <- limma::contrasts.fit(ifFit, localContrast)
+        )
+
+        ### Test with limma diffsplice
+        correspondingGene <- switchAnalyzeRlist$isoformFeatures$gene_id[match(
+            rownames(ifFitContrast$coefficients),
+            switchAnalyzeRlist$isoformFeatures$isoform_id
+        )]
+        tmp <- capture.output(
+            suppressWarnings(
+                ifTest <- limma::diffSplice(
+                    fit = ifFitContrast,
+                    exonid = rownames(ifFitContrast$coefficients),
+                    geneid = correspondingGene,
+                    robust = FALSE
+                )
+            )
+        )
+    }
+
+    ### Test each contrast
+    if(TRUE) {
+        ### For each contrast extract result
+        contrastList <- split(contrastCoefs, contrastCoefs)
+        sigIfList <- plyr::llply(
+            .data = contrastList,
+            .fun = function(
+                aContrast
+            ) { # aContrast <- contrastList[[1]]
+                localDtuRes <- topSplice(ifTest, coef = aContrast, test = 't', number = Inf, FDR = alpha)
+
+                colnames(localDtuRes)[1:2] <- c('isoform_id','gene_id')
+
+                ### Add conditions
+                localCond <- unlist(strsplit(aContrast, ' - '))
+                localDtuRes$condition_1 <- localCond[2]
+                localDtuRes$condition_2 <- localCond[1]
+
+                ### add dIF
+                localDtuRes$dIF <- switchAnalyzeRlist$isoformFeatures$dIF[match(
+                    str_c(localDtuRes$isoform_id, localDtuRes$condition_1, localDtuRes$condition_2),
+                    str_c(switchAnalyzeRlist$isoformFeatures$isoform_id, switchAnalyzeRlist$isoformFeatures$condition_1, switchAnalyzeRlist$isoformFeatures$condition_2)
+                )]
+
+                ### Subset dIF
+                localDtuRes <- localDtuRes[which(
+                    abs(localDtuRes$dIF) > dIFcutoff
+                ),]
+
+                return(localDtuRes)
+            }
+        )
+    }
+
+    ### Extract estimates
+    if(TRUE) {
+        sigDf <- data.frame(
+            comparison = names(sigIfList),
+            estimated_genes_with_dtu = sapply(sigIfList, function(x) {length(unique(x$gene_id))}),
+            #estimated_isoforms_with_dtu = sapply(sigIfList, function(x) {length(unique(x$ExonID))}),
+            stringsAsFactors = FALSE,
+            row.names = NULL
+        )
+
+        deseqVsLimmaFactor <- 0.85
+        estimateRatio <- 0.25
+
+        sigDf$estimated_genes_with_dtu <- paste(
+            round( sigDf$estimated_genes_with_dtu * (1/actualSubsampleFraction) * deseqVsLimmaFactor * (1-estimateRatio)),
+            '-',
+            round( sigDf$estimated_genes_with_dtu * (1/actualSubsampleFraction) * deseqVsLimmaFactor * (1+estimateRatio))
+        )
+
+        #sigDf$n_genes_analyzed <- subsampleNumber
+    }
+
+    return(sigDf)
 }
 

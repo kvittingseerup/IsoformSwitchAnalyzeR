@@ -10,7 +10,7 @@ This function enables a genome wide analysis of changes in isoform usage of isof
 
 Specifically this function extract isoforms of interest and for each splicing type (such as exon skipping) the global distribution of IF (measuring isoform usage) are plotted for each subset of features in that category (e.g with exons skipping vs without exon skipping). This enables a global analysis of isoforms with a common annotation.
 
-The isoforms of interest can either be defined by isoforms form gene differentially expressed, isoform that are differential expressed or isoforms from genes with isoform switching - as controlled by \code{featureToExtract}.
+The isoforms of interest can either be defined by isoforms form gene differentially expressed, isoform that are differential expressed or isoforms from genes with isoform switching - as controlled by \code{featureToExtract}. Please note that the \link{extractSplicingEnrichment} function probably more relevant than using \code{featureToExtract='isoformUsage'} since it directly uses the paired information from switches.
 
 This function offers both visualization of the result as well as analysis via summary statistics of the comparisons.
 }
@@ -37,7 +37,7 @@ extractSplicingGenomeWide(
 \item{featureToExtract}{
 This argument, given as a string, defines the set isoforms which should be analyzed. The available options are:
 \itemize{
-    \item {\code{'isoformUsage'} (Default): Analyze a subset of isoforms defined by change in isoform usage (controlled by \code{dIFcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
+    \item {\code{'isoformUsage'} (Default): Analyze a subset of isoforms defined by change in isoform usage (controlled by \code{dIFcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha}). Please note that the \link{extractSplicingEnrichment} function probably more relevant than using \code{featureToExtract='isoformUsage'} since it directly uses the paired information from switches.}
     \item {\code{'isoformExp'} :Analyze a subset of isoforms defined by change in isoform expression (controlled by \code{log2FCcutoff}) and the significance of the change in isoform expression (controlled by \code{alpha})}
     \item {\code{'geneExp'} :Analyze all isoforms from a subset of genes defined by by change in gene expression (controlled by \code{log2FCcutoff}) and the significance of the change in gene expression (controlled by \code{alpha})}
     \item {\code{'all'} : Analyze all isoforms stored in the switchAnalyzeRlist (note that this is highly depending on the parameter \code{reduceToSwitchingGenes} in \link{isoformSwitchTestDEXSeq} - which should be set to FALSE (default is TRUE) if the 'all' option should be used here).}
@@ -67,11 +67,11 @@ General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for
 }
 
 \item{plot}{
-A logical indicating whether to generate the plot (if TRUE) not (if FALSE). Default is TRUE.
+A logic indicting whether the analysis should be plotted. If TRUE and \code{returnResult = FALSE} the ggplot2 object will be returned instead. Default is TRUE.
 }
 
 \item{returnResult}{
-A logical indicating whether to return a data.frame with summary statistics of the comparisons (if TRUE) or not (if FALSE). Default is TRUE.
+A logical indicating whether to return a data.frame with summary statistics of the comparisons (if TRUE) or not (if FALSE). If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
 }
 }
 
