@@ -1,7 +1,7 @@
 Package: IsoformSwitchAnalyzeR
 Type: Package
 Title: Identify, Annotate and Visualize Alternative Splicing and Isoform Switches with Functional Consequences from both short- and long-read RNA-seq data.
-Version: 1.11.3
+Version: 1.11.4
 Author: Kristoffer Vitting-Seerup
 Maintainer: Kristoffer Vitting-Seerup <k.vitting.seerup@gmail.com>
 Description: IsoformSwitchAnalyzeR enables identification and analysis of alternative splicing and isoform switches with predicted functional consequences (e.g. gain/loss of protein domains etc.) from quantification of all types of RNASeq by tools such as Kallisto, Salmon, Cufflinks/Cuffdiff, RSEM etc.
@@ -9,7 +9,7 @@ URL: http://bioconductor.org/packages/IsoformSwitchAnalyzeR/
 BugReports: https://github.com/kvittingseerup/IsoformSwitchAnalyzeR/issues
 License: GPL (>= 2)
 Depends: R (>= 3.5), limma, DEXSeq, ggplot2
-Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings (>= 2.50.0), IRanges, GenomicRanges, DRIMSeq, RColorBrewer, rtracklayer, VennDiagram, DBI, grDevices, graphics, stats, utils, GenomeInfoDb, grid, tximport (>= 1.7.1), edgeR, futile.logger, stringr, dplyr, magrittr, readr, XVector
+Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings (>= 2.50.0), IRanges, GenomicRanges, DRIMSeq, RColorBrewer, rtracklayer, VennDiagram, DBI, grDevices, graphics, stats, utils, GenomeInfoDb, grid, tximport (>= 1.7.1), tximeta (>= 1.7.12), edgeR, futile.logger, stringr, dplyr, magrittr, readr, tibble, XVector, BiocGenerics
 Suggests: knitr, BSgenome.Hsapiens.UCSC.hg19, cummeRbund
 VignetteBuilder: knitr
 Collate: classes.R methods.R import_data.R test_isoform_switches.R analyze_ORF.R analyze_external_sequence_analysis.R analyze_switch_consequences.R isoform_plots.R plot_all_iso_switch.R high_level_functions.R tools.R analyze_alternative_splicing.R

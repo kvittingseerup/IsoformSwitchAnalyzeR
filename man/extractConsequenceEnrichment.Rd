@@ -4,7 +4,7 @@
 Analyze data for enrichment of specific consequences
 }
 \description{
-This functions analyzes for enrichment of specific consequences by for each set of opposing consequences (e.g.. domain gain vs loss), by analyzing the fraction of events belonging to one of them.
+This functions analyzes the genome wide enrichment of specific consequences by for each set of opposing consequences (e.g.. domain gain vs loss) analyzing the fraction of events belonging to one of them.
 }
 \usage{
 extractConsequenceEnrichment(
@@ -44,7 +44,7 @@ A logic indicating whether it is the number of genes (if TRUE) or isoform switch
 A logic indicating whether reverse the analysis meaning if "Domain gains"" are analyze using default parameters setting \code{analysisOppositeConsequence=TRUE} will case the analysis to be performed on "Domain loss". The main effect is for the visual appearance of plot which will be mirrored (around the 0.5 fraction). Default is FALSE.
 }
   \item{plot}{
-A logic indicting whether the analysis should be plotted. Default is TRUE.
+A logic indicting whether the analysis should be plotted. If TRUE and \code{returnResult = FALSE} the ggplot2 object will be returned instead. Default is TRUE.
 }
   \item{localTheme}{
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw(base_size = 14).
@@ -55,19 +55,34 @@ The minimum number of events (total gain/loss) must be present before the result
 }
 
   \item{returnResult}{
-A logic indicating whether the analysis should be returned as a data.frame. Default is TRUE.
+A logic indicating whether the analysis should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
 }
  \item{returnSummary}{
-A logic indicating whether to return the statistical summary (if TRUE) or the underlying data (if FALSE). Default is TRUE.
+A logic indicating whether to return the statistical summary (if TRUE) or the underlying data (if FALSE). Depends on \code{returnResult=TRUE} Default is TRUE.
 }
 }
 
 \details{
-The significance test is performed with R's build in \code{prop.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
+The significance test is performed with R's build in \code{binom.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
 }
 
 \value{
-If \code{returnResult=TRUE} a data.frame with the statistical summary for each opposing consequences in each comparison. If \code{plot=TRUE} a plot summarizing the proportions is also created of switches with specific consequences is created.
+If \code{plot=TRUE} a plot summarizing the proportions is also created of switches with specific consequences is created.
+
+If \code{returnResult=TRUE} a data.frame with the statistical summary for each opposing consequences in each comparison. This data.frame will have the following collumns:
+\itemize{
+    \item{condition_1: Condition 1.}
+    \item{condition_2: Condition 2.}
+    \item{conseqPair: The set of oposite consequences consudedered.}
+    \item{feature: Description of which consequence the calculations are done from the perspective of (with the opposite mention in parentheses)}
+    \item{propOfRelevantEvents: Proportion of total number of genes (of genes affected by the consequence described in the conseqPair column) being of the type described in the feature column.}
+    \item{propCiLo: The lower boundary of the confidence interval of the propOfRelevantEvents.}
+    \item{propCiHi: The high boundary of the confidence interval of the propOfRelevantEvents.}
+    \item{propPval: The p-value associated with the null hypothesis that propOfRelevantEvents is 0.5.}
+    \item{nUp: The number of genes with the consequence described in the feature column.}
+    \item{nDown: The number of genes with the opposite consequence of what is described in the feature column (as described in the parentheses of the feature column.}
+    \item{propQval: The q-values resulting when p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).}
+}
 }
 
 \references{

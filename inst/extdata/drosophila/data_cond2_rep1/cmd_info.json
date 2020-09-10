@@ -1,0 +1,12 @@
+{
+    "salmon_version": "0.14.1",
+    "libType": "A",
+    "gcBias": [],
+    "validateMappings": [],
+    "threads": "4",
+    "index": "Drosophila_melanogaster.BDGP6.22.98_salmon-0.14.1",
+    "mates1": "SRR1197474_1.fastq.gz",
+    "mates2": "SRR1197474_2.fastq.gz",
+    "output": "SRR1197474",
+    "auxDir": "aux_info"
+}
