@@ -1,4 +1,9 @@
-Changes in version 1.11.4 (2020-XX-XX)
+Changes in version 1.11.5 (2020-09-14)
+- Update type: Minor.
+- Updated example code in importIsoformExpression()
+- Updated namespace
+
+Changes in version 1.11.4 (2020-09-10)
 - Update type: Medium.
 - importRdata() was updated to give examples of sequence names when no overlap between fasta file and expression data was found.
 - importRdata() was updated to try and rescue missing gene_name annoations (must likely due to novel transcripts) and split merged genes (a problem often occuring when doing transcript assembly with tools such as Cufflinks/StringTie).

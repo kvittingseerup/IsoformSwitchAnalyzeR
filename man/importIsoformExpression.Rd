@@ -122,8 +122,8 @@ head(salmonQuant$abundance, 2)
 
 ### Import individual quantificaiton files
 myFiles <- c(
-    system.file("extdata/Fibroblasts_0/quant.sf", package="IsoformSwitchAnalyzeR"),
-    system.file("extdata/Fibroblasts_1/quant.sf", package="IsoformSwitchAnalyzeR")
+    system.file("extdata/Fibroblasts_0/quant.sf.gz", package="IsoformSwitchAnalyzeR"),
+    system.file("extdata/Fibroblasts_1/quant.sf.gz", package="IsoformSwitchAnalyzeR")
 )
 names(myFiles) <- c('Fibroblasts_0','Fibroblasts_1')
 
