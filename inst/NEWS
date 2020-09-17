@@ -1,3 +1,7 @@
+Changes in version 1.11.6 (2020-09-17)
+- Update type: Minor.
+- Updated namespace.
+
 Changes in version 1.11.5 (2020-09-14)
 - Update type: Minor.
 - Updated example code in importIsoformExpression()

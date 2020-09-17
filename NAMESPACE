@@ -37,7 +37,6 @@ importFrom("edgeR", "calcNormFactors")
 importFrom("stats", "binom.test")
 importFrom("futile.logger","flog.threshold")
 importFrom("stringr", "str_split")
-importFrom("RCurl", "url.exists")
 
 importFrom('stats', 'fisher.test')
 importFrom('stats', 'fisher.test')
