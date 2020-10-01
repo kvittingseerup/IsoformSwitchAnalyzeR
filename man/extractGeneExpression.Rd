@@ -24,6 +24,10 @@ A logic to indicate whether to extract counts (if TRUE, default) or expression e
 
 }
 
+\details{
+The count matrix obtained if \code{extractCounts=TRUE} is the same as would be obtained by running tximport with \code{countsFromAbundance="scaledTPM" which are suitable both for analysis of differential expression and usage.}
+}
+
 \value{
 A data.frame with the replicate count/abundance estimates.
 }

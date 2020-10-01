@@ -3225,6 +3225,10 @@ switchPlot <- function(
         )
     ))
 
+    ### Expression legend
+    print(expressionLegend,
+          vp = viewport(layout.pos.row = 9:15, layout.pos.col = lastTwoCols))
+
     # expression
     print(
         expressionPlots2$isoform_usage + guides(fill = FALSE),
@@ -3248,12 +3252,9 @@ switchPlot <- function(
         )
     )
 
-    # Legends
-    print(expressionLegend,
-          vp = viewport(layout.pos.row = 9:15, layout.pos.col = lastTwoCols))
+    # Transcript Legend
     print(transcriptLegend,
           vp = viewport(layout.pos.row = 2:8, layout.pos.col = lastTwoCols))
-
 
 }
 

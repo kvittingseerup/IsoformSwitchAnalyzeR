@@ -135,7 +135,7 @@ The minimum fraction of a novel isoform must overlap with a known isoform for ge
 }
 
 \item{fixStringTieMinOverlapLog2RatioToContender}{
-A log2 ratio which describes how much larger the overlap between a novel isoform and a known isoform must be for gene_name transfer in cases where overlap with known isoforms from multiple gene_names occure. Set to Inf to turn off to only consider cases where overlap with a single gene_name occure. Set to 1 to trun off. Default is 0.65 (corresponding to approx 1.57 fold).
+A log2 ratio which describes how much larger the overlap between a novel isoform and a known isoform must be for gene_name transfer in cases where overlap with known isoforms from multiple gene_names occure. This is the most important argument of deciding what to do with isoform overlapping multiple genes. If increased only more certain cases are assigned at the cost of more isoforms not being assigned. If decrease more isoforms are assigned but the certainty is lower. The default is 0.65 (corresponding to approx 1.57 fold) which according to our test data is the best a balance between strict and lenient.
 }
 
 \item{estimateDifferentialGeneRange}{

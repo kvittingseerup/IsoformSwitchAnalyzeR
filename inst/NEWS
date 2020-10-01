@@ -1,3 +1,9 @@
+Changes in version 1.11.7 (2020-09-17)
+- Update type: Minor.
+- Various documentation updates
+- The plotting order of the sub-plots of switchPlot() was changed to avoid problems when having long isoform names.
+- analyzeSignalP() was updated to be more robust at handling SignalP5 data where very few predictions were done.
+
 Changes in version 1.11.6 (2020-09-17)
 - Update type: Minor.
 - Updated namespace.

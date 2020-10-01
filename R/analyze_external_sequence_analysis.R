@@ -990,9 +990,9 @@ analyzeSignalP <- function(
     ### Obtain signalP result
     if (TRUE) {
         ### Figure out which version of signal-p was used
-        fileHead <- read.table(
+        fileType <- read.table(
             pathToSignalPresultFile[1],
-            nrows = 2,
+            nrows = 1,
             fill = TRUE,
             header = FALSE,
             comment.char = '',
@@ -1000,13 +1000,21 @@ analyzeSignalP <- function(
             stringsAsFactors = FALSE
         )
 
-        isSignalP5 <- grepl('SignalP-5', fileHead$V1[1])
+        isSignalP5 <- grepl('SignalP-5', fileType$V1[1])
 
         ### SignalP5
         if( isSignalP5 ) {
-            if( ! grepl('Eukarya|euk', fileHead$V2[1]) ){
+            if( !any( sapply(unlist(fileType), function(x) {grepl('Eukarya|euk',x)} )) ){
                 warning('It seems SignalP was run as Non-Eukaryote - was that on purpouse?')
             }
+
+            signalP5colNames <- c(
+                'isoform_id',
+                'Prediction',
+                'SP_Sec_SPI',
+                'OTHER',
+                'CS_Position'
+            )
 
             ### Read in SignalP predictions
             if(TRUE) {
@@ -1020,7 +1028,7 @@ analyzeSignalP <- function(
                             header = FALSE,
                             stringsAsFactors = FALSE,
                             fill = TRUE,
-                            col.names = c('isoform_id',unlist((fileHead[2,-1]))),
+                            col.names = signalP5colNames,
                             sep='\t'
                         )
                     }
