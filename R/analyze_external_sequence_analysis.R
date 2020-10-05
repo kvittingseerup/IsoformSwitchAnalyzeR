@@ -1023,13 +1023,19 @@ analyzeSignalP <- function(
                     .fun = function(
                         aFile
                     ) {
-                        read.table(
-                            aFile,
-                            header = FALSE,
-                            stringsAsFactors = FALSE,
-                            fill = TRUE,
-                            col.names = signalP5colNames,
-                            sep='\t'
+                        suppressWarnings(
+                            readr::read_table2(
+                                file = aFile,
+                                col_names = signalP5colNames,
+                                col_types = cols(
+                                    isoform_id = col_character(),
+                                    Prediction = col_character(),
+                                    SP_Sec_SPI = col_double(),
+                                    OTHER = col_double(),
+                                    CS_Position = col_character()
+                                ),
+                                comment = '#'
+                            )
                         )
                     }
                 ))
