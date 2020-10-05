@@ -1024,7 +1024,7 @@ analyzeSignalP <- function(
                         aFile
                     ) {
                         suppressWarnings(
-                            readr::read_table2(
+                            readr::read_tsv(
                                 file = aFile,
                                 col_names = signalP5colNames,
                                 col_types = cols(
@@ -1037,6 +1037,14 @@ analyzeSignalP <- function(
                                 comment = '#'
                             )
                         )
+                        #read.table(
+                        #    aFile,
+                        #    header = FALSE,
+                        #    stringsAsFactors = FALSE,
+                        #    fill = TRUE,
+                        #    col.names = signalP5colNames,
+                        #    sep='\t'
+                        #)
                     }
                 ))
 
