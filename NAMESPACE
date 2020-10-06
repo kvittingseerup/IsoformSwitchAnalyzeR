@@ -60,7 +60,7 @@ importFrom("dplyr", "n_distinct", "as_tibble", "mutate", "any_of", "distinct")
 importFrom("tibble", "rownames_to_column")
 importFrom("stringr","str_c")
 importFrom("magrittr","%>%")
-importFrom('readr', 'read_tsv', 'read_csv', 'fwf_empty','read_fwf','cols_only','col_character','col_integer','col_double')
+importFrom('readr', 'read_tsv', 'read_csv', 'fwf_empty','read_fwf','cols_only','col_character','col_integer','col_double', 'cols')
 
 
 ### Export functions from IsoformSwitchAnalyzeR

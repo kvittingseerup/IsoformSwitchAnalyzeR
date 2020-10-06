@@ -1027,12 +1027,12 @@ analyzeSignalP <- function(
                             readr::read_tsv(
                                 file = aFile,
                                 col_names = signalP5colNames,
-                                col_types = cols(
-                                    isoform_id = col_character(),
-                                    Prediction = col_character(),
-                                    SP_Sec_SPI = col_double(),
-                                    OTHER = col_double(),
-                                    CS_Position = col_character()
+                                col_types = readr::cols(
+                                    isoform_id  = readr::col_character(),
+                                    Prediction  = readr::col_character(),
+                                    SP_Sec_SPI  = readr::col_double(),
+                                    OTHER       = readr::col_double(),
+                                    CS_Position = readr::col_character()
                                 ),
                                 comment = '#'
                             )
