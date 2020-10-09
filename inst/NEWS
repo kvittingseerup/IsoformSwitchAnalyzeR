@@ -1,4 +1,8 @@
-Changes in version 1.11.7 (2020-09-17)
+Changes in version 1.11.8 (2020-XX-XX)
+- Update type: Minor.
+- Description update regarding to namespace
+
+Changes in version 1.11.7 (2020-09-30)
 - Update type: Minor.
 - Various documentation updates
 - The plotting order of the sub-plots of switchPlot() was changed to avoid problems when having long isoform names.
