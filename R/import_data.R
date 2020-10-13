@@ -2840,9 +2840,14 @@ importIsoformExpression <- function(
     if(TRUE) {
         ### massage
         localDataList$abundance <- as.data.frame(localDataList$abundance)
-        localDataList$counts <- as.data.frame(localDataList$counts)
+        if(countsFromAbundance) {
+            localDataList$counts <- as.data.frame(localDataList$countsFromAbundance)
+        } else {
+            localDataList$counts <- as.data.frame(localDataList$counts)
+        }
         localDataList$length <- as.data.frame(localDataList$length)
-        localDataList$countsFromAbundance <- NULL # remove message of how it was imported
+        localDataList$countsFromAbundance <- NULL
+
 
         ### Fix names
         if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
