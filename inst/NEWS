@@ -1,6 +1,10 @@
+Changes in version 1.11.11 (2020-10-13)
+- Update type: minor.
+- Fixed the mistake in importIsoformExpression() introduced in last updated
+
 Changes in version 1.11.10 (2020-10-13)
-- Update type: Major.
-- Update of importIsoformExpression fix the import of countsFromAbundance
+- Update type: minor.
+- Update of importIsoformExpression() fix the import of countsFromAbundance
 
 Changes in version 1.11.9 (2020-10-12)
 - Update type: Minor.
