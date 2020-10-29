@@ -1,3 +1,9 @@
+Changes in version 1.13.01 (2020-10-29)
+- Update type: minor.
+- Version bump due to Bioconductor release.
+- Fixed an error in importRdata() that could cause trouble when fixing StringTie annotation. Thanks to @yaccos for identifying the problem.
+- analyseSignalP() was updated to handle cases where no signal peptides were found with a warning instead of an error.
+
 Changes in version 1.11.11 (2020-10-13)
 - Update type: minor.
 - Fixed the mistake in importIsoformExpression() introduced in last updated

@@ -1126,7 +1126,8 @@ analyzeSignalP <- function(
                 ),]
 
                 if( nrow(singalPresults) == 0) {
-                    stop('No signal peptides were found for the isoforms analyzed in this switchAnalyzeRlist')
+                    warning('There were no signal peptides in the SignalP result file. Returning switchAnalyzeRlist without this analysis.')
+                    return(switchAnalyzeRlist)
                 }
             }
 

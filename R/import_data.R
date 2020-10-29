@@ -4158,8 +4158,7 @@ importRdata <- function(
                             paste(
                                 '   We were unable to assign', length(isoToRemove),
                                 'isoform_id\'s (all located within annotated genes) with a gene_name.',
-                                '\n        These were removed to enable analysis of the rest of the isoform from within the gene.',
-                                #'\n'
+                                '\n        These were removed to enable analysis of the rest of the isoform from within the gene.'
                             )
                         )
                     }
