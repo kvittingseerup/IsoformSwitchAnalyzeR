@@ -4251,7 +4251,7 @@ importRdata <- function(
                                     'gene_ids which were associated with multiple gene_names',
                                     '\n        were split into mutliple genes via their gene_names.',
                                     #'\n',
-                                    sep = ' '
+                                    sep = ''
                                 )
                             )
                         }
@@ -4677,10 +4677,15 @@ importRdata <- function(
 
     ### Estimate DTU
     if(estimateDifferentialGeneRange & !quiet) {
-        localEstimate <- estimateDifferentialRange(dfSwichList)
-
-        message('The GUESSTIMATED number of genes with differential isoform usage are:')
-        print(localEstimate)
+        localEstimate <- estimateDifferentialRange(
+            switchAnalyzeRlist = dfSwichList
+        )
+        if( !is.null(localEstimate)) {
+            message('The GUESSTIMATED number of genes with differential isoform usage are:')
+            print(localEstimate)
+        } else {
+            message('The estimation of DTU failed. Please proceed with the normal workflow.')
+        }
     }
 
 

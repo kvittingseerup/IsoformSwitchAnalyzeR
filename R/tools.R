@@ -1541,14 +1541,14 @@ estimateDifferentialRange <- function(
     switchAnalyzeRlist
 )  {
     ### Define test parameters
-    alpha = 0.05
-    dIFcutoff = 0.1
-    subsampleFraction = 0.1
-    subsampleMin = 100
-    subsampleMax = 1000
-    maxComparisons = 3
-    maxSamples = 10
-    analyzeExpression = FALSE
+    alpha <- 0.05
+    dIFcutoff <- 0.1
+    subsampleFraction <- 0.1
+    subsampleMin <- 100
+    subsampleMax <- 1000
+    maxComparisons <- 3
+    maxSamples <- 10
+    analyzeExpression <- FALSE
 
     ### Tjek Input
     if(TRUE) {
@@ -1793,6 +1793,11 @@ estimateDifferentialRange <- function(
                 aContrast
             ) { # aContrast <- contrastList[[1]]
                 localDtuRes <- topSplice(ifTest, coef = aContrast, test = 't', number = Inf, FDR = alpha)
+
+                # In case no results are significant
+                if(nrow(localDtuRes) == 0) {
+                    return(NULL)
+                }
 
                 colnames(localDtuRes)[1:2] <- c('isoform_id','gene_id')
 
