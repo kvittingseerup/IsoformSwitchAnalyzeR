@@ -2392,7 +2392,7 @@ To support people using Galaxy IsoformSwitchAnalyzeR can be run locally after do
 
 * For Kallisto/Stringtie simply download the result files and use the sampleVector() argument of the importIsoformExpression() function to point to each all result files and continue as described in the [Example Workflow].
 * For Cufflinks/Cuffdiff download all the cuffdiff result files and use the importCufflinksFiles() function.
-* For StringTie a small modification is needed. When running the final quantification (the re-quantificaiton after of the result of running the stringtie --merge (see workflow description in [What Quantification Tool(s) Should I Use?])) use the "Output files for differential expression?" and choose "DESeq2/edgeR/limma-voom". The resulting transcript count matrix can be download, and along with the gtf from the Stringtie merge result, used to creat a switchAnalyzeRlist with IsoformSwitchAnalyzeR's importRdata().
+* For StringTie a small modification is needed. When running the final quantification (the re-quantificaiton after of the result of running the stringtie --merge (see workflow description in [What Quantification Tool(s) Should I Use?])) use the "Output files for differential expression?" and choose "Ballgown". The resulting t_data.ctab can be download and imported with importIsoformExpression(). The resulting count and abundance matrixes can, along with the gtf from the Stringtie merge result, be used to creat a switchAnalyzeRlist with IsoformSwitchAnalyzeR's importRdata().
 
 <br />
 
