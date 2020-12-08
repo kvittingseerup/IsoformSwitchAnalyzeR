@@ -92,6 +92,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 - [Quality control of ORF of known annotation]
 - [Analyzing the Biological Mechanisms Behind Isoform Switching]
 - [Analyzing experiments without replicates]
+- [Rescude StringTie Annoation and Extract Gene Count Matrix]
 
 [Frequently Asked Questions, Problems and Errors]
 
@@ -2136,6 +2137,63 @@ aSwitchList$isoformFeatures$gene_switch_q_value <- 1
 
 - In all subsequent steps of the [Detailed Workflow], make sure IsoformSwitchAnalyzeR ignores the q-value by setting the _alpha_ argument to something larger than 1 (e.g. 1.1) or use the . You will have to ignore the resulting warnings IsoformSwitchAnalyzeR produces as it tests the validity of the arguments supplied by the user.
 
+
+Back to [Table of Content]
+
+<br />
+
+### Rescude StringTie Annoation and Extract Gene Count Matrix
+Due to the inherent difficulty of the transcript assembly problem StringTie output Gene_ids (MSTRG.XXXX) which corresponds to set of overlapping transcripts. This result in two separate problems:
+
+- Some genes have been "merged" due to genomic overlap of transcripts from the different genes.
+- Gene names (or non-StingTie gene_ids) have not been assigned.
+
+From our experience with StringTie data there are typically tens of thousands of missing gene_names and ~50% of the missing gene_names are due to these problems (the rest are novel genes).
+
+IsoformSwitchAnalyzeR now includes a "rescue" algorithm that can be used as follows:
+
+```
+### Please note
+# The way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# and not something  you need to do - just supply the string e.g.
+# parentDir = "/path/to/my_string_tie_quantifications/" pointing to the parent directory (where
+# each sample is a separate sub-directory) to the function.
+
+### Import StringTie Expression data
+stringTieQuant <- importIsoformExpression(
+    parentDir = system.file("extdata/", package="IsoformSwitchAnalyzeR"),
+    addIsofomIdAsColumn = FALSE
+)
+
+### Make design matrix
+myDesign <- data.frame(
+    sampleID = colnames(stringTieQuant$abundance),
+    condition = gsub('_.*', '', colnames(stringTieQuant$abundance))
+)
+
+### Create switchAnalyzeRlist
+switchAnalyzeRlist <- importRdata(
+    isoformCountMatrix   = stringTieQuant$counts,
+    isoformRepExpression = stringTieQuant$abundance,
+    designMatrix         = myDesign,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"),
+)
+```
+From the *switchAnalyzeRlist* you can also run the switch analysis workflow as described in [Example Workflow] and examples of the results of this workflow can be found in [Examples Visualizations]. For more information about the details of the rescue please refere to the documentation of importRdata (by typing `?importRdata` in an R terminal), specifically the fixStringTie* arguments.
+
+To make a differential expression analysis you can obtain the gene-count matrix from the *switchAnalyzeRlist* as follows:
+
+```
+### Extract gene count matrix
+geneCountMatrix <- extractGeneExpression(
+    switchAnalyzeRlist,
+    extractCounts = TRUE
+)
+```
+
+This count matrix can be used as input to differential expression tools such as [edgeR](http://bioconductor.org/packages/edgeR/), [DESeq2](http://bioconductor.org/packages/DESeq2/), [limma](http://bioconductor.org/packages/limma/).
 
 Back to [Table of Content]
 
