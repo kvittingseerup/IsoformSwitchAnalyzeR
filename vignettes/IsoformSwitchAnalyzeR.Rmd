@@ -92,7 +92,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 - [Quality control of ORF of known annotation]
 - [Analyzing the Biological Mechanisms Behind Isoform Switching]
 - [Analyzing experiments without replicates]
-- [Rescude StringTie Annoation and Extract Gene Count Matrix]
+- [Rescue StringTie Annoation and Extract Gene Count Matrix]
 
 [Frequently Asked Questions, Problems and Errors]
 
@@ -2142,7 +2142,7 @@ Back to [Table of Content]
 
 <br />
 
-### Rescude StringTie Annoation and Extract Gene Count Matrix
+### Rescue StringTie Annoation and Extract Gene Count Matrix
 Due to the inherent difficulty of the transcript assembly problem StringTie output Gene_ids (MSTRG.XXXX) which corresponds to set of overlapping transcripts. This result in two separate problems:
 
 - Some genes have been "merged" due to genomic overlap of transcripts from the different genes.
