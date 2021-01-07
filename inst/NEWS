@@ -1,4 +1,4 @@
-Changes in version 1.13.05 (2021-XX-XX)
+Changes in version 1.13.05 (2021-01-07)
 - Update type: Major.
 - analyseORF was updated with the orfMethod "longest.AnnotatedWhenPossible" a hybrid between "longes" and "longestAnnotated". See ?analyseORF for details.
 - importGTF, importRdata and analyseORF was updated to also annoate the source of the ORF annoations. analyzeCPAT and analyzeCPC2 was updated to also changes these if removeNoncodinORFs = TRUE.
