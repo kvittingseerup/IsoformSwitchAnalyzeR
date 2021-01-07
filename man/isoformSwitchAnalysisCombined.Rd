@@ -8,22 +8,22 @@ This high-level function uses a pre-existing switchAnalyzeRlist as input. Then i
 }
 \usage{
 isoformSwitchAnalysisCombined(
+    ### Core arguments
     switchAnalyzeRlist,
-    alpha=0.05,
-    dIFcutoff = 0.1,
-    switchTestMethod='DEXSeq',
-    n=NA,
-    pathToOutput=getwd(),
-    overwriteORF=FALSE,
-    outputSequences=FALSE,
-    genomeObject,
-    orfMethod='longest',
-    cds=NULL,
-    consequencesToAnalyze=c('intron_retention','ORF_seq_similarity','NMD_status'),
-    fileType='pdf',
-    asFractionTotal=FALSE,
-    outputPlots=TRUE,
-    quiet=FALSE
+
+    ### Annotation arguments
+    genomeObject = NULL,
+    pathToGTF = NULL,
+
+    ### Analysis and output arguments
+    n = Inf,
+    consequencesToAnalyze = c('intron_retention', 'ORF_seq_similarity', 'NMD_status'),
+    pathToOutput = getwd(),
+    fileType = 'pdf',
+    outputPlots = TRUE,
+
+    ### Other arguments
+    quiet = FALSE
 )
 }
 
@@ -31,59 +31,31 @@ isoformSwitchAnalysisCombined(
     \item{switchAnalyzeRlist}{
 A \code{switchAnalyzeRlist}.
 }
-  \item{alpha}{
-The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
-}
-\item{dIFcutoff}{
-The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
-}
-\item{switchTestMethod}{ A sting indicating which statistical method should be used for testing differential isoform usage. The following options are available:
-        \itemize{
-            \item {\code{'DEXSeq'} : Uses DEXSeq to perform the statistical test. See \link{isoformSwitchTestDEXSeq}. Default}
-            \item {\code{'DRIMSeq'} : Uses the DRIMSeq package to perform the statistical test. See \link{isoformSwitchTestDRIMSeq}. Default}
-            \item {\code{'none'} : No statistical test is performed. Should only be used if a test have already been performed and should not be overwritten (e.g when wanting to use the already imported/added CuffDiff analysis).}
-        }
-    }
 
-\item{n}{
-The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use NA to create all. Default is NA (all).
-}
-  \item{pathToOutput}{
-A path to the folder in which the plots should be made. Default is working directory ( getwd() ).
-}
-
-\item{overwriteORF}{
-A logical indicating whether to overwrite the ORF analysis already stored in the supplied switchAnalyzeRlist. Default is FALSE.
-}
-  \item{outputSequences}{
-A logic indicating whether transcript nucleotide and amino acid sequences should be save in the \code{pathToOutput} folder. Default is TRUE.
-}
   \item{genomeObject}{
 A \code{BSgenome} object (for example Hsapiens for Homo sapiens).
 }
-  \item{orfMethod}{
-A string indicating which of the 3 ORF identification methods should be used. The methods are:
-  \itemize{
-    \item {\code{longest} : Identifies the longest ORF in the transcript. This approach is similar to what the CPAT tool uses in it's analysis of coding potential}
-    \item {\code{longestAnnotated} : Identifies the longest ORF downstream of an annotated translation start site (supplied via the \code{cds} argument)}
-    \item {\code{mostUpstreamAnnoated} : Identifies the ORF downstream of the most upstream overlapping annotated translation start site (supplied via the \code{cds} argument)}
-  }
-  Default is \code{longest}.
+\item{pathToGTF}{
+A string indicating the full path to the (gziped or unpacked) GTF file which contains the the known annotation (aka from a official source) which was used to guided the transcript assembly (isoform deconvolution).
 }
-  \item{cds}{
-A CDSSet object containing annotated coding regions, see ?CDSSet and ?getCDS for more information. Only necessary if \'orfType\' arguments is \'longestAnnotated\' or \'mostUpstreamAnnoated\'.
+
+\item{n}{
+The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use Inf to create all. Default is Inf (all).
 }
+
   \item{consequencesToAnalyze}{
-A vector of strings indicating what type of functional consequences to analyze. Note there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','ORF_seq_similarity','NMD_status') (corresponding to analyze: intron retention, ORF AA sequence similarity and NMD status).
+    A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated and signal peptides annotated by Pfam).
+}
+
+  \item{pathToOutput}{
+A path to the folder in which the plots should be made. Default is working directory ( getwd() ).
 }
   \item{fileType}{
 A string indicating which file type is generated. Available options are \'pdf\' and \'png\'. Default is pdf.
 }
-   \item{asFractionTotal}{
-A logic indicating whether the number of consequences should be calculated as numbers (if FALSE) or as a fraction of the total number of switches in the plot summarizing general consequences of all the isoform switches. Default is FALSE.
-}
+
 \item{outputPlots}{
-A logic indicating whether all isoform switches as well as the summary of functional consequences should be outputted in the directory specified by \code{pathToOutput} argument. Default is TRUE.
+A logic indicating whether all isoform switches as well as the summary of functional consequences should be saved in the directory specified by \code{pathToOutput} argument. Default is TRUE.
 }
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 
@@ -135,9 +107,6 @@ exampleSwitchList
 library(BSgenome.Hsapiens.UCSC.hg19)
 exampleSwitchListAnalyzed <- isoformSwitchAnalysisCombined(
     switchAnalyzeRlist=exampleSwitchList,
-    genomeObject = Hsapiens,
-    dIFcutoff = 0.4,         # Set high for short runtime in example data
-    outputSequences = FALSE, # keeps the function from outputting the fasta files from this example
     outputPlots = FALSE      # keeps the function from outputting the Isoform Switch AnalyzeR Plots from this example
 )
 

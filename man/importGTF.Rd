@@ -8,8 +8,11 @@ Function for importing a (gziped or unpacked) GTF/GFF file into R as a \code{swi
 }
 \usage{
 importGTF(
+    ### Core arguments
     pathToGTF,
     isoformNtFasta = NULL,
+
+    ### Advanced arguments
     extractAaSeq = FALSE,
     addAnnotatedORFs=TRUE,
     onlyConsiderFullORF=FALSE,
@@ -58,7 +61,8 @@ A logic indicating whether the nucleotide sequence imported via \code{isoformNtF
 
 \item{removeFusionTranscripts}{A logic indicating whether to remove genes with cross-chromosome fusion transcripts as IsoformSwitchAnalyzeR cannot handle them.}
 
-\item{quiet}{ A logic indicating whether to avoid printing progress messages. Default is FALSE}
+\item{quiet}{A logic indicating whether to avoid printing progress messages. Default is FALSE.}
+
 }
 
 \details{

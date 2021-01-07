@@ -1,3 +1,22 @@
+Changes in version 1.13.05 (2021-XX-XX)
+- Update type: Major.
+- analyseORF was updated with the orfMethod "longest.AnnotatedWhenPossible" a hybrid between "longes" and "longestAnnotated". See ?analyseORF for details.
+- importGTF, importRdata and analyseORF was updated to also annoate the source of the ORF annoations. analyzeCPAT and analyzeCPC2 was updated to also changes these if removeNoncodinORFs = TRUE.
+- To enable better ORF analysis the addORFfromGTF() and analyzeNovelIsoformORF() functions were added to IsoformSwitchAnalyzeR. These should be used instead of analyzeORF(). These function also annotate the source of the ORF annoations. See vignette for description of why these are preferable.
+- analyseORF() was updated with an additional method for ORF detection: "longest.AnnotatedWhenPossible".
+- the getCDS() function and CDSSet class was removed for the user as addORFfromGTF() + analyzeNovelIsoformORF() provides a better way to analyse ORFs.
+- Downstream functions relying on ORF data now checks that all isoforms have been assessed for ORFs. These are extractSequence(), analyzeSwitchConsequences(), switchPlotTranscript() and switchPlot().
+- isoformSwitchAnalysisPart1() and isoformSwitchAnalysisPart2() was also updated to support the new ORF annotation scheme.
+- The usage of isoformSwitchAnalysisPart1() and isoformSwitchAnalysisPart2() was made less complex by removing many arguments passed to sub-functions thereby relying more on default arguments.
+- importRdata() was updated to import the "refrence gene_ids" instead of StringTie gene_ids (for all annotated genes).
+- the StringTie annotation rescue in importRdata() was updated to use "refrence gene_ids" instead of "refrence gene_names" thereby fixing problems with closely spaced genes, that have the same gene name, which was merged by StringTie.
+- importGTF() now also imports ref_gene_id from StringTie gtf to enable the above mentioned updates to importRdata(). If not pressent it will duplicate gene_name instead.
+- extractGeneExpression() was updated to allow easy output of gene annoation.
+- isoformToGeneExp() was updated to use rowsum() instead of a tidyverse implementation as it is much faster for large datasets.
+- The result of importRdata()'s estimateDifferentialGeneRange option now repports the condition names in accordance with the rest of IsoformSwitchAnalyzeR.
+- Removed mentions of StringTie2 as it has been merged into StringTie.
+- Documentation and vignette was updated accordingly.
+
 Changes in version 1.13.04 (2020-12-10)
 - Update type: minor.
 - Vignette update.

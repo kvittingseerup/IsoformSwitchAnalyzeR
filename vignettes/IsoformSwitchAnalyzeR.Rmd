@@ -27,7 +27,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 <!-- Abstract -->
 ## Abstract
-Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as Cufflinks, StringTie(2), Kallisto and Salmon. Alternatively long-read RNASeq (third generation sequencing) now rutinly provide us with full length transcripts. These full lenght transcripts makes it possible to analyze isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential. 
+Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as Cufflinks, StringTie, Kallisto and Salmon. Alternatively long-read RNASeq (third generation sequencing) now rutinly provide us with full length transcripts. These full lenght transcripts makes it possible to analyze isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential. 
 
 To solve this problem, we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR facilitates integration of many sources of (predicted) annotation such as Open Reading Frame (ORF/CDS), protein domains (via Pfam), signal peptides (via SignalP), Intrinsically Disordered Regions (IDR, via NetSurfP-2 or IUPred2A), coding potential (via CPAT or CPC2) and sensitivity to Non-sense Mediated Decay (NMD) and more. The combination of identified isoform switches and their annotation enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches for individual genes as well as both summary statistics and visualization of the genome-wide changes/consequences of isoform switches, their consequences and the associated alternative splicing.
 
@@ -306,11 +306,13 @@ See below for example of usage, and [Detailed Workflow] for details on the indiv
 
 This corresponds to running _isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_ without adding the external results.
 
+<center>
 
-
-<embed src="Overview_figure_simple.jpg" width="910" height="517">
+<embed src="Overview_figure_simple.jpg" width="886" height="492">
 
 **Figure 1: Workflow overview.** Grey transparent boxes indicate the two parts of a normal workflow for analyzing isoform switches. The individual steps in the two sub-workflows are indicated by arrows. Speech bubbles summarize how this full analysis can be done in a two-step process using the high-level functions ( _isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_). Please note the boxes marked with "external analysis" means the user have to run tools outside of R either locally or on a web-server - more info can be found below.
+
+</center>
 
 Back to [Table of Content].
 
@@ -318,7 +320,7 @@ Back to [Table of Content].
 
 ### Example Workflow
 
-As indicted above, a comprehensive, but less customizable, analysis of isoform switches can be done using the two high-level functions _isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_. This section aims to show how these functions are used as well as illustrate what IsoformSwitchAnalyzeR can be used for. For the detailed, fully customizable workflow please refer to the [Detailed Workflow] (though we still recommend reading this section as it will provide a nice overview of the workflow).
+As indicted above, a comprehensive, but less customizable, analysis of isoform switches can be done using the two high-level functions _isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_. This section aims to show how these functions are used as well as illustrate what IsoformSwitchAnalyzeR can be used for. For the detailed, fully customizable workflow, please refer to the [Detailed Workflow] (though we still recommend reading this section as it will provide a nice overview of the workflow).
 
 Let us start by loading IsoformSwitchAnalyzeR into the R environment.
 ```{r, results = "hide", message = FALSE, warning=FALSE}
@@ -338,7 +340,7 @@ Since IsoformSwitchAnalyzeR is (significantly) updated quite frequently please m
 <br />
 
 #### Importing the Data
-The first step is to import all data needed for the analysis into R and then concatenate them as a switchAnalyzeRlist object. Although IsoformSwitchAnalyzeR has different functions for importing data from tools such as Salmon/Kallisto/RSEM/StringTie(2)/Cufflinks/TALON (for long-read data), IsoformSwitchAnalyzeR can be used with quantifications from any tool which produce isoform-level quantification.
+The first step is to import all data needed for the analysis into R and then concatenate them as a switchAnalyzeRlist object. Although IsoformSwitchAnalyzeR has different functions for importing data from tools such as Salmon/Kallisto/RSEM/StringTie/Cufflinks/TALON (for long-read data), IsoformSwitchAnalyzeR can be used with quantifications from any tool which produce isoform-level quantification.
 
 For the purpose of illustrating importing data into R let us use some cufflinks data re-quantified quantified via Salmon which is included in the distribution of IsoformSwitchAnalyzeR.
 
@@ -393,7 +395,7 @@ Apart from the isoform quantification we need 2-3 additional sets of annotation 
 
 2) The transcript structure of the isoforms (in genomic coordinates) as well as information about which isoforms originate from the same gene. This information is typically stored in a GTF file - a file format which IsoformSwitchAnalyzeR can directly import and integrate (as described below) you just have to tell IsoformSwitchAnalyzeR where the file is located on your computer/server. Please note that IsoformSwitchAnalyzeR also support RefSeq GFF files - for all other database you have to use a GTF file - see [What Transcript Database Should I Use?] for recomendations on databases and more info on how to obtain these.
 
-3) If you have quantified the transcriptome via tools such as Salmon/Kallisto/RSEM (aka you did NOT do any guided/de-novo transcriptome assembly (using tools such as Cufflinks/StringTie(2))) we highly recommended that the transcript nucleotide sequences (the fasta file used to make the index for the quantification tool) is also supplied to IsoformSwitchAnalyzeR. If a fasta file is provided IsoformSwitchAnalyzeR which will import and integrate these sequences into the workflow. Although options are available to extracting transcript sequences later via BSgenomes (more info in the [Detailed Workflow]) importing the transcript fasta file at this stage will provide a much faster (and potentially more accurate) analysis. Providing the sequences here will be (a lot!) easier for people analyzing non-model organisms. You can also find suggestions about how to obtain fasta files which are paired with the GTF/GFF files from some of the major databases in [What Transcript Database Should I Use?].
+3) If you have quantified the transcriptome via tools such as Salmon/Kallisto/RSEM (aka you did NOT do any guided/de-novo transcriptome assembly (using tools such as Cufflinks/StringTie)) we highly recommended that the transcript nucleotide sequences (the fasta file used to make the index for the quantification tool) is also supplied to IsoformSwitchAnalyzeR. If a fasta file is provided IsoformSwitchAnalyzeR which will import and integrate these sequences into the workflow. Although options are available to extracting transcript sequences later via BSgenomes (more info in the [Detailed Workflow]) importing the transcript fasta file at this stage will provide a much faster (and potentially more accurate) analysis. Providing the sequences here will be (a lot!) easier for people analyzing non-model organisms. You can also find suggestions about how to obtain fasta files which are paired with the GTF/GFF files from some of the major databases in [What Transcript Database Should I Use?].
 
 Since the information in point 2-3 from above are just files stored on the computer which IsoformSwitchAnalyzeR itself imports into R, the only thing you need to make yourself is the design matrix. The design matrix will have to be generated manually to ensure correct grouping of samples. For the example data this can be done from the file names as follows:
 
@@ -463,8 +465,17 @@ Before we can run the analysis, it is necessary to know that IsoformSwitchAnalyz
 To illustrate the IsoformSwitchAnalyzeR workflow we will use a smaller example dataset equal to what you would get from following the import steps described above (used for convenience). The example switchAnalyzeRlist is included in IsoformSwitchAnalyzeR and can loaded as follows: 
 
 ```{r}
+### load example data
 data("exampleSwitchList")
-exampleSwitchList
+
+### Subset for quick runtime
+exampleSwitchList <- subsetSwitchAnalyzeRlist(
+    switchAnalyzeRlist = exampleSwitchList,
+    subset = abs(exampleSwitchList$isoformFeatures$dIF) > 0.4
+)
+
+### Print summary of switchAnalyzeRlist
+summary(exampleSwitchList)
 ```
 
 We can now run the first part of the isoform switch analysis workflow which filters for non-expressed genes/isoforms, identifies isoform switches, annotates open reading frames (ORF), switches with and extracts both the nucleotide and peptide (amino acid) sequences and output them as two separate fasta files (here turned off to make the example run - so a user should use outputSequences=TRUE).
@@ -510,9 +521,8 @@ The second part of the isoform switch analysis workflow, which includes importin
 
 exampleSwitchList <- isoformSwitchAnalysisPart2(
   switchAnalyzeRlist        = exampleSwitchList, 
-  dIFcutoff                 = 0.3,   # Cutoff for defining switch size - set high for short runtime in example data
   n                         = 10,    # if plotting was enabled, it would only output the top 10 switches
-  removeNoncodinORFs        = TRUE,  # Because ORF was predicted de novo
+  removeNoncodinORFs        = TRUE,
   pathToCPC2resultFile      = system.file("extdata/cpc2_result.txt"         , package = "IsoformSwitchAnalyzeR"),
   pathToPFAMresultFile      = system.file("extdata/pfam_results.txt"        , package = "IsoformSwitchAnalyzeR"),
   pathToIUPred2AresultFile  = system.file("extdata/iupred2a_result.txt.gz"  , package = "IsoformSwitchAnalyzeR"),
@@ -534,7 +544,7 @@ Now the data gathering and integration is complete (and some analysis have alrea
 <br />
 
 ### Examples Visualizations
-To illustrate visualizations, both for individual genes and for the genome-wide analysis, we will use a larger dataset which is a subset of two of the TCGA Cancer types analyzed in Vitting-Seerup et al 2017. Please note that all analysis describe below can be done with any data analyzed as describe above. The TCGA example data can be loaded as follows:
+To illustrate visualizations, both for individual genes and for the genome-wide analysis, we will use a larger dataset which is a subset of two of the TCGA Cancer types analyzed in Vitting-Seerup et al 2017. The fully annotated switchAnalyzeRlist (corresponding to what was created with _isoformSwitchAnalysisPart1()_ and _isoformSwitchAnalysisPart2()_ above) with the TCGA example data can be loaded as follows:
 
 ```{r}
 data("exampleSwitchListAnalyzed")
@@ -565,7 +575,7 @@ subset(
 )
 ```
 
-Let us take a look at the isoform switch in the ZAK gene using the switchPlot functionality. Note that since the switchAnalyzeRlist contains two different comparison (LUAD and COAD) we need to specify the conditions to plot (not necessary if there is only one).
+Let us take a look at the isoform switch in the ZAK gene using the switchPlot functionality. Note that since the switchAnalyzeRlist contains two different comparison (LUAD and COAD) we need to specify the conditions to plot (this is not necessary if there is only one condition in your data).
 
 
 ```{r, fig.width=12, fig.height=7, warning=FALSE}
@@ -760,7 +770,7 @@ This corresponds to running the following functions in sequential order (which i
 
 ```
 ### Import data into R via one of:
-myQantifications <- importIsoformExpression() # RSEM/Kallisto/Salmon/StringTie(2)
+myQantifications <- importIsoformExpression() # RSEM/Kallisto/Salmon/StringTie
 
 ### Create SwitchAnalyzeRlist
 mySwitchList <- importRdata()         # OR
@@ -773,8 +783,9 @@ mySwitchList <- preFilter( mySwitchList )
 mySwitchList <- isoformSwitchTestDEXSeq( mySwitchList )   # OR
 mySwitchList <- isoformSwitchTestDRIMSeq( mySwitchList ) 
 
-### If novel isoforms (else use CDS from ORF as explained in importRdata() )
-mySwitchList <- analyzeORF( mySwitchList )
+### If analysing (some) novel isoforms (else use CDS from ORF as explained in importRdata() )
+mySwitchList <- addORFfromGTF( mySwitchList )
+mySwitchList <- analyzeNovelIsoformORF( mySwitchList )
 
 ### Extract Sequences
 mySwitchList <- extractSequence( mySwitchList )
@@ -832,25 +843,26 @@ extractSplicingEnrichment( mySwitchList )
 extractSplicingGenomeWide( mySwitchList )
 ```
 
-The combined workflow is visualized here:
+The combined workflow is visualized in the figure below.
 
-<embed src="Overview_figure_detailed.jpg" width="910" height="830">
+<center>
 
+<embed src="Overview_figure_detailed.jpg" width="753" height="674">
 **Figure 2: Detailed workflow overview.** The grey transparent boxes indicate the two parts of a normal workflow for analyzing isoform switches. The individual steps in the two sub-workflows are indicated by arrows along with a description and the main R functions for performing the steps. 
+
+</center>
 
 <br />
 
 <!-- Background information -->
 ### IsoformSwitchAnalyzeR Background Information
 #### The switchAnalyzeRlist
-The switchAnalyzeRlist object is created to specifically contain and summarize all relevant information about the isoforms involved in isoform switches. The switchAnalyzeRlist object is a named list, meaning each entry in the list can be accessed by its name via the '$' symbol or by using "[['entryName']]". A newly created switchAnalyzeRlist object contains 6 entries, and as the isoforms are gradually annotated and analyzed more entries are added.
+The switchAnalyzeRlist object is created to specifically contain and summarize all relevant information about the isoforms involved in isoform switches. The switchAnalyzeRlist object is a named list, meaning each entry in the list can be accessed by its name via the '$' symbol or by using "[['entryName']]". A newly created switchAnalyzeRlist object contains 10 entries, and as the isoforms are gradually annotated and analyzed more entries are added.
 
 ```{r}
-data("exampleSwitchList")         # A newly created switchAnalyzeRlist + switch analysis
+### A newly created switchAnalyzeRlist + switch analysis
+data("exampleSwitchList")         
 names(exampleSwitchList)
-
-data("exampleSwitchListAnalyzed") # A fully analyzed switchAnalyzeRlist
-names(exampleSwitchListAnalyzed)
 ```
 
 The first entry 'isoformFeatures' is a data.frame where all relevant data about each comparison of an isoform (between conditions), as well as the analysis performed and annotation incorporate via IsoformSwitchAnalyzeR, is stored. Among the default information is isoform and gene id, gene and isoform expression as well as the _isoform\_switch\_q_value_ and _isoform\_switch\_q_value_ where the result of the differential isoform analysis is stored. The comparisons made can be identified as "from 'condition\_1' to 'condition\_2'", meaning 'condition\_1' is considered the ground state and 'condition\_2' the changed state. This also means that a positive dIF value indicates that the isoform usage is increased in 'condition\_2' compared to 'condition\_1'. Since the 'isoformFeatures' entry is the most relevant part of the switchAnalyzeRlist object, the most-used standard methods have also been implemented to work directly on isoformFeatures.
@@ -900,7 +912,7 @@ Back to [Table of Content]
 #### Function overview
 With a few exceptions, all functions in IsoformSwitchAnalyzeR can be divided into 6 groups sharing the first part of the function name (very useful with RStudio's auto-completion functionality (via the tab button)):
 
-1. **_import\*()_**: Functions for importing data from different data sources into a switchAnalyzeRlist, for example _importIsoformExpression()_ for importing data from Kallisto, Salmon StringTie(2) or RSEM.
+1. **_import\*()_**: Functions for importing data from different data sources into a switchAnalyzeRlist, for example _importIsoformExpression()_ for importing data from Kallisto, Salmon StringTie or RSEM.
 2. **_analyze\*()_**: Functions for analyzing and annotating the switchAnalyzeRlist. For example _analyzeORF()_ for analyzing the ORFs of the isoforms in the switchAnalyzeRlist.
 3. **_isoformSwitchTest\*()_**: Functions performing the differential isoform usage test that enables switch identification. For example _isoformSwitchTestDEXSeq()_.
 4. **_extract\*()_**: Functions for extracting (summarized) data or data analysis from the switchAnalyzeRlist., e.g. _extractConsequenceSummary()_ for extracting a summary of the number of genes and isoforms with isoform switches including predicted functional consequences.
@@ -953,7 +965,7 @@ For a (non-exhaustive) recommendations of bioinformatic tools which can perform 
 <br />
 
 #### Importing Data from Kallisto, Salmon, RSEM or StringTie
-While RSEM and StringTie(2) are well-established and robust isoform quantification tool, a new generation of tools often referred to as pseudo/quasi-aligners, such as Salmon and Kallisto, are on the rise due to their speed and increased accuracy. All four tools are directly supported by allowing for easy import of the isoform replicate abundance via the _importIsoformExpression()_ function.
+While RSEM and StringTie are well-established and robust isoform quantification tool, a new generation of tools often referred to as pseudo/quasi-aligners, such as Salmon and Kallisto, are on the rise due to their speed and increased accuracy. All four tools are directly supported by allowing for easy import of the isoform replicate abundance via the _importIsoformExpression()_ function.
 
 This function is an easy-to-use wrapper for the tximport R package with extra functionalists. Using tximport (with countsFromAbundance='scaledTPM'), importIsoformExpression() allows the isoform counts to be estimated from the abundance estimates --- which is recommended as it will incorporate the bias correction performed by the tools into the switch identification. The _importIsoformExpression_ function can furthermore perform an inter-library normalization of the abundance estimates which is necessary for a fair comparison of libraries (for in-depth discussion of normalization and why it is needed, see section 2.7 of the [edgeR user guide](http://bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf)).
 
@@ -989,7 +1001,7 @@ Once the quantified isoforms are imported into R all you need to supply to the _
 1) The estimated replicate isoform count expression and/or (and highly recommended!) the replicate isoform abundance estimates
 2) a design matrix indicating which samples are from the same condition. 
 3) The isoform annotation (either as a GRange or as sting pointing to a GTF/GFF file with the isoforms quantified). Note import of gziped GTF/GFF file is directly supported.
-4) The isoform nucleotide sequence (not for StringTie(2) if it was used to do transcript assembly).
+4) The isoform nucleotide sequence (not for StringTie if it was used to do transcript assembly).
 
 The _importRdata()_ function will then: 
 
@@ -1040,7 +1052,7 @@ Note that:
 1) By supplying the GTF/GFF file to the "isoformExonAnnoation" argument IsoformSwitchAnalyzeR will automatically also import and integrate CDS regions annotated in the GTF/GFF file as the ORF regions used by IsoformSwitchAnalyzeR (if addAnnotatedORFs=TRUE (default)).
 2) IsoformSwitchAnalyzeR also supports the analysis of isoform switches found via other tools/test --- see [Testing for Isoform Switches with other Tools].
 3) The overall unit of isoforms analyzed together is defined by the gene annotation provided. In principle, this overall unit does not have to be genes but could be for example a TSS shared by multiple isoforms --- to utilize this simply provide TSS\_ids instead of gene\_ids in the isoform annotation.
-4) If StringTie(2) have been used to predict novel transcripts (transcript assembly/deconvolution) the gene_ids created is based on islands of overlapping transcripts - this means that sometimes multiple genes (defined by gene short name) as combined into one StringTie(2) gene. This will create quite complex switchPlots which might contain multiple gene names (including NA if it is a novel gene). Currently there are no good way of "reversing" this but we are considering how to handle it.
+4) If StringTie have been used to predict novel transcripts (transcript assembly/deconvolution) the gene_ids created is based on islands of overlapping transcripts - this means that sometimes multiple genes (defined by gene short name) as combined into one StringTie gene. This will create quite complex switchPlots which might contain multiple gene names (including NA if it is a novel gene). Currently there are no good way of "reversing" this but we are considering how to handle it.
 
 The switchAnalyzeRlist now contains all the information imported in separate entries of the switchAnalyzeRlist object:
 
@@ -1414,57 +1426,65 @@ Back to [Table of Content]
 <br />
 
 ### Analyzing Open Reading Frames
-Once the isoform switches have been found, the next step is to annotate the isoforms involved in the isoform switches. The first step in such annotation is to obtain Open Reading Frames (ORFs).
+Once the isoform switches have been found, the next step is to annotate the isoforms involved in the isoform switches. Essential to this process is the annotation of Open Reading Frames (ORFs).
 
-If known annotated isoforms were quantified (i.e. you did not perform a (guided) de novo isoform reconstruction) we recommend that you use the annotated CDS (Coding Sequence) from the annotation --- which can be imported and integrated though one of the implemented import methods, see [Importing Data Into R].
+When annotating ORFs we need to consider two "types" of isoforms:
 
-If you performed (guided) de-novo isoform reconstruction (isoform deconvolution), or just want to re-do them, prediction of ORFs can be done with high accuracy from the transcript sequence alone (see supplementary data in Vitting-Seerup et al 2017 for benchmark). Such prediction can be done with:
+1) Isoforms which were obtained from trusted annotation database.
+2) Isoforms which were extracted from the RNASeq data itself either by long-read sequencing or deconvolution (aka reconstruction) via tools such as StringTie (or similar).
+
+The difference between these two "types" of annotation is that ORF regions are already annotated (if they have any) for the known isoforms and are therefore referred to as CoDing Sequences (CDS) regions. On the other hand the novel isoforms needs to be analyzed to identify the most likely ORF (if they have any). IsoformSwitchAnalyzeR enables both import of already annotated CDS and analysis of ORF in novel isoforms as described below for each of the 3 possible scenarios:
+
+A) [Analyzing Only Known Isoforms]
+B) [Analyzing Known and Novel Isoforms]
+C) [Analyzing Only Novel Isoforms]
+
+
+#### Analyzing Only Known Isoforms
+If you are "only" analyzing known isoforms from a trusted annotation database (if you have used Kallisto/Salmon and not used StringTie etc) you can most likely skip this step as the _importRdata()_ function automatically imports CDS regions from the GTF supplied. You can check using this command - which should return TRUE:
+
+```{r, warning=FALSE}
+"orfAnalysis" %in% names( exampleSwitchList )
+```
+
+If for some reason ORFs have not been annotated you can use the _addORFfromGTF()_ function to add the CDS regions stored in a GTF file to the switchAnalyzeRlist.
+
+The next step in the workflow is [Extracting Nucleotide and Amino Acid Sequences].
+
+<br />
+
+#### Analyzing Known and Novel Isoforms
+If you are analyzing a mix of known and novel isoforms (the vast majority of people using StringTie or similar) annotating ORFs is a two-step process:
+
+First you add the CDS regions from the GTF file containing information about the known isoforms (the GTF file which were also given as input to StringTie (or similar) to guide the identification of novel isoforms). This is done using the _addORFfromGTF()_ function.
+
+Afterwards the novel isoforms can be analyzed with the _analyzeNovelIsoformORF()_ function. Although more options are available the two main methods for identifying the novel ORF are:
+
+1. The 'longest' method. This method identifies the longest ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence. This approach is what the CPC2 and CPAT tool uses in its analysis of coding potential.
+2. The "longest.AnnotatedWhenPossible" method (default) which will identify the longest ORF (as described for 1. above) in a novel isoform that has the same CDS start sites as one of the annotated isoforms. If no known CDS start sites overlaps the novel isoforms it will locate the longest possible ORF instead (as described for 1. above).
+
+Please note that although these ORFs are predictions they are very accurate - especially when combined with CPAT/CPC2 predictions (see benchmark in supplementary information of Vitting-Seerup et al 2017).
+
+Also note that the _analyzeNovelIsoformORF()_ function relies on analyzing the isoform nucleotide sequences which can be obtained in two ways:
+
+1) You can use a tool such as gffread and the GTF file containing both known and novel isoforms to obtain a fasta file with the nucleotide sequence of all isoforms. This fasta can be added when the switchAnalyzeRlist was constructed in the first place (see above in [Importing Data Into R]).
+
+2) Alternatively the _analyzeNovelIsoformORF()_ function can utilizes the genomic coordinates of each isoform to extract the isoform nucleotide sequence from a reference genome (supplied via the _genomeObject_ argument). Such genomic sequences are available in Bioconductor for most model organisms as BSgenome object and can be found [here](http://bioconductor.org/packages/release/BiocViews.html#___BSgenome). If necessary check out the [BSGenomes for non-model organisms] section. If sequences are extracted from a BSgenome object they will also be added to the switchAnalyzeRlist to facilitate internal sequence analysis and used in all downstream analysis. An example of the internal sequence analysis is a pairwise comparison of the predicted amino acid sequence of the CDS/ORFs in two switching isoforms (see [Predicting Switch Consequences] below).
+
+Lastly information about the other ORF detection methods can be found in the documentation of the _analyzeNovelIsoformORF()_ function.
+
+The next step in the workflow is [Extracting Nucleotide and Amino Acid Sequences].
+
+<br />
+
+#### Analyzing Only Novel Isoforms
+If you performed a completely de-novo isoform reconstruction (isoform deconvolution) meaing you did not supply a file with known annotation to the deconvolution tools (Trinity or similar) prediction of ORFs can be done with high accuracy from the transcript sequence alone (see supplementary data in Vitting-Seerup et al 2017 for benchmark). Such prediction can be done with:
 
     analyzeORF()
 
-This function relies on analyzing the transcript nucleotide sequences which can be obtained in two ways:
+This function relies on analyzing the transcript nucleotide sequences which can be obtained as described in [Analyzing Known and Novel Isoforms].
 
-1) If you quantified known annotated isoforms were quantified (i.e. you did not perform a (guided) de novo isoform reconstruction) we recommend that you supply the transcript fasta file while constructing the switchAnalyzeRlist (see above in [Importing Data Into R]). This will result in more accurate and much faster analysis in the entire workflow.
-
-2) Alternatively the analyzeORF() function can utilizes the genomic coordinates of each transcript to extract the transcript nucleotide sequence from a reference genome (supplied via the _genomeObject_ argument). Such genomic sequences are available in Bioconductor for most model organisms as BSgenome object and can be found [here](http://bioconductor.org/packages/release/BiocViews.html#___BSgenome). If necessary check out the [BSGenomes for non-model organisms] section. Importantly this option should only be used if the isoforms quantified include guide/de-novo reconstructed transcripts (such as produced by Cufflinks/StringTie(2)), else we recommend the first option.
-
-If sequences are extracted from a BSgenome object they will also be added to the switchAnalyzeRlist to facilitate internal sequence analysis and used in all downstream analysis. An example of the internal sequence analysis is a pairwise comparison of the predicted amino acid sequence of the CDS/ORFs in two switching isoforms (see [Predicting Switch Consequences] below).
-
-<br >
-
-In _analyzeORF_ four different methods for predicting the ORF are implemented, suitable for different purposes and circumstances. The four methods are:
-
-1. The 'longest' method. This method identifies the longest ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence. This approach is what the CPC2 and CPAT tool uses in its analysis of coding potential. This is the default as it is the most common use case and has the highest accuracy in benchmarks against known annotated ORFs (>90% accuracy against GENCODE data, Vitting-Seerup et al 2017).
-2. The 'mostUpstream' method. This method identifies the most upstream ORF based on finding the canonical start and stop codons in the transcript nucleotide sequence.
-3. The 'longestAnnotated' method. This method identifies the longest ORF downstream of an annotated translation start site. It requires known translation start sites are supplied to the _cds_ argument.
-4. The 'mostUpstreamAnnoated' method. This method identifies ORF downstream of the most upstream overlapping annotated translation start site. It requires known translation start sites are supplied to the _cds_ argument.
-
-One important argument is the _minORFlength_, which will ensure that only ORFs longer than _minORFlength_ nucleotides are annotated. Besides predicting the ORF, information about the most likely stop codon also allows for prediction of Pre-mature Termination Codon (PTC) and thereby sensitivity to degradation via the Nonsense Mediated Decay (NMD) pathway. This analysis is also implemented in the _analyzeORF()_ function and is controlled by the _PTCDistance_ argument.
-
-Note that the ORF prediction can be integrated with both the CPC2/CPAT results (via the _removeNoncodinORFs_ parameter, see ?analyzeCPAT or ?analyzeCPC2) as well as Pfam results (see [Augmenting ORF Predictions with Pfam Results])
-
-The _analyzeORF()_ function can be used as follows:
-
-```{r}
-### This example relies on the example data from the 'Usage of The Statistical Test' section above 
-
-exampleSwitchListAnalyzed <- analyzeORF(
-    exampleSwitchListAnalyzed,
-    orfMethod = "longest",
-    # genomeObject = Hsapiens, # not necessary since sequences are already stored in the switchAnalyzeRlist
-    showProgress=FALSE
-)
-
-head(exampleSwitchListAnalyzed$orfAnalysis, 3)
-
-```
-
-As seen above, genomic and transcript coordinates for ORF beginning and end, as well as PTC status, are added to the 'orfAnalysis' entry of the switchAnalyzeRlist.
-
-If the user wants to use the _longestAnnotated_ or _mostUpstreamAnnoated_ methods, the _analyzeORF()_ function requires known CDS to be supplied as described above. The CDS must be stored as a CDSSeq (see ?CDSSet) and a wrapper for downloading the CDS of the most frequently used datasets from UCSC genome browser is implemented in:
-
-    getCDS()
-
+Information about the ORF detection methods available can be found in the documentation of the _analyzeORF()_ function.
 <br />
 
 ### Extracting Nucleotide and Amino Acid Sequences
@@ -1478,7 +1498,7 @@ Please note:
 
 * If you are planning on using the webserver version of the external sequence analysis tools you should set _removeLongAAseq=TRUE_ and _alsoSplitFastaFile=TRUE_. These arguments exist because some webservers (Pfam and SignalP) have (quite) strict limits on the number (and length) of amino acid sequences one can submit at the time. When those arguments are true IsoformSwitchAnalyzeR will generate multiple filtered amino acid fasta files which can then be supplied as multiple individual analysis at the websites.
 * If you have quantified known annotated isoforms were quantified (i.e. you did not perform a (guided) de novo isoform reconstruction) we recommend that you supply the transcript fasta file while constructing the switchAnalyzeRlist (see above in [Importing Data Into R]). This will result in more accurate and much faster analysis in the entire workflow.
-* Alternatively the analyzeORF() function can utilizes the genomic coordinates of each transcript to extract the transcript nucleotide sequence from a reference genome (supplied via the _genomeObject_ argument). Such genomic sequences are available in Bioconductor for most model organisms as BSgenome object and can be found [here](http://bioconductor.org/packages/release/BiocViews.html#___BSgenome). In necessary check out [BSGenomes for non-model organisms]. Importantly this option should only be used if the isoforms quantified include guide/de-novo reconstructed transcripts (such as produced by Cufflinks/StringTie(2)), else we recommend the first option.
+* Alternatively the analyzeORF() function can utilizes the genomic coordinates of each transcript to extract the transcript nucleotide sequence from a reference genome (supplied via the _genomeObject_ argument). Such genomic sequences are available in Bioconductor for most model organisms as BSgenome object and can be found [here](http://bioconductor.org/packages/release/BiocViews.html#___BSgenome). In necessary check out [BSGenomes for non-model organisms]. Importantly this option should only be used if the isoforms quantified include guide/de-novo reconstructed transcripts (such as produced by Cufflinks/StringTie), else we recommend the first option.
 
 If sequences are extracted from a BSgenome object they will also be added to the switchAnalyzeRlist to facilitate internal sequence analysis and used in all downstream analysis. An example of the internal sequence analysis is a pairwise comparison of the CDS/ORFs in two switching isoforms (see [Predicting Switch Consequences] below).
 
@@ -2143,14 +2163,17 @@ Back to [Table of Content]
 <br />
 
 ### Rescue StringTie Annoation and Extract Gene Count Matrix
-Due to the inherent difficulty of the transcript assembly problem StringTie output Gene_ids (MSTRG.XXXX) which corresponds to set of overlapping transcripts. This result in two separate problems:
+Due to the inherent difficulty of the transcript assembly problem StringTie output its own gene_ids (MSTRG.XXXX) for a large number of genes. These "StringTie gene_ids" simply represent sets of overlapping transcripts and are used instead of the known "reference  gene_ids" because of three overlapping problems:
 
+- For all genes, where a novel transcript was identified, the "StringTie gene_id" is used instead of the "reference gene_id".
+- No novel transcripts have been assigned to a "reference gene_id".
 - Some genes have been "merged" due to genomic overlap of transcripts from the different genes.
-- Gene names (or non-StingTie gene_ids) have not been assigned.
 
-From our experience with StringTie data there are typically tens of thousands of missing gene_names and ~50% of the missing gene_names are due to these problems (the rest are novel genes).
+From our experience with StringTie data there are typically tens of thousands isoforms from thousands of genes affected by these problems.
 
-IsoformSwitchAnalyzeR now includes a "rescue" algorithm that can be used as follows:
+IsoformSwitchAnalyzeR now includes a "rescue" algorithm which ensures that all novel isoforms are assigned to genes and that "reference gene_id" and "reference gene_names" are used instead of "Stringtie gene_is" for all already annotated genes. The result is that only novel genes ("Stringtie genes" not overlapping any "Refrence genes") still use the MSTRG.XXXX gene_ids. Meaning that the resuced data are easy to use with downstream tools.
+
+The resuce algorithm is built into the _importRdata()_ function which is meant to integrate expression and annoation data. The _importRdata()_ that is used as follows (more details can be found in [Importing Data Into R]):
 
 ```
 ### Please note
@@ -2181,19 +2204,21 @@ switchAnalyzeRlist <- importRdata(
     isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"),
 )
 ```
-From the *switchAnalyzeRlist* you can also run the switch analysis workflow as described in [Example Workflow] and examples of the results of this workflow can be found in [Examples Visualizations]. For more information about the details of the rescue please refere to the documentation of importRdata (by typing `?importRdata` in an R terminal), specifically the fixStringTie* arguments.
+From the *switchAnalyzeRlist* you can run the isoform switch analysis workflow as described in [Example Workflow] and examples of the results of this workflow can be found in [Examples Visualizations].
 
-To make a differential expression analysis you can obtain the gene-count matrix from the *switchAnalyzeRlist* as follows:
+For more information about the details of the annoation rescue please refer to the documentation of importRdata (by typing `?importRdata` in an R terminal), specifically the fixStringTie* arguments.
+
+For other analysis (such as differential gene expression) a gene-count (or abundance) matrix can be extracted from the *switchAnalyzeRlist* as follows:
 
 ```
 ### Extract gene count matrix
 geneCountMatrix <- extractGeneExpression(
     switchAnalyzeRlist,
-    extractCounts = TRUE
+    extractCounts = TRUE # set to FALSE for abundances
 )
 ```
 
-This count matrix can be used as input to differential expression tools such as [edgeR](http://bioconductor.org/packages/edgeR/), [DESeq2](http://bioconductor.org/packages/DESeq2/), [limma](http://bioconductor.org/packages/limma/).
+This count matrix can be used as input to e.g. differential expression tools such as [edgeR](http://bioconductor.org/packages/edgeR/), [DESeq2](http://bioconductor.org/packages/DESeq2/) and [limma](http://bioconductor.org/packages/limma/).
 
 Back to [Table of Content]
 
@@ -2236,13 +2261,13 @@ For long-read data some have been using Salon for the quantification of known tr
 **Option B.1):** If have short-read (standard) RNASeq data and you do not have any (trustworthy) annotation, or want to improve it (find novel transcripts), you need to do a transcript deconvolution aka predicting novel transcripts from the RNAseq data. A transcript deconvolution can be described as a 4-step process:
 
 1) After QC and potential quality trimming you you map reads to the genome (with tools such as [STAR](http://labshare.cshl.edu/shares/gingeraslab/www-data/dobin/STAR/STAR.posix/doc/STARmanual.pdf), [HISAT2](https://ccb.jhu.edu/software/hisat2/manual.shtml) etc.).
-2) Then you assemble transcripts (typically guided by existing annoation) with tools such as [Cufflinks](http://cole-trapnell-lab.github.io/cufflinks/manual/),  [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual), [StringTie2](https://github.com/mpertea/stringtie2) or [Scallop](https://github.com/Kingsford-Group/scallop). Please note that many other tools for solving this problem  and new methods are still published regularly. Since the transcript assembly is the central step in the analysis, you probably want to read up on these tools yourself to make sure you use the tools that currently are the better one. Make sure to run these tools in discovery mode (default) so they will identify novel transcripts from the data.
-3) The third step is to merge the assembled transcripts from all individual Cufflinks/StringTie(2)/Scallop/other runs into one combined reference transcriptome with tools such as [Cuffmerge](http://cole-trapnell-lab.github.io/cufflinks/cuffmerge/index.html), [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual), [StringTie2](https://github.com/mpertea/stringtie2) or [TACO](https://tacorna.github.io/). The result is a augmented transcriptome which in addition to already known transcripts also contain the novel transcripts identified in at least one of your samples. Note that this joint transcriptome is more accurate than the once predicted from the individual samples as the integration typically is more elaborate that simple concatenation which will reduce the error rates. As an optional step the merged GTF file can be further annotated with tools such as [SQANTI2](https://github.com/Magdoll/SQANTI2/).
-4) To make the analysis of the individual samples comparable you need to quantify the same set of transcripts in each sample - else you do not know which novel transcript is the same in two different files - and the quantification will be skewed by not considering all isoforms. Therefore the fourth step is to re-quantify all samples using the GTF file  created in step 3. This can be done with tools such as [Cufflinks/CuffDiff](http://cole-trapnell-lab.github.io/cufflinks/manual/), [StringTie]((http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual)), [StringTie2](https://github.com/mpertea/stringtie2), [Salmon](https://salmon.readthedocs.io/en/latest/salmon.html) or [Kallisto](http://pachterlab.github.io/kallisto/manual.html). Remember if you use Cufflinks/StringTie(2) for the re-quantification you have to disable the discovery mode (as the novel transcripts have already been found and are part of the combined transcriptome you are quantifying).
+2) Then you assemble transcripts (typically guided by existing annoation) with tools such as [Cufflinks](http://cole-trapnell-lab.github.io/cufflinks/manual/),  [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual) or [Scallop](https://github.com/Kingsford-Group/scallop). Please note that many other tools for solving this problem  and new methods are still published regularly. Since the transcript assembly is the central step in the analysis, you probably want to read up on these tools yourself to make sure you use the tools that currently are the better one. Make sure to run these tools in discovery mode (default) so they will identify novel transcripts from the data.
+3) The third step is to merge the assembled transcripts from all individual Cufflinks/StringTie/Scallop/other runs into one combined reference transcriptome with tools such as [Cuffmerge](http://cole-trapnell-lab.github.io/cufflinks/cuffmerge/index.html), [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual) or [TACO](https://tacorna.github.io/). The result is a augmented transcriptome which in addition to already known transcripts also contain the novel transcripts identified in at least one of your samples. Note that this joint transcriptome is more accurate than the once predicted from the individual samples as the integration typically is more elaborate that simple concatenation which will reduce the error rates. As an optional step the merged GTF file can be further annotated with tools such as [SQANTI2](https://github.com/Magdoll/SQANTI2/).
+4) To make the analysis of the individual samples comparable you need to quantify the same set of transcripts in each sample - else you do not know which novel transcript is the same in two different files - and the quantification will be skewed by not considering all isoforms. Therefore the fourth step is to re-quantify all samples using the GTF file  created in step 3. This can be done with tools such as [Cufflinks/CuffDiff](http://cole-trapnell-lab.github.io/cufflinks/manual/), [StringTie]((http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual)), [Salmon](https://salmon.readthedocs.io/en/latest/salmon.html) or [Kallisto](http://pachterlab.github.io/kallisto/manual.html). Remember if you use Cufflinks/StringTie for the re-quantification you have to disable the discovery mode (as the novel transcripts have already been found and are part of the combined transcriptome you are quantifying).
 
 You will need to figure out which combination of tools you choose on your own - but IsoformSwitchAnalyzeR can analyze the data from all of them. For more information see [Importing Data Into R]. 
 
-**Option B.2):** If have long-read RNASeq data (Oxford Nanopore (ONT) or PacBio) we recommend using TALON ( [github](https://github.com/dewyman/TALON), [preprint](https://www.biorxiv.org/content/10.1101/672931v1) ) or StringTie2 ( [github](https://github.com/mpertea/stringtie2), [preprint](https://doi.org/10.1101/694554) ) for identifying and quantifying known and novel transcripts. Optionally Salon can be used on the StringTie2/TALON results for a more accurate quantification of the identified transcripts. IsoformSwitchAnalyzeR can analyze the output of all tools as described in the [Importing Data Into R] section.
+**Option B.2):** If have long-read RNASeq data (Oxford Nanopore (ONT) or PacBio) we recommend using TALON ( [github](https://github.com/dewyman/TALON), [preprint](https://www.biorxiv.org/content/10.1101/672931v1) ) or StringTie ( [github](https://github.com/gpertea/stringtie), [preprint](https://doi.org/10.1101/694554) ) for identifying and quantifying known and novel transcripts. Optionally Salon can be used on the StringTie/TALON results for a more accurate quantification of the identified transcripts. IsoformSwitchAnalyzeR can analyze the output of all tools as described in the [Importing Data Into R] section.
 
 <br />
 

@@ -4,43 +4,54 @@
 Prediction of Transcript Open Reading Frame.
 }
 \description{
-Predicts the most likely Open Reading Frame (ORF) and the NMD sensitivity of the isoforms stored in a \code{switchAnalyzeRlist} object. This functionality is made to help annotate isoforms if you have performed (guided) de-novo isoform reconstruction (isoform deconvolution). Else you should use the annotated CDS (CoDing Sequence) typically obtained though one of the implemented import methods (see vignette for details).
+Please note the vast majority of users are better of using the new \link{addORFfromGTF} + \link{analyzeNovelIsoformORF} annotation combo.
+
+This function predicts the most likely Open Reading Frame (ORF) and the NMD sensitivity of the isoforms stored in a \code{switchAnalyzeRlist} object. This functionality is made to help annotate isoforms if you have performed (guided) de-novo isoform reconstruction (isoform deconvolution). Else you should use the annotated CDS (CoDing Sequence) typically obtained though one of the implemented import methods (see vignette for details).
 }
 \usage{
 analyzeORF(
+    ### Core arguments
     switchAnalyzeRlist,
     genomeObject = NULL,
-    minORFlength=100,
-    orfMethod = "longest",
+
+    ### Advanced argument
+    minORFlength = 100,
+    orfMethod = 'longest',
     cds = NULL,
     PTCDistance = 50,
-    startCodons="ATG",
-    stopCodons=c("TAA", "TAG", "TGA"),
-    showProgress=TRUE,
-    quiet=FALSE
+    startCodons = "ATG",
+    stopCodons = c("TAA", "TAG", "TGA"),
+    showProgress = TRUE,
+    quiet = FALSE
 )
 }
 
 \arguments{
   \item{switchAnalyzeRlist}{ A \code{switchAnalyzeRlist} object. n}
 
-  \item{genomeObject}{ A \code{BSgenome} object uses as reference genome (e.g. 'Hsapiens' for Homo sapiens). Only necessary if transcript sequences were not already added (via the 'isoformNtFasta' argument in \code{importRdata()}).}
+  \item{genomeObject}{ A \code{BSgenome} object uses as reference genome (e.g. 'Hsapiens' for Homo sapiens). Only necessary if transcript sequences were not already added (via the 'isoformNtFasta' argument in \code{importRdata()} or the \code{extractSequence()} function).}
 
   \item{minORFlength}{ The minimum size (in nucleotides) an ORF must be to be considered (and reported). Please note that we recommend using CPAT to predict coding potential instead of this cutoff - it is simply implemented as a pre-filter, see \link{analyzeCPAT}. Default is 100 nucleotides, which >97.5\% of Gencode coding isoforms in both human and mouse have.}
 
   \item{orfMethod}{
-  A string indicating which of the 4 available ORF identification methods should be used. The methods are:
+  A string indicating which of the 5 available ORF identification methods should be used. The methods are:
   \itemize{
     \item {\code{longest} : Identifies the longest ORF in the transcript (after filtering via minORFlength). This approach is similar to what the CPAT tool uses in it's analysis of coding potential.}
+
     \item {\code{mostUpstream} : Identifies the most upstream ORF in the transcript (after filtering via minORFlength).}
+
     \item {\code{longestAnnotated} : Identifies the longest ORF (after filtering via minORFlength) downstream of an annotated translation start site (which are supplied via the \code{cds} argument).}
+
     \item {\code{mostUpstreamAnnoated} : Identifies the ORF (after filtering via minORFlength) downstream of the most upstream overlapping annotated translation start site (supplied via the \code{cds} argument).}
+
+    \item {\code{longest.AnnotatedWhenPossible} : A merge between "longestAnnotated" and "longest". For all isoforms where CDS start positions overlap, only these CDS starts are considered and the longest ORF is annotated (similar to "longestAnnotated"). All isoforms without any overlapping CDS start sites they will be analysed with the "longest" approach.}
+
   }
   Default is \code{longest}.
 }
 
 \item{cds}{
-A CDSSet object containing annotated coding regions, see ?CDSSet and ?getCDS for more information. Only necessary if \code{orfMethod} arguments is 'longestAnnotated' or 'mostUpstreamAnnoated'.
+Should not be used by end user. If analysis using known CDS start sites is wanted the user should use the combination of \link{addORFfromGTF} and \link{analyzeNovelIsoformORF} instead.
 }
 
 \item{PTCDistance}{
@@ -86,6 +97,8 @@ The data.frame added have one row pr isoform and contains 11 columns:
     \item{\code{stopDistanceToLastJunction}: Distance from stop codon to the last exon-exon junction}
     \item{\code{stopIndex}: The index, counting from the last exon (which is 0), of which exon is the stop codon is in.}
     \item{\code{PTC}: A logic indicating whether the isoform is classified as having a Premature Termination Codon. This is defined as having a stop codon more than \code{PTCDistance} (default is 50) nt upstream of the last exon exon junction.}
+    \item{\code{orf_origin}: A column indicating where the ORF annotation originates form. Possible values are "Annotation" (imported from GTF), "Predicted" (indicating they were predicted) and "not_annotated_yet" indicting ORF have not been annotated yet.}
+
 }
 NA means no information was available aka no ORF (passing the \code{minORFlength} filter) was found.
 }

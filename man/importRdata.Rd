@@ -116,8 +116,9 @@ A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE
 \item{fixStringTieAnnotationProblem}{
 A logic indicating whether to try and fix the following two annoation problems.
 \itemize{
-    \item{\code{1}: Fix the problem where novel isoforms are not assigned a gene_name. This is done by assigning the gene_name of the parrent gene_id, but only when the gene_id is associated with a single gene_name.}
-    \item{\code{2}: Fix the problem where multiple genes (as indicated by gene_name) are merged into a single gene_id. This can only be done when all isoforms are assigned a gene_name. The gene_id is simply split into multiple gene_ids via the gene_names. Genes with this problem, which could not be fixed, are removed since such constallations might result in untrustworthy switches (where the isoforms are acutally from different genes).}
+    \item{\code{1}: Fix the problem where novel isoforms are not assigned to a refrence gene. This is done by assigning the gene_name of the parrent gene_id, but only when the gene_id is associated with a single gene_name.}
+    \item{\code{2}: Fix the problem where multiple genes (as indicated by refrence gene_ids) are merged into a single gene_id. This can only be done when all isoforms are assigned a gene_name. The gene_id is simply split into multiple gene_ids via the gene_names. Genes with this problem, which could not be fixed, are removed since such constallations might result in untrustworthy switches (where the isoforms are acutally from different genes).}
+    \item{\code{3}: Fix the problem where all genes containing novel isoforms are assigned a StringTie gene_id instead of their original id. This is done by assigning the gene_name of the parrent gene_id, but only when the gene_id is associated with a single gene_name.}
 }
 Default is TRUE.
 }

@@ -1,15 +1,17 @@
 isoformSwitchAnalysisPart1 <- function(
+    ### Core arguments
     switchAnalyzeRlist,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    switchTestMethod = 'DEXSeq',
-    orfMethod = 'longest',
+
+    ### Annotation arguments
     genomeObject = NULL,
-    cds = NULL,
+    pathToGTF = NULL,
+
+    ### Output arguments
+    prepareForWebServers,
     pathToOutput = getwd(),
     outputSequences = TRUE,
-    prepareForWebServers = FALSE, # to keep backcompatability
-    overwriteORF = FALSE,
+
+    ### Other arguments
     quiet = FALSE
 ) {
     isConditional <- switchAnalyzeRlist$sourceId != 'preDefinedSwitches'
@@ -26,8 +28,8 @@ isoformSwitchAnalysisPart1 <- function(
 
     ### Test input
     if(TRUE) {
-        ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
-        if( ! ntAlreadyInSwitchList ) {
+        ### Test sequence annotation
+        if( is.null(switchAnalyzeRlist$ntSequence) ) {
             if( is.null(genomeObject)) {
                 stop(paste(
                     'Since the switchAnalyzeRlist does not contain the',
@@ -39,11 +41,26 @@ isoformSwitchAnalysisPart1 <- function(
             } else if (class(genomeObject) != 'BSgenome') {
                 stop('The genomeObject argument must be a BSgenome')
             }
+        } else {
+            if( ! is.null(genomeObject)) {
+                warning(paste0(
+                    'Since isoform sequences are already annotated in the switchAnalyzeRlist',
+                    '\n   these will be used (meaning the \'genomeObject\' argument will be ignored.'
+                ))
+                genomeObject <- NULL
+            }
+        }
+
+        ### Test ORF annotation
+        if( is.null(switchAnalyzeRlist$orfAnalysis) ) {
+            if( is.null(pathToGTF)) {
+                stop('When ORFs are not annotated you must supply the GTF with known annotation to the \'pathToGTF\' argument.')
+            }
         }
     }
 
 
-    ### Run preFilter
+    ### preFilter
     if(hasQuant) {
         switchAnalyzeRlist <-
             preFilter(
@@ -56,65 +73,22 @@ isoformSwitchAnalysisPart1 <- function(
     ### Test isoform switches
     if(TRUE) {
         if(isConditional) {
-            if (switchTestMethod == 'DEXSeq') {
-                if (!quiet) {
-                    message(
-                        paste(
-                            'Step 1 of',
-                            nrAnalysis,
-                            ': Detecting isoform switches...',
-                            sep = ' '
-                        )
+            if (!quiet) {
+                message(
+                    paste(
+                        'Step 1 of',
+                        nrAnalysis,
+                        ': Detecting isoform switches...',
+                        sep = ' '
                     )
-                }
-                switchAnalyzeRlist <-
-                    isoformSwitchTestDEXSeq(
-                        switchAnalyzeRlist,
-                        reduceToSwitchingGenes = TRUE,
-                        alpha = alpha,
-                        dIFcutoff = dIFcutoff,
-                        quiet = TRUE
-                    )
-
-            } else if (switchTestMethod == 'DRIMSeq') {
-                if (!quiet) {
-                    message(
-                        paste(
-                            'Step 1 of',
-                            nrAnalysis,
-                            ': Detecting isoform switches (this may take a while)...',
-                            sep = ' '
-                        )
-                    )
-                }
-                switchAnalyzeRlist <-
-                    isoformSwitchTestDRIMSeq(
-                        switchAnalyzeRlist,
-                        reduceToSwitchingGenes = TRUE,
-                        alpha = alpha,
-                        dIFcutoff = dIFcutoff,
-                        quiet = TRUE
-                    )
-
-            } else if (switchTestMethod != 'none') {
-                if (!quiet) {
-                    message(
-                        paste(
-                            'Step 1 of',
-                            nrAnalysis,
-                            ': No isoform switch detection was performed...',
-                            sep = ' '
-                        )
-                    )
-                }
-                tmp <- 'doNothing'
-            } else {
-                stop(
-                    'Something went wrong with the switch selection - please check input for switch choisce.'
                 )
             }
-
-
+            switchAnalyzeRlist <-
+                isoformSwitchTestDEXSeq(
+                    switchAnalyzeRlist,
+                    reduceToSwitchingGenes = TRUE,
+                    quiet = TRUE
+                )
             if (nrow(switchAnalyzeRlist$isoformSwitchAnalysis) == 0) {
                 stop('No isoform switches were identified with the current cutoffs.')
             }
@@ -134,24 +108,32 @@ isoformSwitchAnalysisPart1 <- function(
     }
 
     ### Predict ORF
-    if (all(names(switchAnalyzeRlist) != 'orfAnalysis') | overwriteORF) {
+    if ( is.null(switchAnalyzeRlist$orfAnalysis) ) {
         if (!quiet) {
             message(paste(
                 'Step 2 of',
                 nrAnalysis,
-                ': Predicting open reading frames',
+                ': Adding and predicting open reading frames',
                 sep = ' '
             ))
         }
 
-        switchAnalyzeRlist <-
-            analyzeORF(
+        ### Add known annoation
+        switchAnalyzeRlist <- addORFfromGTF(
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            pathToGTF = pathToGTF,
+            quiet = TRUE
+        )
+
+        ### Predict novel once (if any are missing)
+        if ( any( switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet' )) {
+            switchAnalyzeRlist <- analyzeNovelIsoformORF(
                 switchAnalyzeRlist = switchAnalyzeRlist,
-                genomeObject = genomeObject,
-                cds = cds,
-                orfMethod = orfMethod,
-                quiet = TRUE
+                analysisAllIsoformsWithoutORF = TRUE,
+                genomeObject = genomeObject
             )
+        }
+
     }
 
     ### Extract and write sequences
@@ -184,9 +166,7 @@ isoformSwitchAnalysisPart1 <- function(
         message('\nThe number of isoform switches found were:')
         print(
             extractSwitchSummary(
-                switchAnalyzeRlist,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff
+                switchAnalyzeRlist
             )
         )
         if(outputSequences) {
@@ -209,10 +189,10 @@ isoformSwitchAnalysisPart1 <- function(
 }
 
 isoformSwitchAnalysisPart2 <- function(
+    ### Core arguments
     switchAnalyzeRlist,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    n = Inf,
+
+    ### External annotation arguments
     codingCutoff = NULL,
     removeNoncodinORFs,
     pathToCPATresultFile = NULL,
@@ -221,6 +201,9 @@ isoformSwitchAnalysisPart2 <- function(
     pathToIUPred2AresultFile = NULL,
     pathToNetSurfP2resultFile = NULL,
     pathToSignalPresultFile = NULL,
+
+    ### Analysis and output arguments
+    n = Inf,
     consequencesToAnalyze = c(
         'intron_retention',
         'coding_potential',
@@ -233,18 +216,19 @@ isoformSwitchAnalysisPart2 <- function(
     ),
     pathToOutput = getwd(),
     fileType = 'pdf',
-    asFractionTotal = FALSE,
     outputPlots = TRUE,
+
+    ### Other arguments
     quiet = FALSE
 ) {
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
-        stop(
-            'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
-        )
-    }
-
     ### Test input
     if (TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+
         if (!is.null(pathToCPATresultFile) & !is.null(pathToCPC2resultFile) ) {
             stop(
                 paste(
@@ -378,8 +362,6 @@ isoformSwitchAnalysisPart2 <- function(
             analyzeAlternativeSplicing(
                 switchAnalyzeRlist = switchAnalyzeRlist,
                 onlySwitchingGenes = TRUE,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
                 quiet = TRUE
             )
         analysisDone <- analysisDone + 1
@@ -393,7 +375,7 @@ isoformSwitchAnalysisPart2 <- function(
                 analysisDone,
                 'of',
                 nrAnalysis,
-                ': Prediciting functional consequences...',
+                ': Predicting functional consequences...',
                 sep = ' '
             )
         )
@@ -403,8 +385,6 @@ isoformSwitchAnalysisPart2 <- function(
         analyzeSwitchConsequences(
             switchAnalyzeRlist = switchAnalyzeRlist,
             consequencesToAnalyze = consequencesToAnalyze,
-            alpha = alpha,
-            dIFcutoff = dIFcutoff,
             quiet = TRUE
         )
     analysisDone <- analysisDone + 1
@@ -426,8 +406,6 @@ isoformSwitchAnalysisPart2 <- function(
 
         switchPlotTopSwitches(
             switchAnalyzeRlist = switchAnalyzeRlist,
-            alpha = alpha,
-            dIFcutoff = dIFcutoff,
             n = n,
             pathToOutput = pathToOutput,
             filterForConsequences = TRUE,
@@ -479,9 +457,6 @@ isoformSwitchAnalysisPart2 <- function(
             }
             extractConsequenceSummary(
                 switchAnalyzeRlist = switchAnalyzeRlist,
-                asFractionTotal = asFractionTotal,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
                 plot = TRUE,
                 returnResult = FALSE
             )
@@ -494,8 +469,6 @@ isoformSwitchAnalysisPart2 <- function(
             ### test numbers found
             testNumbers <- extractConsequenceEnrichment(
                 switchAnalyzeRlist = switchAnalyzeRlist,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
                 plot=FALSE,
                 returnResult = TRUE
             )
@@ -528,8 +501,6 @@ isoformSwitchAnalysisPart2 <- function(
                 }
                 extractConsequenceEnrichment(
                     switchAnalyzeRlist = switchAnalyzeRlist,
-                    alpha = alpha,
-                    dIFcutoff = dIFcutoff,
                     plot=TRUE,
                     returnResult = FALSE
                 )
@@ -547,8 +518,6 @@ isoformSwitchAnalysisPart2 <- function(
         if(TRUE) {
             testNumbers <- extractSplicingEnrichment(
                 switchAnalyzeRlist = switchAnalyzeRlist,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
                 plot=FALSE,
                 returnResult = TRUE
             )
@@ -581,8 +550,6 @@ isoformSwitchAnalysisPart2 <- function(
                 }
                 extractSplicingEnrichment(
                     switchAnalyzeRlist = switchAnalyzeRlist,
-                    alpha = alpha,
-                    dIFcutoff = dIFcutoff,
                     plot=TRUE,
                     returnResult = FALSE
                 )
@@ -605,8 +572,6 @@ isoformSwitchAnalysisPart2 <- function(
         print(
             extractSwitchSummary(
                 switchAnalyzeRlist,
-                alpha = alpha,
-                dIFcutoff = dIFcutoff,
                 filterForConsequences = TRUE
             )
         )
@@ -625,21 +590,21 @@ isoformSwitchAnalysisPart2 <- function(
 }
 
 isoformSwitchAnalysisCombined <- function(
+    ### Core arguments
     switchAnalyzeRlist,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    switchTestMethod = 'DEXSeq',
-    n = NA,
-    pathToOutput = getwd(),
-    overwriteORF = FALSE,
-    outputSequences = FALSE,
-    genomeObject,
-    orfMethod = 'longest',
-    cds = NULL,
+
+    ### Annotation arguments
+    genomeObject = NULL,
+    pathToGTF = NULL,
+
+    ### Analysis and output arguments
+    n = Inf,
     consequencesToAnalyze = c('intron_retention', 'ORF_seq_similarity', 'NMD_status'),
+    pathToOutput = getwd(),
     fileType = 'pdf',
-    asFractionTotal = FALSE,
     outputPlots = TRUE,
+
+    ### Other arguments
     quiet = FALSE
 ) {
     ### Run part 1
@@ -649,15 +614,11 @@ isoformSwitchAnalysisCombined <- function(
     switchAnalyzeRlist <-
         isoformSwitchAnalysisPart1(
             switchAnalyzeRlist = switchAnalyzeRlist,
-            alpha = alpha,
-            dIFcutoff = dIFcutoff,
-            switchTestMethod = switchTestMethod,
             pathToOutput = pathToOutput,
             genomeObject = genomeObject,
-            orfMethod = orfMethod,
-            cds = cds,
-            outputSequences = outputSequences,
-            overwriteORF = overwriteORF,
+            pathToGTF = pathToGTF,
+            outputSequences = FALSE,
+            prepareForWebServers = FALSE,
             quiet = quiet
         )
 
@@ -668,13 +629,10 @@ isoformSwitchAnalysisCombined <- function(
     switchAnalyzeRlist <-
         isoformSwitchAnalysisPart2(
             switchAnalyzeRlist = switchAnalyzeRlist,
-            alpha = alpha,
-            dIFcutoff = dIFcutoff,
             n = n,
             consequencesToAnalyze = consequencesToAnalyze,
             pathToOutput = pathToOutput,
             fileType = fileType,
-            asFractionTotal = asFractionTotal,
             outputPlots = outputPlots,
             quiet = quiet
         )

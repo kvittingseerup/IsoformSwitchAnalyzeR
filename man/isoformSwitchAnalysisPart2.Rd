@@ -8,10 +8,10 @@ This high-level function adds the results of the external sequence analysis supp
 }
 \usage{
 isoformSwitchAnalysisPart2(
+    ### Core arguments
     switchAnalyzeRlist,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    n = Inf,
+
+    ### External annotation arguments
     codingCutoff = NULL,
     removeNoncodinORFs,
     pathToCPATresultFile = NULL,
@@ -20,6 +20,9 @@ isoformSwitchAnalysisPart2(
     pathToIUPred2AresultFile = NULL,
     pathToNetSurfP2resultFile = NULL,
     pathToSignalPresultFile = NULL,
+
+    ### Analysis and output arguments
+    n = Inf,
     consequencesToAnalyze = c(
         'intron_retention',
         'coding_potential',
@@ -32,8 +35,9 @@ isoformSwitchAnalysisPart2(
     ),
     pathToOutput = getwd(),
     fileType = 'pdf',
-    asFractionTotal = FALSE,
     outputPlots = TRUE,
+
+    ### Other arguments
     quiet = FALSE
 )
 }
@@ -42,15 +46,7 @@ isoformSwitchAnalysisPart2(
   \item{switchAnalyzeRlist}{
 The \code{switchAnalyzeRlist} object as produced by \link{isoformSwitchAnalysisPart1}
 }
-  \item{alpha}{
-The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
-}
-\item{dIFcutoff}{
-The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
-}
-\item{n}{
-The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use Inf to create all. Default is Inf (all).
-}
+
   \item{codingCutoff}{
 Numeric indicating the cutoff used by CPAT/CPC2 for distinguishing between coding and non-coding transcripts.
 \enumerate{
@@ -86,18 +82,23 @@ Path to the CPC2 result file. If the webserver is used please download the tab-d
   \item{pathToSignalPresultFile}{
   A string indicating the full path to the SignalP result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. If using the web-server the results should be copy pasted into a empty plain text document (notepad, sublimetext TextEdit or similar (aka not word)) and save that. See \link{analyzeSignalP} for details.
 }
+
+
+\item{n}{
+The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use Inf to create all. Default is Inf (all).
+}
+
   \item{consequencesToAnalyze}{
     A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated and signal peptides annotated by Pfam).
 }
+
   \item{pathToOutput}{
 A path to the folder in which the plots should be made. Default is working directory ( getwd() ).
 }
   \item{fileType}{
 A string indicating which file type is generated. Available options are \'pdf\' and \'png\'. Default is pdf.
 }
-  \item{asFractionTotal}{
-A logic indicating whether the number of consequences should be calculated as numbers (if FALSE) or as a fraction of the total number of switches in the plot summarizing general consequences of all the isoform switches. Default is FALSE.
-}
+
 \item{outputPlots}{
 A logic indicating whether all isoform switches as well as the summary of functional consequences should be saved in the directory specified by \code{pathToOutput} argument. Default is TRUE.
 }
@@ -152,15 +153,23 @@ Kristoffer Vitting-Seerup
 # and not smoothing you need to do - just supply the string e.g.
 # "/path/to/externalAnalysis/toolResult.txt" pointing to the result file.
 
+### Load example data
 data("exampleSwitchListIntermediary")
+
+### Subset for quick runtime
+exampleSwitchListIntermediary <- subsetSwitchAnalyzeRlist(
+    exampleSwitchListIntermediary,
+    abs(exampleSwitchListIntermediary$isoformFeatures$dIF) > 0.4
+)
+
+### Run part 2
 exampleSwitchListAnalyzed <- isoformSwitchAnalysisPart2(
     switchAnalyzeRlist        = exampleSwitchListIntermediary,
-    dIFcutoff                 = 0.4,   # Set high for short runtime in example data
     pathToCPC2resultFile      = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
     pathToPFAMresultFile      = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
     pathToIUPred2AresultFile  = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR"),
     pathToSignalPresultFile   = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR"),
-    codingCutoff              = 0.725,
+    codingCutoff              = 0.5,   # since we are using CPC2
     removeNoncodinORFs        = TRUE,  # Because ORF was predicted de novo
     outputPlots               = FALSE  # keeps the function from outputting the plots from this example code
 )

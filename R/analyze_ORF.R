@@ -80,8 +80,11 @@ getCDS <- function(
 }
 
 analyzeORF <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     genomeObject = NULL,
+
+    ### Advanced argument
     minORFlength = 100,
     orfMethod = 'longest',
     cds = NULL,
@@ -112,18 +115,22 @@ analyzeORF <- function(
         if (length(orfMethod) != 1) {
             stop(paste(
                 'The \'orfMethod\' must be one of \'mostUpstreamAnnoated\',',
-                '\'mostUpstream\', \'longestAnnotated\' or \'longest\',',
+                '\'mostUpstream\', \'longestAnnotated\', \'longest.AnnotatedWhenPossible\' or \'longest\',',
                 'not a vector'
             ))
         }
-        if (!orfMethod %in% c('mostUpstreamAnnoated',
-                              'mostUpstream',
-                              'longest',
-                              'longestAnnotated')) {
+        if (!orfMethod %in% c(
+            'mostUpstreamAnnoated',
+            'mostUpstream',
+            'longest',
+            'longestAnnotated',
+            'longest.AnnotatedWhenPossible'
+            )
+        ) {
             stop(paste(
                 'The \'orfMethod\' argument must be either of',
                 '\'mostUpstreamAnnoated\',\'mostUpstream\',',
-                ' \'longestAnnotated\' or \'longest\' indicating whether',
+                ' \'longestAnnotated\', \'longest.AnnotatedWhenPossible\' or \'longest\' indicating whether',
                 'to use the the most upstream annoated start codon or',
                 'the longest ORF respectively'
             ))
@@ -144,7 +151,7 @@ analyzeORF <- function(
     ### Assign paramters
     if (TRUE) {
         useAnnoated <-
-            orfMethod %in% c('longestAnnotated', 'mostUpstreamAnnoated')
+            orfMethod %in% c('longestAnnotated', 'mostUpstreamAnnoated','longest.AnnotatedWhenPossible')
 
         nrStepsToPerform <- 3 + as.numeric(useAnnoated)
         nrStepsPerformed <- 0
@@ -175,7 +182,7 @@ analyzeORF <- function(
                     nrStepsPerformed + 1,
                     'of',
                     nrStepsToPerform,
-                    ': Identifying overlap between supplied annoated translation start sites and transcripts',
+                    ': Identifying overlap between supplied CDS and isoforms',
                     sep = ' '
                 )
             )
@@ -228,14 +235,16 @@ analyzeORF <- function(
 
 
         ### Find overlaps
-        suppressWarnings(overlappingAnnotStart <-
-                             as.data.frame(
-                                 findOverlaps(
-                                     query = localExons,
-                                     subject = annoatedStartGRanges,
-                                     ignore.strand = FALSE
-                                 )
-                             ))
+        suppressWarnings(
+            overlappingAnnotStart <-
+                as.data.frame(
+                    findOverlaps(
+                        query = localExons,
+                        subject = annoatedStartGRanges,
+                        ignore.strand = FALSE
+                    )
+                )
+        )
         if (!nrow(overlappingAnnotStart)) {
             stop(
                 'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
@@ -319,12 +328,21 @@ analyzeORF <- function(
         overlappingAnnotStart2 <-
             rbind(overlappingAnnotStartPlus,
                   overlappingAnnotStartMinus)
-        overlappingAnnotStart2 <-
-            overlappingAnnotStart2[order(
-                overlappingAnnotStart2$isoform_id,
-                overlappingAnnotStart2$exon_start,
-                overlappingAnnotStart2$exon_end
-            ), ]
+        #overlappingAnnotStart2 <-
+        #    overlappingAnnotStart2[order(
+        #        overlappingAnnotStart2$isoform_id,
+        #        overlappingAnnotStart2$exon_start,
+        #        overlappingAnnotStart2$exon_end
+        #    ), ]
+
+        ### Add back in those not overlapping with CDSs      # KVS Dec 2020
+        if( orfMethod == 'longest.AnnotatedWhenPossible') {
+            allIso <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
+            overlappingAnnotStart2 <- overlappingAnnotStart2[match(
+                allIso, overlappingAnnotStart2$isoform_id
+            ),]
+            overlappingAnnotStart2$isoform_id <- allIso
+        }
 
 
         # Update number of steps performed
@@ -393,7 +411,7 @@ analyzeORF <- function(
                 nrStepsPerformed + 1,
                 'of',
                 nrStepsToPerform,
-                ': Locating ORFs of interest...',
+                ': Locating potential ORFs...',
                 sep = ' '
             )
         )
@@ -414,7 +432,7 @@ analyzeORF <- function(
         }
 
         # Make logics
-        useLongest <- orfMethod == 'longestAnnotated'
+        useLongest <- orfMethod %in% c('longestAnnotated','longest','longest.AnnotatedWhenPossible')
 
         ### Find the disired ORF
         transcriptORFs <-
@@ -423,7 +441,7 @@ analyzeORF <- function(
                 .progress = progressBar,
                 function(
                     annoationInfo
-                ) { # annoationInfo <- overlappingAnnotStartList[[1]]
+                ) { # annoationInfo <- overlappingAnnotStartList[[2]]
 
                 # Extract wanted ORF
                 if (useAnnoated) {
@@ -459,14 +477,16 @@ analyzeORF <- function(
 
                     # longest ORF
                     localORFs <-
-                        myAllFindORFsinSeq(dnaSequence = correspondingSequence,
-                                           codonAnnotation = myCodonDf)
+                        myAllFindORFsinSeq(
+                            dnaSequence = correspondingSequence,
+                            codonAnnotation = myCodonDf
+                        )
 
                     # subset by length
                     localORFs <-
                         localORFs[which(localORFs$length >= minORFlength), ]
 
-                    if (orfMethod == 'longest') {
+                    if (useLongest) {
                         # longest ORF
                         myMaxORF <-
                             localORFs[which.max(localORFs$length), ]
@@ -552,7 +572,8 @@ analyzeORF <- function(
             ptcResult[which(sapply(ptcResult, function(x)
                 ! is.null(x)))]
         if (length(ptcResult) == 0) {
-            stop('No ORFs (passing the filtering) were found')
+            warning('No ORFs (passing the filtering) were found.\nReturning unmodified switchAnalyzeRlist')
+            return(switchAnalyzeRlist)
         }
 
         myPTCresults <-
@@ -583,6 +604,9 @@ analyzeORF <- function(
             all.x = TRUE
         )
 
+        # Annotate ORF origin
+        myResultDf$orf_origin <- 'Predicted'
+
         # myResultDf$orfStarExon <- NULL
         # myResultDf$orfEndExon <- NULL
 
@@ -602,7 +626,7 @@ analyzeORF <- function(
         if (!quiet) {
             message(
                 sum(myResultDf$orfStartGenomic != -1, na.rm = TRUE) ,
-                " putative ORFs were identified and analyzed",
+                " putative ORFs were identified, analyzed and added.",
                 sep = ""
             )
         }
@@ -675,8 +699,15 @@ extractSequence <- function(
         # Are ORF annotated
         if (extractAAseq) {
             if (!'orfAnalysis' %in% names(switchAnalyzeRlist)) {
-                stop('Please run the \'annotatePTC\' function to detect ORFs')
+                stop('Please run the \'annotateORF\' function to detect ORFs')
             }
+
+            if( ! is.null(switchAnalyzeRlist$orfAnalysis$orf_origin) ) {
+                if ( any( switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet' )) {
+                    stop('Some ORFs have not been annotated yet. Please run analyzeNovelIsoformORF() and try again.')
+                }
+            }
+
         }
 
         # If switches are annotated
@@ -1346,6 +1377,321 @@ extractSequence <- function(
 }
 
 
+addORFfromGTF <- function(
+    ### Core arguments
+    switchAnalyzeRlist,
+    pathToGTF,
+
+    ### Advanced argument
+    overwriteExistingORF = FALSE,
+    onlyConsiderFullORF = FALSE,
+    removeNonConvensionalChr = FALSE,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
+    PTCDistance = 50,
+    quiet = FALSE
+) {
+    ### Improvements:
+    # 1) have importRdata() save ignoreAfterBar, ignoreAfterSpace and ignoreAfterPeriod options and re-use
+    # 2) Test overlap. But not untill 1) is done
+
+    ### Test input
+    if(TRUE) {
+        # Test input data class
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+
+        if( !is.null(switchAnalyzeRlist$orfAnalysis ) ) {
+            if( ! all(is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart ))) {
+                if( ! overwriteExistingORF) {
+                    stop('ORF appears to already be annotated. Set \'overwriteExistingORF=TRUE\' to overwrite anyway.')
+                }
+            }
+        }
+
+    }
+
+    ### Import GTF and CDS
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 1 of 2: importing GTF (this may take a while)...')
+        }
+
+        suppressWarnings(
+            gtfSwichList <- importGTF(
+                pathToGTF = pathToGTF,
+                addAnnotatedORFs = TRUE,
+                onlyConsiderFullORF = onlyConsiderFullORF,
+                removeNonConvensionalChr = FALSE,
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod,
+                removeTECgenes = FALSE,
+                PTCDistance = PTCDistance,
+                removeFusionTranscripts = FALSE,
+                quiet = TRUE
+            )
+        )
+
+        ### Test ORF annotaion
+        if( is.null(gtfSwichList$orfAnalysis) ) {
+            stop('No CDS information was extracted from the GTF file.')
+        }
+    }
+
+    ### Add CDS to switchList
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 2 of 2: Adding ORF...')
+        }
+
+        ### Add to switch list
+        allIso <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
+
+        switchAnalyzeRlist$orfAnalysis <- gtfSwichList$orfAnalysis[match(
+            allIso, gtfSwichList$orfAnalysis$isoform_id
+        ),]
+        switchAnalyzeRlist$orfAnalysis$isoform_id <- allIso
+
+        switchAnalyzeRlist$isoformFeatures$PTC <-
+            switchAnalyzeRlist$orfAnalysis$PTC[match(
+                switchAnalyzeRlist$isoformFeatures$isoform_id,
+                switchAnalyzeRlist$orfAnalysis$isoform_id
+            )]
+
+        ### Add origin
+        switchAnalyzeRlist$orfAnalysis$orf_origin[which(
+            is.na(switchAnalyzeRlist$orfAnalysis$orf_origin)
+        )] <- 'not_annotated_yet'
+
+
+        ### Repport numbers
+        if (!quiet) {
+            ### Extract info
+            inSl <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
+            inORF <- unique(switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                switchAnalyzeRlist$orfAnalysis$orf_origin != 'not_annotated_yet'
+            )])
+            notAnalysed <- unique(switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet'
+            )])
+
+            nInSL <- length(inSl)
+            nAdded <- length(inORF)
+
+            knownIso <- unique(
+                switchAnalyzeRlist$isoformFeatures$isoform_id[which(
+                    ! is.na(switchAnalyzeRlist$isoformFeatures$gene_name)
+                )]
+            )
+            knownIsoAdded <- intersect(
+                switchAnalyzeRlist$isoformFeatures$isoform_id[which(
+                    ! is.na(switchAnalyzeRlist$isoformFeatures$gene_name)
+                )],
+                inORF
+            )
+            knownNotAdded <- intersect(knownIso, notAnalysed)
+
+            ### Write message
+            message(paste0(
+                '    Added ORF info (incl info about isoforms annotated as not having an ORF) to ',
+                nAdded, ' isoforms.',
+                '\n        This correspond to ', round(nAdded /nInSL * 100, digits=2), '% of isoforms in the switchAnalyzeRlist.',
+                '\n            Which includes ', round(length(knownIsoAdded) / length(knownIso) * 100, digits=2), '% of isoforms from annotated genes (novel isoforms not counted) in the switchAnalyzeRlist.'
+            ))
+
+            ### Continue message in cases some where not annotated
+            nNotAnnoateted <- nInSL - nAdded
+            if( nNotAnnoateted > 0) {
+
+                isoNotAnnoated <- setdiff(inSl, inORF)
+
+                message(paste0(
+                    '    Isoforms with no ORF annoation are either due to incompatible annotation versions or novel isoforms.',
+                    '\n        We estimate ', round( (( (length(knownIso) - length(knownNotAdded)) / length(knownIso) )) * 100, digits=2), '% of isoforms not annotated with ORF are from novel genes.',
+                    '\n        Examples of isoforms where ORF annoation is still missing are:',
+                    '\n            ', paste(sample(isoNotAnnoated, size = min(c(3, nNotAnnoateted))), collapse = ', ')
+                ))
+            }
+
+        }
+
+    }
+
+    ### Return
+    if (!quiet) {
+        message('Done.')
+        return(switchAnalyzeRlist)
+    }
+}
+
+analyzeNovelIsoformORF <- function(
+    ### Core arguments
+    switchAnalyzeRlist,
+    analysisAllIsoformsWithoutORF, # also analyse all those annoatated as without CDS in ref annottaion
+    genomeObject = NULL,
+
+    ### Advanced argument
+    minORFlength = 100,
+    orfMethod = 'longest.AnnotatedWhenPossible',
+    PTCDistance = 50,
+    startCodons = "ATG",
+    stopCodons = c("TAA", "TAG", "TGA"),
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Improvements
+    #
+
+    ### Test input
+    if(TRUE) {
+        # Test input data class
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+
+        if( is.null(switchAnalyzeRlist$orfAnalysis) ) {
+            stop('No ORF annotation pressent. Run addORFfromGTF() first and try again.')
+        }
+        nWithout <- sum(switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet')
+        nWithout <- nWithout + (sum(!is.na(switchAnalyzeRlist$orfAnalysis$PTC)) * as.integer(analysisAllIsoformsWithoutORF))
+
+        if( nWithout == 0) {
+            stop('There appear not to be any isoforms not already annotated with ORFs - meaning there is no need to run this function')
+        }
+
+        ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
+        if( ! ntAlreadyInSwitchList ) {
+            if (class(genomeObject) != 'BSgenome') {
+                stop('The genomeObject argument must be supplied with a BSgenome object when isoform sequences are not already stored in the switchAnalyzeRlist.')
+            }
+        }
+
+
+        # method choice
+        if (length(orfMethod) != 1) {
+            stop(paste(
+                'The \'orfMethod\' must be one of \'mostUpstreamAnnoated\',',
+                '\'mostUpstream\', \'longestAnnotated\', \'longest.AnnotatedWhenPossible\' or \'longest\',',
+                'not a vector'
+            ))
+        }
+        if (!orfMethod %in% c(
+            'mostUpstreamAnnoated',
+            'mostUpstream',
+            'longest',
+            'longestAnnotated',
+            'longest.AnnotatedWhenPossible'
+        )
+        ) {
+            stop(paste(
+                'The \'orfMethod\' argument must be either of',
+                '\'mostUpstreamAnnoated\',\'mostUpstream\',',
+                ' \'longestAnnotated\', \'longest.AnnotatedWhenPossible\' or \'longest\' indicating whether',
+                'to use the the most upstream annoated start codon or',
+                'the longest ORF respectively'
+            ))
+        }
+    }
+
+    ### Step 1 : extact existing ORFs as a CDS object
+    if(TRUE) {
+        if( orfMethod %in% c(
+            'longestAnnotated',
+            'mostUpstreamAnnoated',
+            'longest.AnnotatedWhenPossible'
+        ) ) {
+            if (!quiet) {
+                message('Step 0 of 4 : Extracting CDS from already annotated isoforms...')
+            }
+
+            knownCds <-
+                switchAnalyzeRlist$orfAnalysis %>%
+                dplyr::filter(
+                    orf_origin == 'Annotation',
+                    !is.na(orfStartGenomic)
+                ) %>%
+                dplyr::select(isoform_id, orfStartGenomic, orfEndGenomic)
+
+            knownCds$chrom <- as.character(seqnames(switchAnalyzeRlist$exons[match(
+                knownCds$isoform_id, switchAnalyzeRlist$exons$isoform_id
+            ),]))
+            knownCds$strand <- as.character(strand(switchAnalyzeRlist$exons[match(
+                knownCds$isoform_id, switchAnalyzeRlist$exons$isoform_id
+            ),]))
+
+            ### Change cds order to genome oriented instead of transcript oriented
+            knownCds$cdsStart <- pmin(knownCds$orfStartGenomic, knownCds$orfEndGenomic)
+            knownCds$cdsEnd   <- pmax(knownCds$orfStartGenomic, knownCds$orfEndGenomic)
+
+            ### Correct as input is expected to be 0 based
+            knownCds$cdsStart <- knownCds$cdsStart - 1
+
+            knownCds <- CDSSet(knownCds)
+        } else {
+            knownCds <- NULL
+        }
+
+    }
+
+    ### Step 2 : use regular analyseORF with the CDS object on novel isoforms
+    if(TRUE) {
+        ### Extract switchAnalyzeRlist with unannotated isoforms
+        nonAnnotatedIso <- switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+            switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet'
+        )]
+
+        if(analysisAllIsoformsWithoutORF) {
+            nonAnnotatedIso <- c(
+                nonAnnotatedIso,
+                switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                    switchAnalyzeRlist$orfAnalysis$orf_origin == 'Annotation' &
+                        is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                )]
+            )
+        }
+
+        unannotatedSl <- subsetSwitchAnalyzeRlist(
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in% nonAnnotatedIso
+        )
+
+        ### Analyse ORFs
+        annotatedSl <- analyzeORF(
+            switchAnalyzeRlist = unannotatedSl,
+            genomeObject = genomeObject,
+            orfMethod = orfMethod,
+            cds = knownCds,
+            minORFlength = minORFlength,
+            PTCDistance = PTCDistance,
+            startCodons = startCodons,
+            stopCodons = stopCodons,
+            showProgress = showProgress,
+            quiet = quiet
+        )
+
+        ### Overwrite analysed results in switchAnalyzeRlist
+        switchAnalyzeRlist$orfAnalysis[match(
+            annotatedSl$orfAnalysis$isoform_id, switchAnalyzeRlist$orfAnalysis$isoform_id
+        ),] <- annotatedSl$orfAnalysis
+
+        switchAnalyzeRlist$isoformFeatures$PTC <-
+            switchAnalyzeRlist$orfAnalysis$PTC[match(
+                switchAnalyzeRlist$isoformFeatures$isoform_id,
+                switchAnalyzeRlist$orfAnalysis$isoform_id
+            )]
+    }
+
+    return(switchAnalyzeRlist)
+}
+
+
 ### Helper functions
 myAllFindORFsinSeq <- function(
     dnaSequence, # A DNAString object containing the DNA nucleotide sequence of to analyze for open reading frames
@@ -1418,13 +1764,15 @@ myAllFindORFsinSeq <- function(
 
     # Filter for annotated start sites
     if (!is.null(filterForPostitions)) {
-        codonsOfInterest <-
-            codonsOfInterest[which(
-                codonsOfInterest$position %in% filterForPostitions |
-                    codonsOfInterest$meaning != 'start'
-            ), ]
-        if (!nrow(codonsOfInterest)) {
-            return(data.frame(NULL))
+        if( any( !is.na( filterForPostitions) ) ) { # KVS added Dec 2020 : NAs are how those without overlapping CDS was added back for "longest.AnnotatedWhenPossible"
+            codonsOfInterest <-
+                codonsOfInterest[which(
+                    codonsOfInterest$position %in% filterForPostitions |
+                        codonsOfInterest$meaning != 'start'
+                ), ]
+            if (!nrow(codonsOfInterest)) {
+                return(data.frame(NULL))
+            }
         }
     }
 

@@ -137,13 +137,34 @@ analyzeSwitchConsequences <- function(
         }
 
         if (any(
-            c('ORF_genomic', 'ORF_length', 'NMD_status')  %in%
-            consequencesToAnalyze
+            c(
+                'ORF_length',
+                '5_utr_length',
+                '3_utr_length',
+                'ORF_seq_similarity',
+                '5_utr_seq_similarity',
+                '3_utr_seq_similarity',
+                'domains_identified',
+                'genomic_domain_position',
+                'domain_length',
+                'signal_peptide_identified',
+                'IDR_identified',
+                'IDR_length',
+                'IDR_type',
+                'solubility_status',
+                'sub_cell_location'
+            ) %in% consequencesToAnalyze
         )) {
             if (!'PTC' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
                 stop(
-                    'To test differences in ORFs or PCT, ORF must be annotated. Please run annotateORF() and try again'
+                    'To test differences in ORF or any annotation derived from these, ORF must be annotated. Please run annotateORF() and try again'
                 )
+            }
+
+            if( ! is.null(switchAnalyzeRlist$orfAnalysis$orf_origin ) ) {
+                if ( any( switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet' )) {
+                    stop('Some ORFs have not been annotated yet. Please return to the analyzeNovelIsoformORF() step and start again.')
+                }
             }
         }
         if ('coding_potential'  %in% consequencesToAnalyze) {
@@ -431,7 +452,8 @@ analyzeSwitchConsequences <- function(
         totalNrGene <-
             extractSwitchSummary(
                 switchAnalyzeRlist,
-                filterForConsequences = TRUE
+                filterForConsequences = TRUE,
+                includeCombined = TRUE
             )
         totalNrGene <- totalNrGene$nrGenes[which(
             totalNrGene$Comparison == 'combined'

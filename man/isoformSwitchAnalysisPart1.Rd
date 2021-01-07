@@ -11,18 +11,20 @@ This function is meant to be used as part 1 of the isoform switch analysis workf
 
 \usage{
 isoformSwitchAnalysisPart1(
+    ### Core arguments
     switchAnalyzeRlist,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    switchTestMethod='DEXSeq',
-    orfMethod = "longest",
+
+    ### Annotation arguments
     genomeObject = NULL,
-    cds = NULL,
+    pathToGTF = NULL,
+
+    ### Output arguments
+    prepareForWebServers,
     pathToOutput = getwd(),
     outputSequences = TRUE,
-    prepareForWebServers = FALSE,
-    overwriteORF=FALSE,
-    quiet=FALSE
+
+    ### Other arguments
+    quiet = FALSE
 )
 }
 
@@ -30,46 +32,27 @@ isoformSwitchAnalysisPart1(
     \item{switchAnalyzeRlist}{
 A \code{switchAnalyzeRlist}.
 }
-   \item{alpha}{ The cutoff which the FDR correct p-values must be smaller than for calling significant switches. Default is 0.05.
-}
-    \item{dIFcutoff}{ The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).}
 
-    \item{switchTestMethod}{ A sting indicating which statistical method should be used for testing differential isoform usage. The following options are available:
-        \itemize{
-            \item {\code{'DEXSeq'} : Uses DEXSeq to perform the statistical test. See \link{isoformSwitchTestDEXSeq}. Default}
-            \item {\code{'DRIMSeq'} : Uses the DRIMSeq package to perform the statistical test. See \link{isoformSwitchTestDRIMSeq}.}
-            \item {\code{'none'} : No statistical test is performed. Should only be used if a test have already been performed and should not be overwritten (e.g when importing cuffdiff data).}
-        }
-    }
-
-  \item{orfMethod}{
-  A string indicating which of the 4 ORF identification methods should be used. The methods are:
-  \itemize{
-    \item {\code{longest} : Identifies the longest ORF in the transcript. This approach is similar to what the CPAT tool uses in it's analysis of coding potential}
-    \item {\code{longestAnnotated} : Identifies the longest ORF downstream of an annotated translation start site (supplied via the \code{cds} argument)}
-    \item {\code{mostUpstreamAnnoated} : Identifies the ORF downstream of the most upstream overlapping annotated translation start site (supplied via the \code{cds} argument)}
-  }
-  Default is \code{longest}.
-}
   \item{genomeObject}{
 A \code{BSgenome} object (for example Hsapiens for Homo sapiens).
 }
-  \item{pathToOutput}{
-A path to the folder in which the plots should be made. Default is working directory ( getwd() ).
-}
-  \item{cds}{
-A CDSSet object containing annotated coding regions, see ?CDSSet and ?getCDS for more information. Only necessary if \'orfType\' arguments is \'longestAnnotated\' or \'mostUpstreamAnnoated\'.
+\item{pathToGTF}{
+A string indicating the full path to the (gziped or unpacked) GTF file which contains the the known annotation (aka from a official source) which was used to guided the transcript assembly (isoform deconvolution).
 }
 
-\item{overwriteORF}{
-A logical indicating whether to overwrite the ORF analysis already stored in the supplied switchAnalyzeRlist. Default is FALSE.
-}
-  \item{outputSequences}{
-A logical indicating whether transcript nucleotide and amino acid sequences should be outputted to \code{pathToOutput}. Default is TRUE.
-}
+
 \item{prepareForWebServers}{
 A logical indicating whether the amino acid fasta files saved (if \code{outputSequences=TRUE}) should be prepared for the online web-services currently supported (as they have some limitations on what can submitted). See details. Default is FALSE (for backward compatibility).
 }
+
+  \item{pathToOutput}{
+A path to the folder in which the plots should be made. Default is working directory ( getwd() ).
+}
+
+  \item{outputSequences}{
+A logical indicating whether transcript nucleotide and amino acid sequences should be outputted to \code{pathToOutput}. Default is TRUE.
+}
+
 
 \item{quiet}{ A logical indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
@@ -78,8 +61,8 @@ A logical indicating whether the amino acid fasta files saved (if \code{outputSe
 \details{
 This function performs the first part of a Isoform Analysis Workflow by
 \enumerate{
-    \item Remove non-expressed isoforms and single-isoform genes (see \link{preFilter})
-    \item Predict isoform switches unless \code{switchTestMethod} is set to 'none'.
+    \item Remove low-expressed isoforms and single-isoform genes (see \link{preFilter})
+    \item Identify isoform switches.
     \item If no ORFs are annotated the isoforms are analyzed for open reading frames (ORFs, see \link{analyzeORF})
     \item The isoform nucleotide and ORF amino acid sequences are extracted and saved to fasta files as well as added to the switchAnalyzeRlist enabling external sequence analysis with CPAT, Pfam and SignalP (see vignette for more info).
 }
@@ -88,7 +71,7 @@ if \code{prepareForWebServers=TRUE} both the "removeLongAAseq" and "alsoSplitFas
 }
 
 \value{
-This function have two outputs. It returns a \code{switchAnalyzeRlist} object where information about the isoform switch test, ORF prediction and nt and aa sequences have been added. Secondly (if \code{outputSequences} is TRUE) the nucleotide and amino acid sequence of transcripts involved in switches are also save as fasta files enabling external sequence analysis.
+This function have two outputs. It returns a \code{switchAnalyzeRlist} object where information about the isoform switch test, ORF prediction and nt and aa sequences have been added. Secondly (if \code{outputSequences=TRUE}) the nucleotide and amino acid sequence of transcripts involved in switches are also save as fasta files enabling external sequence analysis.
 }
 
 \references{
@@ -106,14 +89,25 @@ Kristoffer Vitting-Seerup
 
 }
 \examples{
+### load example data
 data("exampleSwitchList")
-exampleSwitchList
 
+### Subset for quick runtime
+exampleSwitchList <- subsetSwitchAnalyzeRlist(
+    exampleSwitchList,
+    abs(exampleSwitchList$isoformFeatures$dIF) > 0.4
+)
+
+### Show summary
+summary(exampleSwitchList)
+
+### Run Part 1
 exampleSwitchList <- isoformSwitchAnalysisPart1(
     switchAnalyzeRlist=exampleSwitchList,
-    dIFcutoff = 0.4,        # Set high for short runtime in example data
+    prepareForWebServers = FALSE,
     outputSequences = FALSE # keeps the function from outputting the fasta files from this example
 )
 
-exampleSwitchList
+### Show summary
+summary(exampleSwitchList)
 }

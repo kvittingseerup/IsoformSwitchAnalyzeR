@@ -79,6 +79,12 @@ switchPlotTranscript <- function(
     if (TRUE) {
         if (!is.null(switchAnalyzeRlist$orfAnalysis)) {
             inclORF <- TRUE
+
+            if( ! is.null(switchAnalyzeRlist$orfAnalysis$orf_origin) ) {
+                if ( any( switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet' )) {
+                    stop('Some ORFs have not been annotated yet. Please return to the analyzeNovelIsoformORF() step and start again.')
+                }
+            }
         } else {
             inclORF <- FALSE
             warning(

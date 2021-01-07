@@ -294,7 +294,7 @@ isoformToGeneExp <- function(
             }
             if( is(isoformGeneAnnotation, 'character') ){
                 if (!quiet) {
-                    message('Importing GTF/GFF - this may take a while...')
+                    message('Importing GTF (this may take a while)...')
                 }
                 suppressWarnings(
                     localSwitchList <- importGTF(
@@ -326,12 +326,13 @@ isoformToGeneExp <- function(
             if('gene_name' %in% colnames(isoAnnot)) {
                 geneSummary <-
                     isoAnnot %>%
-                    select(gene_id, gene_name) %>%
-                    distinct() %>%
-                    group_by(gene_id) %>%
-                    summarise(
+                    dplyr::select(gene_id, gene_name) %>%
+                    dplyr::distinct() %>%
+                    dplyr::group_by(gene_id) %>%
+                    dplyr::summarise(
                         n_gene_names = length(na.omit(gene_name)),
-                        have_missing_gene_name = any(is.na(gene_name))
+                        have_missing_gene_name = any(is.na(gene_name)),
+                        .groups = 'drop'
                     )
 
                 missingGeneProblem <- any(
@@ -429,20 +430,20 @@ isoformToGeneExp <- function(
 
     }
 
-    ### Calculate gene exp via tidyverse
+    ### Calculate gene exp via rowsum
     if(TRUE) {
-        geneRepExpression <- isoformRepExpression %>%
-            dplyr::select(-isoform_id) %>%
-            dplyr::group_by(gene_id) %>%
-            dplyr::summarise_all(sum) %>%
-            as.data.frame()
+        geneRepExpression <- rowsum(
+            x = isoformRepExpression[,which(
+                ! colnames(isoformRepExpression) %in% c('isoform_id','gene_id')
+            )],
+            group = isoformRepExpression$gene_id
+        )
     }
 
     ### If nesseary make final massage
-    if( isoIdAsRowname) {
-        ### Add rownames
-        rownames(geneRepExpression) <- geneRepExpression$gene_id
-        geneRepExpression$gene_id <- NULL
+    if( ! isoIdAsRowname) {
+        geneRepExpression$gene_id <- rownames(geneRepExpression)
+        rownames(geneRepExpression) <- NULL
     }
 
     ### Return
@@ -649,7 +650,9 @@ isoformToIsoformFraction <- function(
 
 extractGeneExpression <- function(
     switchAnalyzeRlist,
-    extractCounts = TRUE
+    extractCounts = TRUE,
+    addGeneNames = TRUE,
+    addIdsAsColumns = TRUE
 ) {
     if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
         stop(
@@ -658,22 +661,58 @@ extractGeneExpression <- function(
     }
 
     if(extractCounts) {
-        return(
-            isoformToGeneExp(
-                isoformRepExpression  = switchAnalyzeRlist$isoformCountMatrix,
-                isoformGeneAnnotation = switchAnalyzeRlist,
-                quiet = TRUE
-            )
+        geneExp <- isoformToGeneExp(
+            isoformRepExpression  = switchAnalyzeRlist$isoformCountMatrix,
+            isoformGeneAnnotation = switchAnalyzeRlist,
+            quiet = TRUE
         )
     } else {
-        return(
-            isoformToGeneExp(
-                isoformRepExpression  = switchAnalyzeRlist$isoformRepExpression,
-                isoformGeneAnnotation = switchAnalyzeRlist,
-                quiet = TRUE
-            )
+        geneExp <- isoformToGeneExp(
+            isoformRepExpression  = switchAnalyzeRlist$isoformRepExpression,
+            isoformGeneAnnotation = switchAnalyzeRlist,
+            quiet = TRUE
         )
     }
+
+    ### Add gene names
+    if(addGeneNames) {
+        ### Add
+        geneExp$gene_name <- switchAnalyzeRlist$isoformFeatures$gene_name[match(
+            geneExp$gene_id, switchAnalyzeRlist$isoformFeatures$gene_id
+        )]
+        geneExp$gene_name <- stringr::str_replace_na(geneExp$gene_name, replacement = "NA")
+
+        ### Reorder
+        geneExp <- geneExp[,c(
+            match( c('gene_id','gene_name'), colnames(geneExp)),
+            which( ! colnames(geneExp) %in% c('gene_id','gene_name'))
+        )]
+
+        ### Handle gene id return format
+        if( ! addIdsAsColumns ) {
+            rownames(geneExp) <- stringr::str_c(
+                geneExp$gene_id,
+                ' aka ',
+                geneExp$gene_name
+            )
+
+            geneExp$gene_id <- NULL
+            geneExp$gene_name <- NULL
+            ### Remove those with NA
+
+            rownames(geneExp) <- stringr::str_remove(rownames(geneExp), ' aka NA')
+
+        }
+    } else {
+        if( ! addIdsAsColumns ) {
+            rownames(geneExp) <- geneExp$gene_id
+
+            geneExp$gene_id <- NULL
+        }
+    }
+
+
+    return(geneExp)
 }
 
 evalSig <- function(pValue, alphas) {
@@ -1714,11 +1753,18 @@ estimateDifferentialRange <- function(
         contrastCoefs <- paste(
             comaprisonsToMake$condition_2,
             '-',
-            comaprisonsToMake$condition_1, sep=' '
+            comaprisonsToMake$condition_1,
+            sep=' '
         )
         localContrast <- limma::makeContrasts(
             contrasts = contrastCoefs,
             levels=colnames(localModel)
+        )
+        contrastNames <- paste(
+            comaprisonsToMake$condition_1,
+            'vs',
+            comaprisonsToMake$condition_2,
+            sep=' '
         )
 
         ### Fit model
@@ -1786,7 +1832,7 @@ estimateDifferentialRange <- function(
     ### Test each contrast
     if(TRUE) {
         ### For each contrast extract result
-        contrastList <- split(contrastCoefs, contrastCoefs)
+        contrastList <- split(contrastCoefs, contrastNames)
         sigIfList <- plyr::llply(
             .data = contrastList,
             .fun = function(

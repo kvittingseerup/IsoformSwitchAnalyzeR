@@ -1,3 +1,5 @@
+### Run external analysis
+
 ##############################
 ### Import and add external analysis
 
@@ -187,10 +189,14 @@ analyzeCPAT <- function(
             )])
 
         ### Replace noncoding isoforms
-        switchAnalyzeRlist$orfAnalysis[which(
-            switchAnalyzeRlist$orfAnalysis$isoform_id %in% nonCodingIsoforms),
-            2:ncol(switchAnalyzeRlist$orfAnalysis)
+        toModify <- which( switchAnalyzeRlist$orfAnalysis$isoform_id %in% nonCodingIsoforms)
+        switchAnalyzeRlist$orfAnalysis[
+            toModify,
+            which( ! colnames(switchAnalyzeRlist$orfAnalysis) %in% c('isoform_id','orf_origin'))
         ] <- NA
+        if( ! is.null(switchAnalyzeRlist$orfAnalysis$orf_origin)) {
+            switchAnalyzeRlist$orfAnalysis$orf_origin[toModify] <- 'Predicted'
+        }
 
         ### Overwrite PTC
         switchAnalyzeRlist$isoformFeatures$PTC[which(
@@ -375,10 +381,15 @@ analyzeCPC2 <- function(
             )])
 
         ### Replace noncoding isoforms
-        switchAnalyzeRlist$orfAnalysis[which(
-            switchAnalyzeRlist$orfAnalysis$isoform_id %in% nonCodingIsoforms),
-            2:ncol(switchAnalyzeRlist$orfAnalysis)
-            ] <- NA
+        toModify <- which( switchAnalyzeRlist$orfAnalysis$isoform_id %in% nonCodingIsoforms)
+        switchAnalyzeRlist$orfAnalysis[
+            toModify,
+            which( ! colnames(switchAnalyzeRlist$orfAnalysis) %in% c('isoform_id','orf_origin'))
+        ] <- NA
+        if( ! is.null(switchAnalyzeRlist$orfAnalysis$orf_origin)) {
+            switchAnalyzeRlist$orfAnalysis$orf_origin[toModify] <- 'Predicted'
+        }
+
 
         ### Overwrite PTC
         switchAnalyzeRlist$isoformFeatures$PTC[which(

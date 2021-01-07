@@ -1164,8 +1164,11 @@ importCufflinksFiles <- function(
 }
 
 importGTF <- function(
+    ### Core arguments
     pathToGTF,
     isoformNtFasta = NULL,
+
+    ### Advanced arguments
     extractAaSeq = FALSE,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
@@ -1254,7 +1257,7 @@ importGTF <- function(
             tmp <- capture.output(
                 suppressWarnings(
                     suppressMessages(
-                        mfGTF <- rtracklayer::import(pathToGTF, format='gtf')
+                        mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS','exon'))
                     )
                 )
             )
@@ -1278,7 +1281,7 @@ importGTF <- function(
         }
         if( ! isGTF ){
             if (!quiet) {
-                message('importing GFF (this may take a while)')
+                message('importing GFF (this may take a while)...')
             }
             tmp <- capture.output(
                 suppressWarnings(
@@ -1409,7 +1412,8 @@ importGTF <- function(
             colsToExtract <- c(
                 'transcript_id', 'gene_id', 'gene_name',
                 'gene_type','gene_biotype',     # respectively gencode and ensembl gene type col
-                'transcript_biotype','transcript_type'
+                'transcript_biotype','transcript_type',
+                'ref_gene_id' # for StringTie data
             )
             myIso <-
                 as.data.frame(unique(mfGTF@elementMetadata[
@@ -1420,6 +1424,9 @@ importGTF <- function(
             ### Handle columns not extracted
             if (is.null(myIso$gene_name)) {
                 myIso$gene_name <- NA
+            }
+            if (is.null(myIso$ref_gene_id)) {
+                myIso$ref_gene_id <- myIso$gene_name
             }
 
             ### Handle columns with multiple options
@@ -1512,6 +1519,7 @@ importGTF <- function(
             condition_1 = "plaseholder1",
             condition_2 = "plaseholder2",
             gene_name = myIso$gene_name,
+            ref_gene_id = myIso$ref_gene_id,
             gene_biotype = myIso$geneType,
             iso_biotype = myIso$isoType,
             class_code = '=',
@@ -2199,6 +2207,9 @@ importGTF <- function(
             orfInfo[which(orfInfo$isoform_id %in%
                               localSwichList$isoformFeatures$isoform_id), ]
 
+        # Annotate ORF origin
+        orfInfo$orf_origin <- 'Annotation'
+
         # check for negative ORF lengths
         isoformsToRemove <-
             orfInfo$isoform_id[which(orfInfo$orfTransciptLength < 0)]
@@ -2228,6 +2239,7 @@ importGTF <- function(
         localSwichList$orfAnalysis <- orfInfo[which(
             orfInfo$isoform_id %in% localSwichList$isoformFeatures$isoform_id)
             ,]
+
     }
 
     ### Add nucleotide sequence
@@ -2250,7 +2262,9 @@ importGTF <- function(
 
 
     # Return switchAnalyzeRlist
-    message('Done.')
+    if (!quiet) {
+        message('Done.')
+    }
     return(localSwichList)
 }
 
@@ -3323,7 +3337,7 @@ importRdata <- function(
 
     }
 
-    ### Handle annotation input
+    ### Obtain isoform annotaion
     if (!quiet) { message('Step 2 of 7: Obtaining annotation...')}
     if (TRUE) {
         ### Massage annoation input
@@ -3344,7 +3358,7 @@ importRdata <- function(
                     }
 
                     if (!quiet) {
-                        message('    importing GTF (this may take a while)')
+                        message('    importing GTF (this may take a while)...')
                     }
 
                 }
@@ -3462,6 +3476,7 @@ importRdata <- function(
 
                     colsToExtract <- c(
                         'isoform_id', 'gene_id', 'gene_name',
+                        'ref_gene_id', # stringtie annotation
                         'gene_biotype','iso_biotype'
                     )
                     isoformAnnotation <-
@@ -3485,7 +3500,6 @@ importRdata <- function(
                         addAnnotatedORFs <- FALSE
                     }
                 }
-
             }
 
             if( class(isoformExonAnnoation) != 'character' ) {
@@ -3898,8 +3912,18 @@ importRdata <- function(
         }
     }
 
-    ### Fix StringTie gene merge problem
+    ### Rescue StringTie gene annoation
     if(TRUE) {
+        ### Add original gene_ids already assigned to gene_id back to ref_gene_id
+        if(TRUE) {
+            indexToModify <- which(
+                is.na( isoformAnnotation$ref_gene_id  ) &
+                    ! is.na( isoformAnnotation$gene_name  )
+            )
+            isoformAnnotation$ref_gene_id[indexToModify] <- isoformAnnotation$gene_id[indexToModify]
+        }
+
+        ### Assign isoforms to ref_gene_id and gene_names
         if(   fixStringTieAnnotationProblem ) {
             if (!quiet) { message('Step 3 of 7: Fixing StringTie gene annoation problems...')}
 
@@ -3909,21 +3933,22 @@ importRdata <- function(
             anyFixed3 <- FALSE
             anyFixed4 <- FALSE
 
-            ### Fix missing gene_names
-            if( any(is.na(isoformAnnotation$gene_name)) ) {
-                ### Fix simple missing gene_names (within single gene_name gene_id)
+            ### Fix missing ref_gene_id
+            if( any(is.na(isoformAnnotation$ref_gene_id)) ) {
+
+                ### Fix simple missing ref_gene_id (within single ref_gene_id gene_id)
                 if( TRUE ) {
-                    ### Make list with gene_names (same order)
-                    geneNameList <- split(isoformAnnotation$gene_name, isoformAnnotation$gene_id)
+                    ### Make list with ref_gene_id (same order)
+                    geneNameList <- split(isoformAnnotation$ref_gene_id, isoformAnnotation$gene_id)
                     geneNameList <- geneNameList[unique(isoformAnnotation$gene_id)]
 
                     ### Count problems
                     nIsoWihoutNames <- sum(
-                        is.na(isoformAnnotation$gene_name)
+                        is.na(isoformAnnotation$ref_gene_id)
                     )
 
-                    ### Add gene_names to novel StringTie transcripts when possible (only 1 gene_name candidate)
-                    isoformAnnotation$gene_name <- unlist(
+                    ### Add ref_gene_ids to novel StringTie transcripts when possible (only 1 ref_gene_id candidate)
+                    isoformAnnotation$ref_gene_id <- unlist(
                         lapply(
                             geneNameList,
                             function(geneNameVec) {
@@ -3942,7 +3967,7 @@ importRdata <- function(
 
                     ### Re-count problems
                     nIsoWihoutNames2 <- sum(
-                        is.na(isoformAnnotation$gene_name)
+                        is.na(isoformAnnotation$ref_gene_id)
                     )
 
                     anyFixed1 <- nIsoWihoutNames - nIsoWihoutNames2 > 0
@@ -3953,10 +3978,10 @@ importRdata <- function(
                                 paste(
                                     '   ',
                                     nIsoWihoutNames - nIsoWihoutNames2,
-                                    'isoforms were assigned the gene_name of their associated gene_id.',
-                                    '\n        This was only done when the parent gene_id were associated with a single gene_name.',
+                                    ' isoforms were assigned the ref_gene_id and gene_name of their associated gene_id.',
+                                    '\n        This was only done when the parent gene_id were associated with a single ref_gene_id/gene_name.',
                                     #'\n',
-                                    sep = ' '
+                                    sep = ''
                                 )
                             )
                         }
@@ -3964,34 +3989,35 @@ importRdata <- function(
 
                 }
 
-                ### Fix non-simple missing gene_names (within multi gene_names gene_id)
+                ### Fix non-simple missing ref_gene_ids (within multi ref_gene_ids gene_id)
                 if(TRUE) {
                     ### Identify gene_ids with problems
                     if(TRUE) {
                         ### Summazie gene properties
                         multiGeneDf <-
                             isoformAnnotation %>%
-                            dplyr::select(isoform_id, gene_id, gene_name) %>%
+                            dplyr::select(isoform_id, gene_id, ref_gene_id) %>%
                             dplyr::distinct()
 
                         geneNameSummary <-
                             multiGeneDf %>%
                             group_by(gene_id) %>%
                             dplyr::summarise(
-                                n_gene_names = n_distinct(na.omit(gene_name)),
-                                n_iso_na = sum(is.na(gene_name))
+                                n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
+                                n_iso_na = sum(is.na(ref_gene_id)),
+                                .groups = 'drop'
                             )
 
                         ### Identify genes with both missing and multiple gene names
                         multiGenesWithNa <-
                             geneNameSummary %>%
                             dplyr::filter(
-                                n_gene_names >= 2 & # at least two genes
+                                n_ref_gene_ids >= 2 & # at least two genes
                                     n_iso_na > 0           # no novel once
                             )
                     }
 
-                    ### Rescue via genomic overlap of known isoforms (aka with gene_name annotation)
+                    ### Rescue via genomic overlap of known isoforms (aka with ref_gene_id annotation)
                     if(nrow(multiGenesWithNa) & fixStringTieViaOverlapInMultiGenes) {
                         ### Extract all isoforms with problems
                         genesWithProblems <-
@@ -4020,10 +4046,10 @@ importRdata <- function(
 
                         ### Devide into novel and known
                         knownIsoforms <- genesWithProblems$isoform_id[which(
-                            ! is.na(genesWithProblems$gene_name)
+                            ! is.na(genesWithProblems$ref_gene_id)
                         )]
                         novelIsoforms <- genesWithProblems$isoform_id[which(
-                            is.na(genesWithProblems$gene_name)
+                            is.na(genesWithProblems$ref_gene_id)
                         )]
                         knownList <- exonsOiList[ knownIsoforms ]
                         novelList <- exonsOiList[ novelIsoforms ]
@@ -4035,7 +4061,7 @@ importRdata <- function(
                         novelIsoOverlapDf$novel_iso <- names(novelList)[novelIsoOverlapDf$queryHits]
                         novelIsoOverlapDf$known_iso <- names(knownList)[novelIsoOverlapDf$subjectHits]
                         novelIsoOverlapDf <- novelIsoOverlapDf[,c('novel_iso','known_iso')]
-                        novelIsoOverlapDf$known_gene_name <- genesWithProblems$gene_name[match(
+                        novelIsoOverlapDf$known_ref_gene_id <- genesWithProblems$ref_gene_id[match(
                             novelIsoOverlapDf$known_iso, genesWithProblems$isoform_id
                         )]
 
@@ -4051,7 +4077,7 @@ importRdata <- function(
                         novelAssigned <-
                             novelIsoOverlapDf %>%
                             as_tibble() %>%
-                            group_by(novel_iso, known_gene_name) %>%
+                            group_by(novel_iso, known_ref_gene_id) %>%
                             ### For each known_gene extract top contender
                             dplyr::arrange(dplyr::desc(nt_overlap), .by_group = TRUE)  %>%
                             dplyr::slice(1L) %>%
@@ -4075,13 +4101,13 @@ importRdata <- function(
 
                         ### Modify annoation
                         toModify <- which(isoformAnnotation$isoform_id %in% novelAssigned$novel_iso)
-                        isoformAnnotation$gene_name[toModify] <- novelAssigned$known_gene_name[match(
+                        isoformAnnotation$ref_gene_id[toModify] <- novelAssigned$known_ref_gene_id[match(
                             isoformAnnotation$isoform_id[toModify], novelAssigned$novel_iso
                         )]
 
                         ### Redo problem calculations
                         nIsoWihoutNames3 <- sum(
-                            is.na(isoformAnnotation$gene_name)
+                            is.na(isoformAnnotation$ref_gene_id)
                         )
 
                         anyFixed2 <- nIsoWihoutNames2 - nIsoWihoutNames3
@@ -4092,12 +4118,12 @@ importRdata <- function(
                                     paste(
                                         '   ',
                                         nIsoWihoutNames2 - nIsoWihoutNames3,
-                                        'isoforms were assigned the gene_name of the most similar',
+                                        ' isoforms were assigned the ref_gene_id and gene_name of the most similar',
                                         '\n        annotated isoform (defined via overlap in genomic exon coordinates).',
                                         '\n        This was only done if the overlap met the requriements',
                                         '\n        indicated by the three fixStringTieViaOverlap* arguments.',
                                         #'\n',
-                                        sep = ' '
+                                        sep = ''
                                     )
                                 )
                             }
@@ -4110,22 +4136,23 @@ importRdata <- function(
             if(TRUE) {
                 genesWithProblems <-
                     isoformAnnotation %>%
-                    dplyr::select(gene_id, gene_name) %>%
+                    dplyr::select(gene_id, ref_gene_id) %>%
                     dplyr::distinct() %>%
                     group_by(gene_id) %>%
                     dplyr::summarise(
-                        has_gene_name = any(! is.na(gene_name)),
-                        has_novel_iso = any(  is.na(gene_name))
+                        has_ref_gene_id = any(! is.na(ref_gene_id)),
+                        has_novel_iso = any(  is.na(ref_gene_id)),
+                        .groups = 'drop'
                     ) %>%
                     dplyr::filter(
-                        has_gene_name,
+                        has_ref_gene_id,
                         has_novel_iso
                     )
 
                 ### Extract isoforms to remove
                 isoToRemove <- isoformAnnotation$isoform_id[which(
                     isoformAnnotation$gene_id %in% genesWithProblems$gene_id &
-                        is.na(isoformAnnotation$gene_name)
+                        is.na(isoformAnnotation$ref_gene_id)
                 )]
 
                 anyFixed3 <- length(isoToRemove) > 0
@@ -4157,8 +4184,8 @@ importRdata <- function(
                         message(
                             paste(
                                 '   We were unable to assign', length(isoToRemove),
-                                'isoform_id\'s (all located within annotated genes) with a gene_name.',
-                                '\n        These were removed to enable analysis of the rest of the isoform from within the gene.'
+                                'isoforms (located within annotated genes) to a known ref_gene_id/gene_name.',
+                                '\n        These were removed to enable analysis of the rest of the isoform from within the merged genes.'
                             )
                         )
                     }
@@ -4171,18 +4198,19 @@ importRdata <- function(
                 if(TRUE) {
                     multiGeneDf <-
                         isoformAnnotation %>%
-                        dplyr::select(isoform_id, gene_id, gene_name) %>%
+                        dplyr::select(isoform_id, gene_id, ref_gene_id) %>%
                         dplyr::distinct()
 
                     multiGenes <-
                         multiGeneDf %>%
                         group_by(gene_id) %>%
                         dplyr::summarise(
-                            n_gene_names = n_distinct(na.omit(gene_name)),
-                            n_iso_na = sum(is.na(gene_name))
+                            n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
+                            n_iso_na = sum(is.na(ref_gene_id)),
+                            .groups = 'drop'
                         ) %>%
                         dplyr::filter(
-                            n_gene_names >= 2 & # at least two genes
+                            n_ref_gene_ids >= 2 & # at least two genes
                                 n_iso_na == 0           # no novel once
                         )
 
@@ -4196,11 +4224,11 @@ importRdata <- function(
                         multiGeneDf %>%
                         dplyr::filter(gene_id %in% multiGenes$gene_id)
 
-                    ### Create new gene_ids (by merging with gene_name)
+                    ### Create new gene_ids (by merging with ref_gene_id)
                     multiGeneDf$new_gene_id <- stringr::str_c(
                         multiGeneDf$gene_id,
                         ':',
-                        multiGeneDf$gene_name
+                        multiGeneDf$ref_gene_id
                     )
 
                     ### Overwrite in annotation
@@ -4212,11 +4240,8 @@ importRdata <- function(
                             isoformAnnotation$isoform_id[indexToModify], multiGeneDf$isoform_id
                         )]
 
-                    ### Overwrite gene_name and gene_ids in exon annotation
+                    ### Overwrite ref_gene_id and gene_ids in exon annotation
                     isoformExonStructure$gene_id <- isoformAnnotation$gene_id[match(
-                        isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
-                    )]
-                    isoformExonStructure$gene_name <- isoformAnnotation$gene_name[match(
                         isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
                     )]
                 }
@@ -4226,15 +4251,16 @@ importRdata <- function(
                     ### Redo problem calculations
                     multiGenes <-
                         isoformAnnotation %>%
-                        dplyr::select(gene_id, gene_name) %>%
+                        dplyr::select(gene_id, ref_gene_id) %>%
                         dplyr::distinct() %>%
                         group_by(gene_id) %>%
                         dplyr::summarise(
-                            n_gene_names = n_distinct(na.omit(gene_name)),
-                            n_iso_na = sum(is.na(gene_name))
+                            n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
+                            n_iso_na = sum(is.na(ref_gene_id)),
+                            .groups = 'drop'
                         ) %>%
                         dplyr::filter(
-                            n_gene_names >= 2 & # at least two genes
+                            n_ref_gene_ids >= 2 & # at least two genes
                                 n_iso_na == 0           # no novel once
                         )
 
@@ -4248,8 +4274,8 @@ importRdata <- function(
                                 paste(
                                     '   ',
                                     nProblems - nProblems2 ,
-                                    'gene_ids which were associated with multiple gene_names',
-                                    '\n        were split into mutliple genes via their gene_names.',
+                                    ' gene_ids which were associated with multiple ref_gene_id/gene_names',
+                                    '\n        were split into mutliple genes via their ref_gene_id/gene_names.',
                                     #'\n',
                                     sep = ''
                                 )
@@ -4260,6 +4286,23 @@ importRdata <- function(
 
             }
 
+            ### Generalize ref_gene_id assignment to gene_names and update both annotaion objects
+            if(TRUE) {
+                geneNameDf <-
+                    isoformAnnotation %>%
+                    dplyr::select(gene_name, ref_gene_id) %>%
+                    dplyr::filter(!is.na(gene_name)) %>%
+                    dplyr::distinct()
+
+                isoformAnnotation$gene_name <- geneNameDf$gene_name[match(
+                    isoformAnnotation$ref_gene_id, geneNameDf$ref_gene_id
+                )]
+
+                isoformExonStructure$gene_name <- isoformAnnotation$gene_name[match(
+                    isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
+                )]
+            }
+
             if(
                 ! anyFixed1 &
                 ! anyFixed2 &
@@ -4268,10 +4311,91 @@ importRdata <- function(
             ) {
                 message(
                     paste(
-                        '    There were no need to fix any annotation',
+                        '    There were no need to rescue any annotation',
                         sep = ' '
                     )
                 )
+            }
+
+            ### Overwrite with original gene ids if doable
+            if('ref_gene_id' %in% colnames(isoformAnnotation)) {
+                ### Figure out those with potential
+                geneIdsWithRef <- isoformAnnotation$gene_id[which(
+                    ! is.na(isoformAnnotation$ref_gene_id)
+                )]
+
+                ### Devide
+                isoAnnotAlreadCorrect <-
+                    isoformAnnotation %>%
+                    dplyr::filter(! gene_id %in% geneIdsWithRef)
+
+                isoAnnotToCorrect <-
+                    isoformAnnotation %>%
+                    dplyr::filter(gene_id %in% geneIdsWithRef)
+
+                ### Figure out which one can be corrected
+                isoAnnotToCorrect <-
+                    isoAnnotToCorrect %>%
+                    dplyr::group_by(gene_id) %>%
+                    dplyr::mutate(
+                        n_ref = n_distinct(na.omit(ref_gene_id))
+                    ) %>%
+                    dplyr::ungroup()
+
+                ### Devide into those that can be corrected and those that cannot
+                isoAnnotCannotBeCorrected <-
+                    isoAnnotToCorrect %>%
+                    dplyr::filter(n_ref != 1)
+
+                isoAnnotCanBeCorrected <-
+                    isoAnnotToCorrect %>%
+                    dplyr::filter(n_ref == 1)
+
+                if(nrow(isoAnnotCanBeCorrected)) {
+                    message(
+                        paste(
+                            '   ',
+                            length(unique(isoAnnotCanBeCorrected$gene_id)),
+                            ' genes_id were assigned their original gene_id instead of the StringTie gene_id.',
+                            '\n        This was only done when it could be done unambiguous.',
+                            #'\n',
+                            sep = ''
+                        )
+                    )
+                }
+
+                ### Correct annnotation
+                isoAnnotCorrected <-
+                    isoAnnotCanBeCorrected %>%
+                    dplyr::group_by(gene_id) %>%
+                    dplyr::mutate(
+                        gene_id = unique(na.omit(ref_gene_id))
+                    ) %>%
+                    dplyr::ungroup()
+
+                isoAnnotCorrected$n_ref <- NULL
+                isoAnnotCannotBeCorrected$n_ref <- NULL
+
+                ### Combine the 3 datafames
+                isoformAnnotationCorrected <- rbind(
+                    isoAnnotAlreadCorrect,
+                    isoAnnotCorrected,
+                    isoAnnotCannotBeCorrected
+                )
+
+                ### Reorder
+                isoformAnnotationCorrected <-
+                    isoformAnnotationCorrected[match(
+                        isoformAnnotation$isoform_id,
+                        isoformAnnotationCorrected$isoform_id
+                    ),]
+                isoformAnnotationCorrected$ref_gene_id <- NULL
+
+                ### Overwrite
+                isoformAnnotation <- isoformAnnotationCorrected
+                isoformExonStructure$gene_id <- isoformAnnotation$gene_id[match(
+                    isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
+                )]
             }
         }
     }
@@ -4422,7 +4546,7 @@ importRdata <- function(
 
         ### Sum to gene level
         geneRepExpression <- isoformToGeneExp(
-            isoformRepExpression,
+            isoformRepExpression =  isoformRepExpression,
             quiet = TRUE
         )
 
@@ -5073,6 +5197,9 @@ importSalmonData <- function(
                     by = 'isoform_id',
                     all = TRUE
                 )
+
+            # Annotate ORF origin
+            orfInfo$orf_origin <- 'Annotation'
         }
 
         ### Design
