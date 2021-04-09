@@ -1269,7 +1269,7 @@ analyzeAlternativeSplicing <- function(
                 switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
             ))) {
                 stop(
-                    'The analsis of isoform switching must be performed before alternative splicing can be analyzed. Please run ?detectIsoformSwitching and try again.'
+                    'The analsis of isoform switching must be performed before alternative splicing can be analyzed when onlySwitchingGenes=TRUE (default). Please run ?detectIsoformSwitching and try again.'
                 )
             }
         }

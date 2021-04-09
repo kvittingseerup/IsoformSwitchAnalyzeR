@@ -858,11 +858,25 @@ isoformSwitchTestDEXSeq <- function(
                             switchAnalyzeRlist$conditions$condition %in% unlist(aComp)
                         ),]
 
+                        nIso <- length(switchAnalyzeRlist$isoformFeatures$isoform_id[which(
+                            switchAnalyzeRlist$isoformFeatures$condition_1 == aComp$condition_1 &
+                            switchAnalyzeRlist$isoformFeatures$condition_2 == aComp$condition_2
+                        )])
+
                         localExp <- data.frame(
-                            samples=sum(sampleOverview$nrReplicates)
+                            samples=sum(sampleOverview$nrReplicates),
+                            n_iso = nIso
                         )
 
-                        localExp$min <- 10^(1.63152968 + (0.04740975 * localExp$samples)) / 60 # min
+                        # Esitmate based on benchmarking from satuRn paper
+                        localExp$min <- max(c(
+                            1,  # do not repport less than 1 min
+                            10^(
+                                -3.5574003487257 +
+                                (1.0190040124555 * log10(localExp$n_iso)) +
+                                (0.0212879246701 * localExp$samples)
+                            )
+                        ))
 
                         return(localExp)
                     }
@@ -871,7 +885,7 @@ isoformSwitchTestDEXSeq <- function(
                 expectedTime <- sum(expectedTime$min)
 
                 message(paste(
-                    '    Estimated time (for dataset with ~30.000 isoforms):',
+                    '    Estimated run time is:',
                     round(expectedTime, digits = 1),
                     'min',
                     sep=' '

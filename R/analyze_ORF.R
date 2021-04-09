@@ -245,11 +245,11 @@ analyzeORF <- function(
                     )
                 )
         )
-        if (!nrow(overlappingAnnotStart)) {
-            stop(
-                'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
-            )
-        }
+        #if (!nrow(overlappingAnnotStart)) {
+        #    stop(
+        #        'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
+        #    )
+        #}
 
         ### Annoate overlap
         overlappingAnnotStart$queryHits <-
@@ -1053,6 +1053,13 @@ extractSequence <- function(
                     Biostrings::translate(x = transcriptORFntSeq, if.fuzzy.codon = 'solve')
                 ) # supress warning is nessesary because isoformSwitchAnalyzeR allows ORFs to exceed the transcript - which are by default ignored and just gives a warning
 
+            ### Trim (potential) last stop codon
+            transcriptORFaaSeq <- Biostrings::trimLRPatterns(
+                Lpattern = '',
+                Rpattern = "*",
+                subject = transcriptORFaaSeq
+            )
+
             ### Check ORFs for stop codons
             stopData <- data.frame(
                 isoform_id = names(transcriptORFaaSeq),
@@ -1067,7 +1074,7 @@ extractSequence <- function(
                         paste(
                             'There were',
                             nrow(stopDataToRemove),
-                            'isoforms where the amino acid sequence had a stop codon before the annotated stop codon. These was be removed.',
+                            'isoforms where the amino acid sequence had a stop codon before the annotated stop codon. These was removed.',
                             sep = ' '
                         )
                     )
@@ -1080,7 +1087,7 @@ extractSequence <- function(
                     ### Remove ORF annoation
                     switchAnalyzeRlist$orfAnalysis[which(
                         switchAnalyzeRlist$orfAnalysis$isoform_id %in% stopDataToRemove$isoform_id
-                    ), 2:ncol(switchAnalyzeRlist$orfAnalysis)] <- NA
+                    ), which( ! colnames(switchAnalyzeRlist$orfAnalysis) %in% c('isoform_id','orf_origin')) ] <- NA
 
                     ### Remove sequence
                     transcriptORFaaSeq <-
@@ -1273,10 +1280,15 @@ extractSequence <- function(
             if(   alsoSplitFastaFile ) {
                 ### Make index
                 l <- length(transcriptORFaaSeq2)
+
+                maxfileSizes <- 500
+                nFiles <- ceiling(l / maxfileSizes)
+                seqWithinEachFile <-  ceiling(l / nFiles)
+
                 indexVec <- unique( c( seq(
                     from = 1,
                     to = l,
-                    by = 500 -1 # Max in PFAM Jan 2019
+                    by = seqWithinEachFile # Max in PFAM Jan 2019
                 ), l))
 
                 indexDf <- data.frame(
@@ -1566,6 +1578,19 @@ analyzeNovelIsoformORF <- function(
             stop('There appear not to be any isoforms not already annotated with ORFs - meaning there is no need to run this function')
         }
 
+        nWith <- sum(!is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart))
+        if(nWith == 0) {
+            stop('While ORFs seems to have beeen analysed no ORFs were identified. Consider using less strict ORF detection criteria or if something else about ORF detection could have gone wrong.')
+        }
+
+        nKnown <- sum(
+            switchAnalyzeRlist$orfAnalysis$orf_origin == 'Annotation'
+        )
+        if(nKnown == 0) {
+            stop('There appear to be no known ORFs annotated and hence this function can not be used.')
+        }
+
+
         ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
         if( ! ntAlreadyInSwitchList ) {
             if (class(genomeObject) != 'BSgenome') {
@@ -1742,18 +1767,19 @@ myAllFindORFsinSeq <- function(
             codons = codonAnnotation$codons
         )
 
-    # Add stop codon at the end to make sure ORFs are allowed to continue over the edge of the transcript (by simmulating the last codons in each reading frame is a stop codon)
-    codonsOfInterest <-
-        rbind(
-            codonsOfInterest,
-            data.frame(
-                position = nchar(dnaSequence) - 2 - 2:0,
-                codon = codonAnnotation$codons[which(
-                    codonAnnotation$meaning == 'stop'
-                )][1],
-                stringsAsFactors = FALSE
-            )
-        )
+    ### Outcommented 19/3/21 to discard identification of truncated ORFs
+    ## Add stop codon at the end to make sure ORFs are allowed to continue over the edge of the transcript (by simmulating the last codons in each reading frame is a stop codon)
+    #codonsOfInterest <-
+    #    rbind(
+    #        codonsOfInterest,
+    #        data.frame(
+    #            position = nchar(dnaSequence) - 2 - 2:0,
+    #            codon = codonAnnotation$codons[which(
+    #                codonAnnotation$meaning == 'stop'
+    #            )][1],
+    #            stringsAsFactors = FALSE
+    #        )
+    #    )
 
     ### Annotate with meaning of condon
     codonsOfInterest$meaning <-

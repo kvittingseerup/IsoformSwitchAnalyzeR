@@ -432,12 +432,12 @@ isoformToGeneExp <- function(
 
     ### Calculate gene exp via rowsum
     if(TRUE) {
-        geneRepExpression <- rowsum(
+        geneRepExpression <- as.data.frame( rowsum(
             x = isoformRepExpression[,which(
                 ! colnames(isoformRepExpression) %in% c('isoform_id','gene_id')
-            )],
+            ),drop=FALSE],
             group = isoformRepExpression$gene_id
-        )
+        ))
     }
 
     ### If nesseary make final massage
@@ -479,8 +479,9 @@ isoformToIsoformFraction <- function(
         }
 
         ### Make sure it is a data.frame
-        if( ! 'data.frame' %in% class(isoformRepExpression) ) {
-            isoformRepExpression <- as.data.frame(isoformRepExpression)
+        isoformRepExpression <- as.data.frame(isoformRepExpression)
+        if( !is.null(geneRepExpression)) {
+            geneRepExpression <- as.data.frame(geneRepExpression)
         }
 
         ### Handle if ids are supplied as row-ids
@@ -512,6 +513,7 @@ isoformToIsoformFraction <- function(
                 isoAnnot <- unique(as.data.frame(mcols( isoformGeneAnnotation )[,c('gene_id','isoform_id')]))
             } else if( 'data.frame' %in% class(isoformGeneAnnotation) ) {
                 isoAnnot <- unique(isoformGeneAnnotation[,c('gene_id','isoform_id')])
+                isoAnnot <- as.data.frame(isoAnnot)
             } else{
                 stop('The class of object supplied to \'isoformGeneAnnotation\' is unknown.')
             }

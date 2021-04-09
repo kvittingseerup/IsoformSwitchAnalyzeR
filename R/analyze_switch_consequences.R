@@ -2827,7 +2827,9 @@ extractConsequenceSummary <- function(
     }
 
     if (returnResult) {
-        print(g1)
+        if(plot) {
+            print(g1)
+        }
 
         return(myNumbers)
     } else {

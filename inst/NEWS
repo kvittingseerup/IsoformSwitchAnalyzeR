@@ -1,3 +1,13 @@
+Changes in version 1.13.06 (2021-01-XX)
+- Update type: mino.
+- The runtimes repported by isoformSwitchTestDEXSeq() was updated to also consider the number of transcripts analysed.
+- analyzeORF() was updated to enable analysis with analyzeNovelIsoformORF() when no overlaps were found.
+- switchPlot was fixed so the alphas argument now work.
+- Various updates of warning, descriptions and error messages.
+- extractSequence() was updated to remove the terminal stop codon if it is included in the annoation.
+- extractSequence() was updated to produce evenly sized files when alsoSplitFastaFile=TRUE.
+- analysORF no longer allows identification of truncated ORFs.
+
 Changes in version 1.13.05 (2021-01-07)
 - Update type: Major.
 - analyseORF was updated with the orfMethod "longest.AnnotatedWhenPossible" a hybrid between "longes" and "longestAnnotated". See ?analyseORF for details.

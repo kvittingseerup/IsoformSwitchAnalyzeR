@@ -91,5 +91,25 @@ Kristoffer Vitting-Seerup
 }
 
 \examples{
+### Load data
+data("exampleSwitchListIntermediary")
 
+### Select random isoforms to remove ORF annotation for
+exampleSwitchListIntermediary$orfAnalysis$orf_origin <- 'Annotation'
+nToRemove <- 25
+rowsToModify <- sample(which( !is.na( exampleSwitchListIntermediary$orfAnalysis$orfTransciptStart)), nToRemove)
+
+### Remove ORF annoations
+colsToModify <- which( ! colnames(exampleSwitchListIntermediary$orfAnalysis) \%in\% c('isoform_id','orf_origin'))
+exampleSwitchListIntermediary$orfAnalysis[
+    rowsToModify,
+    colsToModify
+] <- NA
+exampleSwitchListIntermediary$orfAnalysis$orf_origin[rowsToModify] <- 'not_annotated_yet'
+
+### Predict ORF of missing isoforms using the ORF in other isoforms
+tmp <- analyzeNovelIsoformORF(
+    switchAnalyzeRlist = exampleSwitchListIntermediary,
+    analysisAllIsoformsWithoutORF = TRUE
+)
 }

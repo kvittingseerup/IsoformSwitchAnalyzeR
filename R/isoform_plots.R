@@ -2808,7 +2808,8 @@ switchPlot <- function(
                 addErrorbars                = addErrorbars,
                 confidenceIntervalErrorbars = TRUE,
                 confidenceInterval          = 0.95,
-                alphas                      = c(0.05, 0.001),
+                #alphas                      = c(0.05, 0.001),
+                alphas                      = alphas,
                 logYaxis                    = logYaxis,
                 extendFactor                = 0.05,
                 localTheme                  = localTheme

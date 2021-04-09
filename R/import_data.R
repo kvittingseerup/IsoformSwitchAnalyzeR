@@ -3065,9 +3065,13 @@ importRdata <- function(
                     #    'The data.frame passed to the \'isoformCountMatrix\'',
                     #    'argument must contain a \'isoform_id\' column'
                     #))
-                    message(paste(
-                        '    Using row.names as \'isoform_id\' for \'isoformCountMatrix\'. If not suitable you must add them manually.'
-                    ))
+                    warning(
+                        paste(
+                        '    Using row.names as \'isoform_id\' for \'isoformCountMatrix\'.',
+                        'If not suitable you must add them manually.',
+                        sep=' '
+                        )
+                    )
                     isoformCountMatrix$isoform_id <- rownames(isoformCountMatrix)
 
                 }
