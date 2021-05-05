@@ -683,7 +683,7 @@ createSwitchAnalyzeRlist <- function(
     ### Add runInfo
     localSwitchList$runInfo <- list(
         IsoformSwitchAnalyzeR = list(
-            version = package.version('IsoformSwitchAnalyzeR')
+            version = Biobase::package.version('IsoformSwitchAnalyzeR')
         )
     )
 

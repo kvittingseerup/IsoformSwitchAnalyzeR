@@ -23,6 +23,7 @@ importGTF(
     removeTECgenes = TRUE,
     PTCDistance=50,
     removeFusionTranscripts = TRUE,
+    removeUnstrandedTranscripts = TRUE,
     quiet=FALSE
 )
 }
@@ -60,6 +61,8 @@ A logic indicating whether the nucleotide sequence imported via \code{isoformNtF
 \item{PTCDistance}{ Only considered if \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
 
 \item{removeFusionTranscripts}{A logic indicating whether to remove genes with cross-chromosome fusion transcripts as IsoformSwitchAnalyzeR cannot handle them.}
+
+\item{removeUnstrandedTranscripts}{A logic indicating whether to remove non-stranded isoforms as the IsoformSwitchAnalyzeR workflow cannot handle them.}
 
 \item{quiet}{A logic indicating whether to avoid printing progress messages. Default is FALSE.}
 

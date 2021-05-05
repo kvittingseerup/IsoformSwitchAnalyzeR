@@ -1179,6 +1179,7 @@ importGTF <- function(
     removeTECgenes = TRUE,
     PTCDistance = 50,
     removeFusionTranscripts = TRUE,
+    removeUnstrandedTranscripts = TRUE,
     quiet = FALSE
 ) {
     ### Test files
@@ -1351,6 +1352,17 @@ importGTF <- function(
         seqlevels(mfGTF) <- as.character(mfGTF@seqnames@values)
     }
 
+    if (removeUnstrandedTranscripts) {
+        mfGTF <- mfGTF[which( ! grepl('\\*' , as.character(mfGTF@strand))), ]
+
+        if (length(mfGTF) == 0) {
+            stop('No exons were left after filtering',
+                 'with \'removeUnstrandedTranscripts\'.')
+        }
+
+        seqlevels(mfGTF) <- as.character(mfGTF@seqnames@values)
+    }
+
     if( removeTECgenes ) {
         if(isGTF) {
             ### Ensembl
@@ -1370,6 +1382,8 @@ importGTF <- function(
             }
         }
     }
+
+
 
     ### Potentially add version numbering
     if( TRUE ) {
@@ -2956,7 +2970,7 @@ importRdata <- function(
         progressBarLogic <- FALSE
     }
 
-    ### Test existance of files
+    ### Test existence of files
     if(TRUE) {
         if( !is.null(isoformNtFasta)) {
             if( ! is(isoformNtFasta, 'character') ) {
@@ -3010,7 +3024,7 @@ importRdata <- function(
         }
     }
 
-    ### Test whether imput data fits together
+    ### Test whether input data fits together
     if (!quiet) { message('Step 1 of 7: Checking data...')}
     if (TRUE) {
         ### Test supplied expression
@@ -3380,6 +3394,7 @@ importRdata <- function(
                         removeTECgenes = FALSE,
                         PTCDistance = PTCDistance,
                         removeFusionTranscripts = FALSE,
+                        removeUnstrandedTranscripts = FALSE,
                         quiet = TRUE
                     )
                 )
@@ -3418,6 +3433,8 @@ importRdata <- function(
                 if(TRUE) {
                     ### Identify isoforms to remove
                     isoformsToRemove <- character()
+
+                    ### TEC genes
                     if( removeTECgenes & any(!is.na( gtfSwichList$isoformFeatures$gene_biotype)) ) {
                         isoformsToRemove <- c(
                             isoformsToRemove,
@@ -3426,6 +3443,8 @@ importRdata <- function(
                             )])
                         )
                     }
+
+                    ### Strange chromosomes
                     if( removeNonConvensionalChr ) {
                         nonChanonicalChrsIso <- unique(
                             gtfSwichList$exons$isoform_id[which(
@@ -3437,6 +3456,34 @@ importRdata <- function(
                             isoformsToRemove,
                             nonChanonicalChrsIso
                         ))
+                    }
+
+                    ### Unstranded transcripts
+                    if(TRUE) {
+                        unstrandedIso <- unique(
+                            gtfSwichList$exons$isoform_id[which(
+                                grepl('\\*'  , as.character(gtfSwichList$exons@strand))
+                            )]
+                        )
+
+                        isoformsToRemove <- unique(c(
+                            isoformsToRemove,
+                            unstrandedIso
+                        ))
+
+                        if(length(unstrandedIso)) {
+                            warning(
+                                paste0(
+                                    'We found ', length(unstrandedIso),
+                                    ' (', round(
+                                        length(unstrandedIso) / length(isoToKeep) * 100,
+                                        digits = 2
+                                    ),
+                                    '%) unstranded transcripts.',
+                                    '\n  These were removed as unstranded transcripts cannot be analysed'
+                                )
+                            )
+                        }
                     }
 
                     ### Note:
@@ -3465,10 +3512,15 @@ importRdata <- function(
                     }
 
                     if(any(isoToKeep %in% gtfSwichList$isoformFeatures$isoform_id)) {
-                        gtfSwichList <- subsetSwitchAnalyzeRlist(
-                            gtfSwichList,
+                        gtfSwichList$isoformFeatures <- gtfSwichList$isoformFeatures[which(
                             gtfSwichList$isoformFeatures$isoform_id %in% isoToKeep
-                        )
+                        ),]
+                        gtfSwichList$exons <- gtfSwichList$exons[which(
+                            gtfSwichList$exons$isoform_id %in% isoToKeep
+                        ),]
+                        gtfSwichList$orfAnalysis <- gtfSwichList$orfAnalysis[which(
+                            gtfSwichList$orfAnalysis$isoform_id %in% isoToKeep
+                        ),]
                     }
                 }
 
@@ -4358,7 +4410,7 @@ importRdata <- function(
                 if(nrow(isoAnnotCanBeCorrected)) {
                     message(
                         paste(
-                            '   ',
+                            '    ',
                             length(unique(isoAnnotCanBeCorrected$gene_id)),
                             ' genes_id were assigned their original gene_id instead of the StringTie gene_id.',
                             '\n        This was only done when it could be done unambiguous.',

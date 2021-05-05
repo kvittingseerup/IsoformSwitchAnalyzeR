@@ -13,8 +13,8 @@ Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings (>= 2.50.0), I
     DRIMSeq, RColorBrewer, rtracklayer, VennDiagram, DBI, grDevices,
     graphics, stats, utils, GenomeInfoDb, grid, tximport (>= 1.7.1),
     tximeta (>= 1.7.12), edgeR, futile.logger, stringr, dplyr,
-    magrittr, readr, tibble, XVector, BiocGenerics, RCurl
-Suggests: knitr, BSgenome.Hsapiens.UCSC.hg19, cummeRbund
+    magrittr, readr, tibble, XVector, BiocGenerics, RCurl, Biobase
+Suggests: knitr, BSgenome.Hsapiens.UCSC.hg19, rmarkdown
 VignetteBuilder: knitr
 Collate: classes.R methods.R import_data.R test_isoform_switches.R analyze_ORF.R
     analyze_external_sequence_analysis.R analyze_switch_consequences.R

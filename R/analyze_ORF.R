@@ -1164,7 +1164,7 @@ extractSequence <- function(
                 switchORFannotation$toBeTrimmed <- FALSE
 
                 ### remove to long sequences
-                if(   removeLongAAseq) {
+                if(   removeLongAAseq ) {
                     ### Filter lengths
                     switchORFannotation$aaLength <- width(transcriptORFaaSeq)
                     switchORFannotation$toBeTrimmed <- switchORFannotation$aaLength > 1000
@@ -1480,9 +1480,8 @@ addORFfromGTF <- function(
             is.na(switchAnalyzeRlist$orfAnalysis$orf_origin)
         )] <- 'not_annotated_yet'
 
-
-        ### Repport numbers
-        if (!quiet) {
+        ### Extract summary numbers
+        if(TRUE) {
             ### Extract info
             inSl <- unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
             inORF <- unique(switchAnalyzeRlist$orfAnalysis$isoform_id[which(
@@ -1508,6 +1507,11 @@ addORFfromGTF <- function(
             )
             knownNotAdded <- intersect(knownIso, notAnalysed)
 
+            nNotAnnoateted <- nInSL - nAdded
+        }
+
+        ### Repport numbers
+        if (!quiet) {
             ### Write message
             message(paste0(
                 '    Added ORF info (incl info about isoforms annotated as not having an ORF) to ',
@@ -1517,7 +1521,6 @@ addORFfromGTF <- function(
             ))
 
             ### Continue message in cases some where not annotated
-            nNotAnnoateted <- nInSL - nAdded
             if( nNotAnnoateted > 0) {
 
                 isoNotAnnoated <- setdiff(inSl, inORF)
@@ -1532,6 +1535,27 @@ addORFfromGTF <- function(
 
         }
 
+        ### Test overlap
+        if(TRUE) {
+            if( nAdded /nInSL == 0) {
+                stop('No ORFs were added to the switchAnalyzeRlist. Please ensure')
+            }
+
+            if( nAdded /nInSL < 0.5 ) {
+                if( nAdded /nInSL < 0.1 ) {
+                    warning(paste0(
+                        'It seems ORF was added to an unlikely small fraction of isoforms (less than 10%).',
+                        'If you are not sure this is on purpose something went wrong and the files are not matching.'
+                    ))
+                } else {
+                    warning(paste0(
+                        'It seems ORF was added to an small fraction of isoforms (less than 50%).',
+                        'You might want to dobule check the ratio of know/novel transcripts to ensure this is not a problem with files not matching.'
+                    ))
+                }
+            }
+
+        }
     }
 
     ### Return

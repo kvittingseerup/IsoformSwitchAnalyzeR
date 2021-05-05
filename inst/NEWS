@@ -1,5 +1,11 @@
-Changes in version 1.13.06 (2021-01-XX)
-- Update type: mino.
+Changes in version 1.13.07 (2021-05-05)
+- Update type: minor.
+- importGTF() and importRdata() was updated to handle the rare cases of mixed stranded and unstranded isoforms (unstanded are now discareded).
+- addORFfromGTF() was updated to better repport if no or only small number of ORFs were added.
+- Various maintainance updates.
+
+Changes in version 1.13.06 (2021-04-09)
+- Update type: minor.
 - The runtimes repported by isoformSwitchTestDEXSeq() was updated to also consider the number of transcripts analysed.
 - analyzeORF() was updated to enable analysis with analyzeNovelIsoformORF() when no overlaps were found.
 - switchPlot was fixed so the alphas argument now work.
