@@ -105,12 +105,18 @@ Note that since there was an error in Cufflinks/Cuffdiff's estimation of standar
 }
 
 \examples{
+dontrun{
 ### Please note
 # The way of importing files in the following example with
-# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
-# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# "system.file('pathToFile', package="cummeRbund") is
+# specialized way of accessing the example data in the cummeRbund package
 # and not something you need to do - just supply the string e.g.
-# "myAnnotation/isoformsQuantified.gtf" to the functions
+# "myAnnotation/isoformsQuantified.gtf" to the functions.
+
+### If you want to run this example code you need the cummeRbund package. It can be installed by running the code below
+if (!requireNamespace("cummeRbund", quietly = TRUE)){
+    BiocManager::install("cummeRbund")
+}
 
 ### Use the files from the cummeRbund example data
 aSwitchList <- importCufflinksFiles(
@@ -143,5 +149,6 @@ aSwitchListAnalyzed <- isoformSwitchTestDEXSeq(
 # extract summary of number of switching features
 extractSwitchSummary(aSwitchListAnalyzed)
 
+}
 }
 
