@@ -1,4 +1,4 @@
-Changes in version 1.13.07 (2021-05-05)
+Changes in version 1.13.07 (2021-05-06)
 - Update type: minor.
 - importGTF() and importRdata() was updated to handle the rare cases of mixed stranded and unstranded isoforms (unstanded are now discareded).
 - addORFfromGTF() was updated to better repport if no or only small number of ORFs were added.

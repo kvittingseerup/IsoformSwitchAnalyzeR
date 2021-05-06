@@ -1487,12 +1487,17 @@ addORFfromGTF <- function(
             inORF <- unique(switchAnalyzeRlist$orfAnalysis$isoform_id[which(
                 switchAnalyzeRlist$orfAnalysis$orf_origin != 'not_annotated_yet'
             )])
+            hasORF <- unique(switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                switchAnalyzeRlist$orfAnalysis$orf_origin != 'not_annotated_yet' &
+                ! is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+            )])
             notAnalysed <- unique(switchAnalyzeRlist$orfAnalysis$isoform_id[which(
                 switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet'
             )])
 
             nInSL <- length(inSl)
             nAdded <- length(inORF)
+            nWithOrf <- length(hasORF)
 
             knownIso <- unique(
                 switchAnalyzeRlist$isoformFeatures$isoform_id[which(
@@ -1537,14 +1542,17 @@ addORFfromGTF <- function(
 
         ### Test overlap
         if(TRUE) {
-            if( nAdded /nInSL == 0) {
-                stop('No ORFs were added to the switchAnalyzeRlist. Please ensure')
+            if( nWithOrf /nInSL == 0) {
+                stop(str_c(
+                    'No ORFs could be added to the switchAnalyzeRlist.',
+                    ' Please ensure GTF file have CDS info and that isoform ids match.'
+                ))
             }
 
-            if( nAdded /nInSL < 0.5 ) {
-                if( nAdded /nInSL < 0.1 ) {
+            if( nWithOrf /nInSL < 0.5 ) {
+                if( nWithOrf /nInSL < 0.1 ) {
                     warning(paste0(
-                        'It seems ORF was added to an unlikely small fraction of isoforms (less than 10%).',
+                        'It seems ORF was only added to an unlikely small fraction of isoforms (less than 10%).',
                         'If you are not sure this is on purpose something went wrong and the files are not matching.'
                     ))
                 } else {
