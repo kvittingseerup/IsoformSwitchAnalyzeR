@@ -235,14 +235,14 @@ analyzeSwitchConsequences <- function(
         )) {
             if (!any(names(switchAnalyzeRlist) == 'ntSequence')) {
                 stop(
-                    'The transcrip nucleotide sequences must be added to the switchAnalyzeRlist before overlap analysis can be performed. Please run \'extractSequence\' and try again.'
+                    'The transcrip nucleotide sequences must be added to the switchAnalyzeRlist before overlap analysis can be performed. These can be added by using the \'extractSequence()\' function.'
                 )
             }
         }
         if (any(consequencesToAnalyze %in% c('ORF_seq_similarity'))) {
             if (!any(names(switchAnalyzeRlist) == 'aaSequence')) {
                 stop(
-                    'The transcrip ORF amino acid sequences must be added to the switchAnalyzeRlist before ORF overlap analysis can be performed. Please run \'extractSequence\' and try again.'
+                    'The transcrip ORF amino acid sequences must be added to the switchAnalyzeRlist before ORF overlap analysis can be performed. These can be added by using the \'extractSequence()\' function.'
                 )
             }
         }

@@ -437,6 +437,18 @@ analyzePFAM <- function(
 
     ### Import result data
     if(TRUE) {
+        ### Figure out file type
+        if(TRUE) {
+            fileVector <- readLines(pathToPFAMresultFile[1], n = 3)
+
+            if (! length(fileVector) ) {
+                stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
+            }
+
+            tapsAnnotated <- any(stringr::str_detect(fileVector, '\\t'))
+        }
+        # tapsAnnotated
+
         ### Figure out header and lines to skip
         if(TRUE) {
             ### Test whether headers are included
@@ -448,9 +460,6 @@ analyzePFAM <- function(
                     header = FALSE,
                     nrows = 1
                 )
-            if (nrow(temp) == 0) {
-                stop('The file pointed to by \'pathToPFAMresultFile\' is empty')
-            }
             headerIncluded <- grepl('^<seq|^seq', temp[1, 1])
 
             ### Figure out number of lines to skip
@@ -469,20 +478,16 @@ analyzePFAM <- function(
                         fill = TRUE,
                         header = FALSE,
                         nrows = 1,
-                        skip = skipLine
+                        skip = skipLine,
                     )
-
-                activeResidueIncluded <- ncol(temp3) == 16
-
             }
             if( ! headerIncluded) {
                 skipLine <- 0
-
-                activeResidueIncluded <- ncol(temp) == 16
             }
         }
+        # skipLine
 
-        ### Read in file
+        ### Read in file(s)
         myPfamResult <- unique(
             do.call(
                 rbind,
@@ -493,31 +498,63 @@ analyzePFAM <- function(
                     ) {
                         # aFile <- pathToPFAMresultFile[1]
 
-                        ### Try reading it as a space seperated
-                        localPfamRes <- read.table(
-                            file = aFile,
-                            stringsAsFactors = FALSE,
-                            fill = TRUE,
-                            header = FALSE,
-                            col.names = 1:16,
-                            skip = skipLine
+                        ### Read in file using the filte type info extracted above
+                        if(TRUE) {
+                            if( tapsAnnotated ) {
+                                localPfamRes <- read.table(
+                                    file = aFile,
+                                    stringsAsFactors = FALSE,
+                                    fill = TRUE,
+                                    header = FALSE,
+                                    col.names = 1:16,
+                                    sep = '\t',
+                                    skip = skipLine
+                                )
+                            } else {
+                                localPfamRes <- read.table(
+                                    file = aFile,
+                                    stringsAsFactors = FALSE,
+                                    fill = TRUE,
+                                    header = FALSE,
+                                    col.names = 1:16,
+                                    sep = '', # one or more white spaces
+                                    skip = skipLine
+                                )
+                            }
+
+                        }
+
+                        ### Determine if active sites are predicted
+                        activeResidueIncluded <- any(
+                            stringr::str_detect(
+                                string = localPfamRes[,ncol(localPfamRes)],
+                                pattern = 'predicted_active_site'
+                            ),
+                            na.rm = TRUE
                         )
 
                         ### Test shifted values
-                        try1problems <- unique(c(
-                            which(is.na( localPfamRes[,14]     )),              # via "significant" column (will either be NA or a clan indication)
-                            which(       localPfamRes[,14] != 1 ),              # via "significant" column (will either be NA or a clan indication)
-                            which( ! stringr::str_detect(localPfamRes[,6], '^PF|^PB') ),  # via pfam_hmm id which should start with PF or PB
-                            which( localPfamRes[,ncol(localPfamRes)] == '' )
-                        ))
+                        testShiftedValues <- function(aDF) {
+                            try1 <- unique(c(
+                                which(is.na( aDF[,14]     )),              # via "significant" column (will either be NA or a clan indication)
+                                which(       aDF[,14] != 1 ),              # via "significant" column (will either be NA or a clan indication)
+                                which( ! stringr::str_detect(aDF[,6], '^PF|^PB') )  # via pfam_hmm id which should start with PF or PB
+                            ))
 
-                        ### If any NAs - try reading it as a tab seperated
+                            return(try1)
+                        }
+                        try1problems <- testShiftedValues(localPfamRes)
+
+                        ### If any NAs - try reading it with read_fwf
                         if( length(try1problems) ) {
                             ### Fix the mistake in the fixed width file
                             suppressWarnings(
-                                fileVector <- readLines(aFile)
+                                fileVector <- readLines(aFile, encoding = 'UTF-8')
                             )
                             fileVector <- gsub('Coiled-coil',' Coiled', fileVector)
+
+                            ### FOr read_fwf to recognice it as raw text it must have new lines included
+                            fileVector <- stringr::str_c(fileVector, '\n')
 
                             suppressMessages(
                                 suppressWarnings(
@@ -541,19 +578,13 @@ analyzePFAM <- function(
                             localPfamRes2 <- as.data.frame(localPfamRes2)
 
                             ### Test shifted values via "significant" column (will either be NA or a clan indication)
-                            try2problems <- unique(c(
-                                which(is.na( localPfamRes2[,14]     )),              # via "significant" column (will either be NA or a clan indication)
-                                which(       localPfamRes2[,14] != 1 ),              # via "significant" column (will either be NA or a clan indication)
-                                which( ! stringr::str_detect(localPfamRes2$X6, '^PF|^PB') ),  # via pfam_hmm id which should start with PF or PB
-                                which( localPfamRes2[,ncol(localPfamRes2)] == '' )
-                            ))
+                            try2problems <- testShiftedValues(localPfamRes2)
 
                             ### overwrite if fewer problems
                             if( length(try2problems) < length(try1problems) ) {
                                 localPfamRes <- localPfamRes2
                             }
                         }
-
 
                         return(localPfamRes)
                     }
@@ -958,22 +989,26 @@ analyzePFAM <- function(
         )] <- 'yes'
     }
 
-    n <- length(unique(myPfamResultDf$isoform_id))
-    p <-
-        round(n / length(unique(
-            switchAnalyzeRlist$isoformFeatures$isoform_id
-        )) * 100, digits = 2)
+    ### Repport numbers
+    if(TRUE) {
+        n <- length(unique(myPfamResultDf$isoform_id))
+        p <-
+            round(n / length(unique(
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+            )) * 100, digits = 2)
 
-    if (!quiet) {
-        message(paste(
-            'Added domain information to ',
-            n,
-            ' (',
-            p,
-            '%) transcripts',
-            sep = ''
-        ))
+        if (!quiet) {
+            message(paste(
+                'Added domain information to ',
+                n,
+                ' (',
+                p,
+                '%) transcripts',
+                sep = ''
+            ))
+        }
     }
+
     return(switchAnalyzeRlist)
 }
 

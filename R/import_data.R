@@ -5455,7 +5455,11 @@ preFilter <- function(
                     'gene_value_1',
                     'gene_value_2',
                     'iso_overall_mean',
+                    'iso_value_1',
+                    'iso_value_2',
                     'IF_overall',
+                    'IF1',
+                    'IF2',
                     'dIF',
                     'gene_switch_q_value',
                     'isoform_switch_q_value'
@@ -5527,19 +5531,23 @@ preFilter <- function(
 
         if (!is.null(isoformExpressionCutoff)) {
             localData <- localData[which(
+                #localData$iso_value_1 > isoformExpressionCutoff |
+                #localData$iso_value_2 > isoformExpressionCutoff
                 localData$iso_overall_mean > isoformExpressionCutoff
             ), ]
             if (!nrow(localData)) {
-                stop('No genes were left after filtering for isoform expression')
+                stop('No isoforms were left after filtering for isoform expression')
             }
         }
 
         if (!is.null(IFcutoff)) {
             localData <- localData[which(
+                #localData$IF1 > IFcutoff |
+                #localData$IF2 > IFcutoff
                 localData$IF_overall > IFcutoff
             ), ]
             if (!nrow(localData)) {
-                stop('No genes were left after filtering for isoform fraction (IF) values')
+                stop('No isoforms were left after filtering for isoform fraction (IF) values')
             }
         }
 

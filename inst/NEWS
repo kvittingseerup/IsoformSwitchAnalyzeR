@@ -1,3 +1,9 @@
+Changes in version 1.15.01 (2021-01-01)
+- Update type: minor.
+- Version bump due to Bioconductor release.
+- preFilter() now applies the gene expression cutoff to both conditions instead of the overall average.
+- analyzePFAM() was updated to reflect recent updates to the tidyverse read_fwf function. It furhtermore now better distinguishes tap seperated and fixed with files.
+
 Changes in version 1.13.07 (2021-05-06)
 - Update type: minor.
 - importGTF() and importRdata() was updated to handle the rare cases of mixed stranded and unstranded isoforms (unstanded are now discareded).
