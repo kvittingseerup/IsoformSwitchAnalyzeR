@@ -1,4 +1,8 @@
-Changes in version 1.15.01 (2021-01-01)
+Changes in version 1.15.02 (2021-09-14)
+- Update type: minor.
+- Various error message updates
+
+Changes in version 1.15.01 (2021-09-01)
 - Update type: minor.
 - Version bump due to Bioconductor release.
 - preFilter() now applies the gene expression cutoff to both conditions instead of the overall average.

@@ -1603,6 +1603,10 @@ estimateDifferentialRange <- function(
             stop('The dIFcutoff must be in the interval [0,1].')
         }
 
+        if( sum( switchAnalyzeRlist$conditions$nrReplicates >= 2 ) < 2) {
+            return('    None as there are no comparisons with replicates')
+        }
+
     }
 
     ### Subset on conditions

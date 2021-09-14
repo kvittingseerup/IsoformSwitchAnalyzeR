@@ -157,8 +157,9 @@ analyzeSwitchConsequences <- function(
         )) {
             if (!'PTC' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
                 stop(
-                    'To test differences in ORF or any annotation derived from these, ORF must be annotated. Please run annotateORF() and try again'
+                    'To test differences in ORF or any annotation derived from these, ORF must be annotated. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again'
                 )
+
             }
 
             if( ! is.null(switchAnalyzeRlist$orfAnalysis$orf_origin ) ) {
@@ -599,7 +600,7 @@ compareAnnotationOfTwoIsoforms <- function(
         )) {
             if (!'PTC' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
                 stop(
-                    'To test differences in ORFs or PCT, ORF must be annotated. Please run annotateORF() and try again'
+                    'To test differences in ORFs or PCT, ORF must be annotated. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again'
                 )
             }
         }

@@ -415,7 +415,7 @@ analyzePFAM <- function(
             )
         }
         if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-            stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
         }
 
         # file
@@ -1019,7 +1019,7 @@ analyzeSignalP <- function(
     quiet = FALSE
 ) {
     if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-        stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+        stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
     }
 
     # file
@@ -1387,7 +1387,7 @@ analyzeNetSurfP2 <- function(
             )
         }
         if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-            stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
         }
 
         # file
@@ -1653,7 +1653,7 @@ analyzeIUPred2A <- function(
             )
         }
         if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-            stop('ORF needs to be analyzed. Please run analyzeORF and try again.')
+            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
         }
 
         # file

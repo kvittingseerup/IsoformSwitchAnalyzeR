@@ -699,7 +699,7 @@ extractSequence <- function(
         # Are ORF annotated
         if (extractAAseq) {
             if (!'orfAnalysis' %in% names(switchAnalyzeRlist)) {
-                stop('Please run the \'annotateORF\' function to detect ORFs')
+                stop('Please run the \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') function(s) to detect ORFs')
             }
 
             if( ! is.null(switchAnalyzeRlist$orfAnalysis$orf_origin) ) {
