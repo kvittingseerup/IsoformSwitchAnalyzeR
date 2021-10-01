@@ -1515,8 +1515,16 @@ addORFfromGTF <- function(
             nNotAnnoateted <- nInSL - nAdded
         }
 
+        ### Test any overlap
+        if( nWithOrf /nInSL == 0) {
+            stop(str_c(
+                'No ORFs could be added to the switchAnalyzeRlist.',
+                ' Please ensure GTF file have CDS info (and that isoform ids match).'
+            ))
+        }
+
         ### Repport numbers
-        if (!quiet) {
+        if (!quiet ) {
             ### Write message
             message(paste0(
                 '    Added ORF info (incl info about isoforms annotated as not having an ORF) to ',
@@ -1542,13 +1550,6 @@ addORFfromGTF <- function(
 
         ### Test overlap
         if(TRUE) {
-            if( nWithOrf /nInSL == 0) {
-                stop(str_c(
-                    'No ORFs could be added to the switchAnalyzeRlist.',
-                    ' Please ensure GTF file have CDS info and that isoform ids match.'
-                ))
-            }
-
             if( nWithOrf /nInSL < 0.5 ) {
                 if( nWithOrf /nInSL < 0.1 ) {
                     warning(paste0(

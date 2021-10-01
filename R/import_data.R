@@ -1182,7 +1182,7 @@ importGTF <- function(
     removeUnstrandedTranscripts = TRUE,
     quiet = FALSE
 ) {
-    ### Test files
+    ### Test input
     if(TRUE) {
         ### Test existance of files
         if(TRUE) {
@@ -1359,8 +1359,6 @@ importGTF <- function(
             stop('No exons were left after filtering',
                  'with \'removeUnstrandedTranscripts\'.')
         }
-
-        seqlevels(mfGTF) <- as.character(mfGTF@seqnames@values)
     }
 
     if( removeTECgenes ) {
@@ -1383,7 +1381,8 @@ importGTF <- function(
         }
     }
 
-
+    ### Ensure seqlevels are ok are removal
+    seqlevels(mfGTF) <- unique(as.character(mfGTF@seqnames@values))
 
     ### Potentially add version numbering
     if( TRUE ) {

@@ -1,6 +1,8 @@
 Changes in version 1.15.02 (2021-09-14)
 - Update type: minor.
 - Various error message updates
+- Fixed a problem where importGTF() could have seqLevel problems after removals.
+- addORFfromGTF() was updated to give better error messages
 
 Changes in version 1.15.01 (2021-09-01)
 - Update type: minor.
