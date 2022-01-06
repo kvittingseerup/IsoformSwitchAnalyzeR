@@ -458,6 +458,16 @@ switchPlotTranscript <- function(
                                levels = unique(isoInfo$isoform_id))
                     DomainAnalysis$id <- 1:nrow(DomainAnalysis)
 
+                    ### Annotate structural variants
+                    DomainAnalysis$domain_sv <- ifelse(
+                        DomainAnalysis$domain_structure == 'Complete',
+                        yes = '',
+                        no = ' (structural variant)'
+                    )
+                    DomainAnalysis$hmm_name <- paste0(
+                        DomainAnalysis$hmm_name,
+                        DomainAnalysis$domain_sv
+                    )
 
                     annotationList$protein_domain <- DomainAnalysis[,c('isoform_id','pfamStartGenomic','pfamEndGenomic','hmm_name','id')]
                 }
@@ -1432,8 +1442,9 @@ switchPlotTranscript <- function(
 
     myPlot <- myPlot +
         scale_fill_manual(
-            breaks = domainsFound,
-            values = correspondingColors
+            breaks = c('transcript',domainsFound),
+            values = correspondingColors,
+            na.value = '#161616'
         ) + # Correct domian color code so transcripts are black and not shown
         scale_y_continuous(breaks = idData$idNr, labels = idData$transcript) + # change index numbers back to names
         localTheme + theme(strip.text.y = element_text(angle = 0)) + # change theme and rotate facette labes (ensures readability even though frew are pressent)
@@ -2244,7 +2255,7 @@ expressionAnalysisPlot <- function(
             if( optimizeForCombinedPlot ) {
                 g1 <- g1 +
                     scale_fill_manual(values = c('darkgrey', '#333333')) +
-                    guides(fill=FALSE)
+                    guides(fill="none")
             }
 
             if (logYaxis) {
@@ -3225,7 +3236,7 @@ switchPlot <- function(
 
     # transctipt plot
     suppressWarnings(print(
-        transcriptPlot2 + guides(fill = FALSE),
+        transcriptPlot2 + guides(fill = "none"),
         vp = viewport(
             layout.pos.row = 2:8,
             layout.pos.col = 1:expPlotLast
@@ -3238,14 +3249,14 @@ switchPlot <- function(
 
     # expression
     print(
-        expressionPlots2$isoform_usage + guides(fill = FALSE),
+        expressionPlots2$isoform_usage + guides(fill = "none"),
         vp = viewport(
             layout.pos.row = 9:15,
             layout.pos.col = 7:expPlotLast
         )
     )
     print(
-        expressionPlots2$isoform_expression + guides(fill = FALSE),
+        expressionPlots2$isoform_expression + guides(fill = "none"),
         vp = viewport(
             layout.pos.row = 9:15,
             layout.pos.col = 3:6

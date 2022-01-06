@@ -2826,7 +2826,7 @@ extractSplicingGenomeWide <- function(
                         y = value,
                         fill = variable
                     ),
-                    fun.y = medianQuartile,
+                    fun = medianQuartile,
                     geom = 'point',
                     position = position_dodge(width = 0.9),
                     size = 2

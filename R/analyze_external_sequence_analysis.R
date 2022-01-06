@@ -796,6 +796,21 @@ analyzePFAM <- function(
 
     }
 
+    ### Add structural predictions
+    if(FALSE) {
+        tmp <- augment_pfam(myPfamResult)
+        tmp <- analyse_pfam_structure(tmp)
+
+        myPfamResult$domain_structure <- tmp$domain_structure
+
+        ### Simplify SV
+        myPfamResult$domain_structure <- ifelse(
+            myPfamResult$domain_structure == 'Complete',
+            yes = 'Complete',
+            no  = 'Structural Variant'
+        )
+    }
+
     ### Convert from AA coordinats to transcript and genomic coordinats
     if (TRUE) {
         if (!quiet) {

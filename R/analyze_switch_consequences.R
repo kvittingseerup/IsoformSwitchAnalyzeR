@@ -80,6 +80,7 @@ analyzeSwitchConsequences <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
+            'domain_structure',
 
             # SignalIP
             'signal_peptide_identified',
@@ -326,7 +327,7 @@ analyzeSwitchConsequences <- function(
             .inform = TRUE,
             .progress = progressBar,
             .fun = function(aDF) {
-                # aDF <- pairwiseIsoComparisonUniq[246,]
+                # aDF <- pairwiseIsoComparisonUniq[852,]
                 compareAnnotationOfTwoIsoforms(
                     switchAnalyzeRlist    = minimumSwitchList,
                     consequencesToAnalyze = consequencesToAnalyze,
@@ -542,6 +543,7 @@ compareAnnotationOfTwoIsoforms <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
+            'domain_structure',
             # SignalIP
             'signal_peptide_identified',
             # IDR
@@ -881,11 +883,20 @@ compareAnnotationOfTwoIsoforms <- function(
                 ), ]
             domanData$isoform_id <-
                 factor(domanData$isoform_id, levels = isoformsToAnalyze)
+
+            ### Simplify Domain structure
+            domanData$domain_structure <- ifelse(
+                domanData$domain_structure == 'Complete',
+                yes = 'Complete',
+                no  = 'Structural Variant'
+            )
+
             domanDataSplit <-
                 split(domanData[, c(
                     'hmm_name',
                     'pfamStartGenomic',
                     'pfamEndGenomic',
+                    'domain_structure',
                     'orf_aa_start',
                     'orf_aa_end'
                 )], f = domanData$isoform_id)
@@ -1272,10 +1283,10 @@ compareAnnotationOfTwoIsoforms <- function(
                                   type = 'global')
 
             overlapSize <- min(c(nchar(gsub(
-                '-', '', as.character(localAlignment@subject)
+                '-', '', as.character(alignedSubject(localAlignment))
             )),
             nchar(gsub(
-                '-', '', as.character(localAlignment@pattern)
+                '-', '', as.character(alignedPattern(localAlignment))
             ))))
             totalWidth <- width(localAlignment@subject@unaligned) +
                 width(localAlignment@pattern@unaligned) -
@@ -1490,14 +1501,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(localAlignment@subject)
+                            as.character(alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(localAlignment@pattern)
+                            as.character(alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-
@@ -1626,14 +1637,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(localAlignment@subject)
+                            as.character(alignedSubject(localAlignment@subject))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(localAlignment@pattern)
+                            as.character(alignedPattern(localAlignment@pattern))
                         )
                     )))
                     totalWidth <-
@@ -1763,14 +1774,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(localAlignment@subject)
+                            as.character(alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(localAlignment@pattern)
+                            as.character(alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-
@@ -1942,9 +1953,6 @@ compareAnnotationOfTwoIsoforms <- function(
 
         if ('domain_length'             %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
-                domanDataSplit
-
-
                 domanDataSplit <- lapply(
                     domanDataSplit,
                     function(x) {
@@ -2062,6 +2070,118 @@ compareAnnotationOfTwoIsoforms <- function(
 
                 }
 
+            }
+        }
+
+        if ('domain_structure'          %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+                domanDataSplit <- lapply(
+                    domanDataSplit,
+                    function(x) {
+                        x$length <- x$orf_aa_end - x$orf_aa_start + 1
+                        return(x)
+                    }
+                )
+
+                ### Analyze structure
+                nDom <- sapply(domanDataSplit, nrow)
+                if( all(nDom) ) {
+                    domainRanges <- lapply(
+                        domanDataSplit,
+                        function(x) {
+                            if( x$pfamStartGenomic[1] < x$pfamEndGenomic[1]) {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$pfamStartGenomic,
+                                        end   = x$pfamEndGenomic
+                                    ),
+                                    hmm_name  = x$hmm_name,
+                                    domain_structure  = x$domain_structure
+                                )
+                            } else {
+                                GRanges(
+                                    seqnames = 'artificial',
+                                    IRanges(
+                                        start = x$pfamEndGenomic,
+                                        end   = x$pfamStartGenomic
+                                    ),
+                                    hmm_name  = x$hmm_name,
+                                    domain_structure  = x$domain_structure
+                                )
+                            }
+
+                        }
+                    )
+
+                    ### Calculate overlap
+                    localOverlap <- findOverlaps(
+                        query   = domainRanges[[ upIso   ]],
+                        subject = domainRanges[[ downIso ]]
+                    )
+
+                    if(length(localOverlap)) {
+
+                        localOverlapDf <- as.data.frame(localOverlap)
+                        localOverlapDf$upName <- domainRanges[[ upIso   ]]$hmm_name[queryHits   (localOverlap)]
+                        localOverlapDf$dnName <- domainRanges[[ downIso ]]$hmm_name[subjectHits (localOverlap)]
+                        localOverlapDf$upStructure <- domainRanges[[ upIso   ]]$domain_structure[queryHits   (localOverlap)]
+                        localOverlapDf$dnStructure <- domainRanges[[ downIso ]]$domain_structure[subjectHits (localOverlap)]
+
+                        ### Subset to same domain
+                        localOverlapDf <- localOverlapDf[which(
+                            localOverlapDf$upName == localOverlapDf$dnName
+                        ),]
+
+                        if(nrow(localOverlapDf)) {
+                            localOverlapDf$upCombined <- stringr::str_c(localOverlapDf$upName, '_', localOverlapDf$upStructure)
+                            localOverlapDf$dnCombined <- stringr::str_c(localOverlapDf$dnName, '_', localOverlapDf$dnStructure)
+
+                            differentDomainStructure <- any( localOverlapDf$upCombined != localOverlapDf$dnCombined)
+                        } else {
+                            differentDomainStructure <- FALSE
+                        }
+                    } else {
+                        differentDomainStructure <- FALSE
+                    }
+
+                } else {
+                    differentDomainStructure <- FALSE
+                }
+
+                # make repport
+                localIndex <-
+                    which(isoComparison$featureCompared == 'domain_structure')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentDomainStructure
+
+                ### Report if any difference
+                if (differentDomainStructure & addDescription) {
+
+                    upCount <- sum(localOverlapDf$upStructure != 'Complete')
+                    dnCount <- sum(localOverlapDf$dnStructure != 'Complete')
+
+                    ### Deside consequence
+                    if(
+                        all( c(upCount, dnCount) > 0 ) & upCount == dnCount
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Mixed domain structural variation changes'
+                    } else if(
+                        upCount > dnCount
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Domain structural variation gain'
+                    } else if(
+                        dnCount > upCount
+                    ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Domain structural variation loss'
+                    } else {
+                        stop('Something with Domain structural variation analysis went wrong')
+                    }
+
+                }
             }
         }
 
@@ -2552,6 +2672,7 @@ extractConsequenceSummary <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
+            'domain_structure',
 
             # SignalIP
             'signal_peptide_identified',
@@ -2920,6 +3041,7 @@ extractConsequenceEnrichment <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
+            'domain_structure',
 
             # SignalIP
             'signal_peptide_identified',
@@ -2992,6 +3114,7 @@ extractConsequenceEnrichment <- function(
             coding_potential=c('Transcript is coding','Transcript is Noncoding'),
             domains_identified=c('Domain gain','Domain loss'),
             domain_length=c('Domain length gain','Domain length loss'),
+            domain_structure=c('Domain structural variation gain','Domain structural variation loss'),
             IDR_identified = c('IDR gain','IDR loss'),
             IDR_length = c('IDR length gain', 'IDR length loss'),
             IDR_type = c('IDR w binding region gain', 'IDR w binding region loss'),
@@ -3595,7 +3718,8 @@ extractConsequenceGenomeWide <- function(
                 'domains_identified',
                 'intron_retention',
                 'switch_consequences',
-                'isoform_class_code'
+                'isoform_class_code',
+                'domain_structure'
             )
         if ('all' %in% annotationToAnalyze) {
             annotationToAnalyze <- okAnnot
@@ -3604,7 +3728,7 @@ extractConsequenceGenomeWide <- function(
             stop(
                 paste(
                     'The \'annotationToAnalyze\' argument must be a one (or multiple) of: \'',
-                    paste(annotationToAnalyze, collapse = '\', \''),
+                    paste(okAnnot, collapse = '\', \''),
                     '\'',
                     sep = ''
                 )
@@ -3685,6 +3809,15 @@ extractConsequenceGenomeWide <- function(
             ))
             ]
 
+        if('domain_structure' %in% annotationToAnalyze) {
+            structureVariantIso <- unique(
+                switchAnalyzeRlist$domainAnalysis$isoform_id[which(
+                    switchAnalyzeRlist$domainAnalysis$domain_structure == "Structural Variant"
+                )]
+            )
+
+            isoData$domain_structure_identified <- isoData$isoform_id %in% structureVariantIso
+        }
 
 
         if (nrow(isoData) == 0) {
@@ -3733,10 +3866,20 @@ extractConsequenceGenomeWide <- function(
             isoData$domain_identified <-
                 ifelse(
                     test = isoData$domain_identified == 'yes',
-                    yes = 'With protein domain',
-                    no = 'Without protein domain'
+                    yes = 'With domain',
+                    no = 'Without domain'
                 )
         }
+        # domain structure
+        if (!is.null(isoData$domain_structure_identified)) {
+            isoData$domain_structure_identified <-
+                ifelse(
+                    test = isoData$domain_structure_identified,
+                    yes = 'With domain structural variant',
+                    no = 'Without domain structural variant'
+                )
+        }
+
         # intron retention
         if (!is.null(isoData$IR)) {
             isoData$IR <-
@@ -3795,18 +3938,23 @@ extractConsequenceGenomeWide <- function(
             'NMD Status',
             isoDataMelt$category
         )
+
         isoDataMelt$category <-
             gsub('codingPotential',
                  'Coding Potential',
                  isoDataMelt$category)
+
         isoDataMelt$category <-
             gsub('signal_peptide_identified',
                  'Signal Peptide',
                  isoDataMelt$category)
+
         isoDataMelt$category <-
-            gsub('domain_identified',
+            gsub('domains_identified',
                  'Protein Domains',
                  isoDataMelt$category)
+
+
         isoDataMelt$category <-
             gsub('IR','Intron Retention',isoDataMelt$category)
         isoDataMelt$category <-
@@ -3893,7 +4041,7 @@ extractConsequenceGenomeWide <- function(
                         y = value,
                         fill = variable
                     ),
-                    fun.y = medianQuartile,
+                    fun = medianQuartile,
                     geom = 'point',
                     position = position_dodge(width = 0.9),
                     size = 2

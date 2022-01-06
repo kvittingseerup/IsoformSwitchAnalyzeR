@@ -110,7 +110,7 @@ This function generates a plot visualizing all the annotation for the transcript
 
     \item{\code{Coding Potential / NMD} : The transcripts will be plotted in 3 categories: 'Coding', 'Non-coding' and 'NMD-sensitive'. The annotation of 'Coding' and 'Non-coding' requires the result of an external CPAT analysis have been added with \code{analyzeCPAT}. The NMD sensitivity is added by the \code{analyzeORF}.}
 
-    \item{\code{Protein domains} : By coloring the part of the ORF containing the protein domains. Requires the result of an external Pfam analysis have been added with \code{analyzePFAM}).}
+    \item{\code{Protein domains} : By coloring the part of the ORF containing the protein domains. Requires the result of an external Pfam analysis have been added with \code{analyzePFAM}). Structural variants (meaning non-complete protein domains) are dindicated. If multiple of the same domain is pressent they are summarized as indicated by the \code{ifMultipleIdenticalAnnotation} arugment (defualt add "(xY)" where Y is the number of identical domains ) }
 
     \item{\code{Signal Peptide} : By coloring the part of the ORF containing the signal peptide. Requires the result of an external SignalP analysis have been added with \code{analyzeSignalP).}
 
