@@ -1,7 +1,7 @@
 Package: IsoformSwitchAnalyzeR
 Type: Package
 Title: Identify, Annotate and Visualize Alternative Splicing and Isoform Switches with Functional Consequences from both short- and long-read RNA-seq data.
-Version: 1.17.00
+Version: 1.17.03
 Authors@R: person(given="Kristoffer",family="Vitting-Seerup", role=c("cre","aut"),email="k.vitting.seerup@gmail.com",comment = c(ORCID = "0000-0002-6450-0608"))
 Description: Analysis of alternative splicing and isoform switches with predicted functional consequences (e.g. gain/loss of protein domains etc.) from quantification of all types of RNASeq by tools such as Kallisto, Salmon, StringTie, Cufflinks/Cuffdiff etc.
 URL: http://bioconductor.org/packages/IsoformSwitchAnalyzeR/
