@@ -459,15 +459,17 @@ switchPlotTranscript <- function(
                     DomainAnalysis$id <- 1:nrow(DomainAnalysis)
 
                     ### Annotate structural variants
-                    DomainAnalysis$domain_sv <- ifelse(
-                        DomainAnalysis$domain_structure == 'Complete',
-                        yes = '',
-                        no = ' (structural variant)'
-                    )
-                    DomainAnalysis$hmm_name <- paste0(
-                        DomainAnalysis$hmm_name,
-                        DomainAnalysis$domain_sv
-                    )
+                    if( !is.null(DomainAnalysis$domain_structure)) {
+                        DomainAnalysis$domain_sv <- ifelse(
+                            DomainAnalysis$domain_structure == 'Complete',
+                            yes = '',
+                            no = ' (structural variant)'
+                        )
+                        DomainAnalysis$hmm_name <- paste0(
+                            DomainAnalysis$hmm_name,
+                            DomainAnalysis$domain_sv
+                        )
+                    }
 
                     annotationList$protein_domain <- DomainAnalysis[,c('isoform_id','pfamStartGenomic','pfamEndGenomic','hmm_name','id')]
                 }

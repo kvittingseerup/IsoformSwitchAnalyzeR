@@ -1,4 +1,4 @@
-<!-- devtools::build_vignettes() # call for building vignette --> 
+<!-- devtools::build_vignettes(quiet = FALSE) # call for building vignette --> 
 <!-- remember to delete files in /inst/doc/ and/or vignettes before upload to BioC  --> 
 
 <!--

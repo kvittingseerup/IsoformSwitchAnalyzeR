@@ -327,7 +327,7 @@ analyzeSwitchConsequences <- function(
             .inform = TRUE,
             .progress = progressBar,
             .fun = function(aDF) {
-                # aDF <- pairwiseIsoComparisonUniq[852,]
+                # aDF <- pairwiseIsoComparisonUniq[1,]
                 compareAnnotationOfTwoIsoforms(
                     switchAnalyzeRlist    = minimumSwitchList,
                     consequencesToAnalyze = consequencesToAnalyze,
@@ -885,21 +885,31 @@ compareAnnotationOfTwoIsoforms <- function(
                 factor(domanData$isoform_id, levels = isoformsToAnalyze)
 
             ### Simplify Domain structure
-            domanData$domain_structure <- ifelse(
-                domanData$domain_structure == 'Complete',
-                yes = 'Complete',
-                no  = 'Structural Variant'
-            )
+            if(! is.null(domanData$domain_structure)) {
+                domanData$domain_structure <- ifelse(
+                    domanData$domain_structure == 'Complete',
+                    yes = 'Complete',
+                    no  = 'Structural Variant'
+                )
+            }
 
-            domanDataSplit <-
-                split(domanData[, c(
+            colIndex <- na.omit(match(
+                c(
                     'hmm_name',
                     'pfamStartGenomic',
                     'pfamEndGenomic',
                     'domain_structure',
                     'orf_aa_start',
                     'orf_aa_end'
-                )], f = domanData$isoform_id)
+                ),
+                colnames(domanData)
+            ))
+
+            domanDataSplit <-
+                split(
+                    domanData[,colIndex],
+                    f = domanData$isoform_id
+                )
 
             ### Remove those overlapping trimmed regions
             if( exists('regionToOmmit') ) {
