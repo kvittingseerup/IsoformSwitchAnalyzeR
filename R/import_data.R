@@ -1,4 +1,4 @@
-### Acutal import functions
+### Actual import functions
 importCufflinksFiles <- function(
     ### Core arguments
     pathToGTF,
@@ -23,7 +23,7 @@ importCufflinksFiles <- function(
         if( pathToGTF == '' ) {
             stop(
                 paste(
-                    'The \'pathToGTF\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                    'The \'pathToGTF\' argument does not lead anywhere (actually you just supplied "" to the argument).',
                     '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
                     'to import your own data? The system.file() should only be used',
                     'to access the example data stored in the IsoformSwitchAnalyzeR package.',
@@ -36,7 +36,7 @@ importCufflinksFiles <- function(
         if( pathToGeneDEanalysis == '' ) {
             stop(
                 paste(
-                    'The \'pathToGeneDEanalysis\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                    'The \'pathToGeneDEanalysis\' argument does not lead anywhere (actually you just supplied "" to the argument).',
                     '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
                     'to import your own data? The system.file() should only be used',
                     'to access the example data stored in the IsoformSwitchAnalyzeR package.',
@@ -53,13 +53,13 @@ importCufflinksFiles <- function(
         }
         if( !is.null(isoformNtFasta)) {
             if( !is.character( isoformNtFasta)) {
-                stop('The \'isoformNtFasta\' argument must be a charachter string.')
+                stop('The \'isoformNtFasta\' argument must be a character string.')
             }
 
             if( any(isoformNtFasta == '') ) {
                 stop(
                     paste(
-                        'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        'The \'isoformNtFasta\' argument does not lead anywhere (actually you just supplied "" to the argument).',
                         '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
                         'to import your own data? The system.file() should only be used',
                         'to access the example data stored in the IsoformSwitchAnalyzeR package.',
@@ -81,39 +81,39 @@ importCufflinksFiles <- function(
 
         # DE
         if (!file.exists(pathToGeneDEanalysis))    {
-            stop('The \'pathToGeneDEanalysis\' argument does not point to an acutal file')
+            stop('The \'pathToGeneDEanalysis\' argument does not point to an actual file')
         }
         if (!file.exists(pathToIsoformDEanalysis)) {
-            stop('The \'pathToIsoformDEanalysis\' argument does not point to an acutal file')
+            stop('The \'pathToIsoformDEanalysis\' argument does not point to an actual file')
         }
         # Tracking
         if (!file.exists(pathToGeneFPKMtracking))    {
-            stop('The \'pathToGeneFPKMtracking\' argument does not point to an acutal file')
+            stop('The \'pathToGeneFPKMtracking\' argument does not point to an actual file')
         }
         if (!file.exists(pathToIsoformFPKMtracking)) {
             stop(
-                'The \'pathToIsoformFPKMtracking\' argument does not point to an acutal file'
+                'The \'pathToIsoformFPKMtracking\' argument does not point to an actual file'
             )
         }
         if (!file.exists(pathToIsoformReadGroupTracking)) {
             stop(
-                'The \'pathToIsoformReadGroupTracking\' argument does not point to an acutal file'
+                'The \'pathToIsoformReadGroupTracking\' argument does not point to an actual file'
             )
         }
         # splicing
         if (!is.null(pathToSplicingAnalysis)) {
             if (!file.exists(pathToSplicingAnalysis)) {
                 stop(
-                    'The \'pathToSplicingAnalysis\' argument does not point to an acutal file'
+                    'The \'pathToSplicingAnalysis\' argument does not point to an actual file'
                 )
             }
         }
         # info
         if (!file.exists(pathToReadGroups)) {
-            stop('The \'pathToReadGroups\' argument does not point to an acutal file')
+            stop('The \'pathToReadGroups\' argument does not point to an actual file')
         }
         if (!file.exists(pathToRunInfo))    {
-            stop('The \'pathToRunInfo\' argument does not point to an acutal file')
+            stop('The \'pathToRunInfo\' argument does not point to an actual file')
         }
     }
 
@@ -247,14 +247,14 @@ importCufflinksFiles <- function(
             warning(paste(
                 'It looks like you have NOT been doing transcript\n',
                 'reconstruction/assembly with Cufflinks/Cuffdiff.\n',
-                'If you have not reconstructed transcripts we receomend to use Kallisto or Salmon\n',
-                'to do the quantification instead - they are more accurate and have better biase correction methods.'
+                'If you have not reconstructed transcripts we recommend to use Kallisto or Salmon\n',
+                'to do the quantification instead - they are more accurate and have better bias correction methods.'
             ))
         }
 
 
 
-        ### gene annoation
+        ### gene annotation
         q1 <-
             !all(
                 colnames(geneAnnotation)[1:8] %in% c(
@@ -271,10 +271,10 @@ importCufflinksFiles <- function(
         if (q1) {
             stop(paste(
                 'The file supplied to geneAnnotation does not appear to be the',
-                'gene FPKM traccking of the CuffDiff gene FPKM trascking analysis.'
+                'gene FPKM tracking of the CuffDiff gene FPKM tracking analysis.'
             ))
         }
-        ### transcript annoation
+        ### transcript annotation
         q1 <-
             !all(
                 colnames(isoformAnnotation)[1:8] %in% c(
@@ -340,7 +340,7 @@ importCufflinksFiles <- function(
 
         }
 
-        ### Read grous
+        ### Read groups
         q1 <-
             !all(
                 colnames(readGroup) %in% c(
@@ -384,7 +384,7 @@ importCufflinksFiles <- function(
 
     }
 
-    ### Massage and merge gene and isoform annoation and DE analysis
+    ### Message and merge gene and isoform annotation and DE analysis
     if (TRUE) {
         if (!quiet) { message('Step 2 of 5: Merging gene and isoform expression...')}
         ### Design matrix
@@ -393,7 +393,7 @@ importCufflinksFiles <- function(
         designMatrix <- readGroup[, c('sample_name', 'condition')]
         colnames(designMatrix) <- c('sampleID', 'condition')
 
-        ### Massage data frames
+        ### Message data frames
         if (TRUE) {
             # gene
             geneDiffanalysis <-
@@ -405,7 +405,7 @@ importCufflinksFiles <- function(
                 paste(
                     "gene_",
                     colnames(geneDiffanalysis)[4:ncol(geneDiffanalysis)] ,
-                    sep = "") # add gene to the colnames so they can be destinquished from the gene diff data
+                    sep = "") # add gene to the colnames so they can be distinguished from the gene diff data
             colnames(geneDiffanalysis) <- gsub(
                     'gene_log2.fold_change.',
                     'gene_log2_fold_change',
@@ -443,7 +443,7 @@ importCufflinksFiles <- function(
                 paste(
                     "iso_",
                     colnames(isoformDiffanalysis)[5:ncol(isoformDiffanalysis)],
-                    sep = "") # add gene to the colnames so they can be destinquished from the gene diff data
+                    sep = "") # add gene to the colnames so they can be distinguished from the gene diff data
             colnames(isoformDiffanalysis)[1] <- 'isoform_id'
             colnames(isoformDiffanalysis) <-
                 gsub(
@@ -514,7 +514,7 @@ importCufflinksFiles <- function(
 
         ### Extract standard error
         if (TRUE) {
-            ### Tjek if the Isoform CI collums are switches
+            ### Check if the Isoform CI collums are switches
             ciLowColumn <-
                 which(grepl('_conf_lo', colnames(isoformAnnotation)))[1]
             ciHighColumn <-
@@ -559,7 +559,7 @@ importCufflinksFiles <- function(
             colnames(isoformFPKMcombined) <-
                 c('isoform_id', 'sample_name', 'iso_stderr')
 
-            ### Tjek if the gene CI collums are switches
+            ### Check if the gene CI collums are switches
             ciLowColumn <-
                 which(grepl('_conf_lo', colnames(geneAnnotation)))[1]
             ciHighColumn <-
@@ -817,7 +817,7 @@ importCufflinksFiles <- function(
                         '(no fix except using propperly paired files).\n',
                         '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
                         'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
-                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '3) One file could contain non-canonical chromosomes while the other do not',
                         '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
                         '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
                         'This problem might be solvable using some of the',
@@ -917,7 +917,7 @@ importCufflinksFiles <- function(
                       exonFeatures$spliceR.gene_name[geneNameIndexesFeatures],
                       sep = ':')
 
-            ## Correct gene expression levels and differntial analysis
+            ## Correct gene expression levels and differential analysis
             problematicGenes <-
                 isoformData[geneNameIndexesData, c(
                     'isoform_id',
@@ -1189,7 +1189,7 @@ importGTF <- function(
             if( pathToGTF == '' ) {
                 stop(
                     paste(
-                        'The \'pathToGTF\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        'The \'pathToGTF\' argument does not lead anywhere (actually you just supplied "" to the argument).',
                         '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
                         'to import your own data? The system.file() should only be used',
                         'to access the example data stored in the IsoformSwitchAnalyzeR package.',
@@ -1217,7 +1217,7 @@ importGTF <- function(
                 if( any(isoformNtFasta == '') ) {
                     stop(
                         paste(
-                            'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                            'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just supplied "" to the argument).',
                             '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
                             'to import your own data? The system.file() should only be used',
                             'to access the example data stored in the IsoformSwitchAnalyzeR package.',
@@ -1271,7 +1271,7 @@ importGTF <- function(
                     )], collapse = ', ')
                 stop(
                     paste(
-                        'The GTF file must contain the folliwing collumns',
+                        'The GTF file must contain the following columns',
                         '\'transcript_id\' and \'gene_id\'.',
                         collumnsMissing,
                         'is missing.',
@@ -1414,11 +1414,11 @@ importGTF <- function(
 
     }
 
-    ### Make annoation
+    ### Make annotation
     if(TRUE) {
         if(   isGTF ) {
             if (!quiet) {
-                message('Massaging annoation...')
+                message('Messaging annotation...')
             }
             exonAnoationIndex <- which(mfGTF$type == 'exon')
 
@@ -1529,8 +1529,8 @@ importGTF <- function(
         myIsoAnot <- data.frame(
             isoform_id = myIso$transcript_id,
             gene_id = myIso$gene_id,
-            condition_1 = "plaseholder1",
-            condition_2 = "plaseholder2",
+            condition_1 = "placeholder1",
+            condition_2 = "placeholder2",
             gene_name = myIso$gene_name,
             ref_gene_id = myIso$ref_gene_id,
             gene_biotype = myIso$geneType,
@@ -1563,7 +1563,7 @@ importGTF <- function(
 
     }
 
-    ### Test for annoation problems
+    ### Test for annotation problems
     if(TRUE) {
         geneSummary <-
             myIsoAnot %>%
@@ -1585,7 +1585,7 @@ importGTF <- function(
         if( missingGeneProblem | mergedGeneProblem ) {
             warning(
                 paste0(
-                    '\nThe annotaion seems to have probelems that commonly occure',
+                    '\nThe annotation seems to have problems that commonly occurs',
                     '\n  when transcript assembly is done (gene merging and unassigned novel isoforms).',
                     '\n  These can be fixed and/or rescued by using the importRdata() function instead.',
                     '\n'
@@ -1594,14 +1594,14 @@ importGTF <- function(
         }
     }
 
-    ### Add CDS annoation from GTF file inc convertion to transcript coordinats
+    ### Add CDS annotation from GTF file inc conversion to transcript coordinates
     if (addAnnotatedORFs) {
 
         if(   isGTF ) {
             # test whether any CDS are found
             if (any(mfGTF$type == 'CDS')) {
                 if (!quiet) {
-                    message('Massaging annotated CDSs...')
+                    message('Messaging annotated CDSs...')
                 }
 
                 ### Prepare CDS data
@@ -1790,7 +1790,7 @@ importGTF <- function(
                     c(annoatedStartGRanges, annoatedEndGRanges)
 
 
-                ### Idenetify overlapping CDS and exons as well as the annoate transcript id
+                ### Identify overlapping CDS and exons as well as the annotate transcript id
                 suppressWarnings(overlappingAnnotStart <-
                                      as.data.frame(
                                          findOverlaps(
@@ -1801,11 +1801,11 @@ importGTF <- function(
                                      ))
                 if (!nrow(overlappingAnnotStart)) {
                     stop(
-                        'No overlap between CDS and transcripts were found. This is most likely due to a annoation problem around chromosome name.'
+                        'No overlap between CDS and transcripts were found. This is most likely due to a annotation problem around chromosome name.'
                     )
                 }
 
-                # Annoate overlap ids
+                # Annotate overlap ids
                 overlappingAnnotStart$transcript_id <-
                     localExons$transcript_id[overlappingAnnotStart$queryHits]
                 overlappingAnnotStart$exon_id <- localExons$exon_id[
@@ -1819,7 +1819,7 @@ importGTF <- function(
                     overlappingAnnotStart$subjectHits
                     ]
 
-                # subset to annoateted overlap
+                # subset to annotated overlap
                 overlappingAnnotStart <-
                     overlappingAnnotStart[which(
                         overlappingAnnotStart$transcript_id ==
@@ -1829,7 +1829,7 @@ importGTF <- function(
                          'cdsTranscriptID',
                          'orf_id')]
 
-                # annoate with genomic site
+                # annotate with genomic site
                 overlappingAnnotStart$orfGenomic <-
                     start(annotatedORFGR)[match(
                         overlappingAnnotStart$orf_id, annotatedORFGR$orf_id
@@ -1881,7 +1881,7 @@ importGTF <- function(
                         rep(1, length(aVec))
                     }))
 
-                # final exon exon junction trancipt position
+                # final exon exon junction transcipt position
                 myExonPlus$finalJunctionPos <-
                     unlist(sapply(plusSplit , function(aVec) {
                         rep(cumsum(c(0, aVec))[length(aVec)], times = length(aVec))
@@ -1895,7 +1895,7 @@ importGTF <- function(
 
                 myExons2 <- rbind(myExonPlus, myExonMinus)
 
-                ### Annoate with exon information
+                ### Annotate with exon information
                 matchIndex <-
                     match(overlappingAnnotStart$exon_id, myExons2$exon_id)
                 overlappingAnnotStart$strand <- myExons2$strand[matchIndex]
@@ -1908,7 +1908,7 @@ importGTF <- function(
                 overlappingAnnotStart$finalJunctionPos <-
                     myExons2$finalJunctionPos[matchIndex]
 
-                ### Annoate with transcript coordinats
+                ### Annotate with transcript coordinats
                 overlappingAnnotStartPlus <-
                     overlappingAnnotStart[which(
                         overlappingAnnotStart$strand == '+'), ]
@@ -2106,7 +2106,7 @@ importGTF <- function(
                         '\nIf there is no overlap (as in zero or close) there are two options:\n',
                         '1) The files do not fit together (different databases, versions etc)',
                         '(no fix except using propperly paired files).\n',
-                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
+                        '2) It is something to do with how the isoform ids are stored in the different files.',
                         'This problem might be solvable using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
                         '    3 Examples from GTF are :',
@@ -2117,13 +2117,13 @@ importGTF <- function(
 
                         '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
                         '1) The files do not fit together (different databases versions)',
-                        '(no fix except using propperly paired files).\n',
+                        '(no fix except using properly paired files).\n',
                         '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
                         'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
-                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '3) One file could contain non-canonical chromosomes while the other do not',
                         '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
                         '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
-                        'This problem might be solvable using some of the',
+                        'This problem might be solved using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
                         sep = ' '
                     )
@@ -2150,9 +2150,9 @@ importGTF <- function(
         myExons$isoform_id %in% myIsoAnot$isoform_id
     ),]
 
-    # Collaps ajecent exons (without any intron between)
+    # Collaps adjacent exons (without any intron between)
     if(TRUE) {
-        ### Reduce ajecent exons
+        ### Reduce adjacent exons
         tmp <- unlist(
             GenomicRanges::reduce(
                 split(
@@ -2180,7 +2180,7 @@ importGTF <- function(
     # create replicates
     nrRep <-
         data.frame(
-            condition = c('plaseholder1', 'plaseholder2'),
+            condition = c('placeholder1', 'placeholder2'),
             nrReplicates = c(NA, NA),
             row.names = NULL,
             stringsAsFactors = FALSE
@@ -2196,8 +2196,8 @@ importGTF <- function(
 
     designMatrix <-
         data.frame(
-            sampleID = c('plaseholder1', 'plaseholder2'),
-            condition = c('plaseholder1', 'plaseholder2'),
+            sampleID = c('placeholder1', 'placeholder2'),
+            condition = c('placeholder1', 'placeholder2'),
             stringsAsFactors = FALSE
         )
 
@@ -2374,7 +2374,7 @@ importIsoformExpression <- function(
                 stop(
                     paste(
                         'One or more of the files pointed to with the \'sampleVector\' argument does not exists.',
-                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        '\nDid you accidentally made a spelling mistake or added a unwanted "/" infront of the text string?',
                         sep=' '
                     )
                 )
@@ -2396,7 +2396,7 @@ importIsoformExpression <- function(
     ### Initialize
     if(TRUE) {
         if( !normalizationMethod %in% c("TMM", "RLE", "upperquartile") ){
-            stop('Metod supplied to "normalizationMethod" must be one of "TMM", "RLE" or "upperquartile". See documentation of edgeR::calcNormFactors for more info')
+            stop('Method supplied to "normalizationMethod" must be one of "TMM", "RLE" or "upperquartile". See documentation of edgeR::calcNormFactors for more info')
         }
 
         analysisCount <- 2 +
@@ -2456,7 +2456,7 @@ importIsoformExpression <- function(
 
 
             if(length(dirList) == 0) {
-                stop('No subdirecories were found in the supplied folder. Please check and try again.')
+                stop('No subdirectories were found in the supplied folder. Please check and try again.')
             }
 
             ### Extract those where there are files of interest
@@ -2821,7 +2821,7 @@ importIsoformExpression <- function(
             toRemove <- names(allZero)[which(allZero)]
             warning(
                 paste(
-                    'Some quantifications appared to not have worked (zero reads mapped).',
+                    'Some quantifications appeared to not have worked (zero reads mapped).',
                     '\nThe following libraries were therefore removed:',
                     paste(toRemove, collapse = ', ')
                 )
@@ -2979,7 +2979,7 @@ importRdata <- function(
             if( any( isoformNtFasta == '') ) {
                 stop(
                     paste(
-                        'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        'The \'isoformNtFasta\' argument does not lead anywhere (actually you just suppled "" to the argument).',
                         '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
                         'to import your own data? The system.file() should only be used',
                         'to access the example data stored in the IsoformSwitchAnalyzeR package.',
@@ -3001,7 +3001,7 @@ importRdata <- function(
             if( isoformExonAnnoation == '' ) {
                 stop(
                     paste(
-                        'The \'isoformExonAnnoation\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+                        'The \'isoformExonAnnoation\' argument does not lead anywhere (actually you just supplied "" to the argument).',
                         '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
                         'to import your own data? The system.file() should only be used',
                         'to access the example data stored in the IsoformSwitchAnalyzeR package.',
@@ -3015,7 +3015,7 @@ importRdata <- function(
                 stop(
                     paste(
                         'The file pointed to with the \'isoformExonAnnoation\' argument does not exists.',
-                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+                        '\nDid you accidentially made a spelling mistake or added a unwanted "/" infront of the text string?',
                         sep=' '
                     )
                 )
@@ -3371,7 +3371,7 @@ importRdata <- function(
                         ))
                     }
                     if( ! grepl('\\.gtf$|\\.gtf\\.gz$', isoformExonAnnoation, ignore.case = TRUE) ) {
-                        warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
+                        warning('The file appears not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the right file?')
                     }
 
                     if (!quiet) {
@@ -3567,12 +3567,12 @@ importRdata <- function(
                     }
 
                     if( length(isoformExonAnnoation) == 0 ) {
-                        stop('The GRange supplied to the "isoformExonAnnoation" argument have zero enteries (rows).')
+                        stop('The GRange supplied to the "isoformExonAnnoation" argument have zero entries (rows).')
                     }
 
                     ### Test
                     if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
-                        stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
+                        stop('The supplied annotation must contain to meta data columns: \'isoform_id\' and \'gene_id\'')
                     }
 
                     ### Test for other than exons by annotation
@@ -3728,7 +3728,7 @@ importRdata <- function(
 
         }
 
-        ### Test the columns of obtained annoation
+        ### Test the columns of obtained annotation
         if(TRUE) {
             if (!all(c('isoform_id', 'gene_id', 'gene_name') %in%
                      colnames(isoformAnnotation))) {
@@ -3784,7 +3784,7 @@ importRdata <- function(
                             'The annotation and quantification (count/abundance matrix and isoform annotation)',
                             'seems to be different (Jaccard similarity < 0.925).',
                             '\nEither isforoms found in the annotation are',
-                            'not quantifed or vise versa.',
+                            'not quantifed or vice versa.',
                             '\nSpecifically:\n',
                             length(unique(expIso)), 'isoforms were quantified.\n',
                             length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
@@ -3809,11 +3809,11 @@ importRdata <- function(
                             '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
                             '1) The files do not fit together (e.g different databases versions etc.)',
                             '(no fix except using propperly paired files).\n',
-                            '2) If you are using Ensembl data you have supplied the GTF without phaplotyps. You need to supply the',
+                            '2) If you are using Ensembl data you have supplied the GTF without haplotypes. You need to supply the',
                             '<Ensembl_version>.chr_patch_hapl_scaff.gtf file - NOT the <Ensembl_version>.chr.gtf\n',
-                            '3) One file could contain non-chanonical chromosomes while the other do not',
+                            '3) One file could contain non-canonical chromosomes while the other do not',
                             '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
-                            '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                            '4) It is something to do with how a subset of the isoform ids are stored in the different files.',
                             'This problem might be solvable using some of the',
                             '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
 
@@ -3831,11 +3831,11 @@ importRdata <- function(
                             '\nSpecifically:\n',
                             length(setdiff(isoformAnnotation$isoform_id, unique(expIso))), 'isoforms were only found in the annotation\n',
 
-                            '\nPlease make sure this is on purpouse since differences',
+                            '\nPlease make sure this is on purpose since differences',
                             'will cause inaccurate quantification and thereby skew all analysis.\n',
 
-                            'If you have quantified with Salmon this could be normal since it as default only keep one copy of identical sequnces (can be prevented using the --keepDuplicates option)\n',
-                            'We strongly encurage you to go back and figure out why this is the case.\n\n',
+                            'If you have quantified with Salmon this could be normal since it as default only keep one copy of identical sequences (can be prevented using the --keepDuplicates option)\n',
+                            'We strongly encourage you to go back and figure out why this is the case.\n\n',
                             sep=' '
                         )
                     )
@@ -3980,7 +3980,7 @@ importRdata <- function(
 
         ### Assign isoforms to ref_gene_id and gene_names
         if(   fixStringTieAnnotationProblem ) {
-            if (!quiet) { message('Step 3 of 7: Fixing StringTie gene annoation problems...')}
+            if (!quiet) { message('Step 3 of 7: Fixing StringTie gene annotation problems...')}
 
             ### variables for messages
             anyFixed1 <- FALSE
@@ -4175,7 +4175,7 @@ importRdata <- function(
                                         nIsoWihoutNames2 - nIsoWihoutNames3,
                                         ' isoforms were assigned the ref_gene_id and gene_name of the most similar',
                                         '\n        annotated isoform (defined via overlap in genomic exon coordinates).',
-                                        '\n        This was only done if the overlap met the requriements',
+                                        '\n        This was only done if the overlap meet the requirements',
                                         '\n        indicated by the three fixStringTieViaOverlap* arguments.',
                                         #'\n',
                                         sep = ''
@@ -4330,7 +4330,7 @@ importRdata <- function(
                                     '   ',
                                     nProblems - nProblems2 ,
                                     ' gene_ids which were associated with multiple ref_gene_id/gene_names',
-                                    '\n        were split into mutliple genes via their ref_gene_id/gene_names.',
+                                    '\n        were split into multiple genes via their ref_gene_id/gene_names.',
                                     #'\n',
                                     sep = ''
                                 )
@@ -4578,9 +4578,9 @@ importRdata <- function(
                             '(no fix except using propperly paired files).\n',
                         '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
                         'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
-                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '3) One file could contain non-canonical chromosomes while the others do not',
                         '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
-                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                        '4) It is something to do with how a subset of the isoform ids are stored in the different files.',
                         'This problem might be solvable using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
                         sep = ' '
@@ -5143,7 +5143,7 @@ importSalmonData <- function(
         }
 
         if( length(unique(salmonFileDataFrame$condition)) == 1) {
-            stop('There appear to be only 1 condition annoatated in the \'condition\' column.')
+            stop('There appear to be only 1 condition annotated in the \'condition\' column.')
         }
     }
 
@@ -5162,7 +5162,7 @@ importSalmonData <- function(
 
         gtfPath <- metadata(localSe)$txomeInfo$gtf
 
-        if (!quiet) { message('Importing annoation data...') }
+        if (!quiet) { message('Importing annotation data...') }
         #suppressMessages(
         #    suppressWarnings(
         #        localSe <- addExons(localSe)
@@ -5182,7 +5182,7 @@ importSalmonData <- function(
 
     ### Massage imported data
     if(TRUE) {
-        if (!quiet) { message('Massaging data...') }
+        if (!quiet) { message('Messaging data...') }
 
         ### Count data
         if(TRUE) {
@@ -5581,7 +5581,7 @@ preFilter <- function(
                     length(x) > 1))]
 
             if (!length(genesToKeep)) {
-                stop('No genes were left after filtering for mutlipe transcrip genes')
+                stop('No genes were left after filtering for multipe transcript genes')
             }
 
             localData <-
