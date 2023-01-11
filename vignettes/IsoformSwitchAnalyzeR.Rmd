@@ -27,7 +27,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 <!-- Abstract -->
 ## Abstract
-Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as Cufflinks, StringTie, Kallisto and Salmon. Alternatively long-read RNASeq (third generation sequencing) now rutinly provide us with full length transcripts. These full lenght transcripts makes it possible to analyze isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential. 
+Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as Cufflinks, StringTie, Kallisto and Salmon. Alternatively long-read RNASeq (third generation sequencing) now routinely provide us with full length transcripts. These full lenght transcripts makes it possible to analyze isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential. 
 
 To solve this problem, we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR facilitates integration of many sources of (predicted) annotation such as Open Reading Frame (ORF/CDS), protein domains (via Pfam), signal peptides (via SignalP), Intrinsically Disordered Regions (IDR, via NetSurfP-2 or IUPred2A), coding potential (via CPAT or CPC2) and sensitivity to Non-sense Mediated Decay (NMD) and more. The combination of identified isoform switches and their annotation enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches for individual genes as well as both summary statistics and visualization of the genome-wide changes/consequences of isoform switches, their consequences and the associated alternative splicing.
 
@@ -601,7 +601,7 @@ Furthermore, note that:
 - The differential gene/isoform expression analysis is not a part of the standard IsoformSwitchAnalyzeR workflow but can easily be added as described in [Adding differential gene expression].
 - the _switchPlot()_ function has an argument called _IFcutoff_ which requires the Isoform Fraction of an isoform to be larger than IFcutoff (default 0.05) to be included in the plot. Increasing this cutoff can result in "cleaner" plots as less used isoforms will be removed.
 - Some regions of transcripts might be marked as "Not Analyzed" if you have been using webservers - for more info on that see [The switchPlot contains regions "Not Annotated"]
-- The dIFcutoff argument in the _switchPlot()_ function is what determines the "increased/decreased/unchage usage" underneed the isoform names in the transcript plots. Please refere to the isoform usage (bottom right) for indication of the statistical analysis.
+- The dIFcutoff argument in the _switchPlot()_ function is what determines the "increased/decreased/unchage usage" underneed the isoform names in the transcript plots. Please refer to the isoform usage (bottom right) for indication of the statistical analysis.
 
 
 <br />
