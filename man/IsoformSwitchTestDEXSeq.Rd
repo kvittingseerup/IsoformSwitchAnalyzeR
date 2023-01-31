@@ -112,6 +112,8 @@ Kristoffer Vitting-Seerup
 
 \seealso{
 \code{\link{preFilter}}\cr
+\code{\link{isoformSwitchTestSatuRn}}\cr
+\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{extractTopSwitches}}
 }

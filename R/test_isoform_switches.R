@@ -1,3 +1,306 @@
+### Test via satuRn
+isoformSwitchTestSatuRn <- function(switchAnalyzeRlist,
+                                    alpha = 0.05,
+                                    dIFcutoff = 0.1,
+                                    reduceToSwitchingGenes = TRUE,
+                                    reduceFurtherToGenesWithConsequencePotential = TRUE,
+                                    onlySigIsoforms = FALSE,
+                                    keepIsoformInAllConditions = TRUE,
+                                    diagplots = TRUE,
+                                    showProgress = TRUE,
+                                    quiet = FALSE){
+  
+  # preamble
+  if (TRUE) {
+    if (class(switchAnalyzeRlist) != "switchAnalyzeRlist") {
+      stop(paste("The object supplied to 'switchAnalyzeRlist'", 
+                 "must be a 'switchAnalyzeRlist'"))
+    }
+    if (switchAnalyzeRlist$sourceId == "preDefinedSwitches") {
+      stop(paste("The switchAnalyzeRlist is made from pre-defined isoform switches", 
+                 "which means it is made without defining conditions (as it should be).", 
+                 "\nThis also means it cannot be used to test for new isoform switches -", 
+                 "if that is your intention you need to create a new", 
+                 "switchAnalyzeRlist with the importRdata() function and try again.", 
+                 sep = " "))
+    }
+    if (!is.logical(reduceToSwitchingGenes)) {
+      stop(paste("The argument supplied to 'reduceToSwitchingGenes'", 
+                 "must be an a logic"))
+    }
+    if (dIFcutoff < 0 | dIFcutoff > 1) {
+      stop("The dIFcutoff must be in the interval [0,1].")
+    }
+    if (reduceToSwitchingGenes) {
+      if (alpha < 0 | alpha > 1) {
+        stop("The alpha parameter must be between 0 and 1 ([0,1]).")
+      }
+      if (alpha > 0.05) {
+        warning(paste("Most journals and scientists consider an alpha", 
+                      "larger than 0.05 untrustworthy. We therefore recommend", 
+                      "using alpha values smaller than or equal to 0.05"))
+      }
+    }
+    if (is.null(switchAnalyzeRlist$isoformCountMatrix)) {
+      stop(paste("An isoform replicate count matrix is nessecary for using", 
+                 "the satuRn approach - please reinitalize the", 
+                 "swithcAnalyzeRlist object with one of the import*()", 
+                 "functions and try again."))
+    }
+    if (any(switchAnalyzeRlist$conditions$nrReplicates == 
+            1)) {
+      stop(paste("A statistical test cannot be performed without replicates.", 
+                 "Please remove all conditions with only 1 replicate and try again.", 
+                 "\nThis can either be done before creating the switchAnalyzeRlist", 
+                 "in the first place or with the subsetSwitchAnalyzeRlist() function", 
+                 sep = " "))
+    }
+    comparisonsToMake <- unique(switchAnalyzeRlist$isoformFeatures[, c(
+      'condition_1', 'condition_2'
+    )])
+    nConditions <- length(unique(switchAnalyzeRlist$designMatrix$condition))
+    oneWayData <- nConditions <= 2
+  }
+  
+  # Create SummarizedExperiment
+  if(TRUE) {
+    if (!quiet) {
+      message("Step 1 of 4: Creating SummarizedExperiment data object...")
+    }
+    localDesign <- switchAnalyzeRlist$designMatrix
+    
+    ### Convert group of interest to factors
+    localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
+    
+    if( ncol(localDesign) > 2 ) {
+      for(i in 3:ncol(localDesign) ) { # i <- 4
+        if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+          ### if there are at least two samples per "condition"
+          if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
+            localDesign[,i] <- factor(localDesign[,i])
+          }
+        }
+      }
+    }
+    
+    ### Make formula for model
+    localFormula <- '~ 0 + condition'
+    if (ncol(localDesign) > 2) {
+      localFormula <- paste(
+        localFormula,
+        '+',
+        paste(
+          colnames(localDesign)[3:ncol(localDesign)],
+          collapse = ' + '
+        ),
+        sep=' '
+      )
+    }
+    localFormula <- as.formula(localFormula)
+    
+    ### Make model (design matrix)
+    localModel <- model.matrix(localFormula, data = localDesign)
+    indexToModify <- 1:nConditions
+    colnames(localModel)[indexToModify] <- gsub(
+      pattern =  '^condition',
+      replacement =  '',
+      x =  colnames(localModel)[indexToModify]
+    )
+    
+    ### Subset count matrix (after prefiltering)
+    localCount <- switchAnalyzeRlist$isoformCountMatrix[which(
+      switchAnalyzeRlist$isoformCountMatrix$isoform_id %in%
+        switchAnalyzeRlist$isoformFeatures$isoform_id
+    ),]
+    rownames(localCount) <- localCount$isoform_id
+    
+    ### add gene id
+    localCount$gene_id <- switchAnalyzeRlist$isoformFeatures$gene_id[match(
+      localCount$isoform_id, switchAnalyzeRlist$isoformFeatures$isoform_id
+    )]
+    
+    ### extract isoform and gene annotation
+    txInfo <- localCount[,c('isoform_id', 'gene_id')]
+    
+    ### extract counts
+    localCount <- localCount[,setdiff(colnames(localCount), c('isoform_id', 'gene_id'))]
+    
+    ### this column always exist if the input was prepared using `importRdata`
+    rownames(localDesign) <- localDesign$sampleID 
+    
+    ### Make summarizedExperiment object
+    sumExp <- SummarizedExperiment::SummarizedExperiment(
+      assays = list(counts = localCount),
+      colData = localDesign,
+      rowData = txInfo
+    )
+  }
+  
+  ### Fitting linear models
+  if(TRUE){
+    if (!quiet) {
+      message("Step 2 of 4: Fitting linear models...")
+    }
+    sumExp <- fitDTU(
+      object = sumExp,
+      formula = localFormula,
+      parallel = FALSE,
+      BPPARAM = BiocParallel::bpparam(),
+      verbose = showProgress
+    )
+  }
+  
+  ### Testing pairwise comparison(s)
+  if(TRUE){
+    if(!quiet){
+      message("Step 3 of 4: Testing pairwise comparison(s)...")
+    }
+    
+    # Set up contrast matrix L to perform all pairwise comparisons
+    # For satuRn, this can be done easily, without looping on data splits
+    L <- matrix(0, ncol = nrow(comparisonsToMake), nrow = ncol(localModel)) 
+    rownames(L) <- colnames(localModel) 
+    colnames(L) <- paste0("Contrast_", seq_len(ncol(L)))
+    for (i in 1:ncol(L)) {
+      L[match(comparisonsToMake[i,], rownames(L)),i] <- c(-1,1)
+    }
+    
+    ### Test all contrasts simultaneously
+    sumExp <- satuRn::testDTU(
+      object = sumExp,
+      contrasts = L,
+      diagplot1 = diagplots,
+      diagplot2 = diagplots,
+      sort = FALSE
+    )
+  }
+  
+  ### Preparing output
+  if (TRUE) {
+    if (!quiet) {
+      message("\nStep 4 of 4: Preparing output...")
+    }
+    
+    resultOfPairwiseTest <- rowData(sumExp)[grep("fitDTUResult",names(rowData(sumExp)))]
+    for (i in 1:ncol(resultOfPairwiseTest)) {
+      resultOfPairwiseTest[[i]]$condition_1 <- comparisonsToMake$condition_1[i]
+      resultOfPairwiseTest[[i]]$condition_2 <- comparisonsToMake$condition_2[i]
+    }
+    
+    ### check for which contrast(s) the empirical correction has failed
+    empirical_succeed <- unlist(lapply(resultOfPairwiseTest, function(i){
+      sum(!is.na(i$pval))
+    }))
+    if(any(empirical_succeed < 500)){ # if not all analyses allowed for computing empirical
+      warning("Empirical adjustment of p-values failed, continuing analysis with raw p-values \n")
+      for (i in 1:ncol(resultOfPairwiseTest)) { # work with raw p-values
+        resultOfPairwiseTest[[i]]$padj <- resultOfPairwiseTest[[i]]$regular_FDR
+      }
+    } else { # if none failed, work with empirical p-values
+      for (i in 1:ncol(resultOfPairwiseTest)) {
+        resultOfPairwiseTest[[i]]$padj <- resultOfPairwiseTest[[i]]$empirical_FDR
+      }
+    }
+    
+    resultOfPairwiseTest <- do.call(rbind, resultOfPairwiseTest)
+    resultOfPairwiseTest$isoform_id <- gsub(".*\\.", "", rownames(resultOfPairwiseTest))
+    rownames(resultOfPairwiseTest) <- 1:nrow(resultOfPairwiseTest)
+    
+    ### Replace with reference ids (which specify isoform-contrast combinations)
+    resultOfPairwiseTest$iso_ref <-
+      switchAnalyzeRlist$isoformFeatures$iso_ref[match(
+        stringr::str_c(
+          resultOfPairwiseTest$isoform_id,
+          resultOfPairwiseTest$condition_1,
+          resultOfPairwiseTest$condition_2
+        ),
+        stringr::str_c(
+          switchAnalyzeRlist$isoformFeatures$isoform_id,
+          switchAnalyzeRlist$isoformFeatures$condition_1,
+          switchAnalyzeRlist$isoformFeatures$condition_2
+        )
+      )]
+    
+    ### Remove those without ID (below filtering treshold)
+    resultOfPairwiseTest <- resultOfPairwiseTest[which(
+      !is.na(resultOfPairwiseTest$iso_ref)
+    ),]
+    resultOfPairwiseTest$gene_ref <-
+      switchAnalyzeRlist$isoformFeatures$gene_ref[match(
+        resultOfPairwiseTest$iso_ref,
+        switchAnalyzeRlist$isoformFeatures$iso_ref
+      )]
+    
+    myDiff <- setdiff(
+      colnames(resultOfPairwiseTest),
+      c('iso_ref', 'gene_ref')
+    )
+    resultOfPairwiseTest <- resultOfPairwiseTest[,c('iso_ref', 'gene_ref', myDiff)]
+  }
+  
+  if (TRUE) {
+    if (!quiet) {
+      message("Result added switchAnalyzeRlist")
+    }
+    
+    ### obtain gene-level results
+    switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <- NA
+    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <- NA
+    geneQlevel <- sapply(X = split(resultOfPairwiseTest$padj, 
+                                   resultOfPairwiseTest$gene_ref), FUN = function(x) {
+                                     min(c(1, x), na.rm = TRUE)
+                                   })
+    switchAnalyzeRlist$isoformFeatures$gene_switch_q_value <- geneQlevel[match(switchAnalyzeRlist$isoformFeatures$gene_ref, 
+                                                                               names(geneQlevel))]
+    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value <- resultOfPairwiseTest$padj[match(switchAnalyzeRlist$isoformFeatures$iso_ref, 
+                                                                                                 resultOfPairwiseTest$iso_ref)]
+    
+    ### add results to switchAnalyzeRlist
+    switchAnalyzeRlist$isoformSwitchAnalysis <- resultOfPairwiseTest
+    
+    ### reduce to genes with at least one significant isoform if TRUE
+    if (reduceToSwitchingGenes) {
+      if (reduceFurtherToGenesWithConsequencePotential) {
+        tmp <- IsoformSwitchAnalyzeR:::extractSwitchPairs(switchAnalyzeRlist, alpha = alpha, 
+                                                          dIFcutoff = dIFcutoff, onlySigIsoforms = onlySigIsoforms)
+        combinedGeneIDsToKeep <- unique(tmp$gene_ref)
+      } else {
+        isoResTest <- any(!is.na(switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value))
+        if (isoResTest) {
+          combinedGeneIDsToKeep <- switchAnalyzeRlist$isoformFeatures$gene_ref[which(switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value < 
+                                                                                       alpha & abs(switchAnalyzeRlist$isoformFeatures$dIF) > 
+                                                                                       dIFcutoff)]
+        } else {
+          combinedGeneIDsToKeep <- switchAnalyzeRlist$isoformFeatures$gene_ref[which(switchAnalyzeRlist$isoformFeatures$gene_switch_q_value < 
+                                                                                       alpha & abs(switchAnalyzeRlist$isoformFeatures$dIF) > 
+                                                                                       dIFcutoff)]
+        }
+      }
+      if (length(combinedGeneIDsToKeep) == 0) {
+        stop(paste("No signifcant switches were found with the supplied cutoffs", 
+                   "whereby we cannot reduce the switchAnalyzeRlist to only", 
+                   "significant genes (with consequence potential)"))
+      }
+      if (keepIsoformInAllConditions) {
+        combinedGeneIDsToKeep <- switchAnalyzeRlist$isoformFeatures$gene_id[which(switchAnalyzeRlist$isoformFeatures$gene_ref %in% 
+                                                                                    combinedGeneIDsToKeep)]
+        switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(switchAnalyzeRlist, 
+                                                       switchAnalyzeRlist$isoformFeatures$gene_id %in% 
+                                                         combinedGeneIDsToKeep)
+      }
+      if (!keepIsoformInAllConditions) {
+        switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(switchAnalyzeRlist, 
+                                                       switchAnalyzeRlist$isoformFeatures$gene_ref %in% 
+                                                         combinedGeneIDsToKeep)
+      }
+    }
+  }
+  if (!quiet) {
+    message("Done")
+  }
+  return(switchAnalyzeRlist)
+}
+
 ### Test via DRIMSeq
 isoformSwitchTestDRIMSeq <- function(
     switchAnalyzeRlist,
