@@ -1958,16 +1958,16 @@ extractTopSwitches <- function(
                     .data = dataDF2,
                     .variables = 'comparison',
                     .fun = function(aDF) {
-                        if (nrow(dataDF2) < n) {
+                        if ( n > nrow(dataDF2) ) {
                             if (filterForConsequences) {
                                 warning(paste(
-                                    'Less than n genes with significant',
+                                    'Less than',n ,'genes with significant',
                                     'switches and consequences were found.',
                                     'Returning those.'
                                 ))
                             } else {
                                 warning(paste(
-                                    'Less than n genes genes with significant',
+                                    'Less than',n ,'genes genes with significant',
                                     'switches were found. Returning those.'
                                 ))
                             }
@@ -2082,17 +2082,18 @@ extractTopSwitches <- function(
                 plyr::ddply(
                     .data = dataDF2,
                     .variables = 'comparison',
+                    .inform = TRUE,
                     .fun = function(aDF) {
-                        if (nrow(dataDF2) < n) {
+                        if ( n > nrow(dataDF2) ) {
                             if (filterForConsequences) {
                                 warning(paste(
-                                    'Less than n genes with significant',
+                                    'Less than',n ,'genes with significant',
                                     'switches and consequences were found.',
                                     'Returning those.'
                                 ))
                             } else {
                                 warning(paste(
-                                    'Less than n genes genes with significant',
+                                    'Less than',n ,'genes genes with significant',
                                     'switches were found. Returning those.'
                                 ))
                             }
