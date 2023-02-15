@@ -67,7 +67,7 @@ Kristoffer Vitting-Seerup
 \seealso{
 \code{\link{preFilter}}\cr
 \code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
+\code{\link{isoformSwitchTestSatuRn}}\cr
 \code{\link{extractTopSwitches}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{analyzeSwitchConsequences}}

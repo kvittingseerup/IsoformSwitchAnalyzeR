@@ -21,15 +21,15 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 <!-- Title --> 
 <center> <h1>IsoformSwitchAnalyzeR</h1> </center>
-<center> <h2>Enabling Identification and Analysis of Isoform Switches with Functional Consequences and the Associated Alternative Splicing</h2> </center>
+<center> <h2>Enabling Analysis of Isoform Switches with Functional Consequences and the Underlying Alternative Splicing</h2> </center>
 <center> <h3>Kristoffer Vitting-Seerup</h3> </center>
 <center> <h4>`r Sys.Date()`</h4> </center>
 
 <!-- Abstract -->
 ## Abstract
-Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as Cufflinks, StringTie, Kallisto and Salmon. Alternatively long-read RNASeq (third generation sequencing) now rutinly provide us with full length transcripts. These full lenght transcripts makes it possible to analyze isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential. 
+Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as StringTie, Kallisto and Salmon. Alternatively long-read RNA-seq (third generation sequencing) now routinely provide us with full length transcripts. These full length transcripts makes it possible to analyze changes in isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential. 
 
-To solve this problem, we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switching from RNA-seq derived quantification of novel and/or annotated full-length isoforms. IsoformSwitchAnalyzeR facilitates integration of many sources of (predicted) annotation such as Open Reading Frame (ORF/CDS), protein domains (via Pfam), signal peptides (via SignalP), Intrinsically Disordered Regions (IDR, via NetSurfP-2 or IUPred2A), coding potential (via CPAT or CPC2) and sensitivity to Non-sense Mediated Decay (NMD) and more. The combination of identified isoform switches and their annotation enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization methods for isoform switches for individual genes as well as both summary statistics and visualization of the genome-wide changes/consequences of isoform switches, their consequences and the associated alternative splicing.
+To solve this problem, we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switches from RNA-seq derived quantification of novel and/or known full-length isoforms. IsoformSwitchAnalyzeR facilitates integration of many sources of annotation such as protein domains, signal peptides, Intrinsically Disordered Regions (IDR), subcellular localization, sensitivity to Non-sense Mediated Decay (NMD) and more. The combination of identified isoform switches and their annotation enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization of isoform switches of individual genes, the genome-wide consequences of isoform switches, and the associated changes in alternative splicing.
 
 In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform resolution with a focus on isoform switching (with predicted consequences) and its associated alternative splicing, thereby expanding the usability of RNA-seq data.
 
@@ -59,12 +59,11 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 - [Importing Data Into R]
     + [Importing Data from Kallisto, Salmon, RSEM or StringTie]
     + [Importing Data from Cufflinks/Cuffdiff]
-    + [Importing long-read Data from the TALON Pipeline]
-    + [Importing Data from other Full-length Transcript Assemblers]
+    + [Importing Data from Full-length Transcript Assemblers]
 - [Filtering]
 - [Identifying Isoform Switches]
     + [Testing for Isoform Switches via DEXSeq] (recommended)
-    + [Testing for Isoform Switches via DRIMSeq]
+    + [Testing for Isoform Switches via satuRn]
     + [Testing for Isoform Switches with other Tools]
 - [Analyzing Open Reading Frames]
 - [Extracting Nucleotide and Amino Acid Sequences]
@@ -117,7 +116,7 @@ The importance of analyzing isoforms instead of genes has been highlighted by ma
 
 On a more systematic level several recent studies suggest that isoform switches are quite common since they often identify hundreds of switch events in both cancer and non-cancer studies.
 
-Tools such as Cufflinks, Salmon and Kallisto allows for (reconstruction and) quantification of full-length transcripts from RNA-seq data.  Such data has the potential to facilitate genome-wide analysis of alternative isoform usage and identification of isoform switching --- but unfortunately these types of analyses are still only rarely done; most analyses are on gene level only.
+Tools such as StringTie, Salmon and Kallisto allows for (reconstruction and) quantification of full-length transcripts from RNA-seq data.  Such data has the potential to facilitate genome-wide analysis of alternative isoform usage and identification of isoform switching --- but unfortunately these types of analyses are still only rarely done; most analyses are on gene level only.
 
 We hypothesize that there are multiple reasons why RNA-seq data is not used to its full potential:
 
@@ -183,9 +182,6 @@ This R package comes with _plenty_ of documentation. Much information can be fou
 
 If you want to report a bug/error (found in the newest version of the R package!) please make an issue with a reproducible example at [GitHub](https://github.com/kvittingseerup/IsoformSwitchAnalyzeR/issues) and ember to post i) the code that gave the error, ii) the error message as well as iii) the output of running sessionInfo().
 
-If you have unanswered questions or comments regarding IsoformSwitchAnalyzeR or how to run it, please post them on the associated [google group](https://groups.google.com/forum/#!forum/isoformswitchanalyzer) (after make sure the question was not already answered). If code or error messages are included please post i) the code that gave the error, ii) the error message as well as iii) the output of running sessionInfo().
-
-
 If you have suggestions for improvements, please put them on [GitHub](https://github.com/kvittingseerup/IsoformSwitchAnalyzeR). This will allow other people to up vote your idea, thereby showing us there is wide support of implementing your idea.
 
 Back to [Table of Content].
@@ -203,15 +199,18 @@ If you are using the:
 - **Import of data from Salmon via Tximeta (importSalmonData() function)**: Please cite reference _10_ and _17_.
 - **Inter-library normalization of abundance values**: Please cite reference _10_ and _11_.
 - **Isoform switch test implemented utilizing DEXSeq via IsoformSwitchAnalyzeR (Default)** : Please cite reference _1_, _12_ and _13_.
-- **Isoform switch test implemented in the DRIMSeq package**: Please cite reference _1_ and _3_.
+- **Isoform switch test implemented in the satuRn package**: Please cite reference _3_.
 - **Prediction of open reading frames (ORF) analysis**: Please cite reference _1_ and _4_.
 - **Prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity**: Please cite reference _1_, _4_, _5_ and _6_.
 - **CPAT**: Please cite reference _7_.
 - **CPC2**: Please cite reference _14_.
 - **Pfam**: Please cite reference _8_.
+- **Pfam isotypes**: Please cite reference _20_.
 - **SignalP**: Please cite reference _9_.
 - **NetSurf2-P**: Please cite reference _15_.
 - **IUPred2A**: Please cite reference _16_.
+- **Deeploc2**: Please cite reference _18_.
+- **DeepTMHMM**: Please cite reference _19_.
 - **Prediction of consequences**: Please cite reference _1_.
 - **Visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package: Please cite reference _1_.
 - **Alternative splicing analysis**: Please cite both reference _1_ and _4_.
@@ -223,21 +222,24 @@ If you are using the:
 
 1. _Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)_ [link](http://mcr.aacrjournals.org/content/15/9/1206.long).
 2. _Vitting-Seerup et al. **IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences.** Bioinformatics (2019)_ [link](http://dx.doi.org/10.1093/bioinformatics/btz247).
-3. _Nowicka et al. **DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics.** F1000Research, 5(0), 1356._ [link](https://f1000research.com/articles/5-1356/v2).
+3. _Gilis et al. **satuRn: Scalable analysis of differential transcript usage for bulk and single-cell RNA-sequencing applications (version 2)**._ F1000Research, 10:374. [link](https://doi.org/10.12688/f1000research.51749.2)
 4. _Vitting-Seerup et al. **spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data**. BMC Bioinformatics 2014, 15:81._ [link](http://www.biomedcentral.com/1471-2105/15/81).
 5. _Weischenfeldt et al. **Mammalian tissues defective in nonsense-mediated mRNA decay display highly aberrant splicing patterns**. Genome Biol 2012, 13:R35_ [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2012-13-5-r35).
 6. _Huber et al. **Orchestrating high-throughput genomic analysis with Bioconductor**. Nat. Methods, 2015, 12:115-121._ [link](https://www.nature.com/articles/nmeth.3252).
 7. _Wang et al. **CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model**. Nucleic Acids Res. 2013, 41:e74._ [link](https://academic.oup.com/nar/article/41/6/e74/2902455).
 8. _Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2012)_ [link](https://academic.oup.com/nar/article/40/D1/D290/2903007). 
-9. _Almagro et al. SignalP 5.0 improves signal peptide predictions using deep neural networks.**. Nat. Biotechnol (2019)_ [link](https://www.nature.com/articles/s41587-019-0036-z)
+9. _Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models.**. Nat. Biotechnol (2022)_ [link](https://www.nature.com/articles/s41587-021-01156-3)
 10. _Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015)._ [link](https://f1000research.com/articles/4-1521/v2).
 11. _Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)_ [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25).
 12. _Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)_ [link](https://academic.oup.com/nar/article/43/7/e47/2414268).
 13. _Anders et al. **Detecting differential usage of exons from RNA-seq data**. Genome Research (2012)_ [link](https://genome.cshlp.org/content/22/10/2008.long).
 14. _Kang et al. **CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features**. Nucleic Acids Res (2017)_ [link](https://academic.oup.com/nar/article/45/W1/W12/3831091).
-15. _Klausen et al. **NetSurfP-2.0: improved prediction of protein structural features by integrated deep learning**. BioRxiv (2018)_ [link](https://www.biorxiv.org/content/10.1101/311209v3)
+15. _Klausen et al. **NetSurfP-2.0: improved prediction of protein structural features by integrated deep learning**. Proteins (2019)_ [link](https://doi.org/10.1002/prot.25674)
 16. _Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018)_ [link](https://doi.org/10.1093/nar/gky384)
 17. _Love et al. Tximeta: Reference sequence checksums for provenance identification in RNA-seq. PLoS Comput. Biol (2020)_ [link](http://dx.doi.org/10.1371/journal.pcbi.1007664)
+18. _Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res  (2022)_ [link](http://dx.doi.org/10.1093/nar/gkac278)
+19. _Hallgren et al. DeepTMHMM predicts alpha and beta transmembrane proteins using deep neural networks. bioRxiv (2022)_ [link](https://doi.org/10.1101/2022.04.08.487609)
+20. _Vitting-Seerup. Most protein domains exist as multiple variants with distinct structure and function. bioRxiv (2022)_ [link](https://www.biorxiv.org/content/10.1101/2022.08.12.503740v1)
 
 
 <br />
@@ -340,7 +342,7 @@ Since IsoformSwitchAnalyzeR is (significantly) updated quite frequently please m
 <br />
 
 #### Importing the Data
-The first step is to import all data needed for the analysis into R and then concatenate them as a switchAnalyzeRlist object. Although IsoformSwitchAnalyzeR has different functions for importing data from tools such as Salmon/Kallisto/RSEM/StringTie/Cufflinks/TALON (for long-read data), IsoformSwitchAnalyzeR can be used with quantifications from any tool which produce isoform-level quantification.
+The first step is to import all data needed for the analysis into R and then concatenate them as a switchAnalyzeRlist object. Although IsoformSwitchAnalyzeR has different functions for importing data from tools such as Salmon/Kallisto/RSEM/StringTie/Cufflinks/IsoQuant (for long-read data), IsoformSwitchAnalyzeR can be used with quantifications from any tool which produce isoform-level quantification.
 
 For the purpose of illustrating importing data into R let us use some cufflinks data re-quantified quantified via Salmon which is included in the distribution of IsoformSwitchAnalyzeR.
 
@@ -350,7 +352,7 @@ Please note:
 
 2) If you have used Salmon to quantify newer versions of the Human/Mouse/Dropsophila Gencode/Ensembl transcriptomes there is an even easier way to import the data (using tximeta) as described in [Importing Data from Salmon via Tximeta].
 
-3) For other sources of quantification (including Cufflinks/Cuffdiff and TALON) see [Importing Data Into R]. 
+3) For other sources of quantification (including StringTie and IsoQuant) see [Importing Data Into R]. 
 
 
 The import of the example quantification can be done as follows:
@@ -575,7 +577,7 @@ subset(
 )
 ```
 
-Let us take a look at the isoform switch in the ZAK gene using the switchPlot functionality. Note that since the switchAnalyzeRlist contains two different comparison (LUAD and COAD) we need to specify the conditions to plot (this is not necessary if there is only one condition in your data).
+Let us take a look at the isoform switch in the ZAK gene (7th most significant gene) using the switchPlot functionality. Note that since the switchAnalyzeRlist contains two different comparison (LUAD and COAD) we need to specify the conditions to plot (this is not necessary if there is only one condition in your data).
 
 
 ```{r, fig.width=12, fig.height=7, warning=FALSE}
@@ -588,7 +590,7 @@ switchPlot(
 )
 ```
 
-From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Interestingly the long isoform contains a SAM_1 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Furthermore, it is noteworthy all 3 isoforms share an Intrinsically Disordered Regions (IDR) in the N-terminal even though they are encoded by different regions of the chromosome. THe IDR with a predicted binding site in the long isoform is of particular interest - and it strenghtens the new-interaction-partners hypothesis.
+From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Interestingly the long isoform contains a SAM_1 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Since only the long isoform have a IDR with a predicted binding site this IDR strengthens the new-interaction-partners hypothesis. Lastly we see that both the topological analysis (the small boxes above the transcripts) and the subcellular location analysis (indicated below the isoform name to the left) suggest all transcripts are intracellular
 
 If you want to save this plot as a pdf file via the _pdf_ command, you need to specify "onefile = FALSE". The following code chunk  will produce a nicely-sized figure:
 
@@ -598,10 +600,10 @@ If you want to save this plot as a pdf file via the _pdf_ command, you need to s
 
 Furthermore, note that:
 
-- The differential gene/isoform expression analysis is not a part of the standard IsoformSwitchAnalyzeR workflow but can easily be added as described in [Adding differential gene expression].
-- the _switchPlot()_ function has an argument called _IFcutoff_ which requires the Isoform Fraction of an isoform to be larger than IFcutoff (default 0.05) to be included in the plot. Increasing this cutoff can result in "cleaner" plots as less used isoforms will be removed.
+- The differential gene/isoform expression analysis shown here is not a part of the standard IsoformSwitchAnalyzeR workflow but can easily be added as described in [Adding differential gene expression].
+- the _switchPlot()_ function has an argument called _IFcutoff_ which requires the Isoform Fraction of an isoform to be larger than IFcutoff (default 0.05) to be included in the plot. Increasing this cutoff can result in "simpler" plots as less used isoforms will be removed.
 - Some regions of transcripts might be marked as "Not Analyzed" if you have been using webservers - for more info on that see [The switchPlot contains regions "Not Annotated"]
-- The dIFcutoff argument in the _switchPlot()_ function is what determines the "increased/decreased/unchage usage" underneed the isoform names in the transcript plots. Please refere to the isoform usage (bottom right) for indication of the statistical analysis.
+- The dIFcutoff argument in the _switchPlot()_ function is what determines the "increased/decreased/unchanged usage" underneed the isoform names in the transcript plots. Please refer to the isoform usage (bottom right) for indication of the statistical analysis.
 
 
 <br />
@@ -618,7 +620,9 @@ extractSwitchOverlap(
 )
 ```
 
-Within each condition we can look more into the details of the isoform switch consequences by considering each type consequence separately as follows:
+From which it can be seen that the overlap here is fairly small. By comparing the overlaps of switches (left) and genes (right) we can even see that the two cancer types utilize different switches in some of the same genes.
+
+We can investigate the consequences of isoform switches by counting each type consequence separately as follows:
 
 ```{r, fig.width=12, fig.height=5}
 extractConsequenceSummary(
@@ -631,40 +635,72 @@ extractConsequenceSummary(
 
 Note the "consequencesToAnalyze" argument enables analysis of only a subset of features.
 
-From this summary plots above many conclusions are possible. First of all, the most frequent changes are changes affecting protein domains, Intrinsically Disordered Regions (IDR) and ORFs.
+From this summary plots above many things can be seen. First of all, the most frequent changes affect protein domains, Intrinsically Disordered Regions (IDR) and length of extracellular domains. We also notice some consequences are un-evenly distributed (e.g. many more instances of "domain loss" compared to "domain gains"). Such differences can be systematically analyzed as shown below.
 
 <br />
 
 ##### Consequence Enrichment Analysis
-When considering opposite consequence (e.g. the gain vs loss of protein domains) in the plot above its quite easy to see they are unevenly distributed (e.g. more protein domain loss than protein domain gain). Such uneven distribution can be systematically analyzed for all consequences using the build in enrichment analysis:
+IsoformSwitchAnalyzeR enables systematic analysis of the predicted consequences of isoform switches. When considering opposite consequence (e.g. the gain vs loss of protein domains) in the plot above its quite easy to see they are unevenly distributed (e.g. more protein domain loss than protein domain gain). Such uneven distribution can be systematically analyzed for all consequences using the build in enrichment analysis:
 
 ```{r, fig.width=14, fig.height=5}
 extractConsequenceEnrichment(
     exampleSwitchListAnalyzed,
     consequencesToAnalyze='all',
     analysisOppositeConsequence = TRUE,
+    localTheme = theme_bw(base_size = 14), # Increase font size in vignette
     returnResult = FALSE # if TRUE returns a data.frame with the summary statistics
 )
 ```
 
-For each pair of opposite consequences (e.g. protein domain loss vs gain) (y-axis) this plot shows the fraction of switches, affected by either of the opposing consequence, that results in the consequence indicated (e.g. protein domain loss) (x-axis). If this fraction is significantly different from 0.5 it indicates there is a systematic bias in isoform switch consequences. 
+For each pair of opposing consequences (e.g. protein domain loss vs gain) this plot shows the fraction of switches (x-axis) that results in the consequence indicated (e.g. protein domain loss) (y-axis). The fraction is calculated only considering switches affected by either of the opposing consequence indicated on the y-axis. If this fraction is significantly different from 0.5 it indicates there is a systematic bias in the functional consequences of isoform switches.
 
-From the analysis above, it is therefore quite clear, that many of the opposing consequences are significantly unevenly distributed. In other words, many types of consequences seem to be used in a cancer-specific manner.
+From the analysis above, it is therefore quite clear, that many of the opposing consequences are significantly unevenly distributed. In other words, many types of consequences seem to be used in a cancer-specific manner. It is specifically noteworthy there is a significant loss of protein domains, IDRs. Interestingly there is also a significant gain of non-reference protein domain isotypes (as the y-axis indicate loss and the fraction is < 0.5) suggesting domain isotopes are also specifically regulated. Lastly this analysis indicate that in COAD there are significantly more switches resulting in isoforms located in additional sub-cellular places (as y-axis indicate loss but the fraction is < 0.5). More on these location gains later.
+
+Please note this enrichment analysis does not consider mixed consequences such as sub-cellular location switch, domain switch and IDR switch.
 
 <br />
 
-When comparing the two cancer types (right vs left plot) the overall pattern seems similar - but there might be differences. This can formally be analyzed with the _extractConsequenceEnrichmentComparison()_ function. This function with for each opposing set of consequence (e.g. protein domain loss vs gain), in a pairwise manner contrasts the individual comparisons to assess whether the ratio of loss/gains are indeed significantly different:
+When comparing the two cancer types (right vs left sub-plot) the overall pattern seems similar - but there might be differences. Such differences can formally be analyzed with the _extractConsequenceEnrichmentComparison()_ function. This function will for each opposing set of consequence (e.g. protein domain loss vs gain), in a pairwise manner contrasts the individual comparisons to assess whether the ratio of loss/gains are indeed significantly different:
 
 ```{r, fig.width=12, fig.height=4}
 extractConsequenceEnrichmentComparison(
     exampleSwitchListAnalyzed,
-    consequencesToAnalyze=c('domains_identified','intron_retention','coding_potential'),
+    consequencesToAnalyze=c('domains_identified','coding_potential'),
     analysisOppositeConsequence = TRUE,
     returnResult = FALSE # if TRUE returns a data.frame with the summary statistics
 )
 ```
 
-The analysis shows that compared to LUAD, COAD have a significantly higher fraction of switches resulting in protein domain loss, but there is no difference in terms of intron retention loss or switches from noncoding to coding transcripts. 
+The analysis shows that compared to LUAD, COAD have a significantly higher fraction of switches resulting in protein domain loss, but there is no difference in switches from noncoding to coding transcripts.
+
+As indicated by the analysis done above with _extractConsequenceEnrichment()_ and _extractConsequenceSummary()_ there seems to be a lot of location changes - especially in COAD. We can further investigate these as follows:
+
+```{r, fig.width=9, fig.height=5}
+extractSubCellShifts(
+    exampleSwitchListAnalyzed,
+    returnResult = FALSE # returns plot instead of data
+)
+```
+
+Note that here we use "none" to indicate if there is no loss or gain of location in a switch. From this plot it is clear that the major number of location changes in COAD are switches the isoforms used more are now also found in Nucleus (as they have gain of "nucleus" (y-axis) and loss of "none" (x-axis)). This indicates that in COAD the cancer-specific isoforms are more frequently also found in the nucleus where they can affect transcription, DNA repair etc. Similarly there is a number of genes where the isoform switch causes a change away from the nucleus meaning these genes can no longer affect transcription, DNA repair etc.
+
+Also note that like many of the other functions you can obtain the results as a data.frame that can easily be analyzed. E.g. the most frequent location changes can be found as follows.
+```{r, fig.width=9, fig.height=5}
+### Extract shifts
+locChange <- extractSubCellShifts(
+    exampleSwitchListAnalyzed,
+    returnResult = TRUE # returns data insted of plot
+)
+
+### Sort
+locChange <- locChange[sort.list(
+    locChange$n_genes,
+    decreasing = TRUE
+),]
+
+### View
+head(locChange, 3)
+```
 
 <br />
 
@@ -759,7 +795,7 @@ The detailed workflow consists of the following steps (illustrated in Figure 2) 
 * [Importing Data Into R]
     + [Importing Data from Kallisto, Salmon, RSEM or StringTie]
     + [Importing Data from Cufflinks/Cuffdiff]
-    + [Importing Data from other Full-length Transcript Assemblers]
+    + [Importing Data from Full-length Transcript Assemblers]
 * [Filtering]
 * [Identifying Isoform Switches]
 * [Analyzing Open Reading Frames]
@@ -781,7 +817,7 @@ mySwitchList <- preFilter( mySwitchList )
 
 ### Test for isoform switches
 mySwitchList <- isoformSwitchTestDEXSeq( mySwitchList )   # OR
-mySwitchList <- isoformSwitchTestDRIMSeq( mySwitchList ) 
+mySwitchList <- isoformSwitchTestSatuRn( mySwitchList ) 
 
 ### If analysing (some) novel isoforms (else use CDS from ORF as explained in importRdata() )
 mySwitchList <- addORFfromGTF( mySwitchList )
@@ -957,8 +993,7 @@ To facilitate the usage of IsoformSwitchAnalyzeR, several dedicated wrappers for
 * [Importing Data from Kallisto, Salmon, RSEM or StringTie]
 * [Importing Data from Salmon via Tximeta]
 * [Importing Data from Cufflinks/Cuffdiff]
-* [Importing long-read Data from the TALON Pipeline]
-* [Importing Data from other Full-length Transcript Assemblers]
+* [Importing Data from Full-length Transcript Assemblers]
 
 For a (non-exhaustive) recommendations of bioinformatic tools which can perform the quantifications please refer to [What Quantification Tool(s) Should I Use?]
 
@@ -1013,10 +1048,10 @@ The _importRdata()_ function will then:
 
 Important notes for the use of importRdata are:
 
-1) The design matrix (a data.frame with two mandatory columns: sampleID and condition) also allows for incorporation of additional cofactors in the experimental setup (such as batch effects) - simply add these to the design matrix as additional columns and IsoformSwitchAnalyzeR will handle the rest (when testing with _isoformSwitchTestDEXSeq()_ (recommended) or _isoformSwitchTestDRIMSeq()_).
+1) The design matrix (a data.frame with two mandatory columns: sampleID and condition) also allows for incorporation of additional cofactors in the experimental setup (such as batch effects) - simply add these to the design matrix as additional columns and IsoformSwitchAnalyzeR will handle the rest (when testing with _isoformSwitchTestDEXSeq()_ (recommended) or _isoformSwitchTestSatuRn()_).
 2) If the path to a GTF/GFF file is supplied to the "isoformExonAnnoation" argument (as a string) it is possible also to import the CoDing Sequence (CDS) annotated in the GTF file (by setting "addAnnotatedORFs=TRUE") as the Open Reading Frame (ORF) which IsoformSwitchAnalyzeR uses for downstream analysis. This can be advantageous if the data provided is a quantification of known annotated transcripts (i.e. isoforms are not the result of any de-novo or guided assembly) since the prediction of ORFs can then be avoided.
 3) If you have quantified known annotated isoforms (i.e. you did not perform a (guided) de novo isoform reconstruction) it is highly recommended that you supply the transcript fasta file while constructing the switchAnalyzeRlist. This will result in more accurate and much faster analysis in the entire workflow. If that was not the case alternatives will be discussed below when the sequence is needed the first time in [Analyzing Open Reading Frames].
-4) If "fixStringTieAnnotationProblem = TRUE" is used (as it is by default) importRdata will automatically try and correct some of the annoation problems created when doing transcript assembly (unassigned transcripts and merged genes). For more information see documentation of importRdata (by typing ?importRdata in R).
+4) If "fixStringTieAnnotationProblem = TRUE" is used (as it is by default) importRdata will automatically try and correct some of the annotation problems created when doing transcript assembly (unassigned transcripts and merged genes). For more information see documentation of importRdata (by typing ?importRdata in R).
 
 The R code for using importRdata:
 
@@ -1052,7 +1087,6 @@ Note that:
 1) By supplying the GTF/GFF file to the "isoformExonAnnoation" argument IsoformSwitchAnalyzeR will automatically also import and integrate CDS regions annotated in the GTF/GFF file as the ORF regions used by IsoformSwitchAnalyzeR (if addAnnotatedORFs=TRUE (default)).
 2) IsoformSwitchAnalyzeR also supports the analysis of isoform switches found via other tools/test --- see [Testing for Isoform Switches with other Tools].
 3) The overall unit of isoforms analyzed together is defined by the gene annotation provided. In principle, this overall unit does not have to be genes but could be for example a TSS shared by multiple isoforms --- to utilize this simply provide TSS\_ids instead of gene\_ids in the isoform annotation.
-4) If StringTie have been used to predict novel transcripts (transcript assembly/deconvolution) the gene_ids created is based on islands of overlapping transcripts - this means that sometimes multiple genes (defined by gene short name) as combined into one StringTie gene. This will create quite complex switchPlots which might contain multiple gene names (including NA if it is a novel gene). Currently there are no good way of "reversing" this but we are considering how to handle it.
 
 The switchAnalyzeRlist now contains all the information imported in separate entries of the switchAnalyzeRlist object:
 
@@ -1185,57 +1219,7 @@ Back to [Table of Content]
 
 <br />
 
-#### Importing long-read Data from the TALON Pipeline
-
-The TALON long-read pipeline ( [github](https://github.com/dewyman/TALON), [preprint](https://www.biorxiv.org/content/10.1101/672931v1) ) is a pipeline for identifying and quantifying known and novel genes/isoforms in long-read RNA-seq data which can be used with both PacBio and Oxfort Nanopore data. The data can be converted into a switchAnalyzeRlist as follows:
-
-```
-### Extract Expresssion
-myTalonResultFile <- readr::read_tsv(file = 'path/To/Talon/Result.tsv')
-
-tallonCols <- c(
-    "gene_ID",
-    "transcript_ID",
-    "annot_gene_id",
-    "annot_transcript_id",
-    "annot_gene_name",
-    "annot_transcript_name",
-    "n_exons",
-    "length",
-    "gene_novelty",
-    "transcript_novelty",
-    "ISM_subtype"
-)
-
-talonExpression <- myTalonResultFile[,setdiff(
-    colnames(myTalonResultFile),
-    tallonCols
-)]
-    
-### Make design
-myDesign <- data.frame(
-    sampleID = colnames(talonExpression),
-    condition = c(
-        rep('cond1',3),
-        rep('cond2',3)
-    )
-)
-    
-### Create switchAnalyzeRlist
-talonSwitchList <- importRdata(
-    isoformCountMatrix   = talonExpression,
-    designMatrix         = myDesign,
-    isoformExonAnnoation = 'path/to/Talon/Results/GTF_file.gtf',
-    isoformNtFasta       = 'path/to/Talon/Results/nucleotide_fasta_file.fasta'
-)
-```
-Please also note that people have been quantifying long-read data with other tools including Salmon.
-
-Back to [Table of Content]
-
-<br />
-
-#### Importing Data from other Full-length Transcript Assemblers
+#### Importing Data from Full-length Transcript Assemblers
 As described above, all you need to create a switchAnalyzeRlist is:
 
 * The isoform abundance estimates in multiple samples from multiple conditions
@@ -1322,7 +1306,7 @@ Back to [Table of Content]
 As identification of isoform switches are essential for IsoformSwitchAnalyzeR, multiple ways of identifying isoform switches are supported. Currently IsoformSwitchAnalyzeR _directly_ supports three different approaches:
 
 * DEXSeq : Using DEXSeq (state-of-the art) to test for differential isoform usage. DEXSeq was originally designed for testing for differential exon usage but have recently been shown to perform exceptionally well for differential isoform usage. The default and recommend in IsoformSwitchAnalyzeR. See [Testing for Isoform Switches via DEXSeq].
-* DRIMSeq : Using the DRIMSeq package. See [Testing for Isoform Switches via DRIMSeq].
+* satuRn : Using the satuRn package. See [Testing for Isoform Switches via satuRn].
 * Cufflinks/Cuffdiff : the splicing analysis performed by Cuffdiff is automatically imported when importing Cufflinks/Cuffdiff data. See [Importing Data from Cufflinks/Cuffdiff].
 
 However, results of other tools which can test for differential isoform usage at gene and/or isoform level can also be used. See below in [Testing for Isoform Switches with other Tools].
@@ -1372,12 +1356,12 @@ Back to [Table of Content]
 
 <br />
 
-#### Testing for Isoform Switches via DRIMSeq
-Recently the DRIMSeq package (By Nowicka et al, see [What To Cite] --- please remember to cite it) was updated to not only analyze genes for differential isoform usage but provide a statistical test for each isoform analyzed thereby allowing for identification of the exact isoforms involved in a switch.
+#### Testing for Isoform Switches via satuRn
+We recently released our satuRn package (By Gilis et al, see [What To Cite] --- please remember to cite it) offing scalable and effecient analysis of differential isoform usage.
 
-IsoformSwitchAnalyzeR supports identification of isoform switches with DRIMSeq via the wrapper _isoformSwitchTestDRIMSeq()_ which performs the full analysis of all isoforms and comparisons in switchAnalyzeRlist. Afterwards, the results are integrated back into the switchAnalyzeRlist which is returned to the user as usual. Note that we support both the use of the gene-level and isoform-level analysis performed by DRIMSeq as controlled by the 'testIntegration' argument. Using this argument, it is also possible to be even more stringent by requiring that both the gene- and isoform-level analysis must be significant.
+IsoformSwitchAnalyzeR supports identification of isoform switches with satuRn via the wrapper _isoformSwitchTestSatuRn()_ which performs the full analysis of all isoforms and comparisons in switchAnalyzeRlist. Afterwards, the results are integrated back into the switchAnalyzeRlist which is returned to the user as usual.
 
-The _isoformSwitchTestDRIMSeq()_ function is used as follows:
+The _isoformSwitchTestSatuRn()_ function is used as follows:
 
 ```{r, warning=FALSE}
 # Load example data and pre-filter
@@ -1385,10 +1369,9 @@ data("exampleSwitchList")
 exampleSwitchList <- preFilter(exampleSwitchList, geneExpressionCutoff = 4) # preFilter for fast runtime
 
 # Perform test (takes ~10 sec)
-exampleSwitchListAnalyzed <- isoformSwitchTestDRIMSeq(
+exampleSwitchListAnalyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = exampleSwitchList,
-    testIntegration='isoform_only',
-    reduceToSwitchingGenes=TRUE
+    reduceToSwitchingGenes = TRUE
 )
 
 # Summarize switching features
@@ -1397,11 +1380,7 @@ extractSwitchSummary(exampleSwitchListAnalyzed)
 
 Just like for _isoformSwitchTestDEXSeq()_ the 'reduceToSwitchingGenes' argument controls whether to reduce/subset the switchAnalyzeRlist to the genes which each contains at least one differential used isoform, as indicated by the _alpha_ and _dIFcutoff_ cutoffs. This option ensures the rest of the workflow runs significantly faster since isoforms from genes without isoform switching are not analyzed.
 
-Please note:
-
-1. Currently, the DRIMSeq approach can be a bit slow and might require some patience if a large number of isoforms are analyzed --- not something you want to sit around and wait for. We have experienced runtimes of up to 90 minutes per comparison made for a full-size dataset.
-2. If an switchAnalyzeRlist already contains the result of a switch test, this will be overwritten by _isoformSwitchTestDRIMSeq()_.
-3. The _isoformSwitchTestDRIMSeq()_ function allows the user to pass arguments to the individual sets of a DRIMSeq workflow --- especially the "dmFilterArgs" option could be of interest, since sometimes additional filtering can be needed to make DRIMSeq run (if you get the "non-finite value supplied by optim" error)
+Please note taht if an switchAnalyzeRlist already contains the result of a switch test, this will be overwritten by _isoformSwitchTestSatuRn()_.
 
 The next step in a IsoformSwitchAnalyzeR workflow would typically be [Analyzing Open Reading Frames] (if isoform predicted de-novo) or [Extracting Nucleotide and Amino Acid Sequences] (if ORF already imported from GTF/GFF file (as supported by the import* functions))
 
@@ -1525,7 +1504,7 @@ The two fasta files that are the output by _extractSequence()_ (if writeToFile=T
 * CPC2 : The Coding Potential Calculator 2 which is a tool for predicting whether an isoform is coding or not. CPC2 can be run either locally or via their [webserver](http://cpc2.cbi.pku.edu.cn/batch.php). This is an alternative to CPAT.
 * Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
 * SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (V5 is supported).
-* IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) --- the parts of a protein protein which does not have a fixed three-dimensional structure (opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu)
+* IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) --- the parts of a protein protein which does not have a fixed three-dimensional structure (as opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu). IUPred3 is also supported by IsoformSwitchAnalyzeR (as it produces identical result files).
 * NetSurfP-2 : Prediction of Intrinsically Disordered Regions (IDR) --- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-2 can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/).
 
 Please note that:
@@ -1542,7 +1521,7 @@ We suggest that the external sequence analysis tools are run as follows:
 * CPC2 : Use default parameters and if required select the most similar species. If the [webserver](\url{http://cpc2.cbi.pku.edu.cn/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" button). If a stand-alone version was just just supply the path to the result file.
 * Pfam : Use default parameters and the amino acid fasta file (_AA.fasta). If the [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan) is used you need to copy/paste the result part of the mail you receive into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to a plain text (txt) file. The path to that file should be supplied. If a stand-alone version was used, just supply the path to the result file. A more detailed walkthrough is found under details in the documentation of the analyzePFAM() function (?analyzePFAM).
 * SignalP : Use the amino acid fasta file (_AA.fasta). If using the [webserver](http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the webserver the results can be downloaded using the "Downloads" button in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the "pathToSignalPresultFile" argument. If a stand-alone version was just supply the path to the summary result file.
-* IUPred2A : 1) Go to the [webserver](https://iupred2a.elte.hu) 2) Upload the amino acoid file (_AA) created with extractSequence() function. 3) Add your email (you will recieve a notification when the job is done). 4) In the email use the link indicated by "The text file can be found here:" and save the result (right click on a blank space and use "save as" or use the keybord shortcut "ctrl/cmd + s"). 5) Supply a string indicating the path to the downloaded file to the "pathToIUPred2AresultFile" argument. If multiple files are creted (multiple web-server runs) just supply the path to all of them as a string.
+* IUPred2A : 1) Go to the [webserver](https://iupred2a.elte.hu) 2) Upload the amino acoid file (_AA) created with extractSequence() function. 3) Add your email (you will recieve a notification when the job is done). 4) In the email use the link indicated by "The text file can be found here:" and save the result (right click on a blank space and use "save as" or use the keybord shortcut "ctrl/cmd + s"). 5) Supply a string indicating the path to the downloaded file to the "pathToIUPred2AresultFile" argument. If multiple files are created (multiple web-server runs) just supply the path to all of them as a string.
 * NetSurfP-2 : 1) Go to [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/). 2) Upload the amino acid file (_AA) created with extractSequence() function. 3) Submit your job. 4) Wait till job is finished (if you submit your email you will receive a notification). 5) In the top-right corner of the result site use the "Export All" button to download the results as a CNV file. 6) Supply a string indicating the path to the downloaded csv file directly to the "pathToNetSurfP2resultFile" argument. If you run NetSurfP-2 locally just use the "--csv" argument and provide the resulting csv file to the _pathToNetSurfP2resultFile_ argument.
 
 Back to [Table of Content]
@@ -1597,7 +1576,7 @@ exampleSwitchListAnalyzed <- analyzeSignalP(
     pathToSignalPresultFile  = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR")
 )
 
-### Add NetSurfP2 analysis
+### Add IUPred2A analysis
 exampleSwitchListAnalyzed <- analyzeIUPred2A(
     switchAnalyzeRlist        = exampleSwitchListAnalyzed,
     pathToIUPred2AresultFile = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR"),
@@ -1832,8 +1811,8 @@ mySwitchList <- importRdata()
 mySwitchList <- preFilter( mySwitchList )
 
 ### Step (3) Identify differentially used isoforms
-mySwitchList <- isoformSwitchTestDEXSeq(  mySwitchList, reduceToSwitchingGenes=FALSE ) # OR
-mySwitchList <- isoformSwitchTestDRIMSeq( mySwitchList, reduceToSwitchingGenes=FALSE ) 
+mySwitchList <- isoformSwitchTestDEXSeq( mySwitchList, reduceToSwitchingGenes=FALSE ) # OR
+mySwitchList <- isoformSwitchTestSatuRn( mySwitchList, reduceToSwitchingGenes=FALSE ) 
 
 ### Step (4) Analyze alternative splicing
 mySwitchList <- analyzeAlternativeSplicing( mySwitchList )
@@ -2255,19 +2234,18 @@ But why not do both since you already have the data?
 
 Generally speaking there are two different ways to obtain gene/transcript quantification and which to choose boils down to whether you **A)** trust the available transcript annotation or **B)** You think you RNA-seq data contains important additional isoforms not included in the available annotations.
 
-**Option A):** If you generally trust the transcript annotation, state-of-the-art quantifications can be obtained directly from the raw sequence files (FASTQ) via Salmon or Kallisto. These methods give much more accurate quantifications (and are a lot faster) than for example first mapping to the genome and afterwards quantifying with Cufflinks. You can find more information in the [Kallisto paper](http://www.nature.com/doifinder/10.1038/nbt.3519). For comparison here is the link to the [Salmon paper](https://www.nature.com/articles/nmeth.4197) but please not the comparison in figure 1 is a special case - under normal circumstances Kallisto and Salmon performs quite similarly and choice is up to personal preference. IsoformSwitchAnalyzeR directly supports the quantifications of both tools (and more) via the importIsoformExpression() function - see [Importing Data Into R]. Kallisto can be downloaded from [here](https://pachterlab.github.io/kallisto/download) and the manual for running Kallisto can be found [here](http://pachterlab.github.io/kallisto/manual.html). Salmon can be downloaded from [here](https://github.com/COMBINE-lab/salmon/releases) and a manual for running Salmon can be found [here](https://salmon.readthedocs.io/en/latest/salmon.html). An alternative is to map reads to the genome using STAR specifying that start should also generate a transcriptome sam file which can then be quantified with Salmon. For more info see section 6 in the [STARmanual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf and the [Salmon documentation](https://salmon.readthedocs.io/en/latest/salmon.html#quantifying-in-alignment-based-mode). 
-For long-read data some have been using Salon for the quantification of known transcripts/genes but you probably want to use option B.2 instead (since that is probably still the main reason to use long-read RNASeq data).
+**Option A):** If you generally trust the transcript annotation, state-of-the-art quantifications can be obtained directly from the raw sequence files (FASTQ) via Salmon or Kallisto. These methods give much more accurate quantifications (and are a lot faster) than for example first mapping to the genome and afterwards quantifying with Cufflinks/Stringtie. You can find more information in the [Kallisto paper](http://www.nature.com/doifinder/10.1038/nbt.3519). For comparison here is the link to the [Salmon paper](https://www.nature.com/articles/nmeth.4197) but please note the comparison in figure 1 is a special case - under normal circumstances Kallisto and Salmon performs quite similarly and choice is up to personal preference. IsoformSwitchAnalyzeR directly supports the quantifications of both tools (and more) via the importIsoformExpression() function - see [Importing Data Into R]. Kallisto can be downloaded from [here](https://pachterlab.github.io/kallisto/download) and the manual for running Kallisto can be found [here](http://pachterlab.github.io/kallisto/manual.html). Salmon can be downloaded from [here](https://github.com/COMBINE-lab/salmon/releases) and a manual for running Salmon can be found [here](https://salmon.readthedocs.io/en/latest/salmon.html). An alternative is to map reads to the genome using e.g. HISAT2 or STAR creating resulting in a SAM file which can be quantified with Salmon. For long-read data some have been using Salmon for the quantification of known transcripts/genes but you probably want to use option B.2 instead (since that is probably still the main reason to use long-read RNASeq data).
 
 **Option B.1):** If have short-read (standard) RNASeq data and you do not have any (trustworthy) annotation, or want to improve it (find novel transcripts), you need to do a transcript deconvolution aka predicting novel transcripts from the RNAseq data. A transcript deconvolution can be described as a 4-step process:
 
 1) After QC and potential quality trimming you you map reads to the genome (with tools such as [STAR](http://labshare.cshl.edu/shares/gingeraslab/www-data/dobin/STAR/STAR.posix/doc/STARmanual.pdf), [HISAT2](https://ccb.jhu.edu/software/hisat2/manual.shtml) etc.).
-2) Then you assemble transcripts (typically guided by existing annoation) with tools such as [Cufflinks](http://cole-trapnell-lab.github.io/cufflinks/manual/),  [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual) or [Scallop](https://github.com/Kingsford-Group/scallop). Please note that many other tools for solving this problem  and new methods are still published regularly. Since the transcript assembly is the central step in the analysis, you probably want to read up on these tools yourself to make sure you use the tools that currently are the better one. Make sure to run these tools in discovery mode (default) so they will identify novel transcripts from the data.
+2) Then you assemble transcripts (typically guided by existing annotation) with tools such as [Cufflinks](http://cole-trapnell-lab.github.io/cufflinks/manual/),  [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual) or [Scallop](https://github.com/Kingsford-Group/scallop). Please note that many other tools for solving this problem  and new methods are still published regularly. Since the transcript assembly is the central step in the analysis, you probably want to read up on these tools yourself to make sure you use the tools that currently are the better one. Make sure to run these tools in discovery mode (default) so they will identify novel transcripts from the data.
 3) The third step is to merge the assembled transcripts from all individual Cufflinks/StringTie/Scallop/other runs into one combined reference transcriptome with tools such as [Cuffmerge](http://cole-trapnell-lab.github.io/cufflinks/cuffmerge/index.html), [StringTie](http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual) or [TACO](https://tacorna.github.io/). The result is a augmented transcriptome which in addition to already known transcripts also contain the novel transcripts identified in at least one of your samples. Note that this joint transcriptome is more accurate than the once predicted from the individual samples as the integration typically is more elaborate that simple concatenation which will reduce the error rates. As an optional step the merged GTF file can be further annotated with tools such as [SQANTI2](https://github.com/Magdoll/SQANTI2/).
-4) To make the analysis of the individual samples comparable you need to quantify the same set of transcripts in each sample - else you do not know which novel transcript is the same in two different files - and the quantification will be skewed by not considering all isoforms. Therefore the fourth step is to re-quantify all samples using the GTF file  created in step 3. This can be done with tools such as [Cufflinks/CuffDiff](http://cole-trapnell-lab.github.io/cufflinks/manual/), [StringTie]((http://ccb.jhu.edu/software/stringtie/index.shtml?t=manual)), [Salmon](https://salmon.readthedocs.io/en/latest/salmon.html) or [Kallisto](http://pachterlab.github.io/kallisto/manual.html). Remember if you use Cufflinks/StringTie for the re-quantification you have to disable the discovery mode (as the novel transcripts have already been found and are part of the combined transcriptome you are quantifying).
+4) To make the analysis of the individual samples comparable you need to quantify the same set of transcripts in each sample - else you do not know which novel transcript is the same in two different files - and the quantification will be skewed by not considering all isoforms. Therefore the fourth step is to re-quantify all samples using the GTF file  created in step 3. In principle this can be done with the tools used to create the merged transcriptome but we recommend using [Salmon](https://salmon.readthedocs.io/en/latest/salmon.html) or [Kallisto](http://pachterlab.github.io/kallisto/manual.html) due to their superior quantification engine. You can use tools such as [gffread](http://ccb.jhu.edu/software/stringtie/gff.shtml#gffread_ex), along with the GTF file from step 3, to create the transcript fasta file needed for quantifying with Salmon/Kallisto. The recommendation of re-quantifying with Salmon/Kallisto is even stronger when you used StringTie for step 1-3 since StringTie actually don't keep track of read counts meaning we afterwards have to "back-calculate" them likely resulting in inaccuracies.
 
 You will need to figure out which combination of tools you choose on your own - but IsoformSwitchAnalyzeR can analyze the data from all of them. For more information see [Importing Data Into R]. 
 
-**Option B.2):** If have long-read RNASeq data (Oxford Nanopore (ONT) or PacBio) we recommend using TALON ( [github](https://github.com/dewyman/TALON), [preprint](https://www.biorxiv.org/content/10.1101/672931v1) ) or StringTie ( [github](https://github.com/gpertea/stringtie), [preprint](https://doi.org/10.1101/694554) ) for identifying and quantifying known and novel transcripts. Optionally Salon can be used on the StringTie/TALON results for a more accurate quantification of the identified transcripts. IsoformSwitchAnalyzeR can analyze the output of all tools as described in the [Importing Data Into R] section.
+**Option B.2):** If have long-read RNASeq data (Oxford Nanopore (ONT) or PacBio) the process is exactly the same as described above for short reads except it uses a set of tools designed to handle long reads. Specifically for step 2-4 described above we recommend using StringTie ([github](https://github.com/gpertea/stringtie), [article](https://doi.org/10.1186/s13059-019-1910-1)) or IsoQuant ([github](https://github.com/ablab/IsoQuant), [article](https://www.nature.com/articles/s41587-022-01565-y)) for long read data. Note that after StringTie/IsoQuant have been used to assemble a final collection (step 3 above) you can use Salon/Kallisto to quantify the individaul samples for a more accurate quantification (step 4 above). IsoformSwitchAnalyzeR can analyze the output of all tools as described in the [Importing Data Into R] section.
 
 <br />
 
@@ -2343,7 +2321,7 @@ Back to [Table of Content]
 ### How to handle confounding effects (including batches)
 "Confounding effect" is a common description of all sources of variation not of interest for the analysis you are doing. This can be anything from a batch effects (data/sample produced/analyzed at different locations, time points, personnel etc.) to an effect you are not interested in but which might influence the result (e.g. sex or age). Taking all this into account to avoid false positive of false negative results can easily be done when testing for isoform switches (or anything else really) when using tools based on linear models. 
 
-Naturally taking confounding effects into account is also supported in IsoformSwitchAnalyzeR via the isoformSwitchTestDRIMSeq() and isoformSwitchTestDEXSeq() functions. Both these functions automatically take additional confounding effects into account if they have been annotated in the switchAnalyzeRlist. isoformSwitchTestDEXSeq() furthermore also supports extract of batch corrected effect sizes (IF and dIFs).
+Naturally taking confounding effects into account is also supported in IsoformSwitchAnalyzeR via the isoformSwitchTestSatuRn() and isoformSwitchTestDEXSeq() functions. Both these functions automatically take additional confounding effects into account if they have been annotated in the switchAnalyzeRlist. isoformSwitchTestDEXSeq() furthermore also supports extract of batch corrected effect sizes (IF and dIFs).
 
 Confounding effects should be annotated in 'designMatrix' when using _importRdata()_ and in the "salmonFileDataFrame" when using _importSalmonData()_ to create the switchAnalyzeRlist. This is simply done by adding extra columns to the "designMatrix"/"salmonFileDataFrame" before creating the switchAnalyzeRlist:
 

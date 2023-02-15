@@ -115,11 +115,8 @@ Kristoffer Vitting-Seerup
 \seealso{
 \code{\link{switchAnalyzeRlist}}\cr
 \code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
-\code{\link{analyzeORF}}\cr
-\code{\link{analyzeCPAT}}\cr
-\code{\link{analyzePFAM}}\cr
-\code{\link{analyzeSignalP}}
+\code{\link{isoformSwitchTestSatuRn}}\cr
+\code{\link{analyzeORF}}
 }
 \examples{
 ### Prepare for sequence extraction

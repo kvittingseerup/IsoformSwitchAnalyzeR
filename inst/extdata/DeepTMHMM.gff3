@@ -1,0 +1,901 @@
+##gff-version 3
+# TCONS_00000007 Length: 389
+# TCONS_00000007 Number of predicted TMRs: 0
+TCONS_00000007	inside	1	389				
+//
+# TCONS_00000008 Length: 389
+# TCONS_00000008 Number of predicted TMRs: 0
+TCONS_00000008	inside	1	389				
+//
+# TCONS_00000009 Length: 389
+# TCONS_00000009 Number of predicted TMRs: 0
+TCONS_00000009	inside	1	389				
+//
+# TCONS_00000020 Length: 91
+# TCONS_00000020 Number of predicted TMRs: 0
+TCONS_00000020	inside	1	91				
+//
+# TCONS_00000045 Length: 802
+# TCONS_00000045 Number of predicted TMRs: 2
+TCONS_00000045	inside	1	250				
+TCONS_00000045	TMhelix	251	271				
+TCONS_00000045	outside	272	691				
+TCONS_00000045	TMhelix	692	715				
+TCONS_00000045	inside	716	802				
+//
+# TCONS_00000046 Length: 638
+# TCONS_00000046 Number of predicted TMRs: 2
+TCONS_00000046	inside	1	86				
+TCONS_00000046	TMhelix	87	107				
+TCONS_00000046	outside	108	527				
+TCONS_00000046	TMhelix	528	551				
+TCONS_00000046	inside	552	638				
+//
+# TCONS_00000047 Length: 638
+# TCONS_00000047 Number of predicted TMRs: 2
+TCONS_00000047	inside	1	86				
+TCONS_00000047	TMhelix	87	107				
+TCONS_00000047	outside	108	527				
+TCONS_00000047	TMhelix	528	551				
+TCONS_00000047	inside	552	638				
+//
+# TCONS_00000048 Length: 704
+# TCONS_00000048 Number of predicted TMRs: 2
+TCONS_00000048	inside	1	152				
+TCONS_00000048	TMhelix	153	173				
+TCONS_00000048	outside	174	593				
+TCONS_00000048	TMhelix	594	617				
+TCONS_00000048	inside	618	704				
+//
+# TCONS_00000049 Length: 427
+# TCONS_00000049 Number of predicted TMRs: 1
+TCONS_00000049	outside	1	319				
+TCONS_00000049	TMhelix	320	340				
+TCONS_00000049	inside	341	427				
+//
+# TCONS_00000066 Length: 634
+# TCONS_00000066 Number of predicted TMRs: 2
+TCONS_00000066	inside	1	295				
+TCONS_00000066	TMhelix	296	305				
+TCONS_00000066	outside	306	306				
+TCONS_00000066	TMhelix	307	316				
+TCONS_00000066	inside	317	634				
+//
+# TCONS_00000067 Length: 586
+# TCONS_00000067 Number of predicted TMRs: 1
+TCONS_00000067	outside	1	246				
+TCONS_00000067	TMhelix	247	262				
+TCONS_00000067	inside	263	586				
+//
+# TCONS_00000068 Length: 507
+# TCONS_00000068 Number of predicted TMRs: 1
+TCONS_00000068	outside	1	167				
+TCONS_00000068	TMhelix	168	183				
+TCONS_00000068	inside	184	507				
+//
+# TCONS_00000173 Length: 244
+# TCONS_00000173 Number of predicted TMRs: 0
+TCONS_00000173	inside	1	244				
+//
+# TCONS_00000174 Length: 634
+# TCONS_00000174 Number of predicted TMRs: 0
+TCONS_00000174	inside	1	634				
+//
+# TCONS_00000175 Length: 195
+# TCONS_00000175 Number of predicted TMRs: 0
+TCONS_00000175	inside	1	195				
+//
+# TCONS_00000176 Length: 292
+# TCONS_00000176 Number of predicted TMRs: 0
+TCONS_00000176	inside	1	292				
+//
+# TCONS_00000190 Length: 239
+# TCONS_00000190 Number of predicted TMRs: 0
+TCONS_00000190	inside	1	239				
+//
+# TCONS_00000191 Length: 238
+# TCONS_00000191 Number of predicted TMRs: 0
+TCONS_00000191	inside	1	238				
+//
+# TCONS_00000192 Length: 175
+# TCONS_00000192 Number of predicted TMRs: 0
+TCONS_00000192	inside	1	175				
+//
+# TCONS_00000219 Length: 392
+# TCONS_00000219 Number of predicted TMRs: 5
+TCONS_00000219	outside	1	18				
+TCONS_00000219	TMhelix	19	32				
+TCONS_00000219	inside	33	213				
+TCONS_00000219	TMhelix	214	234				
+TCONS_00000219	outside	235	297				
+TCONS_00000219	TMhelix	298	315				
+TCONS_00000219	inside	316	324				
+TCONS_00000219	TMhelix	325	340				
+TCONS_00000219	outside	341	356				
+TCONS_00000219	TMhelix	357	373				
+TCONS_00000219	inside	374	392				
+//
+# TCONS_00000220 Length: 642
+# TCONS_00000220 Number of predicted TMRs: 6
+TCONS_00000220	outside	1	16				
+TCONS_00000220	TMhelix	17	32				
+TCONS_00000220	inside	33	218				
+TCONS_00000220	TMhelix	219	236				
+TCONS_00000220	outside	237	297				
+TCONS_00000220	TMhelix	298	315				
+TCONS_00000220	inside	316	324				
+TCONS_00000220	TMhelix	325	341				
+TCONS_00000220	outside	342	353				
+TCONS_00000220	TMhelix	354	374				
+TCONS_00000220	inside	375	619				
+TCONS_00000220	TMhelix	620	638				
+TCONS_00000220	outside	639	642				
+//
+# TCONS_00000221 Length: 1044
+# TCONS_00000221 Number of predicted TMRs: 0
+TCONS_00000221	inside	1	1044				
+//
+# TCONS_00000222 Length: 1043
+# TCONS_00000222 Number of predicted TMRs: 0
+TCONS_00000222	inside	1	1043				
+//
+# TCONS_00000223 Length: 1068
+# TCONS_00000223 Number of predicted TMRs: 0
+TCONS_00000223	inside	1	1068				
+//
+# TCONS_00000234 Length: 1153
+# TCONS_00000234 Number of predicted TMRs: 0
+TCONS_00000234	inside	1	1153				
+//
+# TCONS_00000235 Length: 1770
+# TCONS_00000235 Number of predicted TMRs: 0
+TCONS_00000235	inside	1	1770				
+//
+# TCONS_00000236 Length: 1816
+# TCONS_00000236 Number of predicted TMRs: 0
+TCONS_00000236	inside	1	1816				
+//
+# TCONS_00000237 Length: 1797
+# TCONS_00000237 Number of predicted TMRs: 0
+TCONS_00000237	inside	1	1797				
+//
+# TCONS_00000240 Length: 1809
+# TCONS_00000240 Number of predicted TMRs: 0
+TCONS_00000240	inside	1	1809				
+//
+# TCONS_00000245 Length: 138
+# TCONS_00000245 Number of predicted TMRs: 0
+TCONS_00000245	inside	1	138				
+//
+# TCONS_00000246 Length: 164
+# TCONS_00000246 Number of predicted TMRs: 0
+TCONS_00000246	inside	1	164				
+//
+# TCONS_00000248 Length: 122
+# TCONS_00000248 Number of predicted TMRs: 0
+TCONS_00000248	inside	1	122				
+//
+# TCONS_00000298 Length: 757
+# TCONS_00000298 Number of predicted TMRs: 0
+TCONS_00000298	inside	1	757				
+//
+# TCONS_00000299 Length: 757
+# TCONS_00000299 Number of predicted TMRs: 0
+TCONS_00000299	inside	1	757				
+//
+# TCONS_00000312 Length: 666
+# TCONS_00000312 Number of predicted TMRs: 0
+TCONS_00000312	inside	1	666				
+//
+# TCONS_00000313 Length: 386
+# TCONS_00000313 Number of predicted TMRs: 0
+TCONS_00000313	inside	1	386				
+//
+# TCONS_00000339 Length: 226
+# TCONS_00000339 Number of predicted TMRs: 0
+TCONS_00000339	inside	1	226				
+//
+# TCONS_00000340 Length: 1682
+# TCONS_00000340 Number of predicted TMRs: 0
+TCONS_00000340	inside	1	1682				
+//
+# TCONS_00000341 Length: 1718
+# TCONS_00000341 Number of predicted TMRs: 0
+TCONS_00000341	inside	1	1718				
+//
+# TCONS_00000342 Length: 97
+# TCONS_00000342 Number of predicted TMRs: 0
+TCONS_00000342	inside	1	97				
+//
+# TCONS_00000343 Length: 599
+# TCONS_00000343 Number of predicted TMRs: 0
+TCONS_00000343	inside	1	599				
+//
+# TCONS_00000344 Length: 1481
+# TCONS_00000344 Number of predicted TMRs: 0
+TCONS_00000344	inside	1	1481				
+//
+# TCONS_00000345 Length: 115
+# TCONS_00000345 Number of predicted TMRs: 0
+TCONS_00000345	inside	1	115				
+//
+# TCONS_00000356 Length: 253
+# TCONS_00000356 Number of predicted TMRs: 2
+TCONS_00000356	inside	1	12				
+TCONS_00000356	TMhelix	13	33				
+TCONS_00000356	outside	34	64				
+TCONS_00000356	TMhelix	65	83				
+TCONS_00000356	inside	84	253				
+//
+# TCONS_00000357 Length: 253
+# TCONS_00000357 Number of predicted TMRs: 2
+TCONS_00000357	inside	1	12				
+TCONS_00000357	TMhelix	13	33				
+TCONS_00000357	outside	34	64				
+TCONS_00000357	TMhelix	65	83				
+TCONS_00000357	inside	84	253				
+//
+# TCONS_00000358 Length: 135
+# TCONS_00000358 Number of predicted TMRs: 2
+TCONS_00000358	inside	1	12				
+TCONS_00000358	TMhelix	13	31				
+TCONS_00000358	outside	32	62				
+TCONS_00000358	TMhelix	63	83				
+TCONS_00000358	inside	84	135				
+//
+# TCONS_00000359 Length: 253
+# TCONS_00000359 Number of predicted TMRs: 2
+TCONS_00000359	inside	1	12				
+TCONS_00000359	TMhelix	13	33				
+TCONS_00000359	outside	34	64				
+TCONS_00000359	TMhelix	65	83				
+TCONS_00000359	inside	84	253				
+//
+# TCONS_00000360 Length: 253
+# TCONS_00000360 Number of predicted TMRs: 2
+TCONS_00000360	inside	1	12				
+TCONS_00000360	TMhelix	13	33				
+TCONS_00000360	outside	34	64				
+TCONS_00000360	TMhelix	65	83				
+TCONS_00000360	inside	84	253				
+//
+# TCONS_00000411 Length: 101
+# TCONS_00000411 Number of predicted TMRs: 0
+TCONS_00000411	outside	1	101				
+//
+# TCONS_00000412 Length: 164
+# TCONS_00000412 Number of predicted TMRs: 0
+TCONS_00000412	outside	1	164				
+//
+# TCONS_00000413 Length: 198
+# TCONS_00000413 Number of predicted TMRs: 0
+TCONS_00000413	outside	1	198				
+//
+# TCONS_00000414 Length: 176
+# TCONS_00000414 Number of predicted TMRs: 0
+TCONS_00000414	inside	1	176				
+//
+# TCONS_00000415 Length: 288
+# TCONS_00000415 Number of predicted TMRs: 0
+TCONS_00000415	outside	1	288				
+//
+# TCONS_00000417 Length: 92
+# TCONS_00000417 Number of predicted TMRs: 0
+TCONS_00000417	outside	1	92				
+//
+# TCONS_00000418 Length: 170
+# TCONS_00000418 Number of predicted TMRs: 0
+TCONS_00000418	outside	1	170				
+//
+# TCONS_00000493 Length: 272
+# TCONS_00000493 Number of predicted TMRs: 0
+TCONS_00000493	signal	1	25				
+TCONS_00000493	outside	26	272				
+//
+# TCONS_00000494 Length: 62
+# TCONS_00000494 Number of predicted TMRs: 0
+TCONS_00000494	inside	1	62				
+//
+# TCONS_00000507 Length: 1239
+# TCONS_00000507 Number of predicted TMRs: 0
+TCONS_00000507	inside	1	1239				
+//
+# TCONS_00000508 Length: 1239
+# TCONS_00000508 Number of predicted TMRs: 0
+TCONS_00000508	inside	1	1239				
+//
+# TCONS_00000509 Length: 1127
+# TCONS_00000509 Number of predicted TMRs: 0
+TCONS_00000509	inside	1	1127				
+//
+# TCONS_00000558 Length: 904
+# TCONS_00000558 Number of predicted TMRs: 0
+TCONS_00000558	inside	1	904				
+//
+# TCONS_00000559 Length: 916
+# TCONS_00000559 Number of predicted TMRs: 0
+TCONS_00000559	inside	1	916				
+//
+# TCONS_00000560 Length: 706
+# TCONS_00000560 Number of predicted TMRs: 0
+TCONS_00000560	inside	1	706				
+//
+# TCONS_00000561 Length: 798
+# TCONS_00000561 Number of predicted TMRs: 0
+TCONS_00000561	inside	1	798				
+//
+# TCONS_00003865 Length: 130
+# TCONS_00003865 Number of predicted TMRs: 0
+TCONS_00003865	outside	1	130				
+//
+# TCONS_00003866 Length: 362
+# TCONS_00003866 Number of predicted TMRs: 0
+TCONS_00003866	signal	1	36				
+TCONS_00003866	outside	37	362				
+//
+# TCONS_00003867 Length: 348
+# TCONS_00003867 Number of predicted TMRs: 0
+TCONS_00003867	signal	1	36				
+TCONS_00003867	outside	37	348				
+//
+# TCONS_00003869 Length: 254
+# TCONS_00003869 Number of predicted TMRs: 0
+TCONS_00003869	signal	1	36				
+TCONS_00003869	outside	37	254				
+//
+# TCONS_00003870 Length: 94
+# TCONS_00003870 Number of predicted TMRs: 0
+TCONS_00003870	outside	1	94				
+//
+# TCONS_00003880 Length: 564
+# TCONS_00003880 Number of predicted TMRs: 0
+TCONS_00003880	inside	1	564				
+//
+# TCONS_00003881 Length: 759
+# TCONS_00003881 Number of predicted TMRs: 0
+TCONS_00003881	inside	1	759				
+//
+# TCONS_00003882 Length: 834
+# TCONS_00003882 Number of predicted TMRs: 0
+TCONS_00003882	inside	1	834				
+//
+# TCONS_00003901 Length: 450
+# TCONS_00003901 Number of predicted TMRs: 1
+TCONS_00003901	signal	1	24				
+TCONS_00003901	outside	25	341				
+TCONS_00003901	TMhelix	342	362				
+TCONS_00003901	inside	363	450				
+//
+# TCONS_00003902 Length: 444
+# TCONS_00003902 Number of predicted TMRs: 1
+TCONS_00003902	signal	1	24				
+TCONS_00003902	outside	25	341				
+TCONS_00003902	TMhelix	342	362				
+TCONS_00003902	inside	363	444				
+//
+# TCONS_00003903 Length: 341
+# TCONS_00003903 Number of predicted TMRs: 1
+TCONS_00003903	signal	1	11				
+TCONS_00003903	outside	12	240				
+TCONS_00003903	TMhelix	241	261				
+TCONS_00003903	inside	262	341				
+//
+# TCONS_00003904 Length: 442
+# TCONS_00003904 Number of predicted TMRs: 1
+TCONS_00003904	signal	1	24				
+TCONS_00003904	outside	25	341				
+TCONS_00003904	TMhelix	342	362				
+TCONS_00003904	inside	363	442				
+//
+# TCONS_00003905 Length: 433
+# TCONS_00003905 Number of predicted TMRs: 1
+TCONS_00003905	signal	1	21				
+TCONS_00003905	outside	22	332				
+TCONS_00003905	TMhelix	333	353				
+TCONS_00003905	inside	354	433				
+//
+# TCONS_00003911 Length: 298
+# TCONS_00003911 Number of predicted TMRs: 0
+TCONS_00003911	inside	1	298				
+//
+# TCONS_00003912 Length: 298
+# TCONS_00003912 Number of predicted TMRs: 0
+TCONS_00003912	inside	1	298				
+//
+# TCONS_00003913 Length: 226
+# TCONS_00003913 Number of predicted TMRs: 0
+TCONS_00003913	inside	1	226				
+//
+# TCONS_00003914 Length: 520
+# TCONS_00003914 Number of predicted TMRs: 0
+TCONS_00003914	inside	1	520				
+//
+# TCONS_00003915 Length: 298
+# TCONS_00003915 Number of predicted TMRs: 0
+TCONS_00003915	inside	1	298				
+//
+# TCONS_00003916 Length: 298
+# TCONS_00003916 Number of predicted TMRs: 0
+TCONS_00003916	inside	1	298				
+//
+# TCONS_00003919 Length: 87
+# TCONS_00003919 Number of predicted TMRs: 0
+TCONS_00003919	inside	1	87				
+//
+# TCONS_00003920 Length: 174
+# TCONS_00003920 Number of predicted TMRs: 0
+TCONS_00003920	inside	1	174				
+//
+# TCONS_00003921 Length: 399
+# TCONS_00003921 Number of predicted TMRs: 0
+TCONS_00003921	inside	1	399				
+//
+# TCONS_00003937 Length: 246
+# TCONS_00003937 Number of predicted TMRs: 5
+TCONS_00003937	inside	1	74				
+TCONS_00003937	TMhelix	75	92				
+TCONS_00003937	outside	93	105				
+TCONS_00003937	TMhelix	106	126				
+TCONS_00003937	inside	127	142				
+TCONS_00003937	TMhelix	143	152				
+TCONS_00003937	outside	153	153				
+TCONS_00003937	TMhelix	154	163				
+TCONS_00003937	inside	164	180				
+TCONS_00003937	TMhelix	181	190				
+TCONS_00003937	outside	191	246				
+//
+# TCONS_00003938 Length: 199
+# TCONS_00003938 Number of predicted TMRs: 0
+TCONS_00003938	outside	1	199				
+//
+# TCONS_00003939 Length: 405
+# TCONS_00003939 Number of predicted TMRs: 10
+TCONS_00003939	inside	1	74				
+TCONS_00003939	TMhelix	75	92				
+TCONS_00003939	outside	93	105				
+TCONS_00003939	TMhelix	106	126				
+TCONS_00003939	inside	127	141				
+TCONS_00003939	TMhelix	142	162				
+TCONS_00003939	outside	163	170				
+TCONS_00003939	TMhelix	171	186				
+TCONS_00003939	inside	187	196				
+TCONS_00003939	TMhelix	197	215				
+TCONS_00003939	outside	216	221				
+TCONS_00003939	TMhelix	222	237				
+TCONS_00003939	inside	238	259				
+TCONS_00003939	TMhelix	260	277				
+TCONS_00003939	outside	278	295				
+TCONS_00003939	TMhelix	296	316				
+TCONS_00003939	inside	317	327				
+TCONS_00003939	TMhelix	328	344				
+TCONS_00003939	outside	345	350				
+TCONS_00003939	TMhelix	351	367				
+TCONS_00003939	inside	368	405				
+//
+# TCONS_00003940 Length: 405
+# TCONS_00003940 Number of predicted TMRs: 10
+TCONS_00003940	inside	1	74				
+TCONS_00003940	TMhelix	75	92				
+TCONS_00003940	outside	93	105				
+TCONS_00003940	TMhelix	106	126				
+TCONS_00003940	inside	127	141				
+TCONS_00003940	TMhelix	142	162				
+TCONS_00003940	outside	163	170				
+TCONS_00003940	TMhelix	171	186				
+TCONS_00003940	inside	187	196				
+TCONS_00003940	TMhelix	197	215				
+TCONS_00003940	outside	216	221				
+TCONS_00003940	TMhelix	222	237				
+TCONS_00003940	inside	238	259				
+TCONS_00003940	TMhelix	260	277				
+TCONS_00003940	outside	278	295				
+TCONS_00003940	TMhelix	296	316				
+TCONS_00003940	inside	317	327				
+TCONS_00003940	TMhelix	328	344				
+TCONS_00003940	outside	345	350				
+TCONS_00003940	TMhelix	351	367				
+TCONS_00003940	inside	368	405				
+//
+# TCONS_00003941 Length: 405
+# TCONS_00003941 Number of predicted TMRs: 10
+TCONS_00003941	inside	1	74				
+TCONS_00003941	TMhelix	75	92				
+TCONS_00003941	outside	93	105				
+TCONS_00003941	TMhelix	106	126				
+TCONS_00003941	inside	127	141				
+TCONS_00003941	TMhelix	142	162				
+TCONS_00003941	outside	163	170				
+TCONS_00003941	TMhelix	171	186				
+TCONS_00003941	inside	187	196				
+TCONS_00003941	TMhelix	197	215				
+TCONS_00003941	outside	216	221				
+TCONS_00003941	TMhelix	222	237				
+TCONS_00003941	inside	238	259				
+TCONS_00003941	TMhelix	260	277				
+TCONS_00003941	outside	278	295				
+TCONS_00003941	TMhelix	296	316				
+TCONS_00003941	inside	317	327				
+TCONS_00003941	TMhelix	328	344				
+TCONS_00003941	outside	345	350				
+TCONS_00003941	TMhelix	351	367				
+TCONS_00003941	inside	368	405				
+//
+# TCONS_00003942 Length: 254
+# TCONS_00003942 Number of predicted TMRs: 6
+TCONS_00003942	inside	1	74				
+TCONS_00003942	TMhelix	75	92				
+TCONS_00003942	outside	93	105				
+TCONS_00003942	TMhelix	106	126				
+TCONS_00003942	inside	127	142				
+TCONS_00003942	TMhelix	143	163				
+TCONS_00003942	outside	164	170				
+TCONS_00003942	TMhelix	171	190				
+TCONS_00003942	inside	191	196				
+TCONS_00003942	TMhelix	197	215				
+TCONS_00003942	outside	216	221				
+TCONS_00003942	TMhelix	222	240				
+TCONS_00003942	inside	241	254				
+//
+# TCONS_00003943 Length: 236
+# TCONS_00003943 Number of predicted TMRs: 6
+TCONS_00003943	inside	1	74				
+TCONS_00003943	TMhelix	75	92				
+TCONS_00003943	outside	93	105				
+TCONS_00003943	TMhelix	106	126				
+TCONS_00003943	inside	127	141				
+TCONS_00003943	TMhelix	142	162				
+TCONS_00003943	outside	163	180				
+TCONS_00003943	TMhelix	181	190				
+TCONS_00003943	inside	191	196				
+TCONS_00003943	TMhelix	197	215				
+TCONS_00003943	outside	216	221				
+TCONS_00003943	TMhelix	222	234				
+TCONS_00003943	inside	235	236				
+//
+# TCONS_00003959 Length: 246
+# TCONS_00003959 Number of predicted TMRs: 5
+TCONS_00003959	inside	1	74				
+TCONS_00003959	TMhelix	75	92				
+TCONS_00003959	outside	93	105				
+TCONS_00003959	TMhelix	106	126				
+TCONS_00003959	inside	127	142				
+TCONS_00003959	TMhelix	143	152				
+TCONS_00003959	outside	153	153				
+TCONS_00003959	TMhelix	154	163				
+TCONS_00003959	inside	164	180				
+TCONS_00003959	TMhelix	181	190				
+TCONS_00003959	outside	191	246				
+//
+# TCONS_00003962 Length: 266
+# TCONS_00003962 Number of predicted TMRs: 5
+TCONS_00003962	inside	1	74				
+TCONS_00003962	TMhelix	75	92				
+TCONS_00003962	outside	93	105				
+TCONS_00003962	TMhelix	106	126				
+TCONS_00003962	inside	127	142				
+TCONS_00003962	TMhelix	143	152				
+TCONS_00003962	outside	153	153				
+TCONS_00003962	TMhelix	154	163				
+TCONS_00003962	inside	164	180				
+TCONS_00003962	TMhelix	181	190				
+TCONS_00003962	outside	191	266				
+//
+# TCONS_00004002 Length: 1229
+# TCONS_00004002 Number of predicted TMRs: 0
+TCONS_00004002	signal	1	26				
+TCONS_00004002	outside	27	1229				
+//
+# TCONS_00004003 Length: 1541
+# TCONS_00004003 Number of predicted TMRs: 0
+TCONS_00004003	signal	1	30				
+TCONS_00004003	outside	31	1541				
+//
+# TCONS_00004004 Length: 460
+# TCONS_00004004 Number of predicted TMRs: 0
+TCONS_00004004	inside	1	460				
+//
+# TCONS_00004005 Length: 435
+# TCONS_00004005 Number of predicted TMRs: 0
+TCONS_00004005	inside	1	435				
+//
+# TCONS_00004006 Length: 260
+# TCONS_00004006 Number of predicted TMRs: 0
+TCONS_00004006	inside	1	260				
+//
+# TCONS_00004033 Length: 329
+# TCONS_00004033 Number of predicted TMRs: 0
+TCONS_00004033	inside	1	329				
+//
+# TCONS_00004034 Length: 350
+# TCONS_00004034 Number of predicted TMRs: 0
+TCONS_00004034	inside	1	350				
+//
+# TCONS_00004035 Length: 380
+# TCONS_00004035 Number of predicted TMRs: 0
+TCONS_00004035	inside	1	380				
+//
+# TCONS_00004036 Length: 265
+# TCONS_00004036 Number of predicted TMRs: 0
+TCONS_00004036	inside	1	265				
+//
+# TCONS_00004037 Length: 370
+# TCONS_00004037 Number of predicted TMRs: 0
+TCONS_00004037	inside	1	370				
+//
+# TCONS_00004042 Length: 234
+# TCONS_00004042 Number of predicted TMRs: 1
+TCONS_00004042	signal	1	24				
+TCONS_00004042	outside	25	85				
+TCONS_00004042	TMhelix	86	95				
+TCONS_00004042	inside	96	234				
+//
+# TCONS_00004044 Length: 192
+# TCONS_00004044 Number of predicted TMRs: 0
+TCONS_00004044	inside	1	192				
+//
+# TCONS_00004046 Length: 417
+# TCONS_00004046 Number of predicted TMRs: 1
+TCONS_00004046	signal	1	24				
+TCONS_00004046	outside	25	200				
+TCONS_00004046	TMhelix	201	221				
+TCONS_00004046	inside	222	417				
+//
+# TCONS_00004049 Length: 426
+# TCONS_00004049 Number of predicted TMRs: 1
+TCONS_00004049	signal	1	24				
+TCONS_00004049	outside	25	211				
+TCONS_00004049	TMhelix	212	230				
+TCONS_00004049	inside	231	426				
+//
+# TCONS_00004051 Length: 181
+# TCONS_00004051 Number of predicted TMRs: 0
+TCONS_00004051	signal	1	24				
+TCONS_00004051	outside	25	181				
+//
+# TCONS_00004066 Length: 539
+# TCONS_00004066 Number of predicted TMRs: 0
+TCONS_00004066	inside	1	539				
+//
+# TCONS_00004067 Length: 230
+# TCONS_00004067 Number of predicted TMRs: 0
+TCONS_00004067	inside	1	230				
+//
+# TCONS_00004068 Length: 597
+# TCONS_00004068 Number of predicted TMRs: 0
+TCONS_00004068	inside	1	597				
+//
+# TCONS_00004102 Length: 335
+# TCONS_00004102 Number of predicted TMRs: 7
+TCONS_00004102	outside	1	15				
+TCONS_00004102	TMhelix	16	38				
+TCONS_00004102	inside	39	48				
+TCONS_00004102	TMhelix	49	69				
+TCONS_00004102	outside	70	79				
+TCONS_00004102	TMhelix	80	102				
+TCONS_00004102	inside	103	121				
+TCONS_00004102	TMhelix	122	142				
+TCONS_00004102	outside	143	166				
+TCONS_00004102	TMhelix	167	190				
+TCONS_00004102	inside	191	226				
+TCONS_00004102	TMhelix	227	247				
+TCONS_00004102	outside	248	258				
+TCONS_00004102	TMhelix	259	282				
+TCONS_00004102	inside	283	335				
+//
+# TCONS_00004103 Length: 270
+# TCONS_00004103 Number of predicted TMRs: 7
+TCONS_00004103	outside	1	15				
+TCONS_00004103	TMhelix	16	38				
+TCONS_00004103	inside	39	48				
+TCONS_00004103	TMhelix	49	69				
+TCONS_00004103	outside	70	79				
+TCONS_00004103	TMhelix	80	102				
+TCONS_00004103	inside	103	121				
+TCONS_00004103	TMhelix	122	142				
+TCONS_00004103	outside	143	166				
+TCONS_00004103	TMhelix	167	177				
+TCONS_00004103	inside	178	178				
+TCONS_00004103	TMhelix	179	190				
+TCONS_00004103	outside	191	198				
+TCONS_00004103	TMhelix	199	217				
+TCONS_00004103	inside	218	270				
+//
+# TCONS_00004104 Length: 238
+# TCONS_00004104 Number of predicted TMRs: 5
+TCONS_00004104	outside	1	15				
+TCONS_00004104	TMhelix	16	38				
+TCONS_00004104	inside	39	48				
+TCONS_00004104	TMhelix	49	69				
+TCONS_00004104	outside	70	79				
+TCONS_00004104	TMhelix	80	102				
+TCONS_00004104	inside	103	121				
+TCONS_00004104	TMhelix	122	142				
+TCONS_00004104	outside	143	166				
+TCONS_00004104	TMhelix	167	192				
+TCONS_00004104	inside	193	238				
+//
+# TCONS_00004110 Length: 981
+# TCONS_00004110 Number of predicted TMRs: 1
+TCONS_00004110	signal	1	28				
+TCONS_00004110	outside	29	861				
+TCONS_00004110	TMhelix	862	880				
+TCONS_00004110	inside	881	981				
+//
+# TCONS_00004111 Length: 971
+# TCONS_00004111 Number of predicted TMRs: 1
+TCONS_00004111	signal	1	28				
+TCONS_00004111	outside	29	851				
+TCONS_00004111	TMhelix	852	870				
+TCONS_00004111	inside	871	971				
+//
+# TCONS_00004112 Length: 962
+# TCONS_00004112 Number of predicted TMRs: 1
+TCONS_00004112	signal	1	28				
+TCONS_00004112	outside	29	842				
+TCONS_00004112	TMhelix	843	861				
+TCONS_00004112	inside	862	962				
+//
+# TCONS_00004208 Length: 279
+# TCONS_00004208 Number of predicted TMRs: 0
+TCONS_00004208	inside	1	279				
+//
+# TCONS_00004209 Length: 155
+# TCONS_00004209 Number of predicted TMRs: 0
+TCONS_00004209	inside	1	155				
+//
+# TCONS_00004210 Length: 802
+# TCONS_00004210 Number of predicted TMRs: 0
+TCONS_00004210	inside	1	802				
+//
+# TCONS_00004224 Length: 1117
+# TCONS_00004224 Number of predicted TMRs: 0
+TCONS_00004224	inside	1	1117				
+//
+# TCONS_00004225 Length: 420
+# TCONS_00004225 Number of predicted TMRs: 0
+TCONS_00004225	inside	1	420				
+//
+# TCONS_00004226 Length: 420
+# TCONS_00004226 Number of predicted TMRs: 0
+TCONS_00004226	inside	1	420				
+//
+# TCONS_00004227 Length: 674
+# TCONS_00004227 Number of predicted TMRs: 0
+TCONS_00004227	inside	1	674				
+//
+# TCONS_00004228 Length: 65
+# TCONS_00004228 Number of predicted TMRs: 0
+TCONS_00004228	inside	1	65				
+//
+# TCONS_00004229 Length: 57
+# TCONS_00004229 Number of predicted TMRs: 0
+TCONS_00004229	inside	1	57				
+//
+# TCONS_00004230 Length: 57
+# TCONS_00004230 Number of predicted TMRs: 0
+TCONS_00004230	inside	1	57				
+//
+# TCONS_00004240 Length: 289
+# TCONS_00004240 Number of predicted TMRs: 0
+TCONS_00004240	outside	1	289				
+//
+# TCONS_00004241 Length: 689
+# TCONS_00004241 Number of predicted TMRs: 0
+TCONS_00004241	signal	1	16				
+TCONS_00004241	outside	17	689				
+//
+# TCONS_00004265 Length: 243
+# TCONS_00004265 Number of predicted TMRs: 0
+TCONS_00004265	inside	1	243				
+//
+# TCONS_00004266 Length: 78
+# TCONS_00004266 Number of predicted TMRs: 0
+TCONS_00004266	inside	1	78				
+//
+# TCONS_00004267 Length: 706
+# TCONS_00004267 Number of predicted TMRs: 0
+TCONS_00004267	inside	1	706				
+//
+# TCONS_00004269 Length: 847
+# TCONS_00004269 Number of predicted TMRs: 0
+TCONS_00004269	inside	1	847				
+//
+# TCONS_00004270 Length: 894
+# TCONS_00004270 Number of predicted TMRs: 0
+TCONS_00004270	inside	1	894				
+//
+# TCONS_00004271 Length: 892
+# TCONS_00004271 Number of predicted TMRs: 0
+TCONS_00004271	inside	1	892				
+//
+# TCONS_00004310 Length: 53
+# TCONS_00004310 Number of predicted TMRs: 0
+TCONS_00004310	inside	1	53				
+//
+# TCONS_00004311 Length: 78
+# TCONS_00004311 Number of predicted TMRs: 0
+TCONS_00004311	inside	1	78				
+//
+# TCONS_00004325 Length: 212
+# TCONS_00004325 Number of predicted TMRs: 0
+TCONS_00004325	inside	1	212				
+//
+# TCONS_00004326 Length: 401
+# TCONS_00004326 Number of predicted TMRs: 0
+TCONS_00004326	inside	1	401				
+//
+# TCONS_00004327 Length: 515
+# TCONS_00004327 Number of predicted TMRs: 0
+TCONS_00004327	inside	1	515				
+//
+# TCONS_00004328 Length: 553
+# TCONS_00004328 Number of predicted TMRs: 0
+TCONS_00004328	inside	1	553				
+//
+# TCONS_00004329 Length: 515
+# TCONS_00004329 Number of predicted TMRs: 0
+TCONS_00004329	inside	1	515				
+//
+# TCONS_00004330 Length: 553
+# TCONS_00004330 Number of predicted TMRs: 0
+TCONS_00004330	inside	1	553				
+//
+# TCONS_00004332 Length: 343
+# TCONS_00004332 Number of predicted TMRs: 0
+TCONS_00004332	inside	1	343				
+//
+# TCONS_00004333 Length: 133
+# TCONS_00004333 Number of predicted TMRs: 0
+TCONS_00004333	inside	1	133				
+//
+# TCONS_00004375 Length: 243
+# TCONS_00004375 Number of predicted TMRs: 0
+TCONS_00004375	inside	1	243				
+//
+# TCONS_00004376 Length: 636
+# TCONS_00004376 Number of predicted TMRs: 0
+TCONS_00004376	inside	1	636				
+//
+# TCONS_00004377 Length: 633
+# TCONS_00004377 Number of predicted TMRs: 0
+TCONS_00004377	inside	1	633				
+//
+# TCONS_00004378 Length: 532
+# TCONS_00004378 Number of predicted TMRs: 0
+TCONS_00004378	inside	1	532				
+//
+# TCONS_00004379 Length: 535
+# TCONS_00004379 Number of predicted TMRs: 0
+TCONS_00004379	inside	1	535				
+//
+# TCONS_00004380 Length: 494
+# TCONS_00004380 Number of predicted TMRs: 0
+TCONS_00004380	inside	1	494				
+//
+# TCONS_00004381 Length: 595
+# TCONS_00004381 Number of predicted TMRs: 0
+TCONS_00004381	inside	1	595				
+//
+# TCONS_00004382 Length: 473
+# TCONS_00004382 Number of predicted TMRs: 0
+TCONS_00004382	inside	1	473				
+//
+# TCONS_00004439 Length: 287
+# TCONS_00004439 Number of predicted TMRs: 0
+TCONS_00004439	inside	1	287				
+//
+# TCONS_00004440 Length: 242
+# TCONS_00004440 Number of predicted TMRs: 0
+TCONS_00004440	inside	1	242				
+//
+# TCONS_00004441 Length: 334
+# TCONS_00004441 Number of predicted TMRs: 0
+TCONS_00004441	inside	1	334				
+//
+# TCONS_00004442 Length: 334
+# TCONS_00004442 Number of predicted TMRs: 0
+TCONS_00004442	inside	1	334				
+//
+# TCONS_00004443 Length: 114
+# TCONS_00004443 Number of predicted TMRs: 0
+TCONS_00004443	inside	1	114				

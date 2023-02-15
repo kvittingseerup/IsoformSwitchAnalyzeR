@@ -117,8 +117,6 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{analyzeAlternativeSplicing}}\cr
 \code{\link{extractSplicingSummary}}\cr
 \code{\link{extractSplicingEnrichment}}\cr

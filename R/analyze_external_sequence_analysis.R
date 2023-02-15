@@ -796,35 +796,32 @@ analyzePFAM <- function(
 
     }
 
-    ### Add structural predictions
-    if(FALSE) {
-        tmp <- augment_pfam(myPfamResult)
-        tmp <- analyse_pfam_structure(tmp)
+    ### Add Domain isotypes
+    if(TRUE) {
+        tmp <-
+            myPfamResult %>%
+            pfamAnalyzeR::augment_pfam() %>%
+            pfamAnalyzeR::analyse_pfam_isotypes()
 
-        myPfamResult$domain_structure <- tmp$domain_structure
+        myPfamResult$domain_isotype        <- tmp$domain_isotype
+        myPfamResult$domain_isotype_simple <- tmp$domain_isotype_simple
 
-        ### Simplify SV
-        myPfamResult$domain_structure <- ifelse(
-            myPfamResult$domain_structure == 'Complete',
-            yes = 'Complete',
-            no  = 'Structural Variant'
-        )
     }
 
-    ### Convert from AA coordinats to transcript and genomic coordinats
+    ### Convert from AA coordinates to transcript and gnomic coordinats
     if (TRUE) {
         if (!quiet) {
             message('Converting AA coordinats to transcript and genomic coordinats...')
         }
         ### Remove unwanted columns
-        myPfamResult$envelope_start <- NULL
-        myPfamResult$envelope_end <- NULL
+        myPfamResult$alignment_start <- NULL # KVS update 01/2023
+        myPfamResult$alignment_end   <- NULL # KVS update 01/2023
         myPfamResult$hmm_start <- NULL
         myPfamResult$hmm_end <- NULL
         myPfamResult$hmm_length <- NULL
 
         colnames(myPfamResult)[which(
-            grepl('alignment_', colnames(myPfamResult))
+            grepl('envelope_', colnames(myPfamResult)) # KVS update 01/2023
         )] <- c('orf_aa_start', 'orf_aa_end')
 
         ### convert from codons to transcript position
@@ -1033,20 +1030,23 @@ analyzeSignalP <- function(
     minSignalPeptideProbability = 0.5,
     quiet = FALSE
 ) {
-    if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-        stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
-    }
+    ### Test input
+    if(TRUE) {
+        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
+        }
 
-    # file
-    if (class(pathToSignalPresultFile) != 'character') {
-        stop(
-            'The \'pathToSignalPresultFile\' argument must be a string pointing to the SignalP result file(s)'
-        )
-    }
-    if ( ! all(sapply(pathToSignalPresultFile, file.exists)) ) {
-        stop('The file(s) \'pathToSignalPresultFile\' points to does not exist')
-    }
+        # file
+        if (class(pathToSignalPresultFile) != 'character') {
+            stop(
+                'The \'pathToSignalPresultFile\' argument must be a string pointing to the SignalP result file(s)'
+            )
+        }
+        if ( ! all(sapply(pathToSignalPresultFile, file.exists)) ) {
+            stop('The file(s) \'pathToSignalPresultFile\' points to does not exist')
+        }
 
+    }
 
     ### Obtain signalP result
     if (TRUE) {
@@ -1061,10 +1061,152 @@ analyzeSignalP <- function(
             stringsAsFactors = FALSE
         )
 
-        isSignalP5 <- grepl('SignalP-5', fileType$V1[1])
+        ### Annotate version
+        if( grepl('SignalP-5', fileType$V1[1]) ) {
+            signalPversion = 'v5'
+        } else if( grepl('SignalP-6', fileType$V1[1]) ) {
+            signalPversion = 'v6'
+        } else {
+            signalPversion = 'v4'
+        }
+
+        ### SignalP6
+        if( signalPversion == 'v6' ) {
+            if( !any( sapply(unlist(fileType), function(x) {grepl('Eukarya|euk',x)} )) ){
+                warning('It seems SignalP was run as Non-Eukaryote - was that on purpouse?')
+            }
+
+            signalP6colNames <- c(
+                'isoform_id',
+                'Prediction',
+                'OTHER',
+                'SP_Sec_SPI',
+                'CS_Position'
+            )
+
+            ### Read in SignalP predictions
+            if(TRUE) {
+                singalPresults <- do.call(rbind, plyr::llply(
+                    pathToSignalPresultFile,
+                    .fun = function(
+                        aFile
+                    ) {
+                        suppressWarnings(
+                            readr::read_tsv(
+                                file = aFile,
+                                col_names = signalP6colNames,
+                                col_types = readr::cols(
+                                    isoform_id  = readr::col_character(),
+                                    Prediction  = readr::col_character(),
+                                    SP_Sec_SPI  = readr::col_double(),
+                                    OTHER       = readr::col_double(),
+                                    CS_Position = readr::col_character()
+                                ),
+                                comment = '#'
+                            )
+                        )
+                        #read.table(
+                        #    aFile,
+                        #    header = FALSE,
+                        #    stringsAsFactors = FALSE,
+                        #    fill = TRUE,
+                        #    col.names = signalP5colNames,
+                        #    sep='\t'
+                        #)
+                    }
+                ))
+
+                colnames(singalPresults) <- gsub('\\.$','', colnames(singalPresults))
+                colnames(singalPresults) <- gsub('\\.','_', colnames(singalPresults))
+
+                singalPresults <- unique(singalPresults)
+            }
+
+            ### Sanity check that it is a SignalIP result file
+            if(TRUE) {
+                if(nrow(singalPresults) == 0) {
+                    stop('The result file(s) seems to be empty')
+                }
+
+                t1 <- ! is.character(singalPresults$isoform_id)
+                t2 <- ! is.character(singalPresults$Prediction)
+                t3 <- ! is.numeric(singalPresults$SP_Sec_SPI)
+                t4 <- ! is.numeric(singalPresults$OTHER)
+                t5 <- ! any(c('OTHER','NO_SP','SP') %in% singalPresults$Prediction) # add "Other"
+
+                if( any( c(t1,t2,t3,t4,t5))) {
+                    stop('The pathToSignalPresultFile does not seam to be the result of a SignalP 6 analysis')
+                }
+
+                if( ! any( singalPresults$isoform_id %in% switchAnalyzeRlist$isoformFeatures$isoform_id) ) {
+                    stop('The pathToSignalPresultFile does not contain result of isoforms analyzed in the switchAnalyzeRlist')
+                }
+            }
+
+            ### Reduce to features of interest
+            if(TRUE) {
+                ### With signal
+                singalPresults <- singalPresults[which(
+                    singalPresults$Prediction == 'SP'
+                ),]
+
+                ### Also subset on those with cleaveage site annotated
+                singalPresults <- singalPresults[which(
+                    grepl('CS pos:', singalPresults$CS_Position)
+                ),]
+
+                ### Remove fragment
+                singalPresults <- singalPresults[which(
+                    ! grepl('CS pos: \\?. Probable protein fragment', singalPresults$CS_Position)
+                ),]
+
+                ### Test prob
+                toLargeProb <- unique( c(
+                    which( singalPresults$SP_Sec_SPI > 1),
+                    which( singalPresults$OTHER > 1)
+                ))
+                if(length(toLargeProb)) {
+                    warning(
+                        paste(
+                            'Please note that', length(toLargeProb),
+                            'SignalP results had probabilities ',
+                            '\nlarger than 1 - which probabilities cannot be.',
+                            '\nThese enteries were removed.',
+                            sep = ' '
+                        )
+                    )
+                    singalPresults <- singalPresults[setdiff( 1:nrow(singalPresults), toLargeProb),]
+                }
+
+
+                # Analyzed with ORF
+                singalPresults <- singalPresults[which(
+                    singalPresults$isoform_id %in% switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                        !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                    )]
+                ),]
+
+                if( nrow(singalPresults) == 0) {
+                    warning('There were no signal peptides in the SignalP result file. Returning switchAnalyzeRlist without this analysis.')
+                    return(switchAnalyzeRlist)
+                }
+            }
+
+            ### Massage
+            if(TRUE) {
+                singalPresults$aa_removed <- sapply(
+                    strsplit(singalPresults$CS_Position, split = '\\.|-'),
+                    function(x) {
+                        as.integer( gsub('^CS pos: ', '', x[1]) )
+                    }
+                )
+
+                singalPresults$Prediction <- NULL
+            }
+        }
 
         ### SignalP5
-        if( isSignalP5 ) {
+        if( signalPversion == 'v5' ) {
             if( !any( sapply(unlist(fileType), function(x) {grepl('Eukarya|euk',x)} )) ){
                 warning('It seems SignalP was run as Non-Eukaryote - was that on purpouse?')
             }
@@ -1206,7 +1348,7 @@ analyzeSignalP <- function(
         }
 
         ### SignalP4
-        if( ! isSignalP5 ) {
+        if( signalPversion == 'v4' ) {
             ### Old file
             singalPresults <- do.call(rbind, plyr::llply(
                 pathToSignalPresultFile,
@@ -1651,7 +1793,7 @@ analyzeNetSurfP2 <- function(
 analyzeIUPred2A <- function(
     switchAnalyzeRlist,
     pathToIUPred2AresultFile,
-    smoothingWindowSize = 5,
+    smoothingWindowSize = 11,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
     annotateBindingSites = TRUE,
@@ -2134,6 +2276,449 @@ analyzeIUPred2A <- function(
     return(switchAnalyzeRlist)
 }
 
+analyzeDeepLoc2 <- function(
+    switchAnalyzeRlist,
+    pathToDeepLoc2resultFile,
+    enforceProbabilityCutoff = TRUE,
+    probabilityCutoff = NULL,
+    quiet = FALSE
+) {
+    ### Test input
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        # file
+        if (class(pathToDeepLoc2resultFile) != 'character') {
+            stop(
+                'The \'pathToDeepLoc2resultFile\' argument must be a string pointing to the PFAM result file(s)'
+            )
+        }
+        if ( ! all(sapply(pathToDeepLoc2resultFile, file.exists)) ) {
+            stop('The file(s) \'pathToDeepLoc2resultFile\' points to does not exist')
+        }
+    }
+
+    ### Import result data
+    if(TRUE) {
+        ### Test whether it is a tsv
+        suppressMessages(
+            tmp <- readr::read_tsv( file = pathToDeepLoc2resultFile[1], n_max = 5 )
+        )
+
+        ### Read in and test col names
+        if(TRUE) {
+            ### Tap separated
+            if(ncol(tmp) == 13 ) {
+                deepLocRes <- do.call(rbind, plyr::llply(
+                    pathToDeepLoc2resultFile,
+                    .fun = function(
+                        aFile
+                    ) {
+                        suppressMessages(
+                            localRes <- readr::read_tsv(aFile)
+                        )
+                    }
+                ))
+            }
+
+            ### CSV
+            if(ncol(tmp) == 1) {
+                deepLocRes <- do.call(rbind, plyr::llply(
+                    pathToDeepLoc2resultFile,
+                    .fun = function(
+                        aFile
+                    ) {
+                        suppressMessages(
+                            localRes <- readr::read_csv(aFile)
+                        )
+                    }
+                ))
+
+            }
+
+            if(! ncol(tmp) %in% c(1, 13) ) {
+                ### File format not recogniced
+                stop('The file does not appear to be a DeepLoc result file. Double check and try agian...')
+            }
+
+            ### Massage result
+            if(TRUE) {
+                ### remove potential dupliations
+                deepLocRes <- dplyr::distinct(deepLocRes)
+
+                ### Test columns
+                expectedCols <- c(
+                    "Protein_ID",
+                    "Localizations",
+                    "Signals",
+                    "Cytoplasm",
+                    "Nucleus",
+                    "Extracellular",
+                    "Cell membrane",
+                    "Mitochondrion",
+                    "Plastid",
+                    "Endoplasmic reticulum",
+                    "Lysosome/Vacuole",
+                    "Golgi apparatus",
+                    "Peroxisome"
+                )
+
+                if( ! all( colnames(deepLocRes) == expectedCols ) ) {
+                    stop('The file(s) pointed to by \'pathToDeepLoc2resultFile\' appears not to be DeepLoc Result file')
+                }
+
+            }
+
+        }
+
+        ### Test what file contain
+        if (nrow(deepLocRes) == 0) {
+            stop('The file(s) pointed to by \'pathToDeepLoc2resultFile\' is empty')
+        }
+
+        ### Rename
+        colnames(deepLocRes)[1] <- 'isoform_id'
+        colnames(deepLocRes) <- stringr::str_replace_all( colnames(deepLocRes) , ' ','_')
+        colnames(deepLocRes) <- stringr::str_replace_all( colnames(deepLocRes) , '/','_')
 
 
+        ### Subset to analyzed files
+        deepLocRes <- deepLocRes[which(
+            deepLocRes$isoform_id %in% switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+            )]
+        ),]
 
+        if (nrow(deepLocRes) == 0) {
+            stop(
+                paste(
+                    'The file(s) pointed to by \'pathToDeepLoc2resultFile\' does not',
+                    'contain results for the isoforms stored in the switchAnalyzeRlist supplied'
+                )
+            )
+        }
+
+        ### Remove singal peptides - use SignalP instead
+        deepLocRes$Signals <- NULL
+
+        ### Massage predictions
+        deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations, ' ','_')
+        deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations, '/','_')
+        deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations,'\\|',',')
+    }
+
+    ### Filter
+    if(TRUE) {
+        ### Location specific cutoff
+        if(enforceProbabilityCutoff) {
+            ### Define location specific probability cutoffs
+            probCutoff <- c(
+                0.4695,
+                0.5275,
+                0.6464,
+                0.5237,
+                0.6373,
+                0.6586,
+                0.6278,
+                0.5648,
+                0.6678,
+                0.7168
+            )
+            names(probCutoff) <- c(
+                'Cytoplasm',
+                'Nucleus',
+                'Extracellular',
+                'Cell_membrane',
+                'Mitochondrion',
+                'Plastid',
+                'Endoplasmic_reticulum',
+                'Lysosome_Vacuole',
+                'Golgi_apparatus',
+                'Peroxisome'
+            )
+
+
+            colOi <- setdiff(
+                colnames(deepLocRes),
+                c('isoform_id','Localizations')
+            )
+
+            probCutoff <- probCutoff[match(
+                colOi, names(probCutoff)
+            )]
+
+            ### Identify locations above the specific cutoffs
+            deepLocRes$Localizations <- apply(
+                deepLocRes[,colOi],
+                1,
+                function(x) {
+                    paste(colOi[which(x >= probCutoff)], collapse = ',')
+                }
+            )
+
+            ### Set those without location to NA
+            deepLocRes$Localizations[which(
+                deepLocRes$Localizations == ''
+            )] <- NA
+        }
+
+        ### User specific cutoff
+        if(!is.null(probabilityCutoff)) {
+            colOi <- setdiff(
+                colnames(deepLocRes),
+                c('isoform_id','Localizations')
+            )
+
+            ### Identify locations above the specific cutoffs
+            deepLocRes$Localizations <- apply(
+                deepLocRes[,colOi],
+                1,
+                function(x) {
+                    paste(colOi[which(x >= probabilityCutoff)], collapse = ',')
+                }
+            )
+
+            ### Set those without location to NA
+            deepLocRes$Localizations[which(
+                deepLocRes$Localizations == ''
+            )] <- NA
+        }
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        # add the pfam results to the switchAnalyzeRlist object
+        switchAnalyzeRlist$subCellLocationAnalysis <-
+            deepLocRes[sort.list(deepLocRes$isoform_id),]
+
+        # add location to isoformFeatures
+        switchAnalyzeRlist$isoformFeatures$sub_cell_location <- deepLocRes$Localizations[match(
+            switchAnalyzeRlist$isoformFeatures$isoform_id, deepLocRes$isoform_id
+        )]
+    }
+
+
+    ### Repport summary
+    if(!quiet) {
+        nLoc <- sum(!is.na(deepLocRes$Localizations))
+
+        pLoc <-
+            round(nLoc / length(unique(
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+            )) * 100, digits = 2)
+
+        message(paste(
+            'Added subcellular information to ', nLoc, ' (', pLoc, '%) transcripts',
+            sep = ''
+        ))
+
+    }
+    return(switchAnalyzeRlist)
+}
+
+analyzeDeepTMHMM <- function(
+    switchAnalyzeRlist,
+    pathToDeepTMHMMresultFile,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Test input
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
+        }
+
+        # file
+        if (class(pathToDeepTMHMMresultFile) != 'character') {
+            stop(
+                'The \'pathToDeepTMHMMresultFile\' argument must be a string pointing to the PFAM result file'
+            )
+        }
+        if (! all( file.exists(pathToDeepTMHMMresultFile)) ) {
+            stop('(At least on of) the file(s) \'pathToDeepTMHMMresultFile\' points to does not exist')
+        }
+
+    }
+
+    if (showProgress & !quiet) {
+        progressBar <- 'text'
+    } else {
+        progressBar <- 'none'
+    }
+
+    ### Read result file
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 1 of 2: Reading results into R...')
+        }
+
+        ### Read in file
+        deepTmRes <- do.call(
+            c,
+            lapply(pathToDeepTMHMMresultFile, readLines)
+        )
+
+        ### Remove unwanted lines
+        deepTmRes <- deepTmRes[which(
+            ! grepl('^#', deepTmRes)
+        )]
+        deepTmRes <- deepTmRes[which(
+            ! grepl('^/', deepTmRes)
+        )]
+
+        ### Read as tsv
+        deepTmRes <- read.table(
+            text = deepTmRes,
+            header = FALSE,
+            sep = '\t'
+        )
+
+        ### Extract parts of interest
+        deepTmRes <- deepTmRes[,1:4]
+
+        colnames(deepTmRes) <- c(
+            'isoform_id',
+            'region_type',
+            'orf_aa_start',
+            'orf_aa_end'
+        )
+
+        deepTmRes$length <- deepTmRes$orf_aa_end - deepTmRes$orf_aa_start + 1
+
+
+        ### Subset to those in switchList
+        deepTmRes <- deepTmRes[which(
+            deepTmRes$isoform_id %in%
+                switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                    !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                )]
+        ), ]
+    }
+    # deepTmRes
+
+    ### Convert from AA coordinats to transcript and genomic coordinats
+    if (TRUE) {
+        if (!quiet) {
+            message('Step 2 of 2: Converting AA coordinats to transcript and genomic coordinats...')
+        }
+
+        ### convert from codons to transcript position
+        orfStartDF <-
+            unique(
+                switchAnalyzeRlist$orfAnalysis[
+                    which( !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+                    c('isoform_id', 'orfTransciptStart')
+                ]
+            )
+        deepTmRes$transcriptStart <-
+            (deepTmRes$orf_aa_start  * 3 - 2) +
+            orfStartDF$orfTransciptStart[
+                match(
+                    x = deepTmRes$isoform_id,
+                    table = orfStartDF$isoform_id
+                )] - 1
+        deepTmRes$transcriptEnd <-
+            (deepTmRes$orf_aa_end * 3) +
+            orfStartDF$orfTransciptStart[
+                match(
+                    x = deepTmRes$isoform_id,
+                    table = orfStartDF$isoform_id
+                )] - 1
+
+        ### convert from transcript to genomic coordinats
+        # extract exon data
+        myExons <-
+            as.data.frame(switchAnalyzeRlist$exons[which(
+                switchAnalyzeRlist$exons$isoform_id %in% deepTmRes$isoform_id
+            ), ])
+        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
+        deepTmRes <-
+            plyr::ddply(
+                deepTmRes,
+                .progress = progressBar,
+                .variables = 'isoform_id',
+                .fun = function(aDF) {
+                    # aDF <- deepTmRes[which(deepTmRes$isoform_id == 'TCONS_00000045'),]
+
+                    transcriptId <- aDF$isoform_id[1]
+                    localExons <-
+                        as.data.frame(myExonsSplit[[transcriptId]])
+
+                    # extract domain allignement
+                    localORFalignment <- aDF
+                    colnames(localORFalignment)[match(
+                        x = c('transcriptStart', 'transcriptEnd'),
+                        table = colnames(localORFalignment)
+                    )] <- c('start', 'end')
+
+                    # loop over domain alignment (migh be several)
+                    orfPosList <- list()
+                    for (j in 1:nrow(localORFalignment)) {
+                        domainInfo <-
+                            convertCoordinatsTranscriptToGenomic(
+                                transcriptCoordinats =  localORFalignment[j, ],
+                                exonStructure = localExons
+                            )
+
+                        orfPosList[[as.character(j)]] <- domainInfo
+
+                    }
+                    orfPosDf <- do.call(rbind, orfPosList)
+
+                    return(cbind(aDF, orfPosDf))
+                }
+            )
+
+        colnames(deepTmRes) <- gsub(
+            'pfam',
+            'region',
+            colnames(deepTmRes)
+        )
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        # sort
+        deepTmRes <-
+            deepTmRes[order(
+                deepTmRes$isoform_id,
+                deepTmRes$transcriptStart
+            ), ]
+
+        # add the results to the switchAnalyzeRlist object
+        switchAnalyzeRlist$topologyAnalysis <- deepTmRes
+
+    }
+
+    ### Repport result
+    if(TRUE) {
+        n <- length(unique(deepTmRes$isoform_id))
+        p <-
+            round(n / length(unique(
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+            )) * 100, digits = 2)
+
+        if (!quiet) {
+            message(paste(
+                'Added topology information to ',
+                n,
+                ' transcripts (',
+                p,
+                '%).',
+                sep = ''
+            ))
+        }
+    }
+
+    return(switchAnalyzeRlist)
+}

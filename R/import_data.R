@@ -1246,7 +1246,6 @@ importGTF <- function(
         }
 
         isGTF <- grepl('\\.gtf$|\\.gtf\\.gz$', pathToGTF, ignore.case = TRUE)
-
     }
 
     # Read in from GTF/GFF file
@@ -1567,7 +1566,7 @@ importGTF <- function(
     if(TRUE) {
         geneSummary <-
             myIsoAnot %>%
-            select(gene_id, gene_name) %>%
+            dplyr::select(gene_id, gene_name) %>%
             dplyr::distinct() %>%
             group_by(gene_id) %>%
             dplyr::summarise(
@@ -1634,8 +1633,7 @@ importGTF <- function(
                     dplyr::full_join(
                         orfInfo,
                         unique(myIsoAnot[, 'isoform_id', drop = FALSE]),
-                        by = 'isoform_id',
-                        all = TRUE
+                        by = 'isoform_id'
                     )
 
             } else {
@@ -2214,7 +2212,7 @@ importGTF <- function(
         sourceId = 'gtf'
     )
 
-    if (addAnnotatedORFs) {
+    if(addAnnotatedORFs) {
         # subset to those in list
         orfInfo <-
             orfInfo[which(orfInfo$isoform_id %in%
@@ -2960,15 +2958,6 @@ importRdata <- function(
     showProgress = TRUE,
     quiet = FALSE
 ) {
-    ### Set up progress
-    if (showProgress &  !quiet) {
-        progressBar <- 'text'
-        progressBarLogic <- TRUE
-    } else {
-        progressBar <- 'none'
-        progressBarLogic <- FALSE
-    }
-
     ### Test existence of files
     if(TRUE) {
         if( !is.null(isoformNtFasta)) {
@@ -3024,16 +3013,30 @@ importRdata <- function(
     }
 
     ### Test whether input data fits together
-    if (!quiet) { message('Step 1 of 7: Checking data...')}
+    if (!quiet) { message('Step 1 of 10: Checking data...')}
     if (TRUE) {
+        ### Set up progress
+        if (showProgress &  !quiet) {
+            progressBar <- 'text'
+            progressBarLogic <- TRUE
+        } else {
+            progressBar <- 'none'
+            progressBarLogic <- FALSE
+        }
+
         ### Test supplied expression
         if(TRUE) {
-            countsSuppled <- !is.null(isoformCountMatrix)
-            abundSuppled <- !is.null(isoformRepExpression)
+            countsSuppled <- ! is.null(isoformCountMatrix)
+            abundSuppled  <- ! is.null(isoformRepExpression)
 
-            if( !( countsSuppled | abundSuppled) ) {
-                stop('At least one of \'isoformCountMatrix\' or \'isoformRepExpression\' arguments must be used.')
+            if( ! countsSuppled ) {
+                stop('You must supply a count matrix to \'isoformCountMatrix\'.')
             }
+
+            if( ! class(isoformCountMatrix)[1] %in% c('data.frame','matrix','tbl_df')) {
+                stop('The input given as isoformCountMatrix must be a data.frame or matrix.')
+            }
+
 
             if( abundSuppled ) {
                 isoformRepExpression <- as.data.frame(isoformRepExpression)
@@ -3069,7 +3072,7 @@ importRdata <- function(
             }
         }
 
-        ### Contains the collums they should
+        ### Contains the colums they should
         if (TRUE) {
             ### Colnames
             if( countsSuppled ) {
@@ -3185,6 +3188,7 @@ importRdata <- function(
                 isoformCountMatrix$isoform_id <-
                     as.character(isoformCountMatrix$isoform_id)
             }
+
         }
 
         ### Check supplied data fits togehter
@@ -3301,7 +3305,10 @@ importRdata <- function(
                 }
             }
         }
+
     }
+
+
 
     ### Giver proper R names
     if(TRUE) {
@@ -3354,8 +3361,10 @@ importRdata <- function(
 
     }
 
-    ### Obtain isoform annotaion
-    if (!quiet) { message('Step 2 of 7: Obtaining annotation...')}
+
+
+    ### Obtain isoform annotation
+    if (!quiet) { message('Step 2 of 10: Obtaining annotation...')}
     if (TRUE) {
         ### Massage annoation input
         if(TRUE) {
@@ -3967,8 +3976,110 @@ importRdata <- function(
         }
     }
 
+    ### Handle sequence input
+    if(TRUE) {
+        addIsoformNt <- FALSE
+
+        if(!is.null(isoformNtFasta)) {
+            isoformNtSeq <- do.call(
+                c,
+                lapply(isoformNtFasta, function(aFile) {
+                    Biostrings::readDNAStringSet(
+                        filepath = isoformNtFasta, format = 'fasta'
+                    )
+                })
+            )
+
+            if(!is(isoformNtSeq, "DNAStringSet")) {
+                stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
+            }
+
+            ### Fix names
+            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+
+                names(isoformNtSeq) <- fixNames(
+                    nameVec = names(isoformNtSeq),
+                    ignoreAfterBar = ignoreAfterBar,
+                    ignoreAfterSpace = ignoreAfterSpace,
+                    ignoreAfterPeriod = ignoreAfterPeriod
+                )
+            }
+
+            ### Subset to used
+            isoSeqNames <- names(isoformNtSeq)
+            isoformNtSeq <- isoformNtSeq[which(
+                names(isoformNtSeq) %in% isoformRepExpression$isoform_id
+            )]
+
+            ### Remove potential duplication
+            isoformNtSeq <- isoformNtSeq[which(
+                ! duplicated(names(isoformNtSeq))
+            )]
+
+            if(length(isoformNtSeq) == 0) {
+                stop(
+                    paste(
+                        'No sequences in the fasta files had IDs matching the expression data.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+                        '    3 Examples from expression matrix are :',
+                        paste0( sample(unique(isoformRepExpression$isoform_id), min(c(3, length(isoformRepExpression$isoform_id))) ), collapse = ', '),'\n',
+                        '    3 Examples of sequence annotation are :',
+                        paste0( sample(isoSeqNames, min(c(3, length( isoSeqNames ))) ), collapse = ', '),'\n',
+                        sep = ' '
+                    )
+                )
+
+            }
+
+            if( ! all( isoformRepExpression$isoform_id %in% names(isoformNtSeq) ) ) {
+                options(warning.length = 2000L)
+                warning(
+                    paste(
+                        'The fasta file supplied to \'isoformNtFasta\' does not contain the',
+                        'nucleotide (DNA) sequence for all isoforms quantified and will not be added!',
+                        '\nSpecifically:\n',
+                        length(unique(isoformRepExpression$isoform_id)), 'isoforms were quantified.\n',
+                        length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
+                        'Only', length(intersect(names(isoformNtSeq), isoformRepExpression$isoform_id)), 'overlap.\n',
+                        length(setdiff(unique(isoformRepExpression$isoform_id), names(isoformNtSeq))), 'isoforms quantifed isoforms had no corresponding nucleotide sequence\n',
+
+                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
+                        '1) The files do not fit together (different databases, versions etc)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+                        '    3 Examples from expression matrix are :',
+                        paste0( sample(unique(isoformRepExpression$isoform_id), min(c(3, length(isoformRepExpression$isoform_id))) ), collapse = ', '),'\n',
+                        '    3 Examples of sequence annotation are :',
+                        paste0( sample(names(isoformNtSeq), min(c(3, length( isoformNtSeq ))) ), collapse = ', '),'\n',
+
+                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+                        '1) The files do not fit together (different databases versions)',
+                        '(no fix except using propperly paired files).\n',
+                        '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
+                        'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
+                        '3) One file could contain non-chanonical chromosomes while the other do not',
+                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+                        'This problem might be solvable using some of the',
+                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
+                        sep = ' '
+                    )
+                )
+            } else {
+                addIsoformNt <- TRUE
+            }
+        }
+    }
+
+
+
     ### Rescue StringTie gene annoation
     if(TRUE) {
+        if (!quiet) { message('Step 3 of 10: Fixing StringTie gene annoation problems...')}
+
         ### Add original gene_ids already assigned to gene_id back to ref_gene_id
         if(TRUE) {
             indexToModify <- which(
@@ -3980,8 +4091,6 @@ importRdata <- function(
 
         ### Assign isoforms to ref_gene_id and gene_names
         if(   fixStringTieAnnotationProblem ) {
-            if (!quiet) { message('Step 3 of 7: Fixing StringTie gene annoation problems...')}
-
             ### variables for messages
             anyFixed1 <- FALSE
             anyFixed2 <- FALSE
@@ -4453,177 +4562,318 @@ importRdata <- function(
                 )]
             }
         }
+        if( ! fixStringTieAnnotationProblem ) {
+            if (!quiet) { message('    Was skipped as instructed via the \"fixStringTieAnnotationProblem\" argument...')}
+        }
+
+
     }
+
+
 
     ### If nessesary calculate RPKM values
-    if (!quiet) { message('Step 4 of 7: Calculating gene expression and isoform fractions...') }
-    if ( ! abundSuppled ) {
-        ### Extract isoform lengths
-        isoformLengths <- sapply(
-            X = split(
-                isoformExonStructure@ranges@width,
-                f = isoformExonStructure$isoform_id
-            ),
-            FUN = sum
-        )
-
-        ### Calulate CPM
-        # convert to matrix
-        localCM <- isoformCountMatrix
-        rownames(localCM) <- localCM$isoform_id
-        localCM$isoform_id <- NULL
-        localCM <- as.matrix(localCM)
-
-        myCPM <- t(t(localCM) / colSums(localCM)) * 1e6
-
-        ### Calculate RPKM
-        isoformLengths <-
-            isoformLengths[match(rownames(myCPM), names(isoformLengths))]
-
-        isoformRepExpression <-
-            as.data.frame(myCPM / (isoformLengths / 1e3))
-
-        ### Massage
-        isoformRepExpression$isoform_id <-
-            rownames(isoformRepExpression)
-        isoformRepExpression <-
-            isoformRepExpression[, c(
-                which(colnames(isoformRepExpression) == 'isoform_id'),
-                which(colnames(isoformRepExpression) != 'isoform_id')
-            )]
-        rownames(isoformRepExpression) <- NULL
-    }
-
-    ### Handle sequence input
     if(TRUE) {
-        addIsoformNt <- FALSE
-
-        if(!is.null(isoformNtFasta)) {
-            isoformNtSeq <- do.call(
-                c,
-                lapply(isoformNtFasta, function(aFile) {
-                    Biostrings::readDNAStringSet(
-                        filepath = isoformNtFasta, format = 'fasta'
-                    )
-                })
+        if (!quiet) { message('Step 4 of 10: Calculating expression estimates from count data...') }
+        if ( ! abundSuppled ) {
+            ### Extract isoform lengths
+            isoformLengths <- sapply(
+                X = split(
+                    isoformExonStructure@ranges@width,
+                    f = isoformExonStructure$isoform_id
+                ),
+                FUN = sum
             )
 
-            if(!is(isoformNtSeq, "DNAStringSet")) {
-                stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
-            }
+            ### Calulate CPM
+            # convert to matrix
+            localCM <- isoformCountMatrix
+            rownames(localCM) <- localCM$isoform_id
+            localCM$isoform_id <- NULL
+            localCM <- as.matrix(localCM)
 
-            ### Fix names
-            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+            myCPM <- t(t(localCM) / colSums(localCM)) * 1e6
 
-                names(isoformNtSeq) <- fixNames(
-                    nameVec = names(isoformNtSeq),
-                    ignoreAfterBar = ignoreAfterBar,
-                    ignoreAfterSpace = ignoreAfterSpace,
-                    ignoreAfterPeriod = ignoreAfterPeriod
-                )
-            }
+            ### Calculate RPKM
+            isoformLengths <-
+                isoformLengths[match(rownames(myCPM), names(isoformLengths))]
 
-            ### Subset to used
-            isoSeqNames <- names(isoformNtSeq)
-            isoformNtSeq <- isoformNtSeq[which(
-                names(isoformNtSeq) %in% isoformRepExpression$isoform_id
-            )]
+            isoformRepExpression <-
+                as.data.frame(myCPM / (isoformLengths / 1e3))
 
-            ### Remove potential duplication
-            isoformNtSeq <- isoformNtSeq[which(
-                ! duplicated(names(isoformNtSeq))
-            )]
+            ### Massage
+            isoformRepExpression$isoform_id <-
+                rownames(isoformRepExpression)
+            isoformRepExpression <-
+                isoformRepExpression[, c(
+                    which(colnames(isoformRepExpression) == 'isoform_id'),
+                    which(colnames(isoformRepExpression) != 'isoform_id')
+                )]
+            rownames(isoformRepExpression) <- NULL
+        }
+        if (   abundSuppled ) {
+            if (!quiet) { message('    Skipped as user supplied expression via the \"isoformRepExpression\" argument...')}
+        }
+        # isoformRepExpression
 
-            if(length(isoformNtSeq) == 0) {
-                stop(
+    }
+
+
+
+
+
+    ### Run SVA
+    if(TRUE) {
+        if (!quiet) { message('Step 5 of 10: Testing for unwanted effects...') }
+
+        ### Massage
+        isoformRepExpressionLog <- isoformRepExpression
+        rownames(isoformRepExpressionLog) <- isoformRepExpressionLog$isoform_id
+        isoformRepExpressionLog$isoform_id <- NULL
+        isoformRepExpressionLog <- log2(isoformRepExpressionLog + 1)
+
+        ### Filter of SVA
+        isoformRepExpressionLogFilt <- isoformRepExpressionLog[which(
+            rowSums( isoformRepExpressionLog > 0.1) >= 2
+        ),]
+
+        ### Make model matrix (which also take additional factors into account)
+        if(TRUE) {
+            localDesign <- designMatrix
+
+            ### Convert group of interest to factors
+            localDesign$condition <- factor(
+                localDesign$condition,
+                levels=unique(localDesign$condition)
+            )
+
+            localFormula <- '~ 0 + condition'
+
+            ### Check co-founders for group vs continous variables and add to fomula
+            if( ncol(localDesign) > 2 ) {
+                for(i in 3:ncol(localDesign) ) { # i <- 4
+                    if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+                        if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
+                            localDesign[,i] <- factor(localDesign[,i])
+                        }
+                    } else {
+                        localDesign[,i] <- factor(localDesign[,i])
+                    }
+                }
+
+                ### Make formula for model
+                localFormula <- paste(
+                    localFormula,
+                    '+',
                     paste(
-                        'No sequences in the fasta files had IDs matching the expression data.',
-                        'This problem might be solvable using some of the',
-                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
-                        '    3 Examples from expression matrix are :',
-                        paste0( sample(unique(isoformRepExpression$isoform_id), min(c(3, length(isoformRepExpression$isoform_id))) ), collapse = ', '),'\n',
-                        '    3 Examples of sequence annotation are :',
-                        paste0( sample(isoSeqNames, min(c(3, length( isoSeqNames ))) ), collapse = ', '),'\n',
-                        sep = ' '
-                    )
+                        colnames(localDesign)[3:ncol(localDesign)],
+                        collapse = ' + '
+                    ),
+                    sep=' '
                 )
+
 
             }
 
-            if( ! all( isoformRepExpression$isoform_id %in% names(isoformNtSeq) ) ) {
-                options(warning.length = 2000L)
-                warning(
+
+            localFormula <- as.formula(localFormula)
+
+            ### Make model
+            localModel <- model.matrix(localFormula, data = localDesign)
+            indexToModify <- 1:length(unique( localDesign$condition ))
+            colnames(localModel)[indexToModify] <- gsub(
+                pattern =  '^condition',
+                replacement =  '',
+                x =  colnames(localModel)[indexToModify]
+            )
+        }
+        # localModel
+
+        ### Estimate SVAs
+        nSv = sva::num.sv(
+            dat = isoformRepExpressionLogFilt,
+            mod = localModel,
+        )
+        svaAdded <- FALSE
+
+        ### Run SVA if nessesary
+        if( nSv > 1 ) {
+            ### Run SVA
+            tmp <- capture.output(
+                localSv <- sva::sva(
+                    dat = as.matrix(isoformRepExpressionLogFilt),
+                    mod = localModel,
+                    n.sv = nSv
+                )$sv
+            )
+
+            ### Test SVs
+            if(TRUE) {
+                ### Test for just diagnoal
+                notDiagonal <- which( apply(
+                    localSv,
+                    MARGIN = 2,
+                    function(x) {
+                        sum( x != 1 ) > 1 & sum( x != 0 ) > 1
+                    }
+                ) )
+
+                ### Filter for correlation
+                notToHighCor <- which( apply(
+                    localSv,
+                    MARGIN = 2,
+                    function(x) {
+                        abs(cor(
+                            x,
+                            as.integer(as.factor(designMatrix$condition))
+                        )) < 0.8
+                    }
+                ) )
+
+                ## Subset
+                okSvs <- intersect(notDiagonal, notToHighCor)
+            }
+            # okSvs
+
+
+            ### Add to design
+            if( length(okSvs) ) {
+
+                ### Subset
+                localSv <- localSv[,okSvs]
+                colnames(localSv) <- paste0(
+                    'sv', 1:ncol(localSv)
+                )
+
+                ### Add SVs
+                designMatrix <- cbind(
+                    designMatrix,
+                    localSv
+                )
+
+                svaAdded <- TRUE
+            }
+        }
+
+        if(   svaAdded ) {
+            if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
+        }
+        if( ! svaAdded ) {
+            if (!quiet) { message('    No unwanted effects found') }
+        }
+
+    }
+
+    ### Batch correct if necessary
+    if(TRUE) {
+        if (!quiet) { message('Step 6 of 10: Batch correcting expression estimates...') }
+
+        batchCorrectionNeeded <- ncol(designMatrix) >= 3
+
+        if(   batchCorrectionNeeded ) {
+            ### Make new model matrix (which also take additional factors into account)
+            if(TRUE) {
+                localDesign <- designMatrix
+
+                ### Convert group of interest to factors
+                localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
+
+                ### Check co-founders for group vs continous variables
+                if( ncol(localDesign) > 2 ) {
+                    for(i in 3:ncol(localDesign) ) { # i <- 4
+                        if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+                            if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
+                                localDesign[,i] <- factor(localDesign[,i])
+                            }
+                        } else {
+                            localDesign[,i] <- factor(localDesign[,i])
+                        }
+                    }
+                }
+
+                ### Make formula for model
+                localFormula <- paste(
+                    '~ 0 + condition',
+                    '+',
                     paste(
-                        'The fasta file supplied to \'isoformNtFasta\' does not contain the',
-                        'nucleotide (DNA) sequence for all isoforms quantified and will not be added!',
-                        '\nSpecifically:\n',
-                        length(unique(isoformRepExpression$isoform_id)), 'isoforms were quantified.\n',
-                        length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
-                        'Only', length(intersect(names(isoformNtSeq), isoformRepExpression$isoform_id)), 'overlap.\n',
-                        length(setdiff(unique(isoformRepExpression$isoform_id), names(isoformNtSeq))), 'isoforms quantifed isoforms had no corresponding nucleotide sequence\n',
-
-                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
-                        '1) The files do not fit together (different databases, versions etc)',
-                            '(no fix except using propperly paired files).\n',
-                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
-                        'This problem might be solvable using some of the',
-                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
-                        '    3 Examples from expression matrix are :',
-                        paste0( sample(unique(isoformRepExpression$isoform_id), min(c(3, length(isoformRepExpression$isoform_id))) ), collapse = ', '),'\n',
-                        '    3 Examples of sequence annotation are :',
-                        paste0( sample(names(isoformNtSeq), min(c(3, length( isoformNtSeq ))) ), collapse = ', '),'\n',
-
-                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
-                        '1) The files do not fit together (different databases versions)',
-                            '(no fix except using propperly paired files).\n',
-                        '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
-                        'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
-                        '3) One file could contain non-chanonical chromosomes while the other do not',
-                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
-                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
-                        'This problem might be solvable using some of the',
-                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
-                        sep = ' '
-                    )
+                        colnames(localDesign)[3:ncol(localDesign)],
+                        collapse = ' + '
+                    ),
+                    sep=' '
                 )
-            } else {
-                addIsoformNt <- TRUE
+
+                localFormula <- as.formula(localFormula)
+
+                ### Make model
+                localModel <- model.matrix(localFormula, data = localDesign)
+                indexToModify <- 1:length(unique( localDesign$condition ))
+                colnames(localModel)[indexToModify] <- gsub(
+                    pattern =  '^condition',
+                    replacement =  '',
+                    x =  colnames(localModel)[indexToModify]
+                )
             }
+
+            ### Batch correct expression matrix
+            suppressWarnings(
+                isoRepBatch <- as.data.frame( limma::removeBatchEffect(
+                    x = isoformRepExpressionLog,
+                    design     = localModel[,which(   colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
+                    covariates = localModel[,which( ! colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
+                    method='robust'
+                ))
+            )
+
+            ### Overwrite expression
+            isoformRepExpression <- 2^isoRepBatch - 1
+            isoformRepExpression[which( isoformRepExpression < 0, arr.ind = TRUE)] <- 0
+
+            ### Massage back
+            isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
+            rownames(isoformRepExpression) <- NULL
+        }
+        if( ! batchCorrectionNeeded ) {
+            if (!quiet) { message('    Skipped as no batch effects were found or annoated...')}
         }
     }
 
-    ### Sum to gene level gene expression - updated
+
+
+    ### Calculate gene and IF
+    if (!quiet) {
+        message('Step 7 of 10: Extracting data from each condition...')
+    }
     if(TRUE) {
-        ### add gene_id
-        isoformRepExpression$gene_id <-
-            isoformAnnotation$gene_id[match(isoformRepExpression$isoform_id,
-                                            isoformAnnotation$isoform_id)]
+        ### Sum to gene level gene expression - updated
+        if(TRUE) {
+            ### add gene_id
+            isoformRepExpression$gene_id <-
+                isoformAnnotation$gene_id[match(isoformRepExpression$isoform_id,
+                                                isoformAnnotation$isoform_id)]
 
-        ### Sum to gene level
-        geneRepExpression <- isoformToGeneExp(
-            isoformRepExpression =  isoformRepExpression,
-            quiet = TRUE
-        )
+            ### Sum to gene level
+            geneRepExpression <- isoformToGeneExp(
+                isoformRepExpression =  isoformRepExpression,
+                quiet = TRUE
+            )
 
-        ### Remove gene id
-        isoformRepExpression$gene_id <- NULL
+            ### Remove gene id
+            isoformRepExpression$gene_id <- NULL
+        }
+
+        ### Calculate IF rep matrix
+        if(TRUE) {
+            isoformRepIF <- isoformToIsoformFraction(
+                isoformRepExpression=isoformRepExpression,
+                geneRepExpression=geneRepExpression,
+                isoformGeneAnnotation=isoformAnnotation,
+                quiet = TRUE
+            )
+        }
     }
 
-    ### Calculate IF rep matrix
-    if(TRUE) {
-        isoformRepIF <- isoformToIsoformFraction(
-            isoformRepExpression=isoformRepExpression,
-            geneRepExpression=geneRepExpression,
-            isoformGeneAnnotation=isoformAnnotation,
-            quiet = TRUE
-        )
 
-    }
 
     ### in each condition analyzed get mean and standard error of gene and isoforms
-    if (!quiet) {
-        message('Step 5 of 7: Merging gene and isoform expression...')
-    }
     if (TRUE) {
         conditionList <-
             split(designMatrix$sampleID, f = designMatrix$condition)
@@ -4678,7 +4928,7 @@ importRdata <- function(
 
     ### Use comparisonsToMake to create the isoform comparisons
     if (!quiet) {
-        message('Step 6 of 7: Making comparisons...')
+        message('Step 8 of 10: Making comparisons...')
     }
     if (TRUE) {
         isoAnnot <-
@@ -4800,9 +5050,11 @@ importRdata <- function(
         isoAnnot <- isoAnnot[, matchVector]
     }
 
+
+
     ### Create the swichList
     if (!quiet) {
-        message('Step 7 of 7: Making switchAnalyzeRlist object...')
+        message('Step 9 of 10: Making switchAnalyzeRlist object...')
     }
     if (TRUE) {
         if( countsSuppled ) {
@@ -4855,17 +5107,26 @@ importRdata <- function(
     }
 
     ### Estimate DTU
+    if (!quiet) {
+        message('Step 10 of 10: Guestimating differential usage...')
+    }
     if(estimateDifferentialGeneRange & !quiet) {
         localEstimate <- estimateDifferentialRange(
             switchAnalyzeRlist = dfSwichList
         )
         if( !is.null(localEstimate)) {
-            message('The GUESSTIMATED number of genes with differential isoform usage are:')
+            message('    The GUESSTIMATED number of genes with differential isoform usage are:')
             print(localEstimate)
         } else {
-            message('The estimation of DTU failed. Please proceed with the normal workflow.')
+            message('    The estimation of DTU failed. Please proceed with the normal workflow.')
+        }
+    } else {
+        if (!quiet) {
+            message('    Skipping due to the \"estimateDifferentialGeneRange\" argument...')
         }
     }
+
+
 
 
     ### Return switchList
@@ -5303,7 +5564,7 @@ importSalmonData <- function(
         #localSL$orfAnalysis <- orfInfo
     }
 
-    ### Subset to ensure everything is alligned
+    ### Subset to ensure everything is aligned
     if(TRUE) {
         localSL <- subsetSwitchAnalyzeRlist(
             localSL,
@@ -5339,6 +5600,17 @@ preFilter <- function(
                 'The object supplied to \'switchAnalyzeRlist\'',
                 'must be a \'switchAnalyzeRlist\''
             ))
+        }
+
+        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+            stop(
+                paste(
+                    'The switchAnalyzeRlist is made from pre-defined isoform switches.',
+                    'All filtering should be done before you used the approach',
+                    'that gave rise to the isoform pairs you have pre-defined',
+                    sep = ' '
+                )
+            )
         }
 
         if( switchAnalyzeRlist$sourceId == 'gtf') {

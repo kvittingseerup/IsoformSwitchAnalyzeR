@@ -16,11 +16,14 @@ switchPlotTranscript(
 
     ### Advanced arguments
     rescaleTranscripts = TRUE,
+    rescaleRoot = 3,
     plotXaxis = !rescaleTranscripts,
     reverseMinus = TRUE,
     ifMultipleIdenticalAnnotation = 'summarize',
     annotationImportance = c('signal_peptide','protein_domain','idr'),
+    plotTopology = TRUE,
     IFcutoff = 0.05,
+    abbreviateLocations = TRUE,
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -49,6 +52,11 @@ A vector of the id(s) of which isoform(s) (from the same gene) to plot, alternat
 A Logical indicating whether all the isoforms should be rescaled to the square root of their original sizes. This feature is implemented because introns usually are much larger than exons making it difficult to see structural changes. This is very useful for structural visualization but the scaling might distort actual intron and exon sizes. Default is TRUE.
 }
 
+\item{rescaleRoot}{
+A number indicating what how strongly the genomic distances are rescaled when \code{rescaleTranscripts=TRUE}. The new size of a genomic feature is calculated as \code{orgSize^(1/rescaleRoot)}. Seeting it to the integer 2 rescales everything to the square-root, setting it to the integer 3 rescales to the qubic root etc.. The larger the value the more uniform the sizes of all annoations become. Default is 3.
+}
+
+
   \item{plotXaxis}{
 A logical indicating whether x-axis should be shown. Default is the opposite of the rescaleTranscripts (meaning FALSE when rescale is TRUE and vice versa).
 }
@@ -65,8 +73,16 @@ This argument determines how to visually handle if multiple instances of the sam
 Since some of the annotation collected potentially overlap (mainly protein domains and IDR) but only one can be visualized for a given position in the transcript this argument controls the importance of the respective annotations. This argument is used to control which annotation is shown for a given position in the transcript. Must be a vector of strings indicating the order of the annotations in decreasing importance. All annotation must be mentioned even if they have not been analyzed. Default is c('signal_peptide','protein_domain','idr') which means that if an IDR and a protein domain partially overlap the protein domain will be visualized for the overlapping region (non-overlapping regions are not affected).
 }
 
+\item{plotTopology}{
+A logical whether to plot toplogical information as a thin line above the plot. If topology was not annoated with \code{analyzeDeepTMHMM} this argument will be ignored and topology will not be plotted.
+}
+
 \item{IFcutoff}{
 The cutoff used for the minimum contribution to gene expression (in at least one condition) for an isoforms must have to be plotted (measured as Isoform Fraction (IF) values). Default is 0.05 (which removes isoforms with minor contribution).
+}
+
+\item{abbreviateLocations}{
+A logic indicating whether to abbreviate subcellular locations annoated. See details. Default is TRUE.
 }
 
   \item{rectHegith}{
@@ -114,9 +130,26 @@ This function generates a plot visualizing all the annotation for the transcript
 
     \item{\code{Signal Peptide} : By coloring the part of the ORF containing the signal peptide. Requires the result of an external SignalP analysis have been added with \code{analyzeSignalP).}
 
+    \item{\code{Topology} : By adding a line above the transcript where the color of the line indicate whether that part of the transcript is a signale peptide, intracellular or extracellular.}
+
     \item{\code{Transcript status} : Specifically from data imported from cufflinks/cuffdiff. The status (class code) of the transcript is added in brackets after the transcript name.}
     }
 }
+
+\cr
+
+The abbeviation used if \code{abbreviateLocations=TRUE} are:\cr
+Cyto    : Cytoplasm \cr
+ER      : Endoplasmic Reticulum \cr
+ExtCell : ExtraCellular \cr
+Golgi   : Golgi_apparatus \cr
+Lys     : Lysosome_Vacuole \cr
+Memb    : Cell_membrane \cr
+Mito    : Mitochondrion \cr
+Nucl    : Nucleus \cr
+Perox   : Peroxisome \cr
+Plastid : Plastid
+
 }
 
 \value{

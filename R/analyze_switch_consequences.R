@@ -7,6 +7,7 @@ analyzeSwitchConsequences <- function(
         'ORF_seq_similarity',
         'NMD_status',
         'domains_identified',
+        'domain_isotype',
         'IDR_identified',
         'IDR_type',
         'signal_peptide_identified'
@@ -18,7 +19,7 @@ analyzeSwitchConsequences <- function(
     ntFracCutoff = NULL,
     ntJCsimCutoff = 0.8,
     AaCutoff = 10,
-    AaFracCutoff = 0.5,
+    AaFracCutoff = 0.8,
     AaJCsimCutoff = 0.9,
     removeNonConseqSwitches = TRUE,
     showProgress = TRUE,
@@ -80,7 +81,7 @@ analyzeSwitchConsequences <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
-            'domain_structure',
+            'domain_isotype',
 
             # SignalIP
             'signal_peptide_identified',
@@ -92,7 +93,17 @@ analyzeSwitchConsequences <- function(
 
             # sub cell
             'sub_cell_location',
-            'solubility_status'
+            'sub_cell_shift_to_cell_membrane',
+            'sub_cell_shift_to_cytoplasm',
+            'sub_cell_shift_to_nucleus',
+            'sub_cell_shift_to_Extracellular',
+
+            # topology
+            'isoform_topology',
+            'extracellular_region_count',
+            'intracellular_region_count',
+            'extracellular_region_length',
+            'intracellular_region_length'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -152,7 +163,6 @@ analyzeSwitchConsequences <- function(
                 'IDR_identified',
                 'IDR_length',
                 'IDR_type',
-                'solubility_status',
                 'sub_cell_location'
             ) %in% consequencesToAnalyze
         )) {
@@ -252,14 +262,15 @@ analyzeSwitchConsequences <- function(
         if ('sub_cell_location'  %in% consequencesToAnalyze) {
             if ( ! 'sub_cell_location' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
                 stop(
-                    'Cannot test for differences in sub-cellular location as such results are not annotated'
+                    'Cannot test for differences in sub-cellular location as such results are not annotated. Run analyzeDeepLoc2() and try again.'
                 )
             }
         }
-        if ('solubility_status'  %in% consequencesToAnalyze) {
-            if ( ! 'solubility_status' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+
+        if ('isoform_topology'  %in% consequencesToAnalyze) {
+            if ( ! 'topologyAnalysis' %in% names(switchAnalyzeRlist) ) {
                 stop(
-                    'Cannot test for differences in solubility status as such results are not annotated'
+                    'Cannot test for differences in topology as such results are not annotated. Run analyzeDeepTMHMM() and try again.'
                 )
             }
         }
@@ -483,7 +494,7 @@ compareAnnotationOfTwoIsoforms <- function(
     ntFracCutoff = NULL,
     ntJCsimCutoff = 0.8,
     AaCutoff = 10,
-    AaFracCutoff = 0.5,
+    AaFracCutoff = 0.8,
     AaJCsimCutoff = 0.9,
     testInput = TRUE
 ) {
@@ -493,16 +504,6 @@ compareAnnotationOfTwoIsoforms <- function(
         if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
-            )
-        }
-
-        if (alpha < 0 |
-            alpha > 1) {
-            warning('The alpha parameter should usually be between 0 and 1 ([0,1]).')
-        }
-        if (alpha > 0.05) {
-            warning(
-                'Most journals and scientists consider an alpha larger than 0.05 untrustworthy. We therefore recommend using alpha values smaller than or queal to 0.05'
             )
         }
 
@@ -543,16 +544,25 @@ compareAnnotationOfTwoIsoforms <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
-            'domain_structure',
+            'domain_isotype',
             # SignalIP
             'signal_peptide_identified',
             # IDR
             'IDR_identified',
             'IDR_length',
             'IDR_type',
-            # DeepLoc3
+            # DeepLoc2
             'sub_cell_location',
-            'solubility_status'
+            'sub_cell_shift_to_cell_membrane',
+            'sub_cell_shift_to_cytoplasm',
+            'sub_cell_shift_to_nucleus',
+            'sub_cell_shift_to_Extracellular',
+            # topology
+            'isoform_topology',
+            'extracellular_region_count',
+            'intracellular_region_count',
+            'extracellular_region_length',
+            'intracellular_region_length'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -636,21 +646,35 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('sub_cell_location'  %in% consequencesToAnalyze) {
+        if ( any(c(
+            'sub_cell_location',
+            'sub_cell_shift_to_cell_membrane',
+            'sub_cell_shift_to_cytoplasm',
+            'sub_cell_shift_to_nucleus',
+            'sub_cell_shift_to_Extracellular'
+            ) %in% consequencesToAnalyze)) {
             if ( ! 'sub_cell_location' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
                 stop(
                     'Cannot test for differences in sub-cellular location as such results are not annotated'
                 )
             }
         }
-        if ('solubility_status'  %in% consequencesToAnalyze) {
-            if ( ! 'solubility_status' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+
+        if ( any(
+            c(
+                'isoform_topology',
+                'intracellular_region_length',
+                'extracellular_region_length',
+                'extracellular_region_count',
+                'intracellular_region_count'
+            )  %in% consequencesToAnalyze
+        ) %in% consequencesToAnalyze) {
+            if ( ! 'topologyAnalysis' %in% names(switchAnalyzeRlist) ) {
                 stop(
-                    'Cannot test for differences in solubility status as such results are not annotated'
+                    'Cannot test for differences in topology as such results are not annotated. Run analyzeDeepTMHMM() and try again.'
                 )
             }
         }
-
 
         if (!is.numeric(ntCutoff)) {
             stop('The ntCutoff arugment must be an numeric')
@@ -686,17 +710,6 @@ compareAnnotationOfTwoIsoforms <- function(
                 stop(
                     'The transcrip ORF amino acid sequences must be added to the switchAnalyzeRlist before ORF overlap analysis can be performed. Please run \'extractSequence\' and try again.'
                 )
-            }
-        }
-
-        if( 'sub_cell_location' %in% consequencesToAnalyze) {
-            if( ! 'sub_cell_location' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
-                'Subcellular localizations have not been analyzed. Please annotate and try again.'
-            }
-        }
-        if( 'solubility_status' %in% consequencesToAnalyze) {
-            if( ! 'solubility_status' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
-                'Subcellular localizations have not been analyzed. Please annotate and try again.'
             }
         }
 
@@ -736,11 +749,13 @@ compareAnnotationOfTwoIsoforms <- function(
         if ('coding_potential'   %in% consequencesToAnalyze) {
             columnsToExtract <- c(columnsToExtract, 'codingPotential')
         }
-        if ('sub_cell_location'   %in% consequencesToAnalyze) {
+        if (any(c(
+            'sub_cell_location',
+            'sub_cell_shift_to_cell_membrane',
+            'sub_cell_shift_to_cytoplasm',
+            'sub_cell_shift_to_nucleus',
+            'sub_cell_shift_to_Extracellular' ) %in% consequencesToAnalyze) ) {
             columnsToExtract <- c(columnsToExtract, 'sub_cell_location')
-        }
-        if ('solubility_status'   %in% consequencesToAnalyze) {
-            columnsToExtract <- c(columnsToExtract, 'solubility_status')
         }
 
         transcriptData <-
@@ -774,8 +789,16 @@ compareAnnotationOfTwoIsoforms <- function(
                 'IDR_identified',
                 'IDR_length',
                 'IDR_type',
-                'solubility_status',
-                'sub_cell_location'
+                'sub_cell_location',
+                'sub_cell_shift_to_cell_membrane',
+                'sub_cell_shift_to_cytoplasm',
+                'sub_cell_shift_to_nucleus',
+                'sub_cell_shift_to_Extracellular',
+                'soform_topology',
+                'intracellular_region_length',
+                'extracellular_region_length',
+                'extracellular_region_count',
+                'intracellular_region_count'
             ) %in% consequencesToAnalyze
         )) {
             columnsToExtract2 <-
@@ -873,7 +896,8 @@ compareAnnotationOfTwoIsoforms <- function(
             c(
                 'domains_identified',
                 'genomic_domain_position',
-                'domain_length'
+                'domain_length',
+                'domain_isotype'
             )  %in% consequencesToAnalyze
         )) {
             domanData <-
@@ -884,21 +908,13 @@ compareAnnotationOfTwoIsoforms <- function(
             domanData$isoform_id <-
                 factor(domanData$isoform_id, levels = isoformsToAnalyze)
 
-            ### Simplify Domain structure
-            if(! is.null(domanData$domain_structure)) {
-                domanData$domain_structure <- ifelse(
-                    domanData$domain_structure == 'Complete',
-                    yes = 'Complete',
-                    no  = 'Structural Variant'
-                )
-            }
 
             colIndex <- na.omit(match(
                 c(
                     'hmm_name',
                     'pfamStartGenomic',
                     'pfamEndGenomic',
-                    'domain_structure',
+                    'domain_isotype_simple',
                     'orf_aa_start',
                     'orf_aa_end'
                 ),
@@ -947,6 +963,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
+        ### IDR data
         if ( any( c('IDR_identified','IDR_type','IDR_length') %in% consequencesToAnalyze ) ) {
             idrData <-
                 switchAnalyzeRlist$idrAnalysis[which(
@@ -1038,6 +1055,84 @@ compareAnnotationOfTwoIsoforms <- function(
                     })
             }
         }
+
+        ### Topology
+        if (any(
+            c(
+                'isoform_topology',
+                'intracellular_region_length',
+                'extracellular_region_length',
+                'extracellular_region_count',
+                'intracellular_region_count'
+            )  %in% consequencesToAnalyze
+        )) {
+            topData <-
+                switchAnalyzeRlist$topologyAnalysis[which(
+                    switchAnalyzeRlist$topologyAnalysis$isoform_id %in%
+                        isoformsToAnalyze
+                ), ]
+            topData$isoform_id <-
+                factor(topData$isoform_id, levels = isoformsToAnalyze)
+
+
+            colIndex <- na.omit(match(
+                c(
+                    'region_type',
+                    'regionStartGenomic',
+                    'regionEndGenomic'
+                ),
+                colnames(topData)
+            ))
+
+            topDataSplit <-
+                split(
+                    topData[,colIndex],
+                    f = topData$isoform_id
+                )
+
+            ### Remove those overlapping trimmed regions
+            if( exists('regionToOmmit') ) {
+                topDataSplit <- lapply(topDataSplit, function(aSet) { # aSet <- topDataSplit[[2]]
+                    if( onPlusStrand ) {
+                        aSet[which(
+                            ! overlapsAny(
+                                IRanges(aSet$regionStartGenomic, aSet$regionEndGenomic),
+                                regionToOmmit
+                            )
+                        ),]
+                    } else {
+                        aSet[which(
+                            ! overlapsAny(
+                                IRanges(aSet$regionEndGenomic, aSet$regionStartGenomic),
+                                regionToOmmit
+                            )
+                        ),]
+                    }
+
+                })
+            }
+
+            # overwrite if no ORF is detected
+            isNAnames <-
+                transcriptData$isoform_id[which(
+                    is.na(transcriptData$orfTransciptLength)
+                )]
+            if (length(isNAnames)) {
+                isNAindex <- which(names(topDataSplit) %in% isNAnames)
+                topDataSplit[isNAindex] <-
+                    lapply(topDataSplit[isNAindex], function(aDF) {
+                        aDF[0, ]
+                    })
+            }
+
+            topDataSplit <- lapply(topDataSplit, function(x) {
+                x$regionLength <- abs(x$regionEndGenomic - x$regionStartGenomic)
+                return(x)
+            })
+
+        }
+        # topDataSplit
+
 
         ### Extract isoform length
         if (any(
@@ -1292,15 +1387,17 @@ compareAnnotationOfTwoIsoforms <- function(
                                   subject = downNtSeq,
                                   type = 'global')
 
-            overlapSize <- min(c(nchar(gsub(
-                '-', '', as.character(alignedSubject(localAlignment))
-            )),
-            nchar(gsub(
-                '-', '', as.character(alignedPattern(localAlignment))
-            ))))
+            overlapSize <- min(c(
+                nchar(gsub(
+                    '-', '', as.character(alignedSubject(localAlignment))
+                )),
+                nchar(gsub(
+                    '-', '', as.character(alignedPattern(localAlignment))
+                ))
+            ))
             totalWidth <- width(localAlignment@subject@unaligned) +
                 width(localAlignment@pattern@unaligned) -
-                overlapSize
+                overlapSize + 1
 
             jcDist <- overlapSize / totalWidth
 
@@ -1514,17 +1611,18 @@ compareAnnotationOfTwoIsoforms <- function(
                             as.character(alignedSubject(localAlignment))
                         )
                     ),
-                    nchar(
-                        gsub(
-                            '-',
-                            '',
-                            as.character(alignedPattern(localAlignment))
-                        )
-                    )))
+                        nchar(
+                            gsub(
+                                '-',
+                                '',
+                                as.character(alignedPattern(localAlignment))
+                            )
+                        ))
+                    )
                     totalWidth <-
                         width(localAlignment@subject@unaligned) +
                         width(localAlignment@pattern@unaligned) -
-                        overlapSize
+                        overlapSize + 1
 
                     jcDist <- overlapSize / totalWidth
 
@@ -1660,7 +1758,7 @@ compareAnnotationOfTwoIsoforms <- function(
                     totalWidth <-
                         width(localAlignment@subject@unaligned) +
                         width(localAlignment@pattern@unaligned) -
-                        overlapSize
+                        overlapSize + 1
 
                     jcDist <- overlapSize / totalWidth
                 } else {
@@ -1797,7 +1895,7 @@ compareAnnotationOfTwoIsoforms <- function(
                     totalWidth <-
                         width(localAlignment@subject@unaligned) +
                         width(localAlignment@pattern@unaligned) -
-                        overlapSize
+                        overlapSize + 1
 
                     jcDist <- overlapSize / totalWidth
                 } else {
@@ -1838,7 +1936,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('NMD_status'                %in% consequencesToAnalyze) {
+        if ('NMD_status'                      %in% consequencesToAnalyze) {
             if (all(!is.na(transcriptData$PTC))) {
                 ptcDifferent <- transcriptData$PTC[1] != transcriptData$PTC[2]
 
@@ -1866,7 +1964,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('coding_potential'          %in% consequencesToAnalyze) {
+        if ('coding_potential'                %in% consequencesToAnalyze) {
             if (all(!is.na(transcriptData$codingPotential))) {
                 cpDifferent <-
                     transcriptData$codingPotential[1] !=
@@ -1896,7 +1994,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('domains_identified'        %in% consequencesToAnalyze) {
+        if ('domains_identified'              %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
                 domianNames <- lapply(domanDataSplit, function(x)
                     x$hmm_name)
@@ -1935,7 +2033,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('genomic_domain_position'   %in% consequencesToAnalyze) {
+        if ('genomic_domain_position'         %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
                 localDomanDataSplit <-
                     lapply(domanDataSplit, function(aDF) {
@@ -1961,7 +2059,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('domain_length'             %in% consequencesToAnalyze) {
+        if ('domain_length'                   %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
                 domanDataSplit <- lapply(
                     domanDataSplit,
@@ -2083,8 +2181,10 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('domain_structure'          %in% consequencesToAnalyze) {
-            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+        if ('domain_isotype'                  %in% consequencesToAnalyze) {
+            if (
+                sum(!is.na(transcriptData$orfTransciptLength)) > 0
+            ) {
                 domanDataSplit <- lapply(
                     domanDataSplit,
                     function(x) {
@@ -2107,7 +2207,7 @@ compareAnnotationOfTwoIsoforms <- function(
                                         end   = x$pfamEndGenomic
                                     ),
                                     hmm_name  = x$hmm_name,
-                                    domain_structure  = x$domain_structure
+                                    domain_isotype  = x$domain_isotype_simple
                                 )
                             } else {
                                 GRanges(
@@ -2117,7 +2217,7 @@ compareAnnotationOfTwoIsoforms <- function(
                                         end   = x$pfamStartGenomic
                                     ),
                                     hmm_name  = x$hmm_name,
-                                    domain_structure  = x$domain_structure
+                                    domain_isotype  = x$domain_isotype_simple
                                 )
                             }
 
@@ -2135,8 +2235,8 @@ compareAnnotationOfTwoIsoforms <- function(
                         localOverlapDf <- as.data.frame(localOverlap)
                         localOverlapDf$upName <- domainRanges[[ upIso   ]]$hmm_name[queryHits   (localOverlap)]
                         localOverlapDf$dnName <- domainRanges[[ downIso ]]$hmm_name[subjectHits (localOverlap)]
-                        localOverlapDf$upStructure <- domainRanges[[ upIso   ]]$domain_structure[queryHits   (localOverlap)]
-                        localOverlapDf$dnStructure <- domainRanges[[ downIso ]]$domain_structure[subjectHits (localOverlap)]
+                        localOverlapDf$upStructure <- domainRanges[[ upIso   ]]$domain_isotype[queryHits   (localOverlap)]
+                        localOverlapDf$dnStructure <- domainRanges[[ downIso ]]$domain_isotype[subjectHits (localOverlap)]
 
                         ### Subset to same domain
                         localOverlapDf <- localOverlapDf[which(
@@ -2161,41 +2261,39 @@ compareAnnotationOfTwoIsoforms <- function(
 
                 # make repport
                 localIndex <-
-                    which(isoComparison$featureCompared == 'domain_structure')
+                    which(isoComparison$featureCompared == 'domain_isotype')
                 isoComparison$isoformsDifferent[localIndex] <-
                     differentDomainStructure
 
                 ### Report if any difference
                 if (differentDomainStructure & addDescription) {
 
-                    upCount <- sum(localOverlapDf$upStructure != 'Complete')
-                    dnCount <- sum(localOverlapDf$dnStructure != 'Complete')
+                    upCount <- sum(localOverlapDf$upStructure != 'Reference')
+                    dnCount <- sum(localOverlapDf$dnStructure != 'Reference')
 
                     ### Deside consequence
                     if(
                         all( c(upCount, dnCount) > 0 ) & upCount == dnCount
                     ) {
                         isoComparison$switchConsequence[localIndex] <-
-                            'Mixed domain structural variation changes'
+                            'Mixed domain isotype changes'
                     } else if(
                         upCount > dnCount
                     ) {
                         isoComparison$switchConsequence[localIndex] <-
-                            'Domain structural variation gain'
+                            'Domain non-reference isotype gain'
                     } else if(
                         dnCount > upCount
                     ) {
                         isoComparison$switchConsequence[localIndex] <-
-                            'Domain structural variation loss'
-                    } else {
-                        stop('Something with Domain structural variation analysis went wrong')
+                            'Domain non-reference isotype loss'
                     }
 
                 }
             }
         }
 
-        if ('IDR_identified'            %in% consequencesToAnalyze) {
+        if ('IDR_identified'                  %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
 
                 nIdr <- sapply(idrDataSplit, nrow)
@@ -2273,7 +2371,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('IDR_type'                  %in% consequencesToAnalyze) {
+        if ('IDR_type'                        %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
 
                 nIdr <- sapply(idrDataSplit, nrow)
@@ -2369,7 +2467,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('IDR_length'                %in% consequencesToAnalyze) {
+        if ('IDR_length'                      %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
 
                 idrDataSplit <- lapply(
@@ -2486,7 +2584,7 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('signal_peptide_identified' %in% consequencesToAnalyze) {
+        if ('signal_peptide_identified'       %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
                 nrSignalPeptides <- sapply(peptideDataSplit, nrow)
 
@@ -2519,11 +2617,21 @@ compareAnnotationOfTwoIsoforms <- function(
             }
         }
 
-        if ('sub_cell_location'         %in% consequencesToAnalyze) {
+        if ('sub_cell_location'               %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) == 2) {
                 if( sum(!is.na(transcriptData$sub_cell_location)) == 2 ) {
-                    differentLoc <-
-                        transcriptData$sub_cell_location[1] != transcriptData$sub_cell_location[2]
+
+                    upIsoIndex <- which(
+                        transcriptData$isoform_id == upIso
+                    )
+                    dnIsoIndex <- which(
+                        transcriptData$isoform_id != upIso
+                    )
+
+                    locUp <- sort( unlist( strsplit(transcriptData$sub_cell_location[upIsoIndex], ',') ))
+                    locDn <- sort( unlist( strsplit(transcriptData$sub_cell_location[dnIsoIndex], ',') ))
+
+                    differentLoc <- ! identical(locUp, locDn)
 
                     # make repport
                     localIndex <-
@@ -2535,58 +2643,360 @@ compareAnnotationOfTwoIsoforms <- function(
                         differentLoc
 
                     if (differentLoc & addDescription) {
-                        upLoc <- transcriptData$sub_cell_location[which(
-                            transcriptData$isoform_id == upIso
-                        )]
-                        dnLoc <- transcriptData$sub_cell_location[which(
-                            transcriptData$isoform_id != upIso
-                        )]
+                        ### Analyze overlap
+                        upUniqueLength <- length(setdiff(locUp, locDn))
+                        #shared   <- intersect(locUp, locDn)
+                        dnUniqueLength <- length(setdiff(locDn, locUp))
 
-                        #isoComparison$switchConsequence[localIndex] <- paste0('Location switch to ', upLoc)
-                        isoComparison$switchConsequence[localIndex] <- paste0(
-                            'Location switch from ',
-                            dnLoc,
-                            ' to ', upLoc
-                        )
+                        if( upUniqueLength  > 0 & dnUniqueLength > 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location switch'
+                        }
+                        if( upUniqueLength  > 0 & dnUniqueLength == 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location gain'
+                        }
+                        if( upUniqueLength == 0 & dnUniqueLength > 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location loss'
+                        }
+
                     }
                 }
             }
         }
 
-        if ('solubility_status'         %in% consequencesToAnalyze) {
+        if ('sub_cell_shift_to_cell_membrane' %in% consequencesToAnalyze) {
             if (sum(!is.na(transcriptData$orfTransciptLength)) == 2) {
-                if( sum(!is.na(transcriptData$solubility_status)) == 2 ) {
-                    differentSolubility <-
-                        transcriptData$solubility_status[1] !=
-                        transcriptData$solubility_status[2]
+                if( sum(!is.na(transcriptData$sub_cell_location)) == 2 ) {
+
+                    upIsoIndex <- which(
+                        transcriptData$isoform_id == upIso
+                    )
+                    dnIsoIndex <- which(
+                        transcriptData$isoform_id != upIso
+                    )
+
+                    upLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[upIsoIndex], ',') ),
+                        'Cell_membrane'
+                    ))
+                    dnLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[dnIsoIndex], ',') ),
+                        'Cell_membrane'
+                    ))
+
+                    differentLoc <- upLength != dnLength
 
                     # make repport
                     localIndex <-
                         which(
                             isoComparison$featureCompared ==
-                                'solubility_status'
+                                'sub_cell_shift_to_cell_membrane'
                         )
                     isoComparison$isoformsDifferent[localIndex] <-
-                        differentSolubility
+                        differentLoc
 
-                    if (differentSolubility & addDescription) {
-                        upSoluble <-
-                            'Soluble' ==
-                            transcriptData$solubility_status[which(
-                                transcriptData$isoform_id == upIso
-                            )]
-                        if (upSoluble) {
-                            isoComparison$switchConsequence[localIndex] <-
-                                'Membrane tethering loss'
-                        } else {
-                            isoComparison$switchConsequence[localIndex] <-
-                                'Membrane tethering gain'
+                    if (differentLoc & addDescription) {
+
+                        if( upLength  > 0 & dnLength == 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location memb gain'
                         }
+                        if( upLength == 0 & dnLength > 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location memb loss'
+                        }
+
                     }
                 }
             }
-
         }
+
+        if ('sub_cell_shift_to_cytoplasm'     %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) == 2) {
+                if( sum(!is.na(transcriptData$sub_cell_location)) == 2 ) {
+
+                    upIsoIndex <- which(
+                        transcriptData$isoform_id == upIso
+                    )
+                    dnIsoIndex <- which(
+                        transcriptData$isoform_id != upIso
+                    )
+
+                    upLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[upIsoIndex], ',') ),
+                        'Cytoplasm'
+                    ))
+                    dnLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[dnIsoIndex], ',') ),
+                        'Cytoplasm'
+                    ))
+
+                    differentLoc <- upLength != dnLength
+
+                    # make repport
+                    localIndex <-
+                        which(
+                            isoComparison$featureCompared ==
+                                'sub_cell_shift_to_cytoplasm'
+                        )
+                    isoComparison$isoformsDifferent[localIndex] <-
+                        differentLoc
+
+                    if (differentLoc & addDescription) {
+
+                        if( upLength  > 0 & dnLength == 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location cyto gain'
+                        }
+                        if( upLength == 0 & dnLength > 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location cyto loss'
+                        }
+
+                    }
+                }
+            }
+        }
+
+        if ('sub_cell_shift_to_nucleus'       %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) == 2) {
+                if( sum(!is.na(transcriptData$sub_cell_location)) == 2 ) {
+
+                    upIsoIndex <- which(
+                        transcriptData$isoform_id == upIso
+                    )
+                    dnIsoIndex <- which(
+                        transcriptData$isoform_id != upIso
+                    )
+
+                    upLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[upIsoIndex], ',') ),
+                        'Nucleus'
+                    ))
+                    dnLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[dnIsoIndex], ',') ),
+                        'Nucleus'
+                    ))
+
+                    differentLoc <- upLength != dnLength
+
+                    # make report
+                    localIndex <-
+                        which(
+                            isoComparison$featureCompared ==
+                                'sub_cell_shift_to_nucleus'
+                        )
+                    isoComparison$isoformsDifferent[localIndex] <-
+                        differentLoc
+
+                    if (differentLoc & addDescription) {
+
+                        if( upLength  > 0 & dnLength == 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location nucl gain'
+                        }
+                        if( upLength == 0 & dnLength > 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location nucl loss'
+                        }
+
+                    }
+                }
+            }
+        }
+
+        if ('sub_cell_shift_to_Extracellular' %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) == 2) {
+                if( sum(!is.na(transcriptData$sub_cell_location)) == 2 ) {
+
+                    upIsoIndex <- which(
+                        transcriptData$isoform_id == upIso
+                    )
+                    dnIsoIndex <- which(
+                        transcriptData$isoform_id != upIso
+                    )
+
+                    upLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[upIsoIndex], ',') ),
+                        'Extracellular'
+                    ))
+                    dnLength <- length(intersect(
+                        unlist( strsplit(transcriptData$sub_cell_location[dnIsoIndex], ',') ),
+                        'Extracellular'
+                    ))
+
+                    differentLoc <- upLength != dnLength
+
+                    # make report
+                    localIndex <-
+                        which(
+                            isoComparison$featureCompared ==
+                                'sub_cell_shift_to_Extracellular'
+                        )
+                    isoComparison$isoformsDifferent[localIndex] <-
+                        differentLoc
+
+                    if (differentLoc & addDescription) {
+
+                        if( upLength  > 0 & dnLength == 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location ext cell gain'
+                        }
+                        if( upLength == 0 & dnLength > 0 ) {
+                            isoComparison$switchConsequence[localIndex] <- 'SubCell location ext cell loss'
+                        }
+
+                    }
+                }
+            }
+        }
+
+        if ('isoform_topology'                %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+                toplogy <- lapply(topDataSplit, function(x)
+                    x$region_type)
+
+                t1 <- rle(toplogy[[1]])
+                t2 <- rle(toplogy[[2]])
+
+                differentTopology <- !identical(t1, t2)
+                # make repport
+                localIndex <-
+                    which(isoComparison$featureCompared == 'isoform_topology')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentTopology
+
+                if (differentTopology & addDescription) {
+                    if (sum(t1$lengths) != sum(t2$lengths)) {
+                        nrTop <- sapply(topDataSplit, nrow)
+                        upHasMoreTop <-
+                            names(nrTop)[which.max(nrTop)] == upIso
+
+                        if (upHasMoreTop) {
+                            isoComparison$switchConsequence[localIndex] <-
+                                'Topology complexity gain'
+                        } else {
+                            isoComparison$switchConsequence[localIndex] <-
+                                'Topology complexity loss'
+                        }
+                    } else {
+                        isoComparison$switchConsequence[localIndex] <-
+                            NA
+                    }
+                }
+            }
+        }
+
+        if ('extracellular_region_count'      %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+
+                upCount <- sum( topDataSplit[[upIso  ]]$region_type == 'outside')
+                dnCount <- sum( topDataSplit[[downIso]]$region_type == 'outside')
+
+                differentTopology <- upCount != dnCount
+                # make repport
+                localIndex <-
+                    which(isoComparison$featureCompared == 'extracellular_region_count')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentTopology
+
+                if (differentTopology & addDescription) {
+                    if ( upCount > dnCount ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Extracellular region gain'
+                    } else {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Extracellular region loss'
+                    }
+                }
+            }
+        }
+
+        if ('intracellular_region_count'      %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+
+                upCount <- sum( topDataSplit[[upIso  ]]$region_type == 'inside')
+                dnCount <- sum( topDataSplit[[downIso]]$region_type == 'inside')
+
+                differentTopology <- upCount != dnCount
+                # make repport
+                localIndex <-
+                    which(isoComparison$featureCompared == 'intracellular_region_count')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentTopology
+
+                if (differentTopology & addDescription) {
+                    if ( upCount > dnCount ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Intracellular region gain'
+                    } else {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Intracellular region loss'
+                    }
+                }
+            }
+        }
+
+        if ('extracellular_region_length'     %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+
+                upLength <- sum( topDataSplit[[upIso  ]]$regionLength[which(
+                    topDataSplit[[upIso  ]]$region_type == 'outside'
+                )] )
+                dnLength <- sum( topDataSplit[[downIso ]]$regionLength[which(
+                    topDataSplit[[downIso]]$region_type == 'outside'
+                )] )
+
+                lengthGain <- upLength - dnLength
+                minLength <- min(c(upLength, dnLength))
+                maxLength <- max(c(upLength, dnLength))
+
+                differentLength <- abs(lengthGain) > AaCutoff & (minLength / maxLength) < AaFracCutoff
+
+                # make repport
+                localIndex <-
+                    which(isoComparison$featureCompared == 'extracellular_region_length')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentLength
+
+                if (differentLength & addDescription) {
+                    if ( lengthGain > 0 ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Extracellular length gain'
+                    } else {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Extracellular length loss'
+                    }
+                }
+            }
+        }
+
+        if ('intracellular_region_length'     %in% consequencesToAnalyze) {
+            if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
+
+                upLength <- sum( topDataSplit[[upIso  ]]$regionLength[which(
+                    topDataSplit[[upIso  ]]$region_type == 'inside'
+                )] )
+                dnLength <- sum( topDataSplit[[downIso ]]$regionLength[which(
+                    topDataSplit[[downIso]]$region_type == 'inside'
+                )] )
+
+                lengthGain <- upLength - dnLength
+                minLength <- min(c(upLength, dnLength))
+                maxLength <- max(c(upLength, dnLength))
+
+                differentLength <- abs(lengthGain) > AaCutoff & (minLength / maxLength) < AaFracCutoff
+
+                # make repport
+                localIndex <-
+                    which(isoComparison$featureCompared == 'intracellular_region_length')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentLength
+
+                if (differentLength & addDescription) {
+                    if ( lengthGain > 0 ) {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Intracellular length gain'
+                    } else {
+                        isoComparison$switchConsequence[localIndex] <-
+                            'Intracellular length loss'
+                    }
+                }
+            }
+        }
+
 
     }
 
@@ -2682,7 +3092,7 @@ extractConsequenceSummary <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
-            'domain_structure',
+            'domain_isotype',
 
             # SignalIP
             'signal_peptide_identified',
@@ -2694,7 +3104,17 @@ extractConsequenceSummary <- function(
 
             # sub cell
             'sub_cell_location',
-            'solubility_status'
+            'sub_cell_shift_to_cell_membrane',
+            'sub_cell_shift_to_cytoplasm',
+            'sub_cell_shift_to_nucleus',
+            'sub_cell_shift_to_Extracellular',
+
+            # topology
+            'isoform_topology',
+            'extracellular_region_count',
+            'intracellular_region_count',
+            'extracellular_region_length',
+            'intracellular_region_length'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -2761,22 +3181,6 @@ extractConsequenceSummary <- function(
         localSwitchConsequences <-
             rbind(localSwitchConsequences, tmp)
     }
-
-    ### Handle location
-    if( simplifyLocation & 'sub_cell_location' %in% localSwitchConsequences$featureCompared ) {
-        toModifyIndex <- which(localSwitchConsequences$featureCompared == 'sub_cell_location')
-
-        localSwitchConsequences$switchConsequence[toModifyIndex] <- sapply(
-            strsplit(
-                localSwitchConsequences$switchConsequence[toModifyIndex],
-                ' from | to '
-            ),
-            function(x) {
-                paste(x[c(1,3)], collapse = ' to ')
-            }
-        )
-    }
-
 
     ### Extract Sig iso
     isoResTest <-
@@ -3051,7 +3455,7 @@ extractConsequenceEnrichment <- function(
             'domains_identified',
             'genomic_domain_position',
             'domain_length',
-            'domain_structure',
+            'domain_isotype',
 
             # SignalIP
             'signal_peptide_identified',
@@ -3063,7 +3467,13 @@ extractConsequenceEnrichment <- function(
 
             # sub cell
             'sub_cell_location',
-            'solubility_status'
+            'sub_cell_shift_to_cell_membrane',
+            'sub_cell_shift_to_cytoplasm',
+            'sub_cell_shift_to_nucleus',
+            'sub_cell_shift_to_Extracellular',
+
+            # topology
+            'isoform_topology'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -3089,10 +3499,6 @@ extractConsequenceEnrichment <- function(
                 )
             )
         }
-
-        hasLocation <- 'sub_cell_location' %in%
-            colnames(switchAnalyzeRlist$isoformFeatures)
-
 
     }
 
@@ -3124,12 +3530,21 @@ extractConsequenceEnrichment <- function(
             coding_potential=c('Transcript is coding','Transcript is Noncoding'),
             domains_identified=c('Domain gain','Domain loss'),
             domain_length=c('Domain length gain','Domain length loss'),
-            domain_structure=c('Domain structural variation gain','Domain structural variation loss'),
+            domain_isotype=c('Domain non-reference isotype gain','Domain non-reference isotype loss'),
             IDR_identified = c('IDR gain','IDR loss'),
             IDR_length = c('IDR length gain', 'IDR length loss'),
             IDR_type = c('IDR w binding region gain', 'IDR w binding region loss'),
             signal_peptide_identified=c('Signal peptide gain','Signal peptide loss'),
-            solubility_status = c('Membrane tethering gain','Membrane tethering loss')
+            sub_cell_location = c('SubCell location gain','SubCell location loss'),
+            sub_cell_shift_to_cell_membrane = c('SubCell location memb gain','SubCell location memb loss'),
+            sub_cell_shift_to_cytoplasm     = c('SubCell location cyto gain','SubCell location cyto loss'),
+            sub_cell_shift_to_nucleus       = c('SubCell location nucl gain','SubCell location nucl loss'),
+            sub_cell_shift_to_Extracellular = c('SubCell location ext cell gain','SubCell location ext cell loss'),
+            isoform_topology = c('Topology complexity gain','Topology complexity loss'),
+            extracellular_region_count = c('Extracellular region gain', 'Extracellular region loss'),
+            intracellular_region_count = c('Intracellular region gain', 'Intracellular region loss'),
+            extracellular_region_length = c('Extracellular length gain','Extracellular length loss'),
+            intracellular_region_length = c('Intracellular length gain','Intracellular length loss')
         )
         levelListDf <- plyr::ldply(levelList, function(x) data.frame(feature=x, stringsAsFactors = FALSE))
 
@@ -3142,38 +3557,6 @@ extractConsequenceEnrichment <- function(
             localConseq$featureCompared %in% consequencesToAnalyze
         ),]
     }
-
-    ### Extract location consequecnes
-    if(hasLocation) {
-        localLocConseq <- switchAnalyzeRlist$switchConsequence[
-            which( !is.na(
-                switchAnalyzeRlist$switchConsequence$switchConsequence
-            ))
-            ,]
-        localLocConseq <- localLocConseq[which(
-            grepl('Location switch', localLocConseq$switchConsequence)
-        ),]
-
-        locationsList <- lapply(
-            strsplit(
-                localLocConseq$switchConsequence,
-                ' from | to '
-            ),
-            function(x) {
-                x[2:3]
-            }
-        )
-        localLocConseq$from <- sapply(
-            locationsList,
-            function(x) x[1]
-        )
-        localLocConseq$to <- sapply(
-            locationsList,
-            function(x) x[2]
-        )
-
-    }
-
 
     ### Subset to significant features
     if(TRUE) {
@@ -3201,24 +3584,10 @@ extractConsequenceEnrichment <- function(
                 localConseq$iso_ref_down %in% sigIso$iso_ref |
                 localConseq$iso_ref_up   %in% sigIso$iso_ref
             ),]
-
-            if(hasLocation) {
-                localLocConseq <- localLocConseq[which(
-                    localLocConseq$iso_ref_down %in% sigIso$iso_ref |
-                        localLocConseq$iso_ref_up   %in% sigIso$iso_ref
-                ),]
-            }
         } else {
             localConseq <- localConseq[which(
                 localConseq$gene_ref %in% sigIso$gene_ref
             ),]
-
-            if(hasLocation) {
-                localLocConseq <- localLocConseq[which(
-                    localLocConseq$gene_ref %in% sigIso$gene_ref
-                ),]
-            }
-
         }
     }
 
@@ -3290,87 +3659,6 @@ extractConsequenceEnrichment <- function(
         }
     )
 
-    ### Summarize gain vs loss for each location
-    if( hasLocation ) {
-        locationBalance <- plyr::ddply(
-            .data = localLocConseq,
-            .variables = c('condition_1','condition_2'),
-            #.inform = TRUE,
-            .fun = function(aDF) { # aDF <- localLocConseq[1:20,]
-                locationsAnalyzed <- unique(c(
-                    aDF$from, aDF$to
-                ))
-                locationsAnalyzedList <- split(
-                    locationsAnalyzed,
-                    locationsAnalyzed
-                )
-
-                localCount <- plyr::ldply(
-                    locationsAnalyzedList,
-                    function(aLocation) {
-                        ### Summarize category
-                        if( countGenes ) {
-                            localNumber <- data.frame(
-                                Var1 = paste(c('Location switch to','Location switch away from'), aLocation),
-                                Freq = c(
-                                    length(unique( aDF$gene_ref[which(aDF$to   == aLocation)])),
-                                    length(unique( aDF$gene_ref[which(aDF$from == aLocation)]))
-                                )
-                            )
-                        } else {
-                            localNumber <- data.frame(
-                                Var1 = paste(c('Location switch to','Location switch away from'), aLocation),
-                                Freq = c(
-                                    sum(aDF$to   == aLocation),
-                                    sum(aDF$from == aLocation)
-                                )
-                            )
-                        }
-
-                        if(nrow(localNumber) == 2) {
-                            localTest <- suppressWarnings(
-                                stats::binom.test(localNumber$Freq[1], sum(localNumber$Freq))
-                            )
-
-                            localRes <- data.frame(
-                                feature=stringr::str_c(
-                                    localNumber$Var1[1],
-                                    ' (paired with ',
-                                    localNumber$Var1[2],
-                                    ')'
-                                ),
-                                propOfRelevantEvents=localTest$estimate,
-                                stringsAsFactors = FALSE
-                            )
-
-                            localRes$propCiLo <- min(localTest$conf.int)
-                            localRes$propCiHi <- max(localTest$conf.int)
-                            localRes$propPval <- localTest$p.value
-                        } else {
-                            warning('Somthing strange happend - contact developer with reproducible example')
-                        }
-
-                        localRes$nUp   <- localNumber$Freq[1] # order is always fixed
-                        localRes$nDown <- localNumber$Freq[2] # order is always fixed
-
-                        return(localRes)
-
-                    }
-                )
-
-                return(localCount)
-            }
-        )
-
-        colnames(locationBalance)[3] <- c('conseqPair')
-
-
-        consequenceBalance <- rbind(
-            consequenceBalance,
-            locationBalance
-        )
-    }
-
     consequenceBalance$propQval <- p.adjust(consequenceBalance$propPval, method = 'fdr')
     consequenceBalance$Significant <- consequenceBalance$propQval < alpha
     consequenceBalance$Significant <- factor(
@@ -3424,6 +3712,13 @@ extractConsequenceEnrichment <- function(
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
             scale_color_manual(name = paste0('FDR < ', alpha), values=c('black','red'), drop=FALSE) +
+            scale_radius(limits=c(
+                0,
+                # Ensure largest number is always incuded
+                max(
+                    roundUpToNearsTenOrHundred( consequenceBalance2$nTot )
+                )
+            )) +
             guides(
                 color = guide_legend(order=1),
                 size = guide_legend(order=2)
@@ -3431,9 +3726,9 @@ extractConsequenceEnrichment <- function(
             coord_cartesian(xlim=c(0,1))
 
         if( countGenes ) {
-            g1 <- g1 + scale_size_continuous(name = 'Genes')
+            g1 <- g1 + labs(size = 'Genes')
         } else {
-            g1 <- g1 + scale_size_continuous(name = 'Switches')
+            g1 <- g1 + labs(size = 'Switches')
         }
     }
 
@@ -3729,7 +4024,7 @@ extractConsequenceGenomeWide <- function(
                 'intron_retention',
                 'switch_consequences',
                 'isoform_class_code',
-                'domain_structure'
+                'domain_isotype'
             )
         if ('all' %in% annotationToAnalyze) {
             annotationToAnalyze <- okAnnot
@@ -3819,14 +4114,14 @@ extractConsequenceGenomeWide <- function(
             ))
             ]
 
-        if('domain_structure' %in% annotationToAnalyze) {
+        if('domain_isotype' %in% annotationToAnalyze) {
             structureVariantIso <- unique(
                 switchAnalyzeRlist$domainAnalysis$isoform_id[which(
-                    switchAnalyzeRlist$domainAnalysis$domain_structure == "Structural Variant"
+                    switchAnalyzeRlist$domainAnalysis$domain_isotype_simple == "Non-reference"
                 )]
             )
 
-            isoData$domain_structure_identified <- isoData$isoform_id %in% structureVariantIso
+            isoData$domain_isotype_identified <- isoData$isoform_id %in% structureVariantIso
         }
 
 
@@ -3881,12 +4176,12 @@ extractConsequenceGenomeWide <- function(
                 )
         }
         # domain structure
-        if (!is.null(isoData$domain_structure_identified)) {
-            isoData$domain_structure_identified <-
+        if (!is.null(isoData$domain_isotype_identified)) {
+            isoData$domain_isotype_identified <-
                 ifelse(
-                    test = isoData$domain_structure_identified,
-                    yes = 'With domain structural variant',
-                    no = 'Without domain structural variant'
+                    test = isoData$domain_isotype_identified,
+                    yes = 'With non-reference domain isotype',
+                    no  = 'Without non-reference domain isotype'
                 )
         }
 

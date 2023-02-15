@@ -94,7 +94,7 @@ Kristoffer Vitting-Seerup
 \code{\link{isoformSwitchAnalysisPart2}}\cr
 \code{\link{preFilter}}\cr
 \code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
+\code{\link{isoformSwitchTestSatuRn}}\cr
 \code{\link{analyzeORF}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{analyzeSwitchConsequences}}\cr

@@ -117,7 +117,7 @@ Kristoffer Vitting-Seerup
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{preFilter}}\cr
 \code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
+\code{\link{isoformSwitchTestSatuRn}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}
 }

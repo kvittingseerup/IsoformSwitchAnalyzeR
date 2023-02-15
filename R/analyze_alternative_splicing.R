@@ -2338,6 +2338,12 @@ extractSplicingEnrichment <- function(
             localTheme +
             theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
             scale_color_manual(name = paste0('FDR < ', alpha), values=c('black','red'), drop=FALSE) +
+            scale_radius(limits=c(
+                0,
+                max(
+                    roundUpToNearsTenOrHundred( gainLossBalance2$nTot )
+                )
+            )) +
             guides(
                 color = guide_legend(order=1),
                 size = guide_legend(order=2)
@@ -2345,9 +2351,9 @@ extractSplicingEnrichment <- function(
             coord_cartesian(xlim=c(0,1))
 
         if( countGenes ) {
-            g1 <- g1 + scale_size_continuous(name = 'Genes')
+            g1 <- g1 + labs(size = 'Genes')
         } else {
-            g1 <- g1 + scale_size_continuous(name = 'Switches')
+            g1 <- g1 + labs(size = 'Switches')
         }
     }
 

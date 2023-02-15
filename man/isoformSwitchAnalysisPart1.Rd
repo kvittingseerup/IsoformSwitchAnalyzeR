@@ -4,7 +4,7 @@
 Isoform Switch Analysis Workflow Part 1: Extract Isoform Switches and Their Bio-sequences
 }
 \description{
-This high-level function takes a pre-existing switchAnalyzeRlist as input (see \code{importRdata}). Then part 1 of the workflow is performed. Specifically it is filtered to remove low expression, isoform switches are identified via the statistical methods (unless \code{switchTestMethod='none'}) and ORF are predicted if not already annotated. Lastly the function extracts the nucleotide sequence and the ORF AA sequences of the isoforms involved in isoform switches. To enable external and internal sequence analysis these sequences are both saved to the computer (as fasta files) and added to the switchAnalyzeRlist.
+This high-level function takes a pre-existing switchAnalyzeRlist as input (see \code{importRdata}). Then part 1 of the workflow is performed. Specifically it is filtered to remove low expression, identifies significant isoform switches and ORF are predicted if not already annotated. Lastly the function extracts the nucleotide sequence and the ORF AA sequences of the isoforms involved in isoform switches. To enable external and internal sequence analysis these sequences are both saved to the computer (as fasta files) and added to the switchAnalyzeRlist.
 
 This function is meant to be used as part 1 of the isoform switch analysis workflow, which can be followed by the second step via \code{isoformSwitchAnalysisPart2}.
 }
@@ -30,16 +30,16 @@ isoformSwitchAnalysisPart1(
 
 \arguments{
     \item{switchAnalyzeRlist}{
-A \code{switchAnalyzeRlist}.
-}
+        A \code{switchAnalyzeRlist}.
+    }
 
-  \item{genomeObject}{
-A \code{BSgenome} object (for example Hsapiens for Homo sapiens).
-}
-\item{pathToGTF}{
-A string indicating the full path to the (gziped or unpacked) GTF file which contains the the known annotation (aka from a official source) which was used to guided the transcript assembly (isoform deconvolution).
-}
+    \item{genomeObject}{
+        A \code{BSgenome} object (for example Hsapiens for Homo sapiens).
+    }
 
+    \item{pathToGTF}{
+        A string indicating the full path to the (gziped or unpacked) GTF file which contains the the known annotation (aka from a official source) which was used to guided the transcript assembly (isoform deconvolution).
+    }
 
 \item{prepareForWebServers}{
 A logical indicating whether the amino acid fasta files saved (if \code{outputSequences=TRUE}) should be prepared for the online web-services currently supported (as they have some limitations on what can submitted). See details. Default is FALSE (for backward compatibility).
@@ -62,7 +62,7 @@ A logical indicating whether transcript nucleotide and amino acid sequences shou
 This function performs the first part of a Isoform Analysis Workflow by
 \enumerate{
     \item Remove low-expressed isoforms and single-isoform genes (see \link{preFilter})
-    \item Identify isoform switches.
+    \item Identify isoform switches. This uses satuRn if there are more than 5 replicates in any condition and else DEXseq.
     \item If no ORFs are annotated the isoforms are analyzed for open reading frames (ORFs, see \link{analyzeORF})
     \item The isoform nucleotide and ORF amino acid sequences are extracted and saved to fasta files as well as added to the switchAnalyzeRlist enabling external sequence analysis with CPAT, Pfam and SignalP (see vignette for more info).
 }
@@ -83,7 +83,7 @@ Kristoffer Vitting-Seerup
 \seealso{
 \code{\link{preFilter}}\cr
 \code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
+\code{\link{isoformSwitchTestSatuRn}}\cr
 \code{\link{analyzeORF}}\cr
 \code{\link{extractSequence}}
 

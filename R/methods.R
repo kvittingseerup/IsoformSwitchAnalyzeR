@@ -43,6 +43,11 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
         )]
     )
 
+    ### Only save all isoforms if not pre-defined
+    if(switchAnalyzeRlist$sourceId != 'preDefinedSwitches') {
+        allIsoformsAssociated <- isoformsToKeep
+    }
+
     # exons
     switchAnalyzeRlist$exons <- switchAnalyzeRlist$exons[which(
         switchAnalyzeRlist$exons$isoform_id %in% allIsoformsAssociated
@@ -560,26 +565,6 @@ createSwitchAnalyzeRlist <- function(
 
     ### Add refrence genes
     if(TRUE) {
-        ### Helper functions
-        zeroHelper <- Vectorize(function(nrTimes) {
-            stringr::str_c( rep.int(x = 0, times= nrTimes ), collapse = '')
-        })
-        addZeroes <- function(aVec, n=8) {
-            localData <- data.frame(
-                id=aVec,
-                stringsAsFactors = FALSE
-            )
-            localData$nToAdd <- n - stringr::str_length(localData$id)
-            localData$zeeros <- zeroHelper(localData$nToAdd)
-            localData$combinedId <- stringr::str_c(
-                localData$zeeros,
-                localData$id
-            )
-            return(
-                localData$combinedId
-            )
-        }
-
         ### reorder (nessesary for ref creation)
         isoformFeatures <- isoformFeatures[order(
             isoformFeatures$condition_1,

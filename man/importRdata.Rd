@@ -6,12 +6,12 @@ Create SwitchAnalyzeRlist From Standard R Objects
 }
 
 \description{
-A general-purpose interface to constructing a switchAnalyzeRlist. The data needed for this function are
+A general-purpose interface to constructing a switchAnalyzeRlist. The data needed for this function are:
 \itemize{
     \item{\code{1}: An isoform count expression matrix (nessesary). See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
     \item{\code{2}: Optional. Normalized biological replicate isoform abundances. See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
     \item{\code{3}: Isoform annotation (both genomic exon coordinates and which gene the isoform belongs to). This can also be supplied as the path to a GTF file from which the data is then extracted.}
-    \item{\code{4}: A design matrix indicating which samples belong to which condition}
+    \item{\code{4}: A design matrix indicating which samples belong to which condition along with any potential confounding factors (e.g. batch effects)}
 }
 
 Please note that
@@ -20,7 +20,10 @@ Please note that
     It is possible to specify which comparisons to make using the \code{comparisonsToMake} (default is all possible pairwise of the once indicated by the design matrix).
     }
     \item{\code{2}
-    The importRdata() also includes an extended algorithm to correct some of the annoation problems frequently occuring when doing transcript assembly via tools such as StringTie/Cufflinks (gene merging and unassigned novel isoforms). These can be controlled via the fixStringTie* arguments.
+    The importRdata() function automatically correct abundance and isoform fractions (IF) for confounding/batch effects annoated in the design matrix. It also automaticallt detectes unwanted effects not annoated in the design matrix. See details.
+    }
+    \item{\code{3}
+    The importRdata() function includes an extended algorithm to correct some of the annoation problems frequently occuring when doing transcript assembly via tools such as StringTie/Cufflinks (gene merging and unassigned novel isoforms). These can be controlled via the fixStringTie* arguments.
     }
 }
 }
@@ -157,6 +160,10 @@ For each gene in each replicate sample the expression of all isoforms belonging 
 Changes in isoform usage are measure as the difference in isoform fraction (dIF) values, where isoform fraction (IF) values are calculated as <isoform_exp> / <gene_exp>.
 
 The guestimate produced by setting \code{estimateDifferentialGeneRange = TRUE} is created by subsetting a lot on data (both on samples, conditions and genes) and running a fast but unreliable DTU method. The resulting number is then multiplied by a factor to caclulate back what would be expected by running the IsoformSwitchAnalyzeR pipeline. It should go without saying due to all these factors the acutal guestimate is just that - and estimate which cannot be trusted but merely indicate the expected range. It is to be expected the acutal results from running the IsoformSwitchAnalyzeR pipeline differs from the guestimate in which case the guestimate should not be trusted.
+
+The importRdata() function automatically detecteds unannoated/unwanted effects/covariates via \code{sva::sva()}. These are added to the design matrix and will be taken into account in all downstream analysis.
+
+The importRdata() function automatically correct abundance and isoform fractions (IF) for confounding/batch effects annoated in the \code{designMatrix}. Specifically the log2 transformed isoform expression is corrected via \code{limma::removeBatchEffect()} and the corrected values are used to calculate all summary statistics. The isoform count data is not modified as the differential methods used in IsoformSwitchAnalyzeR models this themselves.
 }
 
 \value{

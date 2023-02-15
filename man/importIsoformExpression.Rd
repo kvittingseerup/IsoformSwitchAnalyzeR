@@ -57,7 +57,7 @@ importIsoformExpression(
 
 \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
-\item{readLength}{ Only necessary when importing from StringTie. Must be the number of base pairs sequenced. e.g. if the data quantified is 75 bp paired ends the the user should supply \code{readLength=75}.}
+\item{readLength}{ Only necessary when importing from StringTie. Must be the number of base pairs sequenced. e.g. if the data quantified is single end 75bp use \code{readLength=75} and if 75bp paired end use \code{readLength=150}.}
 
 \item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.}
 

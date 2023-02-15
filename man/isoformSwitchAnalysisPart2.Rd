@@ -20,6 +20,8 @@ isoformSwitchAnalysisPart2(
     pathToIUPred2AresultFile = NULL,
     pathToNetSurfP2resultFile = NULL,
     pathToSignalPresultFile = NULL,
+    pathToDeepLoc2resultFile = NULL,
+    pathToDeepTMHMMresultFile = NULL,
 
     ### Analysis and output arguments
     n = Inf,
@@ -29,6 +31,7 @@ isoformSwitchAnalysisPart2(
         'ORF_seq_similarity',
         'NMD_status',
         'domains_identified',
+        'domain_isotype',
         'IDR_identified',
         'IDR_type',
         'signal_peptide_identified'
@@ -83,6 +86,13 @@ Path to the CPC2 result file. If the webserver is used please download the tab-d
   A string indicating the full path to the SignalP result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. If using the web-server the results should be copy pasted into a empty plain text document (notepad, sublimetext TextEdit or similar (aka not word)) and save that. See \link{analyzeSignalP} for details.
 }
 
+\item{pathToDeepLoc2resultFile}{
+A string indicating the full path to the DeepLoc2 result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the DeepLoc2 tool.
+}
+
+\item{pathToDeepTMHMMresultFile}{
+A string indicating the full path to the DeepTMHMM result file. Can be gziped. If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings.
+}
 
 \item{n}{
 The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use Inf to create all. Default is Inf (all).

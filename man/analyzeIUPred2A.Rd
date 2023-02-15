@@ -2,16 +2,16 @@
 \alias{analyzeIUPred2A}
 
 \title{
-Import Result of IUPred2A analysis
+Import Result of IUPred2A or IUPred3 analysis
 }
 \description{
-Allows for easy integration of the result of IUPred2A (performing external sequence analysis of Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) ) in the IsoformSwitchAnalyzeR workflow. This function also supports using a sliding window to extract IDRs. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeIUPred2A, analyzePFAM and analyzeSignalP if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the result of IUPred2A or IUPred3 (performing external sequence analysis of Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) ) in the IsoformSwitchAnalyzeR workflow. This function also supports using a sliding window to extract IDRs. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeIUPred2A, analyzePFAM and analyzeSignalP if you have predicted the ORFs with \code{analyzeORF}.
 }
 \usage{
 analyzeIUPred2A(
     switchAnalyzeRlist,
     pathToIUPred2AresultFile,
-    smoothingWindowSize = 5,
+    smoothingWindowSize = 11,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
     annotateBindingSites = TRUE,
@@ -119,16 +119,26 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeNetSurfP2}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
-\examples{
-### Load example data (matching the result files also store in IsoformSwitchAnalyzeR)
-data("exampleSwitchListIntermediary")
-exampleSwitchListIntermediary
 
-### Add IUPred2A analysis
-exampleSwitchListAnalyzed <- analyzeIUPred2A(
-    switchAnalyzeRlist = exampleSwitchListIntermediary,
-    pathToIUPred2AresultFile = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR")
+\examples{
+### Please note
+# The way of importing files in the following example with
+#   "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+#   specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+#   and not something you need to do - just supply the string e.g.
+#   "myAnnotation/upred2aResultFile.txt" to the functions
+
+data("exampleSwitchListIntermediary")
+
+upred2aResultFile <- system.file(
+    "extdata/iupred2a_result.txt.gz",
+    package = "IsoformSwitchAnalyzeR"
 )
 
-exampleSwitchListAnalyzed
+exampleSwitchListAnalyzed <- analyzeIUPred2A(
+    switchAnalyzeRlist       = exampleSwitchListIntermediary,
+    pathToIUPred2AresultFile = upred2aResultFile,
+    showProgress = FALSE
+)
+
 }

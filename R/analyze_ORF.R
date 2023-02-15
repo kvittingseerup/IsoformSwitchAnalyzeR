@@ -3,82 +3,6 @@
 ######### Analyze coding potential and identify protein domains ########
 ########################################################################
 
-getCDS <- function(
-    selectedGenome,
-    repoName
-) {
-    ### Test input
-    if (length(repoName) > 1)
-        stop("getCDS: Please supply only one repository")
-    if (!any(selectedGenome %in% c("hg19", "hg38", "mm9", "mm10")))
-        stop("getCDS: supported genomes are currently: hg19, hg38, mm9, mm10")
-    if (!any(repoName %in% c("ensemble", "UCSC", "refseq", "GENCODE")))
-        stop("getCDS: Supported repositories are currently: Ensemble (not hg38), UCSC, Refseq, GENCODE (not mm9)")
-
-    ### Make data.frame to translate to tack names
-    localRepos <- rbind(
-        # hg19
-        data.frame(
-            genome='hg19',
-            repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
-            track =c("ensGene" , "knownGene", "refGene"        , "wgEncodeGencodeV19"),
-            stringsAsFactors = FALSE
-        ),
-        # hg38
-        data.frame(
-            genome='hg38',
-            repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
-            track =c(NA        , NA         , 'refSeqComposite', "knownGene"), # gencode is stored as knownGene according to trackNames() annotation
-            stringsAsFactors = FALSE
-        ),
-        # mm9
-        data.frame(
-            genome='mm9',
-            repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
-            track =c("ensGene" , "knownGene", "refGene"        , NA),
-            stringsAsFactors = FALSE
-        ),
-        # mm10
-        data.frame(
-            genome='mm10',
-            repo  =c("ensemble", "UCSC"     , "refseq"         , "GENCODE"),
-            track =c(NA        , "knownGene", "refSeqComposite", "wgEncodeGencode"),
-            stringsAsFactors = FALSE
-        )
-    )
-    repoOfInterest <- localRepos[which(
-        localRepos$genome == selectedGenome &
-            localRepos$repo == repoName
-    ),]
-
-    if(is.na(repoOfInterest$track)) {
-        stop('Combination of genome and repository is not available')
-    }
-
-    ### Make session
-    message("Retrieving CDS tables for ", repoOfInterest$repo, "...", sep = "")
-    session <- rtracklayer::browserSession("UCSC",url="http://genome-euro.ucsc.edu/cgi-bin/") # KVS : this solves the problem with changing geomes
-    GenomeInfoDb::genome(session) <- repoOfInterest$genome
-    query <- rtracklayer::ucscTableQuery(session, repoOfInterest$track)
-
-    ### Get data
-    cdsTable <- rtracklayer::getTable(query)
-    if (repoOfInterest$repo == "ensemble")
-        cdsTable <- cdsTable[cdsTable$cdsStartStat != "none",
-                             ]
-    if (repoOfInterest$repo == "UCSC")
-        cdsTable <- cdsTable[cdsTable$cdsStart != cdsTable$cdsEnd,
-                             ]
-    if (repoOfInterest$repo == "refseq")
-        cdsTable <- cdsTable[cdsTable$cdsStart != cdsTable$cdsEnd,
-                             ]
-    cdsTable <- cdsTable[, c("chrom", "strand", "txStart", "txEnd",
-                             "cdsStart", "cdsEnd", "exonCount", "name")]
-    message("Retrieved ", nrow(cdsTable), " records...", sep = "")
-    utils::flush.console()
-    return(new("CDSSet", cdsTable))
-}
-
 analyzeORF <- function(
     ### Core arguments
     switchAnalyzeRlist,
@@ -719,7 +643,7 @@ extractSequence <- function(
                 switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
             ))) {
                 stop(
-                    'If only switching genes should be outputted please run the \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestDRIMSeq\' function first and try again'
+                    'If only switching genes should be outputted please run the \'isoformSwitchTestDEXSeq\' or \'isoformSwitchTestSatuRn\' function first and try again'
                 )
             }
         }
@@ -1519,7 +1443,9 @@ addORFfromGTF <- function(
         if( nWithOrf /nInSL == 0) {
             stop(str_c(
                 'No ORFs could be added to the switchAnalyzeRlist.',
-                ' Please ensure GTF file have CDS info (and that isoform ids match).'
+                ' Please ensure GTF file have CDS info (and that isoform ids match).',
+                ' Also note that ORF/CDS information cannot be found in the output from asemblers such as StringTie and Cufflinks.',
+                'Instead use the official GTF that you downloaded from an official source such as Ensembl, Gencode, etc.'
             ))
         }
 

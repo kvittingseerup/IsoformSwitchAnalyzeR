@@ -278,7 +278,7 @@ isoformToGeneExp <- function(
                     isoformGeneAnnotation %>%
                     mcols() %>%
                     as.data.frame() %>%
-                    select(any_of( c('gene_id','isoform_id','gene_name') ) ) %>%
+                    dplyr::select(any_of( c('gene_id','isoform_id','gene_name') ) ) %>%
                     distinct()
             }
             if( is(isoformGeneAnnotation, 'data.frame') ) {
@@ -288,7 +288,7 @@ isoformToGeneExp <- function(
 
                 isoAnnot <-
                     isoformGeneAnnotation %>%
-                    select(any_of( c('gene_id','isoform_id','gene_name') ) ) %>%
+                    dplyr::select(any_of( c('gene_id','isoform_id','gene_name') ) ) %>%
                     distinct()
 
             }
@@ -721,6 +721,8 @@ evalSig <- function(pValue, alphas) {
     sapply(pValue, function(x) {
         if( is.na(x) ) {
             return('NA')
+        } else if( x == -1 ) {
+            sigLevel <- '*'
         } else if( x < min( alphas) ) {
             sigLevel <- '***'
         } else if ( x < max( alphas) ) {
@@ -798,7 +800,8 @@ fixNames <- function(
     nameVec,
     ignoreAfterBar,
     ignoreAfterSpace,
-    ignoreAfterPeriod
+    ignoreAfterPeriod,
+    extractSecondId = FALSE
 ) {
     splitPattern <- character()
 
@@ -829,19 +832,30 @@ fixNames <- function(
         newNameVec <-
             nameVec %>%
             str_split(pattern = splitString) %>%
-            sapply(function(x) x[1])
+            sapply(function(x) x[1 + as.integer(extractSecondId) ])
 
         ### Compare old and new ids to ensure no NEW duplications were made
         if(
             any( duplicated(nameVec) != duplicated(newNameVec) )
         ) {
-            stop('The application of the ignoreAfter<Character> arguments would cause IDs to be non-unique (not allowed).')
+            stop('The application of the ignoreAfter<Character> arguments you supplied (or their defaults) would cause IDs to be non-unique (not allowed).')
         }
 
         return(newNameVec)
     } else {
         return(nameVec)
     }
+}
+
+roundUpToNearsTenOrHundred <- function(x) {
+    if(max( x ) >= 100 ) {
+        x[which(x > 100 )] <-
+            ceiling( x[which(x > 100 )] / 100 ) * 100
+    } else if(max( x ) >= 10 ) {
+        x[which(x > 10 )] <-
+            ceiling( x[which(x > 10 )] / 10 ) * 10
+    }
+    return(x)
 }
 
 convertCoordinatsTranscriptToGenomic <- function(
@@ -1341,7 +1355,7 @@ determineTranscriptClass <- function(
     }
 
     ### When only PTC information is advailable
-    if (!is.null(ptc) &  is.null(coding)) {
+    if ( !is.null(ptc) &  is.null(coding)) {
         if (!is.na(ptc)) {
             if (ptc) {
                 return('NMD Sensitive')
@@ -1899,3 +1913,220 @@ estimateDifferentialRange <- function(
     return(sigDf)
 }
 
+
+extractSubCellShifts <- function(
+    switchAnalyzeRlist,
+    plotGenes = TRUE,
+    locationMinGenes = 3,
+    returnResult = FALSE,
+    localTheme = theme_bw()
+) {
+    ### Test input
+    if(TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
+            )
+        }
+
+        if ( ! 'sub_cell_location' %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+            stop(
+                'Cannot test for differences in sub-cellular location as such results are not annotated. Run analyzeDeepLoc2() and try again.'
+            )
+        }
+
+        if ( ! 'switchConsequence' %in% names(switchAnalyzeRlist) ) {
+            stop(
+                'You must have analyzed subcelluar switch consequences. Run analyzeSwitchConsequences() and add "sub_cell_location" to the "consequencesToAnalyze" argument.'
+            )
+        }
+
+        if ( ! 'sub_cell_location' %in% switchAnalyzeRlist$switchConsequence$featureCompared ) {
+            stop(
+                'You must have analyzed subcelluar switch consequences. Run analyzeSwitchConsequences() and add "sub_cell_location" to the "consequencesToAnalyze" argument.'
+            )
+        }
+
+
+
+    }
+
+    ### Extract data
+    if(TRUE) {
+        ### Extract changes
+        locChange <-
+            switchAnalyzeRlist$switchConsequence %>%
+            select(
+                gene_ref, gene_id, condition_1, condition_2,
+                isoformUpregulated, isoformDownregulated,
+                featureCompared, isoformsDifferent
+            ) %>%
+            filter(
+                featureCompared == 'sub_cell_location',
+                isoformsDifferent
+            ) %>%
+            mutate(
+                id = 1:dplyr::n()
+            )
+
+        ### Extract locations
+        correspondingLocations <-
+            switchAnalyzeRlist$subCellLocationAnalysis %>%
+            select(isoform_id, Localizations) %>%
+            filter(
+                isoform_id %in% c(locChange$isoformUpregulated, locChange$isoformDownregulated)
+            )
+
+        correspondingLocationList <- strsplit(
+            x = correspondingLocations$Localizations,
+            split = ','
+        )
+        names(correspondingLocationList) <- correspondingLocations$isoform_id
+
+        ### Extract gain/losses
+        locChange2 <- plyr::ddply(
+            .data = locChange,
+            .variables = 'id',
+            .inform = TRUE,
+            .progress = 'none',
+            .fun = function(aDF) { # aDF <- locChange[2,]
+                ### Extract diff
+                upLoc <- correspondingLocationList[[ aDF$isoformUpregulated   ]]
+                dnLoc <- correspondingLocationList[[ aDF$isoformDownregulated ]]
+
+                locGain <- setdiff(upLoc, dnLoc)
+                locLoss <- setdiff(dnLoc, upLoc)
+
+                ### Make equally long
+                lengthDiff <- length(locGain) - length(locLoss)
+                if(lengthDiff < 0) {
+                    locGain <- c(locGain, rep('None', times=abs(lengthDiff)))
+                } else {
+                    locLoss <- c(locLoss, rep('None', times=abs(lengthDiff)))
+                }
+
+
+                ### Add to DF
+                suppressWarnings(
+                    aDF <- cbind(
+                        aDF,
+                        data.frame(location_gain  = locGain, stringsAsFactors = FALSE),
+                        data.frame(location_loss  = locLoss, stringsAsFactors = FALSE)
+                    )
+                )
+
+                return(aDF)
+            }
+        )
+
+        ### Summarise to
+        locCount <-
+            locChange2 %>%
+            group_by(
+                condition_1,
+                condition_2,
+                location_gain,
+                location_loss
+            ) %>%
+            summarise(
+                n_switch = n(),
+                n_genes = length(unique(gene_id)),
+                .groups = 'drop'
+            )
+    }
+
+    ### Plot if needed
+    if(   returnResult ) {
+        return(locCount)
+    }
+    if( ! returnResult ) {
+
+         filtLocation <-
+            locCount %>%
+            filter(
+                n_genes >= locationMinGenes
+            )
+        okLocation <- unique(c(
+            filtLocation$location_gain,
+            filtLocation$location_loss
+        ))
+
+        locCount <-
+            locCount %>%
+            filter(
+                location_gain %in% okLocation,
+                location_loss %in% okLocation
+            ) %>%
+            mutate(
+                cond = paste0(
+                    condition_1,
+                    ' vs ',
+                    condition_2
+                ),
+                location_gain = gsub('_','', location_gain),
+                location_loss = gsub('_','', location_loss),
+                Genes = n_genes,
+                Switch = n_switch
+            )
+
+        if( plotGenes ) {
+            g1 <-
+                locCount %>%
+                ggplot(aes(x=location_loss, y=location_gain, fill=Genes)) +
+                scale_fill_gradient(
+                    limits = c(0, max(locCount$Genes)),
+                    low = 'white',
+                    high = 'black'
+                )
+        } else {
+            g1 <-
+                locCount %>%
+                ggplot(aes(x=location_loss, y=location_gain, fill=Switch)) +
+                scale_fill_gradient(
+                    limits = c(0, max(locCount$Switch)),
+                    low = 'white',
+                    high = 'black'
+                )
+        }
+
+        g1 <-
+            g1 +
+            geom_tile() +
+            localTheme +
+            theme(axis.text.x=element_text(angle=-45, hjust = 0, vjust=1)) +
+            labs(
+                x = 'Sub-cellular Location Loss',
+                y = 'Sub-cellular Location Gain'
+            )
+
+        ### Add facettes
+        if(length(unique(locCount$cond)) > 1) {
+            g1 <-
+                g1 + facet_wrap(~cond)
+        }
+
+
+        return(g1)
+    }
+}
+
+
+### Ref name helpers
+zeroHelper <- Vectorize(function(nrTimes) {
+    stringr::str_c( rep.int(x = 0, times= nrTimes ), collapse = '')
+})
+addZeroes <- function(aVec, n=8) {
+    localData <- data.frame(
+        id=aVec,
+        stringsAsFactors = FALSE
+    )
+    localData$nToAdd <- n - stringr::str_length(localData$id)
+    localData$zeeros <- zeroHelper(localData$nToAdd)
+    localData$combinedId <- stringr::str_c(
+        localData$zeeros,
+        localData$id
+    )
+    return(
+        localData$combinedId
+    )
+}

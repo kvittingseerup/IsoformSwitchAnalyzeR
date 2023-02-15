@@ -7,6 +7,17 @@ To solve these problems we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyze
 
 # Installation 
 
+Note that IsoformSwitchAnalyzeR now depends on the pfamAnalyzeR package. This can be installed via this command
+
+```
+if (!requireNamespace("devtools", quietly = TRUE)){
+    install.packages("devtools")
+}
+if (!requireNamespace("pfamAnalyzeR", quietly = TRUE)){
+    devtools::install_github("kvittingseerup/pfamAnalyzeR")
+}
+```
+
 We *highly* recommend installing the latest version of  [IsoformSwitchAnalyzeR from Bioconductor](https://bioconductor.org/packages/devel/bioc/html/IsoformSwitchAnalyzeR.html).
 
 This can be done by running the following in an R terminal:

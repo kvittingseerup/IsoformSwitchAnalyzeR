@@ -93,7 +93,7 @@ Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. C
 
 \seealso{
 \code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
+\code{\link{isoformSwitchTestSatuRn}}\cr
 \code{\link{switchPlotTranscript}}\cr
 \code{\link{switchPlot}}
 }

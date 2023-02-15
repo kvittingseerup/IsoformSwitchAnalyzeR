@@ -130,13 +130,7 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
-\code{\link{analyzeORF}}\cr
 \code{\link{analyzeAlternativeSplicing}}\cr
-\code{\link{analyzeCPAT}}\cr
-\code{\link{analyzePFAM}}\cr
-\code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeSwitchConsequences}}\cr
 \code{\link{extractConsequenceEnrichment}}\cr
 \code{\link{extractConsequenceEnrichmentComparison}}

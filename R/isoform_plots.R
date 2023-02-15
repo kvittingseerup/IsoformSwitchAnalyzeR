@@ -6,11 +6,14 @@ switchPlotTranscript <- function(
 
     ### Advanced arguments
     rescaleTranscripts = TRUE,
+    rescaleRoot = 3,
     plotXaxis = !rescaleTranscripts,
     reverseMinus = TRUE,
     ifMultipleIdenticalAnnotation = 'summarize',
     annotationImportance = c('signal_peptide','protein_domain','idr'),
+    plotTopology = TRUE,
     IFcutoff = 0.05,
+    abbreviateLocations = TRUE,
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -71,8 +74,20 @@ switchPlotTranscript <- function(
             }
         }
 
+        if(plotTopology) {
+            if( ! 'topologyAnalysis' %in% names(switchAnalyzeRlist) ) {
+                stop('Cannot plot toplogy as it has not been added. Either you first use analyzeDeepTMHMM() or you set "topologyAnalysis=FALSE".')
+            }
+        }
+
         isConditional <- ! is.null(condition1)
-        hasQuant <- ! all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall))
+        hasQuant <- ! all(is.na(switchAnalyzeRlist$isoformFeatures$IF1))
+
+        ### Don't plot topology if it is not annotated
+        if(plotTopology) {
+            plotTopology <- 'topologyAnalysis' %in% names(switchAnalyzeRlist)
+        }
+
     }
 
     ### Check for what annotation are stored in the switchAnalyzeRlist
@@ -136,6 +151,8 @@ switchPlotTranscript <- function(
             inclPTC <- FALSE
         }
     }
+
+
 
     ### interpret gene and isoform_id input
     if (TRUE) {
@@ -266,7 +283,7 @@ switchPlotTranscript <- function(
 
     }
 
-    ### Extract the isoform and annotation data
+    ### Extract isoform and annotation data
     if (TRUE) {
         ### Extract iso annoation
         if(TRUE) {
@@ -280,9 +297,11 @@ switchPlotTranscript <- function(
                     'class_code',
                     'sub_cell_location',
                     'solubility_status',
-                    'dIF',
                     'isoform_switch_q_value',
-                    'IF_overall','IF1','IF2'
+                    'IF_overall',
+                    'IF1',
+                    'IF2',
+                    'dIF'
                 )
             columnsToExtract <-
                 na.omit(match(
@@ -303,17 +322,16 @@ switchPlotTranscript <- function(
                     which(switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoform_id)
             }
 
-
             isoInfo <-
                 unique(switchAnalyzeRlist$isoformFeatures[
                     rowsToExtract,
                     columnsToExtract
-                    ])
+                ])
 
             ### Subset to used isoforms
             if(hasQuant) {
                 isoInfo$minIF <- apply(
-                    isoInfo[,na.omit(match(c('IF_overall','IF1','IF2'), colnames(isoInfo)) ),drop=FALSE],
+                    isoInfo[,na.omit(match(c('IF1','IF2'), colnames(isoInfo)) ),drop=FALSE],
                     1,
                     function(x) {
                         max(x, na.rm = TRUE)
@@ -327,6 +345,15 @@ switchPlotTranscript <- function(
                 }
 
                 isoform_id <- isoInfo$isoform_id
+            }
+            if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+                isoInfo <- isoInfo[which(
+                    !is.na(isoInfo$dIF)
+                ),]
+
+                isoform_id <- intersect(
+                    isoform_id, isoInfo$isoform_id
+                )
             }
 
             ### Remove if all is annotated as NA
@@ -461,9 +488,9 @@ switchPlotTranscript <- function(
                     ### Annotate structural variants
                     if( !is.null(DomainAnalysis$domain_structure)) {
                         DomainAnalysis$domain_sv <- ifelse(
-                            DomainAnalysis$domain_structure == 'Complete',
+                            DomainAnalysis$domain_structure == 'Reference',
                             yes = '',
-                            no = ' (structural variant)'
+                            no = ' (Non-ref Isotype)'
                         )
                         DomainAnalysis$hmm_name <- paste0(
                             DomainAnalysis$hmm_name,
@@ -527,6 +554,28 @@ switchPlotTranscript <- function(
                     annotationList$signal_peptide <- signalPdata
                 }
             }
+
+            if (plotTopology) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$topologyAnalysis$isoform_id
+                )) {
+                    tolologyAnalysis <-
+                        switchAnalyzeRlist$topologyAnalysis[which(
+                            switchAnalyzeRlist$topologyAnalysis$isoform_id %in%
+                                isoInfo$isoform_id
+                        ), ]
+                    tolologyAnalysis$isoform_id <-
+                        factor(tolologyAnalysis$isoform_id,
+                               levels = unique(isoInfo$isoform_id))
+                    tolologyAnalysis$id <- 1:nrow(tolologyAnalysis)
+
+                    annotationList$topology <- tolologyAnalysis[,c('isoform_id','regionStartGenomic','regionEndGenomic','region_type','id')]
+                }
+
+            }
+
+
         }
 
         ### Domain sites
@@ -694,6 +743,44 @@ switchPlotTranscript <- function(
             }
         }
 
+        ### Toplogy
+        if(TRUE) {
+            if (plotTopology) {
+                if (any(
+                    isoInfo$isoform_id %in%
+                    switchAnalyzeRlist$topologyAnalysis$isoform_id
+                )) {
+                    toplologyStart <-
+                        split(
+                            tolologyAnalysis$regionStartGenomic,
+                            tolologyAnalysis$isoform_id,
+                            drop = FALSE
+                        )
+                    toplologyEnd   <-
+                        split(tolologyAnalysis$regionEndGenomic,
+                              tolologyAnalysis$isoform_id,
+                              drop = FALSE)
+                    toplologyType  <-
+                        split(tolologyAnalysis$region_type,
+                              tolologyAnalysis$isoform_id,
+                              drop = FALSE)
+                } else {
+                    toplologyStart <- NULL # By setting them to null they are ignore from hereon out
+                    toplologyEnd   <- NULL
+
+                    # turn of visualization since no data
+                    plotTopology <- FALSE
+                }
+            } else {
+                toplologyStart <- NULL # By setting them to null they are ignore from hereon out
+                toplologyEnd   <- NULL
+
+                # turn of visualization since no data
+                plotTopology <- FALSE
+
+            }
+        }
+
         ### Trimmed sites
         if(TRUE) {
             if( inclTrimmedIsoforms ) {
@@ -720,787 +807,975 @@ switchPlotTranscript <- function(
 
     }
 
-    ### Loop over each transcript and make the data.frame with all the annotation data (this is currently the rate limiting step)
-    myTranscriptPlotDataList <- list()
-    for (i in seq(along.with = exonInfoSplit)) {
-        # extract data
-        transcriptName <- names(exonInfoSplit)[i]
-        localExons     <- exonInfoSplit[[transcriptName]]
-
-        # extract local values of where to cut the transcript
-        localOrfStart           <-
-            orfStart      [[transcriptName]]
-        localOrfEnd             <-
-            orfEnd        [[transcriptName]] - 1
-        localDomainStart        <-
-            domainStart   [[transcriptName]]
-        localDomainEnd          <-
-            domainEnd     [[transcriptName]] - 1
-        localIdrStart        <-
-            idrStart      [[transcriptName]]
-        localIdrEnd          <-
-            idrEnd        [[transcriptName]] - 1
-        localtrimmedStart    <-
-            trimmedStart  [[transcriptName]]
-        localtrimmedEnd      <-
-            trimmedEnd    [[transcriptName]] - 1
-        localPepticeCleaveage   <-
-            cleaveageAfter[[transcriptName]]
-
-        myCutValues <-
-            unique(
-                c(
-                    localOrfStart,
-                    localOrfEnd,
-                    localDomainStart,
-                    localDomainEnd,
-                    localIdrStart,
-                    localIdrEnd,
-                    localtrimmedStart,
-                    localtrimmedEnd,
-                    localPepticeCleaveage
-                )
-            ) # NULLs are just removed
-
-        # cut the exons into smaller part based on the ORF and domain coordinats (if needed)
-        if (length(myCutValues) & !is.na(myCutValues[1])) {
-            localExonsDevided <-
-                cutGRanges(aGRange = localExons, cutValues = myCutValues)
-        } else {
-            localExonsDevided <- localExons[, 0]
-        }
-
-        ### Add annotation
-        ## add standard annotation
-        localExonsDevided$type <- 'utr'
-        localExonsDevided$Domain <- ' transcript'
-
-        ## modify if needed
-        # ORF
-        if (!is.na(localOrfStart)) {
-            coordinatPair <- c(localOrfStart, localOrfEnd)
-            orfRange <-
-                IRanges(min(coordinatPair), max(coordinatPair))
-            localExonsDevided$type[queryHits(findOverlaps(
-                subject = orfRange,
-                query = ranges(localExonsDevided),
-                type = 'within'
-            ))] <- 'cds'
-        }
-        # domain - loop over each domain
-        if (length(localDomainStart)) {
-            for (j in 1:length(localDomainStart)) {
-                coordinatPair <- c(localDomainStart[j], localDomainEnd[j])
-                if( all( !is.na(coordinatPair)) ) {
-                    domainRange <-
-                        IRanges(min(coordinatPair), max(coordinatPair))
-                    localExonsDevided$Domain[queryHits(findOverlaps(
-                        subject = domainRange,
-                        query = ranges(localExonsDevided),
-                        type = 'within'
-                    ))] <- domainName[[transcriptName]][j]
-                }
-            }
-        }
-        # IDR
-        if (length(localIdrStart)) {
-            for (j in 1:length(localIdrStart)) {
-                coordinatPair <- c(localIdrStart[j], localIdrEnd[j])
-                if( all( !is.na(coordinatPair)) ) {
-                    domainRange <-
-                        IRanges(min(coordinatPair), max(coordinatPair))
-                    localExonsDevided$Domain[queryHits(findOverlaps(
-                        subject = domainRange,
-                        query = ranges(localExonsDevided),
-                        type = 'within'
-                    ))] <- idrName[[transcriptName]][j]
-                }
-            }
-        }
-        # signal peptide
-        if (length(localPepticeCleaveage)) {
-            coordinatPair <- c(localOrfStart, localPepticeCleaveage)
-            if( all( !is.na(coordinatPair)) ) {
-                peptideRange <-
-                    IRanges(min(coordinatPair), max(coordinatPair))
-                localExonsDevided$Domain[queryHits(findOverlaps(
-                    subject = peptideRange,
-                    query = ranges(localExonsDevided),
-                    type = 'within'
-                ))] <- 'Signal Peptide'
-            }
-        }
-        # trimmed
-        if (length(localtrimmedStart)) {
-            for (j in 1:length(localtrimmedStart)) {
-                coordinatPair <- c(localtrimmedStart[j], localtrimmedEnd[j])
-                if( all( !is.na(coordinatPair)) ) {
-                    domainRange <-
-                        IRanges(min(coordinatPair), max(coordinatPair))
-                    localExonsDevided$Domain[queryHits(findOverlaps(
-                        subject = domainRange,
-                        query = ranges(localExonsDevided),
-                        type = 'within'
-                    ))] <- 'Not Analyzed'
-                }
-            }
-        }
 
 
-        # convert to df
-        localExonsDf <- as.data.frame(localExonsDevided)
-
-        ### Massage
-        localExonsDf$transcript <- transcriptName
-
-        ### determine transcript type
-        if (inclCodingPotential) {
-            localCoding <- isCoding[[transcriptName]]
-        } else {
-            localCoding <- NULL
-        }
-        if (inclPTC) {
-            localPTC <- isPTC[[transcriptName]]
-        } else {
-            localPTC <- NULL
-        }
-        localExonsDf$seqnames <-
-            determineTranscriptClass(ptc =  localPTC , coding = localCoding)
-        colnames(localExonsDf)[1] <- 'seqnames'
-
-        # save
-        myTranscriptPlotDataList[[transcriptName]] <- localExonsDf
-    }
-    myTranscriptPlotData <- do.call(rbind, myTranscriptPlotDataList)
-
-    ### Correct names  !!! where Tx Names are changed !!!!
-    if (TRUE) {
-        ### correct transcript names
-        # Create name annotation (this can be omitted when ggplots astetics mapping against type works)
-        nameDF <- data.frame(
-            oldTxName = unique(myTranscriptPlotData$transcript),
-            newTxName = unique(myTranscriptPlotData$transcript),
-            stringsAsFactors = FALSE
-        )
-
-        ### Modify if class code is defined
-        if ('class_code' %in% colnames(isoInfo)) {
-            nameDF$newTxName <- paste(
-                nameDF$newTxName,
-                ' (',
-                isoInfo$class_code[match(nameDF$oldTxName, isoInfo$isoform_id)],
-                ')',
-                sep = ''
-            )
-        }
-
-        if ( isConditional ) {
-            ### Interpret direction
-            isoInfo$direction                                      <- 'Unchanged usage'
-            isoInfo$direction[which(isoInfo$dIF > dIFcutoff     )] <- 'Increased usage'
-            isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1)] <- 'Decreased usage'
-
-            if( ! optimizeForCombinedPlot ) {
-                ### Add dIF
-                if( ! all(isoInfo$dIF %in% c(0, Inf, -Inf)) ) {
-                    isoInfo$direction  <- paste(
-                        isoInfo$direction,
-                        ': dIF =',
-                        formatC(round(isoInfo$dIF, digits = 2),digits = 2, format='f') ,
-                        sep=' '
-                    )
-                }
-
-                ### Add q-values
-                if(any( !is.na(isoInfo$isoform_switch_q_value))) {
-                    if( ! all(isoInfo$isoform_switch_q_value %in% c(1, -Inf)) ) {
-                        isoInfo$sig <- evalSig(isoInfo$isoform_switch_q_value, alphas = alphas)
-
-                        isoInfo$direction <- startCapitalLetter(
-                            paste0(
-                                isoInfo$direction,
-                                ' (',
-                                isoInfo$sig,
-                                ')'
-                            )
-                        )
-                    }
-                }
-            }
-
-            ### Make new name
-            nameDF$newTxName <- paste(
-                nameDF$newTxName,
-                '\n(',
-                isoInfo$direction[match(nameDF$oldTxName, isoInfo$isoform_id)],
-                ')',
-                sep = ''
-            )
-
-        }
-
-
-        ### Modify if sub-cell location is defined
-        if( 'sub_cell_location' %in% colnames(isoInfo) ) {
-            matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
-
-            nameDF$newTxName <- paste0(
-                nameDF$newTxName,
-                '\n(Location: ',
-                gsub('_',' ', isoInfo$sub_cell_location[match(
-                    nameDF$newTxName,
-                    isoInfo$isoform_id
-                )]),
-                ')'
-            )
-        }
-
-        ### Modify if  solubility location is defined
-        if( 'solubility_status' %in% colnames(isoInfo) ) {
-            matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
-
-            nameDF$newTxName <- paste0(
-                nameDF$newTxName,
-                '\n(',
-                gsub('_',' ', isoInfo$solubility_status[match(
-                    nameDF$oldTxName,
-                    isoInfo$isoform_id
-                )]),
-                ')'
-            )
-        }
-
-
-
-        myTranscriptPlotData$transcript <-
-            nameDF$newTxName[match(
-                myTranscriptPlotData$transcript, nameDF$oldTxName
-            )]
-
-        ### Factorize order
-        supposedOrder <-
-            c('Coding',
-              'Non-coding',
-              'NMD Insensitive',
-              'NMD Sensitive',
-              'Transcripts')
-        supposedOrder <-
-            supposedOrder[which(
-                supposedOrder %in% myTranscriptPlotData$seqnames
-            )]
-
-        myTranscriptPlotData$seqnames <-
-            factor(myTranscriptPlotData$seqnames)
-        newOrder <-
-            match(levels(myTranscriptPlotData$seqnames),
-                  supposedOrder)
-        myTranscriptPlotData$seqnames <-
-            factor(myTranscriptPlotData$seqnames,
-                   levels = levels(myTranscriptPlotData$seqnames)[newOrder])
-    }
-
-    ### Rescale coordinats if nessesary
-    if (rescaleTranscripts) {
-        # Might as well work with smaller numbers
-        myTranscriptPlotData[, c('start', 'end')] <-
-            myTranscriptPlotData[, c('start', 'end')] -
-            min(myTranscriptPlotData[, c('start', 'end')]) + 1
-
-        ### create conversion table from origial coordiants to rescaled values
-        allCoordinats <-
-            sort(unique(
-                c(
-                    myTranscriptPlotData$start,
-                    myTranscriptPlotData$end
-                )
-            ))
-        myCoordinats <-
-            data.frame(orgCoordinates = allCoordinats,
-                       newCoordinates = allCoordinats)
-        for (i in 2:nrow(myCoordinats)) {
-            orgDistance <-
-                myCoordinats$orgCoordinates[i] -
-                myCoordinats$orgCoordinates[i - 1]
-            newDistance <- max(c(1, round(sqrt(
-                orgDistance
-            ))))
-            difference <- orgDistance - newDistance
-
-            myCoordinats$newCoordinates [i:nrow(myCoordinats)] <-
-                myCoordinats$newCoordinates [i:nrow(myCoordinats)] - difference
-        }
-
-        # replace original values
-        myTranscriptPlotData$start <-
-            myCoordinats$newCoordinates[match(
-                myTranscriptPlotData$start,
-                table = myCoordinats$orgCoordinates
-            )]
-        myTranscriptPlotData$end <-
-            myCoordinats$newCoordinates[match(
-                myTranscriptPlotData$end,
-                table = myCoordinats$orgCoordinates
-            )]
-
-    }
-
-    ### Revers coordinats if nesseary (and transcript is on minus strand)
-    invertCoordinats <-
-        reverseMinus & as.character(exonInfo@strand)[1] == '-' # exonInfo
-    if (invertCoordinats) {
-        # extract min coordinat
-        minCoordinat <- min(myTranscriptPlotData[, c('start', 'end')])
-
-        # transpose to
-        myTranscriptPlotData[, c('start', 'end')] <-
-            myTranscriptPlotData[, c('start', 'end')] - minCoordinat + 1
-
-        # calculate how much to extract
-        subtractNr <- max(myTranscriptPlotData[, c('start', 'end')])
-
-        # calculate new coordinats (by subtracting everthing becomes negative, and abs inverts to postive = evertyhing is inversed)
-        newCoordinats <-
-            abs(myTranscriptPlotData[, c('start', 'end')] - subtractNr)
-
-        # overwrite old coordinats
-        myTranscriptPlotData$start <- newCoordinats$start
-        myTranscriptPlotData$end <- newCoordinats$end
-        myTranscriptPlotData$strand <- '+'
-
-        # transpose back so min coordiant is the same
-        myTranscriptPlotData[, c('start', 'end')] <-
-            myTranscriptPlotData[, c('start', 'end')] + minCoordinat
-    }
-
-    ### order by transcript category and name and add index (index ensures names and transcipts are properly plotted)
-    myTranscriptPlotData <-
-        myTranscriptPlotData[order(myTranscriptPlotData$seqnames,
-                                   myTranscriptPlotData$transcript,
-                                   decreasing = TRUE), ]
-    myTranscriptPlotData$idNr <-
-        match(myTranscriptPlotData$transcript ,
-              unique(myTranscriptPlotData$transcript))
-
-    ### Convert coordiants to rectangels coordinats (for plotting) and order them according to draw order
-    if (TRUE) {
-        ### calculate rectangle coordinates
-        myTranscriptPlotData$ymin <- myTranscriptPlotData$start
-        myTranscriptPlotData$ymax <- myTranscriptPlotData$end
-
-        myTranscriptPlotData$xmin <-
-            myTranscriptPlotData$idNr - rectHegith
-        myTranscriptPlotData$xmax <-
-            myTranscriptPlotData$idNr + rectHegith
-
-        ### Change with of coding regions
-        codingIndex <- which(myTranscriptPlotData$type == 'cds')
-        myTranscriptPlotData$xmin[codingIndex] <-
-            myTranscriptPlotData$idNr[codingIndex] -
-            (rectHegith * codingWidthFactor)
-        myTranscriptPlotData$xmax[codingIndex] <-
-            myTranscriptPlotData$idNr[codingIndex] +
-            (rectHegith * codingWidthFactor)
-
-
-        ### Change order to reflect annotationImportance
-        if(TRUE) {
-            ### Create vector with supposed ordering
-            annotNameList <- list(
-                transcript = ' transcript',
-                notAnalyzed = "Not Analyzed"
-            )
-            if(!is.null(domainStart)) {
-                annotNameList$protein_domain <- unique(unlist(domainName))
-            }
-            if(!is.null(idrStart)) {
-                annotNameList$idr <- unique(unlist(idrName))
-            }
-            if(!is.null(cleaveageAfter)) {
-                annotNameList$signal_peptide <- 'Signal Peptide'
-            }
-
-            annotNameListOrdered <- unlist( annotNameList[c(
-                'transcript',
-                'notAnalyzed',
-                rev(annotationImportance)
-            )] )
-
-            ### Reorder data
-            myTranscriptPlotData$DomainRanking <- match(myTranscriptPlotData$Domain, annotNameListOrdered)
-
-            myTranscriptPlotData <- myTranscriptPlotData[order(
-                myTranscriptPlotData$DomainRanking,
-                myTranscriptPlotData$seqnames,
-                myTranscriptPlotData$transcript,
-                decreasing = FALSE
-            ),]
-        }
-
-    }
-
-    ### Create transcript inton lines with arrows
-    if (TRUE) {
-        totalLengths <-
-            diff(range(
-                c(
-                    myTranscriptPlotData$ymin,
-                    myTranscriptPlotData$ymax
-                )
-            ))
-        byFactor <- totalLengths / nrArrows
-
-        myTranscriptPlotDataSplit <-
-            split(myTranscriptPlotData, f = myTranscriptPlotData$idNr)
-        arrowlineDataCombined <-
-            do.call(rbind, lapply(myTranscriptPlotDataSplit, function(aDF) {
-                # aDF <- myTranscriptPlotDataSplit[[1]]
-                # extract introns (if coordinats are inverted start have the largest coordinat now)
-                if (invertCoordinats) {
-                    localIntrons <-
-                        data.frame(gaps(IRanges(
-                            start = aDF$end, end = aDF$start
-                        )))
-                } else {
-                    localIntrons <-
-                        data.frame(gaps(IRanges(
-                            start = aDF$start, end = aDF$end
-                        )))
-                }
-
-                if (nrow(localIntrons)) {
-                    # Determine munber of arrows based on total intronseize compare to all transcript
-                    totalIntronSize <- sum(localIntrons$width)
-                    localNrArrows <-
-                        totalIntronSize / totalLengths * nrArrows
-
-                    localIntrons$nrArrows <-
-                        floor(localIntrons$width /
-                                  sum(localIntrons$width) * localNrArrows)
-                    localIntrons$index <-
-                        seq(along.with = localIntrons$start)
-
-                    # for each intron make the calculate number of arrows (min 1 arrow pr intron since the seq(+2) will always give two coordiants)
-                    localArrowlineData <-
-                        do.call(rbind, lapply(split(
-                            localIntrons,
-                            f = seq(along.with = localIntrons$start)
-                        ), function(localDF) {
-                            # localDF <- localIntrons[1,]
-                            mySeq <-
-                                seq(
-                                    min(localDF$start),
-                                    max(localDF$end) + 1,
-                                    length.out =  localDF$nrArrows + 2
-                                )
-                            localArrowlineData <-
-                                data.frame(
-                                    seqnames = aDF$seqnames[1],
-                                    x = aDF$idNr[1],
-                                    y = mySeq[-length(mySeq)] - 1,
-                                    yend = mySeq[-1],
-                                    nrArrows = localDF$nrArrows
-                                )
-                            return(localArrowlineData)
-                        }))
-
-                    # reverse arrow direction if transcript is on minus strand (and reverse is off) - nessesary since calculations are done on + strand since IRanges cannot handle negative widths
-                    if (!reverseMinus &
-                        as.character(exonInfo@strand)[1] == '-') {
-                        localArrowlineData <-
-                            data.frame(
-                                seqnames = localArrowlineData$seqnames,
-                                x = localArrowlineData$x,
-                                y = localArrowlineData$yend,
-                                yend = localArrowlineData$y,
-                                nrArrows = localArrowlineData$nrArrows
-                            )
-                    }
-
-                    return(localArrowlineData)
-
-                } else {
-                    localArrowlineData <-
-                        data.frame(
-                            seqnames = aDF$seqnames[1],
-                            x = aDF$idNr[1],
-                            y = NA,
-                            yend = NA,
-                            nrArrows = c(0, 1)
-                        )
-                    return(localArrowlineData)
-                }
-
-
-            }))
-
-        arrowlineDataArrows <-
-            arrowlineDataCombined[which(arrowlineDataCombined$nrArrows != 0), ]
-        arrowlineDataLines <-
-            arrowlineDataCombined[which(arrowlineDataCombined$nrArrows == 0), ]
-    }
-
-    ### create data.frame for converting between index id and transcript name
-    idData <-
-        unique(myTranscriptPlotData[, c('seqnames', 'transcript', 'idNr')])
-
-    ### create color code for domains
+    ### Align and massage regions
     if(TRUE) {
-        domainsFound <-
-            unique(myTranscriptPlotData$Domain [which(
-                ! myTranscriptPlotData$Domain %in% c(' transcript', "Not Analyzed")
-            )])
-
-        ### Reorder
-        domainsFound <- sort(domainsFound)
-        domainsFound <- domainsFound[c(
-            which( domainsFound == "Signal Peptide"),
-            which( domainsFound != "Signal Peptide")
-        )]
-
-        ### Get colors
+        ### Align everything and annoate each region
         if(TRUE) {
-            if (length(domainsFound) == 0) {
-                domainsColor <- NULL
-            } else if (length(domainsFound) < 3) {
-                domainsColor <-
-                    RColorBrewer::brewer.pal(
-                        n = 3,
-                        name = 'Dark2'
-                    )[2:(length(domainsFound) + 1)]
-            } else if (length(domainsFound) > 12) {
-                gg_color_hue <- function(n) {
-                    hues <- seq(15, 375, length = n + 1)
-                    hcl(h = hues,
-                        l = 65,
-                        c = 100)[1:n]
+            ### Loop over each transcript and make the data.frame with all the annotation data (this is currently the rate limiting step)
+            myTranscriptPlotDataList <- list()
+            for (i in seq(along.with = exonInfoSplit)) {
+                # extract data
+                transcriptName <- names(exonInfoSplit)[i]
+                localExons     <- exonInfoSplit[[transcriptName]]
+
+                # extract local values of where to cut the transcript
+                localOrfStart           <-
+                    orfStart      [[transcriptName]]
+                localOrfEnd             <-
+                    orfEnd        [[transcriptName]] + 1
+                localDomainStart        <-
+                    domainStart   [[transcriptName]]
+                localDomainEnd          <-
+                    domainEnd     [[transcriptName]] + 1
+                localIdrStart        <-
+                    idrStart      [[transcriptName]]
+                localIdrEnd          <-
+                    idrEnd        [[transcriptName]] + 1
+                localTopStart        <-
+                    toplologyStart[[transcriptName]]
+                localTopEnd          <-
+                    toplologyEnd  [[transcriptName]] + 1
+                localtrimmedStart    <-
+                    trimmedStart  [[transcriptName]]
+                localtrimmedEnd      <-
+                    trimmedEnd    [[transcriptName]] + 1
+                localPepticeCleaveage   <-
+                    cleaveageAfter[[transcriptName]]
+
+                myCutValues <-
+                    unique(
+                        c(
+                            localOrfStart,
+                            localOrfEnd,
+                            localDomainStart,
+                            localDomainEnd,
+                            localIdrStart,
+                            localIdrEnd,
+                            localTopStart,
+                            localTopEnd,
+                            localtrimmedStart,
+                            localtrimmedEnd,
+                            localPepticeCleaveage
+                        )
+                    ) # NULLs are just removed
+
+                # cut the exons into smaller part based on the ORF and domain coordinats (if needed)
+                if (length(myCutValues) & !is.na(myCutValues[1])) {
+                    localExonsDevided <-
+                        cutGRanges(aGRange = localExons, cutValues = myCutValues)
+                } else {
+                    localExonsDevided <- localExons[, 0]
                 }
-                domainsColor <- gg_color_hue(length(domainsFound))
-            } else {
-                domainsColor <-
-                    RColorBrewer::brewer.pal(n = length(domainsFound), name = 'Paired')
-            }
-        }
 
-        ### Fix order
-        if( "Not Analyzed" %in% myTranscriptPlotData$Domain ) {
-            domainsFound <- c(domainsFound, "Not Analyzed")
+                ### Add annotation
+                ## add standard annotation
+                localExonsDevided$type <- 'utr'
+                localExonsDevided$Domain <- ' transcript'
+                localExonsDevided$topology <- 'none'
 
-            correspondingColors <- c(
-                "#161616", # for ' transcript'
-                domainsColor,
-                '#595959' # For "not analyzed"
-            )
-
-            ### Move "not analyzed" color to its corresponding position
-            apperanceInData <- sort(unique(myTranscriptPlotData$Domain))
-
-            moveToIndex <- which(sort(apperanceInData) == "Not Analyzed")
-            correspondingColors <- c(
-                correspondingColors[1:(moveToIndex-1)],
-                correspondingColors[length(correspondingColors)],
-                correspondingColors[(moveToIndex):(length(correspondingColors)-1)]
-            )
-        } else {
-            correspondingColors <- c(
-                "#161616", # for ' transcript'
-                domainsColor
-            )
-        }
-
-    }
-
-    if (optimizeForCombinedPlot) {
-        ### Collect all labels
-        allLabels <- c(condition1, condition2, unique(domainsFound))
-
-        ### Find length of longest label
-        analyzeStrandCompositionInWhiteSpaces <-
-            function(aString) {
-                # aString <- 'Ab1'
-
-                round(sum(sapply(
-                    strsplit(aString, '')[[1]],
-                    function(aCharacter) {
-                        # Test if whitespace
-                        if (aCharacter == ' ') {
-                            return(1)
-                        }
-                        # Test if number
-                        if (!is.na(suppressWarnings(as.integer(aCharacter)))) {
-                            return(2) # whitespace pr number
-                        }
-                        # test symbols
-                        if (aCharacter == '_') {
-                            return(2) # whitespace pr character
-                        }
-                        # test symbols
-                        if (aCharacter == '.') {
-                            return(1) # whitespace pr numbers
-                        }
-                        # test upper
-                        if (aCharacter == toupper(aCharacter)) {
-                            return(2.4) # whitespace pr uppercase
-                        }
-                        # else it is probably lower
-                        return(1.8) # whitespace pr lowercase
-
-                    })))
-
-            }
-
-        maxCharacter <-
-            max(c(
-                sapply(allLabels, analyzeStrandCompositionInWhiteSpaces) ,
-                50
-            ))
-
-        ### Modify names to match length
-        modifyNames <- function(aVec, extendToLength) {
-            tmp <- sapply(aVec, function(x) {
-                currentLength <- analyzeStrandCompositionInWhiteSpaces(x)
-                whitespacesToAdd <-
-                    round(extendToLength - currentLength - 1)
-                if (whitespacesToAdd > 0) {
-                    x <-
-                        paste(x, paste(rep(
-                            ' ', whitespacesToAdd
-                        ), collapse = ''), collapse = '')
+                ## modify if needed
+                # ORF
+                if(length(localOrfStart)) {
+                    if (!is.na(localOrfStart)) {
+                        coordinatPair <- c(localOrfStart, localOrfEnd)
+                        orfRange <-
+                            IRanges(min(coordinatPair), max(coordinatPair))
+                        localExonsDevided$type[queryHits(findOverlaps(
+                            subject = orfRange,
+                            query = ranges(localExonsDevided),
+                            type = 'within'
+                        ))] <- 'cds'
+                    }
                 }
-                return(x)
-            })
-            names(tmp) <- NULL
 
-            return(tmp)
+                # domain - loop over each domain
+                if (length(localDomainStart)) {
+                    for (j in 1:length(localDomainStart)) {
+                        coordinatPair <- c(localDomainStart[j], localDomainEnd[j])
+                        if( all( !is.na(coordinatPair)) ) {
+                            domainRange <-
+                                IRanges(min(coordinatPair), max(coordinatPair))
+                            localExonsDevided$Domain[queryHits(findOverlaps(
+                                subject = domainRange,
+                                query = ranges(localExonsDevided),
+                                type = 'within'
+                            ))] <- domainName[[transcriptName]][j]
+                        }
+                    }
+                }
+
+                # IDR
+                if (length(localIdrStart)) {
+                    for (j in 1:length(localIdrStart)) {
+                        coordinatPair <- c(localIdrStart[j], localIdrEnd[j])
+                        if( all( !is.na(coordinatPair)) ) {
+                            domainRange <-
+                                IRanges(min(coordinatPair), max(coordinatPair))
+                            localExonsDevided$Domain[queryHits(findOverlaps(
+                                subject = domainRange,
+                                query = ranges(localExonsDevided),
+                                type = 'within'
+                            ))] <- idrName[[transcriptName]][j]
+                        }
+                    }
+                }
+
+                # signal peptide
+                if (length(localPepticeCleaveage)) {
+                    coordinatPair <- c(localOrfStart, localPepticeCleaveage)
+                    if( all( !is.na(coordinatPair)) ) {
+                        peptideRange <-
+                            IRanges(min(coordinatPair), max(coordinatPair))
+                        localExonsDevided$Domain[queryHits(findOverlaps(
+                            subject = peptideRange,
+                            query = ranges(localExonsDevided),
+                            type = 'within'
+                        ))] <- 'Signal Peptide'
+                    }
+                }
+
+                # trimmed
+                if (length(localtrimmedStart)) {
+                    for (j in 1:length(localtrimmedStart)) {
+                        coordinatPair <- c(localtrimmedStart[j], localtrimmedEnd[j])
+                        if( all( !is.na(coordinatPair)) ) {
+                            domainRange <-
+                                IRanges(min(coordinatPair), max(coordinatPair))
+                            localExonsDevided$Domain[queryHits(findOverlaps(
+                                subject = domainRange,
+                                query = ranges(localExonsDevided),
+                                type = 'within'
+                            ))] <- 'Not Analyzed'
+                        }
+                    }
+                }
+
+                # topology - loop over each domain
+                if (length(localTopStart)) {
+                    for (j in 1:length(localTopStart)) {
+                        coordinatPair <- c(localTopStart[j], localTopEnd[j])
+                        if( all( !is.na(coordinatPair)) ) {
+                            domainRange <-
+                                IRanges(min(coordinatPair), max(coordinatPair))
+                            localExonsDevided$topology[queryHits(findOverlaps(
+                                subject = domainRange,
+                                query = ranges(localExonsDevided),
+                                type = 'within'
+                            ))] <- toplologyType[[transcriptName]][j]
+                        }
+                    }
+                }
+
+
+                # convert to df
+                localExonsDf <- as.data.frame(localExonsDevided)
+
+                ### Massage
+                localExonsDf$transcript <- transcriptName
+
+                ### determine transcript type
+                if (inclCodingPotential) {
+                    localCoding <- isCoding[[transcriptName]]
+                } else {
+                    ### I no prediction default to annotation
+                    if( ! is.na(localOrfStart) ) {
+                        localCoding <- TRUE
+                    } else {
+                        localCoding <- NULL
+                    }
+                }
+                if (inclPTC) {
+                    localPTC <- isPTC[[transcriptName]]
+                } else {
+                    localPTC <- NULL
+                }
+                localExonsDf$seqnames <-
+                    determineTranscriptClass(ptc =  localPTC , coding = localCoding)
+                colnames(localExonsDf)[1] <- 'seqnames'
+
+                # save
+                myTranscriptPlotDataList[[transcriptName]] <- localExonsDf
+            }
+            myTranscriptPlotData <- do.call(rbind, myTranscriptPlotDataList)
+
         }
+        # myTranscriptPlotData
 
-
-        ### Modify them
-        domainsFound <- modifyNames(domainsFound, maxCharacter)
-
-        modifiedNames <-
-            data.frame(
-                org = allLabels,
-                new = modifyNames(allLabels, maxCharacter),
+        ### Correct names  !!! where Tx Names are changed !!!!
+        if (TRUE) {
+            ### correct transcript names
+            # Create name annotation (this can be omitted when ggplots astetics mapping against type works)
+            nameDF <- data.frame(
+                oldTxName = unique(myTranscriptPlotData$transcript),
+                newTxName = unique(myTranscriptPlotData$transcript),
                 stringsAsFactors = FALSE
             )
-        indexToModify <-
-            which(myTranscriptPlotData$Domain != ' transcript')
-        myTranscriptPlotData$Domain[indexToModify] <-
-            modifiedNames$new[match(
-                myTranscriptPlotData$Domain[indexToModify] , modifiedNames$org
+
+            ### Modify if class code is defined
+            if ('class_code' %in% colnames(isoInfo)) {
+                nameDF$newTxName <- paste(
+                    nameDF$newTxName,
+                    ' (',
+                    isoInfo$class_code[match(nameDF$oldTxName, isoInfo$isoform_id)],
+                    ')',
+                    sep = ''
+                )
+            }
+
+            if ( isConditional ) {
+                ### Interpret direction
+                isoInfo$direction                                      <- 'Unchanged usage'
+                isoInfo$direction[which(isoInfo$dIF > dIFcutoff     )] <- 'Increased usage'
+                isoInfo$direction[which(isoInfo$dIF < dIFcutoff * -1)] <- 'Decreased usage'
+
+                if( ! optimizeForCombinedPlot ) {
+                    ### Add dIF
+                    if( ! all(isoInfo$dIF %in% c(0, Inf, -Inf)) ) {
+                        isoInfo$direction  <- paste(
+                            isoInfo$direction,
+                            ': dIF =',
+                            formatC(round(isoInfo$dIF, digits = 2),digits = 2, format='f') ,
+                            sep=' '
+                        )
+                    }
+
+                    ### Add q-values
+                    if(any( !is.na(isoInfo$isoform_switch_q_value))) {
+                        if( ! all(isoInfo$isoform_switch_q_value %in% c(1, -Inf)) ) {
+                            isoInfo$sig <- evalSig(isoInfo$isoform_switch_q_value, alphas = alphas)
+
+                            isoInfo$direction <- startCapitalLetter(
+                                paste0(
+                                    isoInfo$direction,
+                                    ' (',
+                                    isoInfo$sig,
+                                    ')'
+                                )
+                            )
+                        }
+                    }
+                }
+
+                ### Make new name
+                nameDF$newTxName <- paste(
+                    nameDF$newTxName,
+                    '\n(',
+                    isoInfo$direction[match(nameDF$oldTxName, isoInfo$isoform_id)],
+                    ')',
+                    sep = ''
+                )
+
+            }
+
+
+            ### Modify if sub-cell location is defined
+            if( 'sub_cell_location' %in% colnames(isoInfo) ) {
+                matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
+
+                if(abbreviateLocations) {
+                    isoInfo$sub_cell_location <- sapply(
+                        str_split(isoInfo$sub_cell_location, ','),
+                        function(x) {
+                            x <- gsub(pattern = 'Cell_membrane'        , replacement = 'Memb'   , x = x)
+                            x <- gsub(pattern = 'Cytoplasm'            , replacement = 'Cyto'   , x = x)
+                            x <- gsub(pattern = 'Endoplasmic_reticulum', replacement = 'ER'     , x = x)
+                            x <- gsub(pattern = 'Extracellular'        , replacement = 'ExtCell', x = x)
+                            x <- gsub(pattern = 'Golgi_apparatus'      , replacement = 'Golgi'  , x = x)
+                            x <- gsub(pattern = 'Lysosome_Vacuole'     , replacement = 'Lys'    , x = x)
+                            x <- gsub(pattern = 'Mitochondrion'        , replacement = 'Mito'   , x = x)
+                            x <- gsub(pattern = 'Nucleus'              , replacement = 'Nucl'   , x = x)
+                            x <- gsub(pattern = 'Peroxisome'           , replacement = 'Perox'  , x = x)
+                            x <- gsub(pattern = 'Plastid'              , replacement = 'Plastid', x = x)
+                            x <- paste(x, collapse = ', ')
+                            return(x)
+                        }
+                    )
+
+                }
+
+                nameDF$newTxName <- paste0(
+                    nameDF$newTxName,
+                    '\n(Location: ',
+                    isoInfo$sub_cell_location[match(
+                        nameDF$oldTxName,
+                        isoInfo$isoform_id
+                    )],
+                    ')'
+                )
+            }
+
+            ### Modify if  solubility location is defined
+            if( 'solubility_status' %in% colnames(isoInfo) ) {
+                matchVec <- match(nameDF$oldTxName, isoInfo$isoform_id)
+
+                nameDF$newTxName <- paste0(
+                    nameDF$newTxName,
+                    '\n(',
+                    gsub('_',' ', isoInfo$solubility_status[match(
+                        nameDF$oldTxName,
+                        isoInfo$isoform_id
+                    )]),
+                    ')'
+                )
+            }
+
+
+
+            myTranscriptPlotData$transcript <-
+                nameDF$newTxName[match(
+                    myTranscriptPlotData$transcript, nameDF$oldTxName
+                )]
+
+            ### Factorize order
+            supposedOrder <-
+                c('Coding',
+                  'Non-coding',
+                  'NMD Insensitive',
+                  'NMD Sensitive',
+                  'Transcripts')
+            supposedOrder <-
+                supposedOrder[which(
+                    supposedOrder %in% myTranscriptPlotData$seqnames
+                )]
+
+            myTranscriptPlotData$seqnames <-
+                factor(myTranscriptPlotData$seqnames)
+            newOrder <-
+                match(levels(myTranscriptPlotData$seqnames),
+                      supposedOrder)
+            myTranscriptPlotData$seqnames <-
+                factor(myTranscriptPlotData$seqnames,
+                       levels = levels(myTranscriptPlotData$seqnames)[newOrder])
+        }
+
+        ### Rescale coordinats if nessesary
+        if (rescaleTranscripts) {
+            # Might as well work with smaller numbers
+            myTranscriptPlotData[, c('start', 'end')] <-
+                myTranscriptPlotData[, c('start', 'end')] -
+                min(myTranscriptPlotData[, c('start', 'end')]) + 1
+
+            ### create conversion table from origial coordiants to rescaled values
+            allCoordinats <-
+                sort(unique(
+                    c(
+                        myTranscriptPlotData$start,
+                        myTranscriptPlotData$end
+                    )
+                ))
+            myCoordinats <-
+                data.frame(orgCoordinates = allCoordinats,
+                           newCoordinates = allCoordinats)
+            for (i in 2:nrow(myCoordinats)) {
+                orgDistance <-
+                    myCoordinats$orgCoordinates[i] -
+                    myCoordinats$orgCoordinates[i - 1]
+
+                newDistance <- max(c(1, round(
+                    orgDistance^(1/rescaleRoot)
+                )))
+
+                difference <- orgDistance - newDistance
+
+                myCoordinats$newCoordinates [i:nrow(myCoordinats)] <-
+                    myCoordinats$newCoordinates [i:nrow(myCoordinats)] - difference
+            }
+
+            # replace original values
+            myTranscriptPlotData$start <-
+                myCoordinats$newCoordinates[match(
+                    myTranscriptPlotData$start,
+                    table = myCoordinats$orgCoordinates
+                )]
+            myTranscriptPlotData$end <-
+                myCoordinats$newCoordinates[match(
+                    myTranscriptPlotData$end,
+                    table = myCoordinats$orgCoordinates
+                )]
+
+        }
+
+        ### Revers coordinats if nesseary (and transcript is on minus strand)
+        invertCoordinats <-
+            reverseMinus & as.character(exonInfo@strand)[1] == '-' # exonInfo
+        if (invertCoordinats) {
+            # extract min coordinat
+            minCoordinat <- min(myTranscriptPlotData[, c('start', 'end')])
+
+            # transpose to
+            myTranscriptPlotData[, c('start', 'end')] <-
+                myTranscriptPlotData[, c('start', 'end')] - minCoordinat + 1
+
+            # calculate how much to extract
+            subtractNr <- max(myTranscriptPlotData[, c('start', 'end')])
+
+            # calculate new coordinats (by subtracting everthing becomes negative, and abs inverts to postive = evertyhing is inversed)
+            newCoordinats <-
+                abs(myTranscriptPlotData[, c('start', 'end')] - subtractNr)
+
+            # overwrite old coordinats
+            myTranscriptPlotData$start <- newCoordinats$start
+            myTranscriptPlotData$end <- newCoordinats$end
+            myTranscriptPlotData$strand <- '+'
+
+            # transpose back so min coordiant is the same
+            myTranscriptPlotData[, c('start', 'end')] <-
+                myTranscriptPlotData[, c('start', 'end')] + minCoordinat
+        }
+
+        ### order data
+        if(TRUE) {
+            ### Order by transcript category and name and add index (index ensures names and transcipts are properly plotted)
+            myTranscriptPlotData <-
+                myTranscriptPlotData[order(myTranscriptPlotData$seqnames,
+                                           myTranscriptPlotData$transcript,
+                                           decreasing = TRUE), ]
+            myTranscriptPlotData$idNr <-
+                match(myTranscriptPlotData$transcript ,
+                      unique(myTranscriptPlotData$transcript))
+
+        }
+
+    }
+
+    ### Create objects for plot parts
+    if(TRUE) {
+        ### Create lines for toplogy
+        if(plotTopology) {
+            toplogyInfo <-
+                myTranscriptPlotData %>%
+                filter(topology %in% c(
+                    'signal',
+                    'outside',
+                    'TMhelix',
+                    'inside'
+                )) %>%
+                mutate(
+                    topGroup = 1:dplyr::n(),
+                    Topology = dplyr::case_when(
+                        topology == 'signal'  ~ 'Signal Peptide',
+                        topology == 'outside' ~ 'Extracellular',
+                        topology == 'inside'  ~ 'Intracellular',
+                        topology == 'TMhelix' ~ 'TM helix',
+                        TRUE ~ 'Something with toplogy assignment went wrong - contact developer'
+                    ),
+                    idNr = idNr + rectHegith * codingWidthFactor + rectHegith / 3 #lift them up
+                ) %>%
+                select(idNr, seqnames, start, end, Topology, topGroup) %>%
+                tidyr::pivot_longer(cols = c('start','end')) %>%
+                as.data.frame()
+        }
+
+        ### Create coordiants to rectangels
+        if (TRUE) {
+            # ### Convert coordiants to rectangels coordinats (for plotting) and order them according to draw order
+
+            ### calculate rectangle coordinates
+            myTranscriptPlotData$ymin <- myTranscriptPlotData$start
+            myTranscriptPlotData$ymax <- myTranscriptPlotData$end
+
+            myTranscriptPlotData$xmin <-
+                myTranscriptPlotData$idNr - rectHegith
+            myTranscriptPlotData$xmax <-
+                myTranscriptPlotData$idNr + rectHegith
+
+            ### Change with of coding regions
+            codingIndex <- which(myTranscriptPlotData$type == 'cds')
+            myTranscriptPlotData$xmin[codingIndex] <-
+                myTranscriptPlotData$idNr[codingIndex] -
+                (rectHegith * codingWidthFactor)
+            myTranscriptPlotData$xmax[codingIndex] <-
+                myTranscriptPlotData$idNr[codingIndex] +
+                (rectHegith * codingWidthFactor)
+
+
+            ### Change order to reflect annotationImportance
+            if(TRUE) {
+                ### Create vector with supposed ordering
+                annotNameList <- list(
+                    transcript = ' transcript',
+                    notAnalyzed = "Not Analyzed"
+                )
+                if(!is.null(domainStart)) {
+                    annotNameList$protein_domain <- unique(unlist(domainName))
+                }
+                if(!is.null(idrStart)) {
+                    annotNameList$idr <- unique(unlist(idrName))
+                }
+                if(!is.null(cleaveageAfter)) {
+                    annotNameList$signal_peptide <- 'Signal Peptide'
+                }
+
+                annotNameListOrdered <- unlist( annotNameList[c(
+                    'transcript',
+                    'notAnalyzed',
+                    rev(annotationImportance)
+                )] )
+
+                ### Reorder data
+                myTranscriptPlotData$DomainRanking <- match(myTranscriptPlotData$Domain, annotNameListOrdered)
+
+                myTranscriptPlotData <- myTranscriptPlotData[order(
+                    myTranscriptPlotData$DomainRanking,
+                    myTranscriptPlotData$seqnames,
+                    myTranscriptPlotData$transcript,
+                    decreasing = FALSE
+                ),]
+            }
+
+        }
+
+        ### Create transcript inton lines with arrows
+        if (TRUE) {
+            totalLengths <-
+                diff(range(
+                    c(
+                        myTranscriptPlotData$ymin,
+                        myTranscriptPlotData$ymax
+                    )
+                ))
+            byFactor <- totalLengths / nrArrows
+
+            myTranscriptPlotDataSplit <-
+                split(myTranscriptPlotData, f = myTranscriptPlotData$idNr)
+            arrowlineDataCombined <-
+                do.call(rbind, lapply(myTranscriptPlotDataSplit, function(aDF) {
+                    # aDF <- myTranscriptPlotDataSplit[[1]]
+                    # extract introns (if coordinats are inverted start have the largest coordinat now)
+                    if (invertCoordinats) {
+                        localIntrons <-
+                            data.frame(gaps(IRanges(
+                                start = aDF$end, end = aDF$start
+                            )))
+                    } else {
+                        localIntrons <-
+                            data.frame(gaps(IRanges(
+                                start = aDF$start, end = aDF$end
+                            )))
+                    }
+
+                    if (nrow(localIntrons)) {
+                        # Determine munber of arrows based on total intronseize compare to all transcript
+                        totalIntronSize <- sum(localIntrons$width)
+                        localNrArrows <-
+                            totalIntronSize / totalLengths * nrArrows
+
+                        localIntrons$nrArrows <-
+                            floor(localIntrons$width /
+                                      sum(localIntrons$width) * localNrArrows)
+                        localIntrons$index <-
+                            seq(along.with = localIntrons$start)
+
+                        # for each intron make the calculate number of arrows (min 1 arrow pr intron since the seq(+2) will always give two coordiants)
+                        localArrowlineData <-
+                            do.call(rbind, lapply(split(
+                                localIntrons,
+                                f = seq(along.with = localIntrons$start)
+                            ), function(localDF) {
+                                # localDF <- localIntrons[1,]
+                                mySeq <-
+                                    seq(
+                                        min(localDF$start),
+                                        max(localDF$end) + 1,
+                                        length.out =  localDF$nrArrows + 2
+                                    )
+                                localArrowlineData <-
+                                    data.frame(
+                                        seqnames = aDF$seqnames[1],
+                                        x = aDF$idNr[1],
+                                        y = mySeq[-length(mySeq)] - 1,
+                                        yend = mySeq[-1],
+                                        nrArrows = localDF$nrArrows
+                                    )
+                                return(localArrowlineData)
+                            }))
+
+                        # reverse arrow direction if transcript is on minus strand (and reverse is off) - nessesary since calculations are done on + strand since IRanges cannot handle negative widths
+                        if (!reverseMinus &
+                            as.character(exonInfo@strand)[1] == '-') {
+                            localArrowlineData <-
+                                data.frame(
+                                    seqnames = localArrowlineData$seqnames,
+                                    x = localArrowlineData$x,
+                                    y = localArrowlineData$yend,
+                                    yend = localArrowlineData$y,
+                                    nrArrows = localArrowlineData$nrArrows
+                                )
+                        }
+
+                        return(localArrowlineData)
+
+                    } else {
+                        localArrowlineData <-
+                            data.frame(
+                                seqnames = aDF$seqnames[1],
+                                x = aDF$idNr[1],
+                                y = NA,
+                                yend = NA,
+                                nrArrows = c(0, 1)
+                            )
+                        return(localArrowlineData)
+                    }
+
+
+                }))
+
+            arrowlineDataArrows <-
+                arrowlineDataCombined[which(arrowlineDataCombined$nrArrows != 0), ]
+            arrowlineDataLines <-
+                arrowlineDataCombined[which(arrowlineDataCombined$nrArrows == 0), ]
+        }
+
+        ### create data.frame for converting between index id and transcript name
+        idData <-
+            unique(myTranscriptPlotData[, c('seqnames', 'transcript', 'idNr')])
+
+        ### create color code for domains
+        if(TRUE) {
+            domainsFound <-
+                unique(myTranscriptPlotData$Domain [which(
+                    ! myTranscriptPlotData$Domain %in% c(' transcript', "Not Analyzed")
+                )])
+
+            ### Reorder
+            domainsFound <- sort(domainsFound)
+            domainsFound <- domainsFound[c(
+                which( domainsFound == "Signal Peptide"),
+                which( domainsFound != "Signal Peptide")
             )]
 
+            ### Get colors
+            if(TRUE) {
+                if (length(domainsFound) == 0) {
+                    domainsColor <- NULL
+                } else if (length(domainsFound) < 3) {
+                    #domainsColor <-
+                    #    RColorBrewer::brewer.pal(
+                    #        n = 3,
+                    #        name = 'Dark2'
+                    #    )[2:(length(domainsFound) + 1)]
+
+                    domainsColor <-
+                        RColorBrewer::brewer.pal(
+                            n = 12,
+                            name = 'Paired'
+                        )[c(2,4,6)[1:length(domainsFound)]]
+
+                } else if (length(domainsFound) > 12) {
+                    gg_color_hue <- function(n) {
+                        hues <- seq(15, 375, length = n + 1)
+                        hcl(h = hues,
+                            l = 65,
+                            c = 100)[1:n]
+                    }
+                    domainsColor <- gg_color_hue(length(domainsFound))
+                } else {
+                    domainsColor <-
+                        RColorBrewer::brewer.pal(n = length(domainsFound), name = 'Paired')
+                }
+            }
+
+            ### Fix order
+            if( "Not Analyzed" %in% myTranscriptPlotData$Domain ) {
+                domainsFound <- c(domainsFound, "Not Analyzed")
+
+                correspondingColors <- c(
+                    "#161616", # for ' transcript'
+                    domainsColor,
+                    '#595959' # For "not analyzed"
+                )
+
+                ### Move "not analyzed" color to its corresponding position
+                apperanceInData <- sort(unique(myTranscriptPlotData$Domain))
+
+                moveToIndex <- which(sort(apperanceInData) == "Not Analyzed")
+                correspondingColors <- c(
+                    correspondingColors[1:(moveToIndex-1)],
+                    correspondingColors[length(correspondingColors)],
+                    correspondingColors[(moveToIndex):(length(correspondingColors)-1)]
+                )
+            } else {
+                correspondingColors <- c(
+                    "#161616", # for ' transcript'
+                    domainsColor
+                )
+            }
+
+        }
+
+        ### Combined plotting
+        if (optimizeForCombinedPlot) {
+
+            ### Collect all labels
+            allLabels <- c(
+                condition1,
+                condition2,
+                unique(domainsFound)
+            )
+            if(plotTopology) {
+                allLabels <- c(
+                    allLabels,
+                    unique(toplogyInfo$Topology)
+                )
+            }
+
+            ### Find length of longest label
+            analyzeStrandCompositionInWhiteSpaces <-
+                function(aString) {
+                    # aString <- 'Ab1'
+
+                    round(sum(sapply(
+                        strsplit(aString, '')[[1]],
+                        function(aCharacter) {
+                            # Test if whitespace
+                            if (aCharacter == ' ') {
+                                return(1)
+                            }
+                            # Test if number
+                            if (!is.na(suppressWarnings(as.integer(aCharacter)))) {
+                                return(2) # whitespace pr number
+                            }
+                            # test symbols
+                            if (aCharacter == '_') {
+                                return(2) # whitespace pr character
+                            }
+                            # test symbols
+                            if (aCharacter == '.') {
+                                return(1) # whitespace pr numbers
+                            }
+                            # test upper
+                            if (aCharacter == toupper(aCharacter)) {
+                                return(2.4) # whitespace pr uppercase
+                            }
+                            # else it is probably lower
+                            return(1.8) # whitespace pr lowercase
+
+                        })))
+
+                }
+
+            maxCharacter <-
+                max(c(
+                    sapply(allLabels, analyzeStrandCompositionInWhiteSpaces) ,
+                    50
+                ))
+
+            ### Modify names to match length
+            modifyNames <- function(aVec, extendToLength) {
+                tmp <- sapply(aVec, function(x) {
+                    currentLength <- analyzeStrandCompositionInWhiteSpaces(x)
+                    whitespacesToAdd <-
+                        round(extendToLength - currentLength - 1)
+                    if (whitespacesToAdd > 0) {
+                        x <-
+                            paste(x, paste(rep(
+                                ' ', whitespacesToAdd
+                            ), collapse = ''), collapse = '')
+                    }
+                    return(x)
+                })
+                names(tmp) <- NULL
+
+                return(tmp)
+            }
+
+
+            ### Modify them
+            domainsFound <- modifyNames(domainsFound, maxCharacter)
+
+            modifiedNames <-
+                data.frame(
+                    org = allLabels,
+                    new = modifyNames(allLabels, maxCharacter),
+                    stringsAsFactors = FALSE
+                )
+            indexToModify <-
+                which(myTranscriptPlotData$Domain != ' transcript')
+            myTranscriptPlotData$Domain[indexToModify] <-
+                modifiedNames$new[match(
+                    myTranscriptPlotData$Domain[indexToModify] , modifiedNames$org
+                )]
+            if(plotTopology) {
+                toplogyInfo$Topology <-
+                    modifiedNames$new[match(
+                        toplogyInfo$Topology, modifiedNames$org
+                    )]
+
+            }
+
+        }
+
+        ### factorize seqnames for all 3 datasets to ensure correct facetting
+        if(TRUE) {
+            myTranscriptPlotData$seqnames <-
+                factor(myTranscriptPlotData$seqnames, levels = supposedOrder)
+            arrowlineDataArrows$seqnames  <-
+                factor(arrowlineDataArrows$seqnames,  levels = supposedOrder)
+            arrowlineDataLines$seqnames   <-
+                factor(arrowlineDataLines$seqnames,   levels = supposedOrder)
+            idData$seqnames               <-
+                factor(idData$seqnames,               levels = supposedOrder)
+
+            if(plotTopology) {
+                toplogyInfo$seqnames               <-
+                    factor(toplogyInfo$seqnames,               levels = supposedOrder)
+            }
+        }
+
     }
 
 
-    ### factorize seqnames for all 3 datasets to ensure correct facetting
-    myTranscriptPlotData$seqnames <-
-        factor(myTranscriptPlotData$seqnames, levels = supposedOrder)
-    arrowlineDataArrows$seqnames  <-
-        factor(arrowlineDataArrows$seqnames,  levels = supposedOrder)
-    arrowlineDataLines$seqnames   <-
-        factor(arrowlineDataLines$seqnames,   levels = supposedOrder)
-    idData$seqnames               <-
-        factor(idData$seqnames,               levels = supposedOrder)
+    ### Build plot
+    if(TRUE) {
 
-    ### Build the actual plot
-    myPlot <- ggplot()
+        myPlot <- ggplot()
 
-    if (nrow(arrowlineDataLines)) {
-        myPlot <-
-            myPlot + geom_segment(data = arrowlineDataLines, aes(
-                x = y,
-                xend = yend,
-                y = x,
-                yend = x
-            )) # Base line
-
-    }
-    if (nrow(arrowlineDataArrows)) {
-        myPlot <-
-            myPlot + geom_segment(
-                data = arrowlineDataArrows,
-                aes(
+        ### Introns
+        if (nrow(arrowlineDataLines)) {
+            myPlot <-
+                myPlot + geom_segment(data = arrowlineDataLines, aes(
                     x = y,
                     xend = yend,
                     y = x,
                     yend = x
-                ),
-                arrow = arrow(length = unit(arrowSize, "cm"))
-            )  # intron arrows
-    }
-
-    myPlot <- myPlot +
-        geom_rect(
-            data = myTranscriptPlotData,
-            aes(
-                xmin = ymin,
-                ymin = xmin,
-                xmax = ymax,
-                ymax = xmax,
-                fill = Domain
-            )
-        )
-
-    myPlot <- myPlot +
-        scale_fill_manual(
-            breaks = c('transcript',domainsFound),
-            values = correspondingColors,
-            na.value = '#161616'
-        ) + # Correct domian color code so transcripts are black and not shown
-        scale_y_continuous(breaks = idData$idNr, labels = idData$transcript) + # change index numbers back to names
-        localTheme + theme(strip.text.y = element_text(angle = 0)) + # change theme and rotate facette labes (ensures readability even though frew are pressent)
-        theme(axis.title.y = element_blank()) + # remove y-axis label
-        theme(strip.background = element_rect(fill = "white", size = 0.5))
-
-    # facette against transcript type if nessesary
-    if (!all(supposedOrder == 'Transcripts')) {
-        myPlot <-
-            myPlot + facet_grid(seqnames ~ ., scales = 'free_y', space = 'free')
-    }
-
-    # Modify X axis
-    if (!plotXaxis) {
-        # remove axis if rescaled
-        myPlot <-
-            myPlot + theme(
-                axis.line = element_blank(),
-                axis.text.x = element_blank(),
-                axis.ticks = element_blank(),
-                axis.title.x = element_blank()
-            )
-    } else {
-        # add chr name
-        myPlot <- myPlot + labs(x = chrName)
-    }
-
-    if( ! optimizeForCombinedPlot ) {
-        if( isConditional ) {
-            if( any(grepl('^placeholder_1$|^placeholder_2$', c(condition1, condition2)) ) ) {
-                myPlot <- myPlot + labs(title = paste(
-                    'The isoform switch in',
-                    geneName,
-                    sep = ' '
                 ))
-            } else {
-                myPlot <- myPlot + labs(title = paste(
-                    'The isoform switch in',
-                    geneName,
-                    paste0(' (', condition1, ' vs ', condition2,')'),
-                    sep = ' '
-                ))
-            }
-        } else {
-            myPlot <- myPlot + labs(title = paste(
-                'The isoforms in',
-                geneName,
-                sep = ' '
-            ))
+
         }
+        if (nrow(arrowlineDataArrows)) {
+            myPlot <-
+                myPlot + geom_segment(
+                    data = arrowlineDataArrows,
+                    aes(
+                        x = y,
+                        xend = yend,
+                        y = x,
+                        yend = x
+                    ),
+                    arrow = arrow(length = unit(arrowSize, "cm"))
+                )  # intron arrows
+        }
+
+        ### transcripts
+        if(TRUE) {
+            myPlot <- myPlot +
+                geom_rect(
+                    data = myTranscriptPlotData,
+                    aes(
+                        xmin = ymin,
+                        ymin = xmin,
+                        xmax = ymax,
+                        ymax = xmax,
+                        fill = Domain
+                    )
+                )
+
+            ### Transcript color and theme
+            myPlot <- myPlot +
+                scale_fill_manual(
+                    breaks = c('transcript',domainsFound),
+                    values = correspondingColors,
+                    na.value = '#161616'
+                ) + # Correct domian color code so transcripts are black and not shown
+                scale_y_continuous(breaks = idData$idNr, labels = idData$transcript) # change index numbers back to names
+
+
+        }
+
+        ### topology
+        if(plotTopology) {
+
+            nToplogy <- length(unique(toplogyInfo$Topology))
+            #lineColors <- grDevices::gray.colors(n = nToplogy, start = 0.3, end = 0.8)
+            lineColors <- c(
+                '#7DC462',
+                '#774FA0',
+                '#0D95D0',
+                '#E72F52'
+            )[1:nToplogy]
+            #lineColors <- RColorBrewer::brewer.pal(
+            #    n = 8,
+            #    name = 'Dark2'
+            #)[c(8, 4, 1)[1:nToplogy]]
+
+            myPlot <-
+                myPlot +
+                geom_line(
+                    aes(
+                        x = value,
+                        y = idNr,
+                        group = topGroup,
+                        color = Topology
+                    ),
+                    data = toplogyInfo,
+                    linewidth = 3
+                ) +
+                scale_color_manual(values = lineColors)
+
+        }
+
+        ### Optimize apperance
+        if(TRUE) {
+            ### style and themes
+            myPlot <-
+                myPlot +
+                localTheme + theme(strip.text.y = element_text(angle = 0)) + # change theme and rotate facette labes (ensures readability even though frew are pressent)
+                theme(axis.title.y = element_blank()) + # remove y-axis label
+                theme(strip.background = element_rect(fill = "white", linewidth = 0.5))
+
+            # facette against transcript type if nessesary
+            if (!all(supposedOrder == 'Transcripts')) {
+                myPlot <-
+                    myPlot + facet_grid(seqnames ~ ., scales = 'free_y', space = 'free')
+            }
+
+            # Modify X axis
+            if (!plotXaxis) {
+                # remove axis if rescaled
+                myPlot <-
+                    myPlot + theme(
+                        axis.line = element_blank(),
+                        axis.text.x = element_blank(),
+                        axis.ticks = element_blank(),
+                        axis.title.x = element_blank()
+                    )
+            } else {
+                # add chr name
+                myPlot <- myPlot + labs(x = chrName)
+            }
+
+            if( ! optimizeForCombinedPlot ) {
+                if( isConditional ) {
+                    if( any(grepl('^placeholder_1$|^placeholder_2$', c(condition1, condition2)) ) ) {
+                        myPlot <- myPlot + labs(title = paste(
+                            'The isoform switch in',
+                            geneName,
+                            sep = ' '
+                        ))
+                    } else {
+                        myPlot <- myPlot + labs(title = paste(
+                            'The isoform switch in',
+                            geneName,
+                            paste0(' (', condition1, ' vs ', condition2,')'),
+                            sep = ' '
+                        ))
+                    }
+                } else {
+                    myPlot <- myPlot + labs(title = paste(
+                        'The isoforms in',
+                        geneName,
+                        sep = ' '
+                    ))
+                }
+            }
+        }
+
     }
 
     return(myPlot)
 }
+
 
 expressionAnalysisPlot <- function(
     switchAnalyzeRlist,
@@ -2836,7 +3111,8 @@ switchPlot <- function(
                         'confidenceIntervalErrorbars',
                         'confidenceInterval',
                         'alphas',
-                        'extendFactor'
+                        'extendFactor',
+                        'rescaleRoot'
                     )
                 )]
             if (length(additionalArguments2) != 0) {
@@ -2857,6 +3133,7 @@ switchPlot <- function(
                 gene                          = gene,
                 isoform_id                    = isoform_id,
                 rescaleTranscripts            = rescaleTranscripts,
+                rescaleRoot                   = 3,
                 plotXaxis                     = !rescaleTranscripts,
                 reverseMinus                  = reverseMinus,
                 ifMultipleIdenticalAnnotation = 'summarize',
@@ -2877,7 +3154,8 @@ switchPlot <- function(
                         'rectHegith',
                         'codingWidthFactor',
                         'nrArrows',
-                        'arrowSize'
+                        'arrowSize',
+                        'rescaleRoot'
                     )
                 )]
             if (length(additionalArguments2) != 0) {
@@ -2919,6 +3197,7 @@ switchPlot <- function(
             isoform_id                      = expressionPlots$isoformsAnalyzed,
             # Ensures only isoforms passing IFcutoff are plotted
             rescaleTranscripts              = tArgList$rescaleTranscripts,
+            rescaleRoot                     = tArgList$rescaleRoot,
             plotXaxis                       = tArgList$plotXaxis,
             reverseMinus                    = tArgList$reverseMinus,
             ifMultipleIdenticalAnnotation   = tArgList$ifMultipleIdenticalAnnotation,
@@ -3116,13 +3395,18 @@ switchPlot <- function(
         anyDomains <- FALSE
     }
 
-
     # Title
     myTitle <- qplot(1:3, 1, geom = "blank") + theme(
         panel.background = element_blank(),
         line = element_blank(),
         text = element_blank(),
-        plot.margin = unit(c(0, 0, 0, 0), "cm")
+        plot.margin = margin(
+            t = 0,
+            r = 0,
+            b = 0,
+            l = 0,
+            unit = "cm"
+        )
     ) +
         annotate(
             geom = 'text',
@@ -3146,18 +3430,32 @@ switchPlot <- function(
     marginSize <- 0.3
     expressionPlots2 <-
         lapply(expressionPlots, function(x) {
-            x + theme(plot.margin = unit(c(0, rep(
-                marginSize, 3
-            )), "cm"),
-            legend.margin = element_blank())
+            x +
+                theme(
+                    plot.margin = margin(
+                        t = 0,
+                        r = marginSize,
+                        b = marginSize,
+                        l = marginSize,
+                        unit = "cm"
+                    ),
+                    legend.position="none"
+                )
         })
 
     transcriptPlot2 <-
         transcriptPlot + theme(
-            plot.margin = unit(c(0, rep(marginSize, 3)), "cm"),
-            legend.margin = element_blank())
+            plot.margin = margin(
+                t = 0,
+                r = marginSize,
+                b = marginSize,
+                l = marginSize,
+                unit = "cm"
+            ),
+            legend.position="none"
+        )
 
-    ### Extract the legends and modify them to have euqally long text strings
+    ### Extract the legends and modify them to have equally long text strings
     if (TRUE) {
         ### Extract the two legends
         g_legend <- function(a.gplot) {
@@ -3186,8 +3484,23 @@ switchPlot <- function(
                     ymin = -Inf,
                     ymax = Inf
                 ) +
-                theme(plot.margin = unit(c(0, 0.5, 0, 0.05), "cm"),
-                      legend.margin = element_blank())
+                theme(
+                    plot.margin = margin(
+                        t = 0,
+                        r = 0.5,
+                        b = 0,
+                        l = 0.5,
+                        unit = "cm"
+                    ),
+                    legend.margin = margin(
+                        t = 0,
+                        r = 0,
+                        b = 0,
+                        l = 0,
+                        unit = "cm"
+                    )
+                )
+
         } else {
             transcriptLegend <-
                 qplot(1:10, 1:10, geom = "blank") + theme_bw() + theme(
@@ -3211,8 +3524,22 @@ switchPlot <- function(
                 ymin = 3,
                 ymax = 10
             ) +
-            theme(plot.margin = unit(c(0, 0.5, 0, 0.05), "cm"),
-                  legend.margin = element_blank())
+            theme(
+                plot.margin = margin(
+                    t = 0,
+                    r = 0.5,
+                    b = 0,
+                    l = 0.5,
+                    unit = "cm"
+                ),
+                legend.margin = margin(
+                    t = 0,
+                    r = 0,
+                    b = 0,
+                    l = 0,
+                    unit = "cm"
+                )
+            )
 
     }
 

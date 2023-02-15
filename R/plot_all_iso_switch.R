@@ -149,6 +149,9 @@ switchPlotTopSwitches <- function(
         ### reduce to gene level information
         localData$gene_ref <- NULL
         localData$dIF <- NULL
+        localData <- localData[which(
+            !is.na( localData$gene_switch_q_value)
+        ),]
         localData <- unique(localData)
 
         # Possible extra filter
@@ -323,7 +326,7 @@ switchPlotTopSwitches <- function(
             .progress = 'text',
             .inform = TRUE,
             .fun = function(aDF) {
-                # aDF <- localDataRanked[72,]
+                # aDF <- localDataRanked[1,]
 
                 if( nrow(aDF) != 1) {
                     stop(
@@ -382,7 +385,8 @@ switchPlotTopSwitches <- function(
                         additionalArguments = additionalArguments
                     )
                     dev.off()
-                } else {
+                }
+                if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches') {
                     ### add plot type
                     if (fileType == 'pdf') {
                         pdf(
@@ -401,12 +405,14 @@ switchPlotTopSwitches <- function(
                         )
                     }
                     ### Do the plot
-                    switchPlotTranscript(
-                        switchAnalyzeRlist = switchAnalyzeRlist,
-                        gene = aDF$gene_id,
-                        condition1 = aDF$condition_1,
-                        condition2 = aDF$condition_2,
-                        localTheme = theme_bw(base_size = 8)
+                    print(
+                        switchPlotTranscript(
+                            switchAnalyzeRlist = switchAnalyzeRlist,
+                            gene = aDF$gene_id,
+                            condition1 = aDF$condition_1,
+                            condition2 = aDF$condition_2,
+                            localTheme = theme_bw(base_size = 8)
+                        )
                     )
                     dev.off()
                 }

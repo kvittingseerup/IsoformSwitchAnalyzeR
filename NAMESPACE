@@ -12,8 +12,8 @@ import(VennDiagram)
 import(DBI)
 import(tximport)
 import(tximeta)
-import(DRIMSeq)
 import(DEXSeq)
+import(satuRn)
 import(limma, except=c(plotMA))
 
 ### Import compiled code
@@ -43,6 +43,7 @@ importFrom('grid', 'popViewport')
 importFrom('limma', 'topTable')
 importFrom('BiocGenerics', 'start','end')
 importFrom('RCurl','url.exists')
+importFrom("sva", "num.sv", 'sva')
 
 # plyr
 importFrom('plyr', 'ddply','ldply','llply','dlply')
@@ -54,16 +55,19 @@ importFrom("dplyr","group_by")
 importFrom("dplyr","summarise_all")
 importFrom("dplyr","filter")
 importFrom("dplyr","summarise")
-importFrom("dplyr", "n_distinct", "as_tibble", "mutate", "any_of", "distinct")
+importFrom("dplyr", "n", "n_distinct", "as_tibble", "mutate", "any_of", "distinct", "case_when")
 importFrom("tibble", "rownames_to_column")
 importFrom("stringr","str_c", "str_split", "str_replace_na", "str_remove")
 importFrom("magrittr","%>%")
 importFrom('readr', 'read_tsv', 'read_csv', 'fwf_empty','read_fwf','cols_only','col_character','col_integer','col_double', 'cols')
+importFrom("tibble","tibble")
 
+# Other
+importFrom("pfamAnalyzeR", "augment_pfam")
+importFrom("pfamAnalyzeR", "analyse_pfam_isotypes")
 
 ### Export functions from IsoformSwitchAnalyzeR
 # Creating list
-export('createSwitchAnalyzeRlist')
 export('subsetSwitchAnalyzeRlist')
 
 # Import data
@@ -76,8 +80,8 @@ export('importSalmonData')
 export('preFilter')
 
 # Test isoform switches
-export('isoformSwitchTestDRIMSeq')
 export('isoformSwitchTestDEXSeq')
+export('isoformSwitchTestSatuRn')
 
 export('extractSwitchSummary')
 export('extractSwitchOverlap')
@@ -85,7 +89,6 @@ export('extractTopSwitches')
 
 # Sequence analysis
 #export('CDSSet')
-#export('getCDS')
 export('extractSequence')
 export('analyzeORF')
 export('addORFfromGTF')
@@ -98,6 +101,8 @@ export('analyzePFAM')
 export('analyzeSignalP')
 export('analyzeNetSurfP2')
 export('analyzeIUPred2A')
+export('analyzeDeepLoc2')
+export('analyzeDeepTMHMM')
 
 # Splicing analysis
 export('analyzeAlternativeSplicing')
@@ -114,6 +119,8 @@ export('extractConsequenceEnrichment')
 export('extractConsequenceEnrichmentComparison')
 export('extractConsequenceGenomeWide')
 export('extractGenomeWideAnalysis') # for backward compatability
+
+export('extractSubCellShifts')
 
 # Plotting
 export('switchPlotTranscript')

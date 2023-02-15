@@ -15,6 +15,7 @@ analyzeSwitchConsequences(
         'ORF_seq_similarity',
         'NMD_status',
         'domains_identified',
+        'domain_isotype',
         'IDR_identified',
         'IDR_type',
         'signal_peptide_identified'
@@ -26,7 +27,7 @@ analyzeSwitchConsequences(
     ntFracCutoff=NULL,
     ntJCsimCutoff=0.8,
     AaCutoff=10,
-    AaFracCutoff=0.5,
+    AaFracCutoff=0.8,
     AaJCsimCutoff=0.9,
     removeNonConseqSwitches=TRUE,
     showProgress=TRUE,
@@ -53,7 +54,7 @@ analyzeSwitchConsequences(
 
     \item{AaCutoff}{ An integer indicating the length difference (in AA) a comparison must be larger than for reporting differences when evaluating 'ORF_seq_similarity', primarily implemented to avoid differences in very short AA sequences being classified as different. Default is 10 (AA).}
 
-    \item{AaFracCutoff}{An numeric indicating the cutoff of length difference of the protein domain or IDR. The difference is measured as a fraction of the longest region, a comparison must be larger than before reporting it. Only used when analyzing 'domain_length' or 'IDR_length'. For example setting AaFracCutoff = 0.5 means the short protein domain (or IDR) must be <50\% of the length of the long region, before it is reported. NULL disables the filter. Default is 0.5.}
+    \item{AaFracCutoff}{An numeric indicating the cutoff of length difference of the protein domain or IDR. The difference is measured as a fraction of the longest region, a comparison must be larger than before reporting it. Only used when analyzing 'domain_length' or 'IDR_length'. For example setting AaFracCutoff = 0.8 means the short protein domain (or IDR) must be less than 80\% of the length of the long region, before it is reported. NULL disables the filter. Default is 0.8.}
 
     \item{AaJCsimCutoff}{An numeric (between 0 and 1) indicating the cutoff on Jaccard Similarity (JCsim) (see details) between the overlap of two amino acid (AA) sequences. If the measured JCsim is smaller than this cutoff the sequences are considered different and reported as such. This cutoff affect the result of the 'ORF_seq_similarity' analysis. Default is 0.9}
 
@@ -105,21 +106,23 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 
     \item \code{ORF_length} : Test transcripts for differences in length of Open Reading Frames (ORF). Note that this is a less powerful analysis than implemented in \code{ORF_seq_similarity} as two equally long sequences might be very different. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that least one of the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{5_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 5' UnTranslated Region (UTR) are different (as described above). The 5'UTR is defined as the region from the transcript start to the ORF start. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with an ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{5_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 5' UnTranslated Region (UTR) are different (as described above). The 5'UTR is defined as the region from the transcript start to the ORF start. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with an ORF.
 
-    \item \code{5_utr_length} : Test transcripts for differences in the length of the 5' UnTranslated Region (UTR). The 5'UTR is defined as the region from the transcript start to the ORF start. Note that this is a less powerful analysis than implemented in '5_utr_seq_similarity' as two equally long sequences might be very different. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{5_utr_length} : Test transcripts for differences in the length of the 5' UnTranslated Region (UTR). The 5'UTR is defined as the region from the transcript start to the ORF start. Note that this is a less powerful analysis than implemented in '5_utr_seq_similarity' as two equally long sequences might be very different. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{3_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 3' UnTranslated Region (UTR) are different (as described above). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{3_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 3' UnTranslated Region (UTR) are different (as described above). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{3_utr_length} : Test transcripts for differences in the length of the 3' UnTranslated Regions (UTR). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Note that this is a less powerful analysis than implemented in \code{3_utr_seq_similarity} as two equally long sequences might be very different. Requires that \code{identifyORF} have been used to predict NMD sensitivity or that the ORF was imported though one of the dedicated import functions implemented in isoformSwitchAnalyzeR. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{3_utr_length} : Test transcripts for differences in the length of the 3' UnTranslated Regions (UTR). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Note that this is a less powerful analysis than implemented in \code{3_utr_seq_similarity} as two equally long sequences might be very different. Requires that \code{identifyORF} have been used to predict NMD sensitivity or that the ORF was imported though one of the dedicated import functions implemented in isoformSwitchAnalyzeR. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF.
 
     \item \code{NMD_status} : Test transcripts for differences in sensitivity to Nonsense Mediated Decay (NMD). Requires that both the isoforms have been annotated with PTC either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{domain_length} : Test transcripts for differences in the length of overlapping domains of the same type (same hmm_name) thereby enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not truncate the protein domain. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff} .Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+  \item \code{domain_isotype} : Test transcripts for differences in the isotype of overlapping protein domain. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis (Will be different unless the two isoforms have the same domains at the same genomic location). Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist (and are thereby also affected by \code{removeNoncodinORFs=TRUE} in \code{analyzeCPAT}).
+    \item \code{domain_length} : Test transcripts for differences in the length of overlapping domains of the same type (same hmm_name) thereby enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not truncate the protein domain. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis (Will be different unless the two isoforms have the same domains at the same genomic location). Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
     \item \code{IDR_identified} : Test for differences in isoform IDRs. Specifically the two isoforms are analyzed for whether they contain IDRs which do not overlap in genomic coordinates. Requires that \code{analyzeNetSurfP2} or \code{analyzeIUPred2A} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
@@ -127,8 +130,33 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 
     \item \code{IDR_type} : Test for differences in IDR type. Specifically the two isoforms are tested for overlapping IDRs (genomic coordinates) and overlapping IDRs are compared with regards to their IDR type (IDR vs IDR w binding site). Only available if \code{analyzeIUPred2A} was used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
-    \item \code{signal_peptide_identified} : Test transcripts for differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{analyzeORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist (and are thereby also affected by \code{removeNoncodinORFs=TRUE} in \code{analyzeCPAT}).
-}
+    \item \code{signal_peptide_identified} : Test transcripts for differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+
+    \item \code{sub_cell_location} : Test for any differences in predicted sub-cellular localization. Requires that \code{analyzeDeepLoc2} have been used to add external location analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+    \item \code{sub_cell_shift_to_cell_membrane} : Test for differences in membrane associations. Requires that \code{analyzeDeepLoc2} have been used to add external location analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+    \item \code{sub_cell_shift_to_cytoplasm} : Test for differences in cytoplasm associations. Requires that \code{analyzeDeepLoc2} have been used to add external location analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+    \item \code{sub_cell_shift_to_nucleus} : Test for differences in nuclear localization. Requires that \code{analyzeDeepLoc2} have been used to add external location analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+    \item \code{sub_cell_shift_to_Extracellular} : Test differences in extracellular localization. Requires that \code{analyzeDeepLoc2} have been used to add external location analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+
+ \item \code{isoform_topology} : Test differences in predicted topology compared to the cell membrane (intracellular, transmembrane helix, extracellular). Requires that \code{analyzeDeepTMHMM} have been used to add external topology analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+ \item \code{extracellular_region_count} : Test differences in number of extracellular region. Requires that \code{analyzeDeepTMHMM} have been used to add external topology analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+ \item \code{intracellular_region_count} : Test differences in number of intracellular region. Requires that \code{analyzeDeepTMHMM} have been used to add external topology analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+
+ \item \code{extracellular_region_length} : Test differences in total length of extracellular regions. Requires that \code{analyzeDeepTMHMM} have been used to add external topology analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}
+
+ \item \code{intracellular_region_length} : Test differences in total length of intracellular regions. Requires that \code{analyzeDeepTMHMM} have been used to add external topology analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}
+
+    }
+
+
 }
 
 \value{

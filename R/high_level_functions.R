@@ -15,7 +15,6 @@ isoformSwitchAnalysisPart1 <- function(
     quiet = FALSE
 ) {
     isConditional <- switchAnalyzeRlist$sourceId != 'preDefinedSwitches'
-    hasQuant <- ! all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall))
 
     nrAnalysis <- 3
 
@@ -61,7 +60,7 @@ isoformSwitchAnalysisPart1 <- function(
 
 
     ### preFilter
-    if(hasQuant) {
+    if(isConditional) {
         switchAnalyzeRlist <-
             preFilter(
                 switchAnalyzeRlist = switchAnalyzeRlist,
@@ -83,12 +82,22 @@ isoformSwitchAnalysisPart1 <- function(
                     )
                 )
             }
-            switchAnalyzeRlist <-
-                isoformSwitchTestDEXSeq(
-                    switchAnalyzeRlist,
-                    reduceToSwitchingGenes = TRUE,
-                    quiet = TRUE
-                )
+
+            if(any( switchAnalyzeRlist$conditions$nrReplicates > 5)) {
+                switchAnalyzeRlist <-
+                    isoformSwitchTestSatuRn(
+                        switchAnalyzeRlist,
+                        reduceToSwitchingGenes = TRUE,
+                        quiet = TRUE
+                    )
+            } else {
+                switchAnalyzeRlist <-
+                    isoformSwitchTestDEXSeq(
+                        switchAnalyzeRlist,
+                        reduceToSwitchingGenes = TRUE,
+                        quiet = TRUE
+                    )
+            }
             if (nrow(switchAnalyzeRlist$isoformSwitchAnalysis) == 0) {
                 stop('No isoform switches were identified with the current cutoffs.')
             }
@@ -201,6 +210,8 @@ isoformSwitchAnalysisPart2 <- function(
     pathToIUPred2AresultFile = NULL,
     pathToNetSurfP2resultFile = NULL,
     pathToSignalPresultFile = NULL,
+    pathToDeepLoc2resultFile = NULL,
+    pathToDeepTMHMMresultFile = NULL,
 
     ### Analysis and output arguments
     n = Inf,
@@ -210,6 +221,7 @@ isoformSwitchAnalysisPart2 <- function(
         'ORF_seq_similarity',
         'NMD_status',
         'domains_identified',
+        'domain_isotype',
         'IDR_identified',
         'IDR_type',
         'signal_peptide_identified'
@@ -341,6 +353,23 @@ isoformSwitchAnalysisPart2 <- function(
                 quiet = TRUE
             )
     }
+    if (!is.null(pathToSignalPresultFile)) {
+        switchAnalyzeRlist <-
+            analyzeDeepLoc2(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                pathToDeepLoc2resultFile = pathToDeepLoc2resultFile,
+                quiet = TRUE
+            )
+    }
+    if (!is.null(pathToSignalPresultFile)) {
+        switchAnalyzeRlist <-
+            analyzeDeepTMHMM(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                pathToDeepTMHMMresultFile = pathToDeepTMHMMresultFile,
+                quiet = TRUE
+            )
+    }
+
     analysisDone <- analysisDone + 1
 
     ### Predict intron retentions
@@ -455,10 +484,12 @@ isoformSwitchAnalysisPart2 <- function(
                     height = 700
                 )
             }
-            extractConsequenceSummary(
-                switchAnalyzeRlist = switchAnalyzeRlist,
-                plot = TRUE,
-                returnResult = FALSE
+            print(
+                extractConsequenceSummary(
+                    switchAnalyzeRlist = switchAnalyzeRlist,
+                    plot = TRUE,
+                    returnResult = FALSE
+                )
             )
             dev.off()
 

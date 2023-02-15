@@ -100,8 +100,6 @@ If \code{returnResult=TRUE} a data.frame with the statistical summary for each o
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{isoformSwitchTestDEXSeq}}\cr
-\code{\link{isoformSwitchTestDRIMSeq}}\cr
 \code{\link{analyzeAlternativeSplicing}}\cr
 \code{\link{extractSplicingSummary}}\cr
 \code{\link{extractSplicingEnrichment}}\cr

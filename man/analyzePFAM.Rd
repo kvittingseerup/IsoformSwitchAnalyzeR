@@ -36,14 +36,16 @@ The PFAM webserver is quite strict with regards to the number of sequences in th
 
 Notes for how to run the external tools: \cr
 Use default parameters. If you want to use the webserver it is easily done as follows:.
-1) Go to \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan}
-2) Switch to the the "Upload a File" tab.
-3) Upload the amino avoid file (_AA) created with \code{extractSequence} file and add your mail address - this is important because there is currently no way of downloading the web output so you need them to send the result to your email.
-4) Check Pfam is selected in the "HMM database" window.
-5) Submit your job.
-6) Wait till you receive the email with the result (usually quite fast).
-7) Copy/paste the result part of the (ONLY what is below the line starting with "seq id") into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)).
-8) Save the document and supply the path to that document to analyzePFAM()
+\itemize{
+\item{Go to \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan}}
+\item{Switch to the the "Upload a File" tab.}
+\item{3) Upload the amino acid file (_AA) created with \code{extractSequence} file AND add your mail address - this is important because there is currently no way of downloading the web output so you need them to send the result to your email.}
+\item{4) Check Pfam is selected in the "HMM database" window.}
+\item{5) Submit your job.}
+\item{6) Wait till you receive the email with the result (usually quite fast).}
+\item{7) Copy/paste the result part of the (ONLY what is below the line starting with "seq id") into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)).}
+\item{8) Save the document and supply the path to that document to analyzePFAM()}
+}
 
 To run PFAM locally you should use the pfam_scan.pl script as described in the readme at \url{ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/} and supply the path to the result file to analyzePFAM().
 
@@ -70,6 +72,9 @@ The data.frame added have one row per isoform and contains the columns:
     \item{\code{pfamEndExon}: The exon index in which the end of the domain is located.}
     \item{\code{pfamStartGenomic}: The genomic coordinate of the start of the domain.}
     \item{\code{pfamEndGenomic}:  The genomic coordinate of the end of the domain.}
+
+    \item{\code{domain_isotype}: The domain isotype identified by pfamAnalyzeR (See Vitting-Seerup 2022 BioRxiv).}
+    \item{\code{domain_isotype_simple}: The simplified domain isotype identified by pfamAnalyzeR (See Vitting-Seerup 2022 BioRxiv).}
 }
 Furthermore depending on the exact tool used (local vs web-server) additional columns are added with information such as E score and type.
 }
@@ -78,6 +83,7 @@ Furthermore depending on the exact tool used (local vs web-server) additional co
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
+    \item{\code{pfamAnalyzeR} :Vitting-Seerup. Most protein domains exist as multiple variants with distinct structure and function. BioRxiv 2022}
 }
 }
 
@@ -93,6 +99,12 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{
+### Please note the way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# specialized way of accessing the example data in the IsoformSwitchAnalyzeR package
+# and not something you need to do - just supply the string e.g.
+# "myAnnotation/predicted_annoation.txt" to the function.
+
 ### Load example data (matching the result files also store in IsoformSwitchAnalyzeR)
 data("exampleSwitchListIntermediary")
 exampleSwitchListIntermediary

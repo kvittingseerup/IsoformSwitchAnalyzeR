@@ -1,3 +1,36 @@
+Changes in version 2.01.01 (2023-02)
+- Update type: Major.
+- createSwitchAnalyzeRlist() was removed. All users should instead use importRdata().
+- importRdata() now automatically detects un-annoated covariates in data via the sva package.
+- importRdata() now automatically corrects abundance and isoform fractions for unwanted covariates (both used supplied and those found via sva).
+- Accordingly all batch correction functionallity in the isoformSwitchTestDEXSeq() function was removed.
+- isoformSwitchTestSatuRn() was introduced. This test uses satuRn for switch identification which works extremely well for larger sample sizes. Huge thanks to Jeroen Gilis making this functionality and the pull request!
+- Accordingly the suboptimal isoformSwitchTestDRIMSeq function have been removed. All documentation was updated accordingly.
+- IsoformSwitchAnalyzeR now depends on the R package pfamAnalyzeR for analyzing pfam domain isotypes.
+- analyzeSignalP() was updated to support import of results predicted with SignalP6.
+- analyzeDeepTMHMM() was introduced to add topological predictions to the switchAnalyzeRList.
+- analyzeDeepLoc2() was introduced to add predictions of sub-cellular localization to the switchAnalyzeRList.
+- analyzeIUPred2A() was tested against with result files from IUPred3 and seem to work.
+- analyzeSwitchConsequences() was updated to predict a number of new consequences based on the new annoation described above.
+- analyzeSwitchConsequences()'s AaFracCutoff default was updated from 0.5 to 0.8 resulting in more lenient differenceses being identified.
+- extractSubCellShifts() was introduced to enable a deeper analysis of changes in sub-cellular localization due to isoform switches.
+- Vignette was updated to recomend IsoQuant instead of TALON for long read data.
+- analyzePFAM() was updated to import envelope (instead of alignment) coordinates as currently recomended. In practice this is a minor change for most domains.
+- Example data was updated to reflect new annoation and consequences that can be predicted
+- Various code corrections and improvements
+- Various documentation improvements
+
+Changes in version 1.17.05 (2022-01-24)
+- Update type: minor.
+- Bugfix that could cause switchPlotTranscript to cast an error in special cases
+- switchPlotTranscript() was updated with the "rescaleRoot" argument that controls the extend of the rescaling done when rescaleTranscripts=TRUE. See ?switchPlotTranscript. This can naturally also be controled from switchPlot and switchPlotTranscript.
+- switchPlotTranscript() was updated to use the cubic root for resacaling instead of the previous square root.
+- extractConsequenceEnrichment() and extractSplicingEnrichment() was updated to force the plot to have the dot-size range always include zero and the largest number identified.
+- Added version requirement to ggplot2 dependency.
+- Various modifications enabling future updates.
+- Improved error messages.
+- Improvement of various error messages.
+
 Changes in version 1.17.04 (2022-01-06)
 - Update type: minor.
 - Fixed a bug in 1.17.03
