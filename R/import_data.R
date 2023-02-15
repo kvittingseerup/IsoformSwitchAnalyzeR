@@ -4817,8 +4817,8 @@ importRdata <- function(
             suppressWarnings(
                 isoRepBatch <- as.data.frame( limma::removeBatchEffect(
                     x = isoformRepExpressionLog,
-                    design     = localModel[,which(   colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
-                    covariates = localModel[,which( ! colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
+                    design     = localModel[,which(   colnames(localModel) %in% localDesign$condition), drop=FALSE],
+                    covariates = localModel[,which( ! colnames(localModel) %in% localDesign$condition), drop=FALSE],
                     method='robust'
                 ))
             )
@@ -4830,6 +4830,11 @@ importRdata <- function(
             ### Massage back
             isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
             rownames(isoformRepExpression) <- NULL
+
+            isoformRepExpression <- isoformRepExpression[,c(
+                which(colnames(isoformRepExpression) == 'isoform_id'),
+                which(colnames(isoformRepExpression) != 'isoform_id')
+            )]
         }
         if( ! batchCorrectionNeeded ) {
             if (!quiet) { message('    Skipped as no batch effects were found or annoated...')}
@@ -4887,13 +4892,16 @@ importRdata <- function(
                     isoIndex <-
                         which(colnames(isoformRepExpression) %in% sampleVec)
 
+                    isoIndex2 <-
+                        which(colnames(isoformRepIF) %in% sampleVec)
+
                     isoSummary <- data.frame(
                         isoform_id       = isoformRepExpression$isoform_id,
                         iso_overall_mean = rowMeans(isoformRepExpression[,designMatrix$sampleID, drop=FALSE]),
                         iso_value        = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
                         iso_std          = apply(   isoformRepExpression[, isoIndex, drop=FALSE], 1, sd),
                         IF_overall       = rowMeans(isoformRepIF[,designMatrix$sampleID, drop=FALSE], na.rm = TRUE),
-                        IF               = rowMeans(isoformRepIF[, isoIndex, drop=FALSE], na.rm = TRUE),
+                        IF               = rowMeans(isoformRepIF[, isoIndex2, drop=FALSE], na.rm = TRUE),
                         stringsAsFactors = FALSE
                     )
                     isoSummary$iso_stderr <-
@@ -5058,6 +5066,9 @@ importRdata <- function(
     }
     if (TRUE) {
         if( countsSuppled ) {
+
+            isoformCountMatrix <- isoformCountMatrix[colnames(isoformRepExpression)]
+
             ### Create switchList
             dfSwichList <- createSwitchAnalyzeRlist(
                 isoformFeatures = isoAnnot,

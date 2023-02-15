@@ -1,3 +1,7 @@
+Changes in version 2.01.02 (2023-02)
+- Update type: Mino.
+- Fixed a problem with batch correction in importRdata()
+
 Changes in version 2.01.01 (2023-02)
 - Update type: Major.
 - createSwitchAnalyzeRlist() was removed. All users should instead use importRdata().
