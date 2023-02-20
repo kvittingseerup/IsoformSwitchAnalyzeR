@@ -821,10 +821,11 @@ compareAnnotationOfTwoIsoforms <- function(
             ])
 
             transcriptData <-
-                dplyr::left_join(transcriptData,
-                      orfData,
-                      by = 'isoform_id',
-                      all.x = TRUE)
+                dplyr::left_join(
+                    transcriptData,
+                    orfData,
+                    by = 'isoform_id',
+                )
         }
 
         ### intron retention data

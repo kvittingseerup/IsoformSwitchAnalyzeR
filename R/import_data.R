@@ -604,13 +604,6 @@ importCufflinksFiles <- function(
 
 
             ## Merge stderr with DE analysis
-            #isoformDiffanalysis <-
-            #    merge(
-            #        isoformDiffanalysis,
-            #        isoformFPKMcombined,
-            #        by.x = c('isoform_id', 'sample_2'),
-            #        by.y = c('isoform_id', 'sample_name')
-            #    )
             isoformDiffanalysis <- suppressWarnings( dplyr::inner_join(
                 isoformDiffanalysis,
                 isoformFPKMcombined,
@@ -620,12 +613,6 @@ importCufflinksFiles <- function(
                 'iso_stderr', colnames(isoformDiffanalysis))
             )] <- 'iso_stderr_2'
 
-            #isoformDiffanalysis <- merge(
-            #        isoformDiffanalysis,
-            #        isoformFPKMcombined,
-            #        by.x = c('isoform_id', 'sample_1'),
-            #        by.y = c('isoform_id', 'sample_name')
-            #    )
             isoformDiffanalysis <- suppressWarnings( dplyr::inner_join(
                 isoformDiffanalysis,
                 isoformFPKMcombined,
@@ -655,13 +642,6 @@ importCufflinksFiles <- function(
                 )]
 
             ### Extract and add gene stderr
-            #geneDiffanalysis <-
-            #    merge(
-            #        geneDiffanalysis,
-            #        geneFPKMcombined,
-            #        by.x = c('gene_id', 'sample_2'),
-            #        by.y = c('gene_id', 'sample_name')
-            #    )
             geneDiffanalysis <- suppressWarnings( dplyr::inner_join(
                 geneDiffanalysis,
                 geneFPKMcombined,
@@ -671,12 +651,6 @@ importCufflinksFiles <- function(
                 'gene_stderr', colnames(geneDiffanalysis)
             ))] <- 'gene_stderr_2'
 
-            #geneDiffanalysis <- merge(
-            #        geneDiffanalysis,
-            #        geneFPKMcombined,
-            #        by.x = c('gene_id', 'sample_1'),
-            #        by.y = c('gene_id', 'sample_name')
-            #    )
             geneDiffanalysis <- suppressWarnings( dplyr::inner_join(
                 geneDiffanalysis,
                 geneFPKMcombined,
@@ -2011,8 +1985,7 @@ importGTF <- function(
                 orfInfo <-
                     dplyr::full_join(orfInfo,
                                      unique(myIsoAnot[, 'isoform_id', drop = FALSE]),
-                                     by = 'isoform_id',
-                                     all = TRUE)
+                                     by = 'isoform_id')
 
             } else {
                 # if no CDS were found
@@ -5521,8 +5494,7 @@ importSalmonData <- function(
                 dplyr::full_join(
                     orfInfo,
                     localCm[, 'isoform_id', drop = FALSE],
-                    by = 'isoform_id',
-                    all = TRUE
+                    by = 'isoform_id'
                 )
 
             # Annotate ORF origin
