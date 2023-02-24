@@ -1,3 +1,7 @@
+Changes in version 2.01.04 (2023-02)
+- Update type: Minor.
+- Fix to handle duplicated levels
+
 Changes in version 2.01.03 (2023-02)
 - Update type: Minor.
 - Fixes to accomodate dplyr updates

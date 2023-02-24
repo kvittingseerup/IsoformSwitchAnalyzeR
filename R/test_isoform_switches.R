@@ -683,11 +683,11 @@ isoformSwitchTestDEXSeq <- function(
                     ),]
                     designSubset$condition <- factor(
                         designSubset$condition,
-                        levels = c(
+                        levels = unique(c(
                             comaprisonsToMake$condition_1,
                             comaprisonsToMake$condition_2
                         )
-                    )
+                    ))
 
                     ### Extract corresponding annotation
                     localAnnot <- switchAnalyzeRlist$isoformFeatures[
@@ -730,10 +730,10 @@ isoformSwitchTestDEXSeq <- function(
                     ### Convert group of interest to factors
                     designSubset$condition <- factor(
                         designSubset$condition,
-                        levels = c(
+                        levels = unique(c(
                             comaprisonsToMake$condition_1,
                             comaprisonsToMake$condition_2
-                        )
+                        ))
                     )
                     colnames(designSubset)[1] <- 'sample'
 
@@ -1184,7 +1184,7 @@ extractSwitchSummary <- function(
                 dataDF$comparison <- paste(dataDF$condition_1, dataDF$condition_2, sep = ' vs ')
                 dataDF$comparison <- factor(
                     x = dataDF$comparison,
-                    levels = setdiff(nrDf$Comparison, 'Combined')
+                    levels = unique(setdiff(nrDf$Comparison, 'Combined'))
                 )
 
                 ### Summarize pr comparison
@@ -1262,7 +1262,7 @@ extractSwitchSummary <- function(
         ### Set levels
         localSwitches$Comparison <- factor(
             localSwitches$Comparison,
-            levels = nrDf$Comparison
+            levels = unique(nrDf$Comparison)
         )
 
         ### Filter for consequences
