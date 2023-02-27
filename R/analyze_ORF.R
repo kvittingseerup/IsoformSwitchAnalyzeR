@@ -1444,7 +1444,8 @@ addORFfromGTF <- function(
             stop(str_c(
                 'No ORFs could be added to the switchAnalyzeRlist.',
                 ' Please ensure GTF file have CDS info (and that isoform ids match).',
-                ' Also note that ORF/CDS information cannot be found in the output from asemblers such as StringTie and Cufflinks.',
+                '\nThis could be a problem with ID matching you can fix by some combination of the three ignoreAfter*() arguments (look at your files)',
+                '\nAlso note that ORF/CDS information cannot be found in the output from asemblers such as StringTie and Cufflinks.',
                 'Instead use the official GTF that you downloaded from an official source such as Ensembl, Gencode, etc.'
             ))
         }

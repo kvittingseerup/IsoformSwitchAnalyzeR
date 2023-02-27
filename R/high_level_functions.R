@@ -353,7 +353,7 @@ isoformSwitchAnalysisPart2 <- function(
                 quiet = TRUE
             )
     }
-    if (!is.null(pathToSignalPresultFile)) {
+    if (!is.null(pathToDeepLoc2resultFile)) {
         switchAnalyzeRlist <-
             analyzeDeepLoc2(
                 switchAnalyzeRlist = switchAnalyzeRlist,
@@ -361,7 +361,7 @@ isoformSwitchAnalysisPart2 <- function(
                 quiet = TRUE
             )
     }
-    if (!is.null(pathToSignalPresultFile)) {
+    if (!is.null(pathToDeepTMHMMresultFile)) {
         switchAnalyzeRlist <-
             analyzeDeepTMHMM(
                 switchAnalyzeRlist = switchAnalyzeRlist,

@@ -1550,7 +1550,7 @@ analyzeNetSurfP2 <- function(
         # file
         if (class(pathToNetSurfP2resultFile) != 'character') {
             stop(
-                'The \'pathToNetSurfP2resultFile\' argument must be a string pointing to the PFAM result file'
+                'The \'pathToNetSurfP2resultFile\' argument must be a string pointing to the NetSurfP2 result file'
             )
         }
         if (! all( file.exists(pathToNetSurfP2resultFile)) ) {
@@ -1816,7 +1816,7 @@ analyzeIUPred2A <- function(
         # file
         if (class(pathToIUPred2AresultFile) != 'character') {
             stop(
-                'The \'pathToIUPred2AresultFile\' argument must be a string pointing to the PFAM result file'
+                'The \'pathToIUPred2AresultFile\' argument must be a string pointing to the IUPred2A result file'
             )
         }
         if (! all( file.exists(pathToIUPred2AresultFile)) ) {
@@ -2293,7 +2293,7 @@ analyzeDeepLoc2 <- function(
         # file
         if (class(pathToDeepLoc2resultFile) != 'character') {
             stop(
-                'The \'pathToDeepLoc2resultFile\' argument must be a string pointing to the PFAM result file(s)'
+                'The \'pathToDeepLoc2resultFile\' argument must be a string pointing to the DeepLoc2 result file(s)'
             )
         }
         if ( ! all(sapply(pathToDeepLoc2resultFile, file.exists)) ) {
@@ -2539,7 +2539,7 @@ analyzeDeepTMHMM <- function(
         # file
         if (class(pathToDeepTMHMMresultFile) != 'character') {
             stop(
-                'The \'pathToDeepTMHMMresultFile\' argument must be a string pointing to the PFAM result file'
+                'The \'pathToDeepTMHMMresultFile\' argument must be a string pointing to the DeepTMHMM result file'
             )
         }
         if (! all( file.exists(pathToDeepTMHMMresultFile)) ) {

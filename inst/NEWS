@@ -1,3 +1,8 @@
+Changes in version 2.01.06 (2023-02)
+- Update type: Minor.
+- Fixed an bug in isoformSwitchAnalysisPart2() that could result in problem when running without toplogy analysis.
+- Introduced a better error message in analyzeORF().
+
 Changes in version 2.01.05 (2023-02)
 - Update type: Minor.
 - Updated switchPlotTranscript() to make a message instaed of an error when plotTopology=TRUE but isoform topology had not beed added.
