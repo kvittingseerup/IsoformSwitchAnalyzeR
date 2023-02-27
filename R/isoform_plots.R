@@ -76,8 +76,10 @@ switchPlotTranscript <- function(
 
         if(plotTopology) {
             if( ! 'topologyAnalysis' %in% names(switchAnalyzeRlist) ) {
-                stop('Cannot plot toplogy as it has not been added. Either you first use analyzeDeepTMHMM() or you set "topologyAnalysis=FALSE".')
+                message('Omitting toplogy visualization as it has not been added. You can add this analysis through analyzeDeepTMHMM(). To avoid this message set \"plotTopology=FALSE\"')
+                plotTopology <- FALSE
             }
+
         }
 
         isConditional <- ! is.null(condition1)

@@ -288,6 +288,9 @@ The resulting fasta files enables the usage of external sequence analysis tools.
 - Tools Prediction of Intrinsically Disordered Regions (IDR):
     + IUPred2A: Which both predict IDRs and Intrinsically Disordered Binding Regions (IDBR) It can be run either locally or via their [webserver](https://iupred2a.elte.hu)
     + NetSurfP-2: Which as parts of its predicitons also predict IDR. It can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/).
+- Tools for localization prediction
+    + DeepTMHMM: Predicts protein toplology (location compared to cell membrane) and can be run from from this [webserver](https://biolib.com/DTU/DeepTMHMM) 
+    + DeepLoc2: Predicts sub-cellular location and can be run from this [webserver](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0).
 
 
 <br /> 
@@ -508,7 +511,7 @@ extractSwitchSummary( exampleSwitchList )
 
 <br />
 
-In a typical workflow, the user would here have to use produced fasta files to perform the external analysis tools (Pfam (for prediction of protein domains), SignalP (for prediction of signal peptides), CPAT or CPC2 (for prediction of coding potential, since they perform similar analysis so it is only necessary to run one of them)), IUPred2A or NetSurfP-2 (for prediction of Intrinsically Disordered Regions (IDR), since they perform similar analysis so it is only necessary to run one of them. The main difference is that NetSurfP-2 is newer but IUPred2A also allows for prediction of IDBS (which are also integrated into the IsoformSwitchAnalyzeR workflow)). For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
+In a typical workflow, the user would here have to use produced fasta files to perform the external analysis tools (Pfam (for prediction of protein domains), SignalP (for prediction of signal peptides), CPAT or CPC2 (for prediction of coding potential, since they perform similar analysis so it is only necessary to run one of them)), Prediction of sub-cellular location (DeepLoc2) and isoform toplogy (DeepTmHmm), IUPred2A or NetSurfP-2 (for prediction of Intrinsically Disordered Regions (IDR), since they perform similar analysis so it is only necessary to run one of them. The main difference is that NetSurfP-2 is newer but IUPred2A also allows for prediction of IDBS (which are also integrated into the IsoformSwitchAnalyzeR workflow)). For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
 
 <br />
 
@@ -590,7 +593,7 @@ switchPlot(
 )
 ```
 
-From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Interestingly the long isoform contains a SAM_1 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Since only the long isoform have a IDR with a predicted binding site this IDR strengthens the new-interaction-partners hypothesis. Lastly we see that both the topological analysis (the small boxes above the transcripts) and the subcellular location analysis (indicated below the isoform name to the left) suggest all transcripts are intracellular
+From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Interestingly the long isoform contains a SAM_1 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Since only the long isoform have a IDR with a predicted binding site this IDR strengthens the new-interaction-partners hypothesis. Lastly we see that both the topological analysis (the small boxes above the transcripts) and the subcellular location analysis (indicated below the isoform name to the left) suggest all transcripts are intracellular.
 
 If you want to save this plot as a pdf file via the _pdf_ command, you need to specify "onefile = FALSE". The following code chunk  will produce a nicely-sized figure:
 
@@ -635,7 +638,7 @@ extractConsequenceSummary(
 
 Note the "consequencesToAnalyze" argument enables analysis of only a subset of features.
 
-From this summary plots above many things can be seen. First of all, the most frequent changes affect protein domains, Intrinsically Disordered Regions (IDR) and length of extracellular domains. We also notice some consequences are un-evenly distributed (e.g. many more instances of "domain loss" compared to "domain gains"). Such differences can be systematically analyzed as shown below.
+From this summary plots above many things can be seen. First of all, the most frequent changes affect protein domains, Intrinsically Disordered Regions (IDR) and length of extracellular domains. The most frequent "switch" (both gain and loss of fatures) is in the sub-cellular locations of isoforms. We also notice some consequences are un-evenly distributed (e.g. many more instances of "domain loss" compared to "domain gains"). Such differences can be systematically analyzed as shown below.
 
 <br />
 
@@ -1503,9 +1506,11 @@ The two fasta files that are the output by _extractSequence()_ (if writeToFile=T
 * CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/). This is an alternative to CPC2.
 * CPC2 : The Coding Potential Calculator 2 which is a tool for predicting whether an isoform is coding or not. CPC2 can be run either locally or via their [webserver](http://cpc2.cbi.pku.edu.cn/batch.php). This is an alternative to CPAT.
 * Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
-* SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (V5 is supported).
+* SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (v5 and v6 is supported).
 * IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) --- the parts of a protein protein which does not have a fixed three-dimensional structure (as opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu). IUPred3 is also supported by IsoformSwitchAnalyzeR (as it produces identical result files).
 * NetSurfP-2 : Prediction of Intrinsically Disordered Regions (IDR) --- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-2 can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/).
+* analyzeDeepTMHMM : Prediction of protein topology --- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
+* analyzeDeepLoc2 : Prediction of sub-cellular localization(s) of protein.
 
 Please note that:
 
@@ -1523,6 +1528,8 @@ We suggest that the external sequence analysis tools are run as follows:
 * SignalP : Use the amino acid fasta file (_AA.fasta). If using the [webserver](http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the webserver the results can be downloaded using the "Downloads" button in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the "pathToSignalPresultFile" argument. If a stand-alone version was just supply the path to the summary result file.
 * IUPred2A : 1) Go to the [webserver](https://iupred2a.elte.hu) 2) Upload the amino acoid file (_AA) created with extractSequence() function. 3) Add your email (you will recieve a notification when the job is done). 4) In the email use the link indicated by "The text file can be found here:" and save the result (right click on a blank space and use "save as" or use the keybord shortcut "ctrl/cmd + s"). 5) Supply a string indicating the path to the downloaded file to the "pathToIUPred2AresultFile" argument. If multiple files are created (multiple web-server runs) just supply the path to all of them as a string.
 * NetSurfP-2 : 1) Go to [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/). 2) Upload the amino acid file (_AA) created with extractSequence() function. 3) Submit your job. 4) Wait till job is finished (if you submit your email you will receive a notification). 5) In the top-right corner of the result site use the "Export All" button to download the results as a CNV file. 6) Supply a string indicating the path to the downloaded csv file directly to the "pathToNetSurfP2resultFile" argument. If you run NetSurfP-2 locally just use the "--csv" argument and provide the resulting csv file to the _pathToNetSurfP2resultFile_ argument.
+* analyzeDeepTMHMM: DeepTMHMM can be run from from this [website](https://biolib.com/DTU/DeepTMHMM) and afterwards all files can be downloaded as a "gff3 format" file can be used as input to this function.
+* analyzeDeepLoc2 can be run from this [website](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0) and choose "Short output (no figures)". Once it is done you can download by pressing the "Download prediction results: CSV Summary" at the top of the result section (just above the red "Probability thresholds" button).
 
 Back to [Table of Content]
 
@@ -1537,6 +1544,8 @@ After the external sequence analysis with have been performed (please remember t
     analyzeSignalP()
     analyzeIUPred2A() # OR
     analyzeNetSurfP2()
+    analyzeDeepLoc2()
+    analyzeDeepTMHMM()
 
 Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP2.
 
@@ -1544,6 +1553,12 @@ Please note that CPC2 and CPAT performs the same type of analysis so only one of
 The functions are used as:
 
 ```{r}
+### Please note the way of importing files in the following example with
+# "system.file('pathToFile', package="IsoformSwitchAnalyzeR") is
+# just a way to accessing the example data in the IsoformSwitchAnalyzeR package
+# and not something you need to do - just supply the string e.g.
+# "myAnnotation/predicted_annoation.txt" to the function.
+
 ### Load test data (matching the external sequence analysis results)
 data("exampleSwitchListIntermediary")
 exampleSwitchListIntermediary
@@ -1582,6 +1597,21 @@ exampleSwitchListAnalyzed <- analyzeIUPred2A(
     pathToIUPred2AresultFile = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR"),
     showProgress = FALSE
 )
+
+### Add DeepLoc2 analysis
+exampleSwitchListAnalyzed <- analyzeDeepLoc2(
+    switchAnalyzeRlist = exampleSwitchListAnalyzed,
+    pathToDeepLoc2resultFile = system.file("extdata/deeploc2.csv", package = "IsoformSwitchAnalyzeR"),
+    quiet = FALSE
+)
+
+### Add DeepTMHMM analysis
+exampleSwitchListAnalyzed <- analyzeDeepTMHMM(
+    switchAnalyzeRlist   = exampleSwitchListAnalyzed,
+    pathToDeepTMHMMresultFile = system.file("extdata/DeepTMHMM.gff3", package = "IsoformSwitchAnalyzeR"),
+    showProgress=FALSE
+)
+
 
 exampleSwitchListAnalyzed
 ```

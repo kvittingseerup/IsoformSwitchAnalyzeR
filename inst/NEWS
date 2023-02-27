@@ -1,3 +1,8 @@
+Changes in version 2.01.05 (2023-02)
+- Update type: Minor.
+- Updated switchPlotTranscript() to make a message instaed of an error when plotTopology=TRUE but isoform topology had not beed added.
+- More detailed descriptions of analyzeDeepTMHMM() and analyzeDeepLoc2() added to the vignette.
+
 Changes in version 2.01.04 (2023-02)
 - Update type: Minor.
 - Fix to handle duplicated levels
