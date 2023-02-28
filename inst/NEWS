@@ -1,3 +1,7 @@
+Changes in version 2.01.07 (2023-02)
+- Update type: Minor.
+- Fixed an edgecase bug in importRdata()
+
 Changes in version 2.01.06 (2023-02)
 - Update type: Minor.
 - Fixed an bug in isoformSwitchAnalysisPart2() that could result in problem when running without toplogy analysis.

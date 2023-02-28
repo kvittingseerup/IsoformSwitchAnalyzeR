@@ -3281,8 +3281,6 @@ importRdata <- function(
 
     }
 
-
-
     ### Giver proper R names
     if(TRUE) {
         ### Double check order
@@ -4712,7 +4710,7 @@ importRdata <- function(
             if( length(okSvs) ) {
 
                 ### Subset
-                localSv <- localSv[,okSvs]
+                localSv <- localSv[,okSvs,drop=FALSE]
                 colnames(localSv) <- paste0(
                     'sv', 1:ncol(localSv)
                 )
