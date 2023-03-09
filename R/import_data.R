@@ -4675,6 +4675,22 @@ importRdata <- function(
         )
         svaAdded <- FALSE
 
+
+        ### Test if to may SVAs
+        if(TRUE) {
+
+            nSvaCutoff <- min(c(
+                10,
+                nrow(designMatrix) * 0.5
+            ))
+
+            skipSvas <- nSv > nSvaCutoff
+
+            if(skipSvas) {
+                nSv <- 0
+            }
+        }
+
         ### Run SVA if nessesary
         if( nSv > 1 ) {
             ### Run SVA
@@ -4734,12 +4750,31 @@ importRdata <- function(
             }
         }
 
-        if(   svaAdded ) {
-            if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
+        ### Send messages
+        if( ! skipSvas ) {
+            if(   svaAdded ) {
+                if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
+            }
+            if( ! svaAdded ) {
+                if (!quiet) { message('    No unwanted effects found') }
+            }
         }
-        if( ! svaAdded ) {
-            if (!quiet) { message('    No unwanted effects found') }
+        if(   skipSvas ) {
+            if( ! svaAdded ) {
+                if (!quiet) { message('    Data not corrected for unwanted effects') }
+            }
+
+            warning(paste0(
+                '\n',
+                'We found MANY unwanted effects in your dataset!',
+                '\nTo many for IsoformSwitchAnalyzeR to be trusted with the correction.',
+                '\nWe therefore highly reccomend you run sva yourself and add',
+                '\nthe nessesary surrogate variables as extra columns in the \"designMatrix\"',
+                '\n'
+            ))
         }
+
+
 
     }
 
