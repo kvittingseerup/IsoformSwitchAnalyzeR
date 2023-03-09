@@ -4596,182 +4596,191 @@ importRdata <- function(
     if(TRUE) {
         if (!quiet) { message('Step 5 of 10: Testing for unwanted effects...') }
 
-        ### Massage
-        isoformRepExpressionLog <- isoformRepExpression
-        rownames(isoformRepExpressionLog) <- isoformRepExpressionLog$isoform_id
-        isoformRepExpressionLog$isoform_id <- NULL
-        isoformRepExpressionLog <- log2(isoformRepExpressionLog + 1)
+        enougthSamples <- nrow(designMatrix) >= 4
 
-        ### Filter of SVA
-        smallestGroup <- min(table(designMatrix$condition))
-        if(smallestGroup > 10) {
-            smallestGroup <- smallestGroup * 0.7
+        if( ! enougthSamples ) {
+            if (!quiet) { message('    Data was not corrected for unwanted effects since there are to few samples') }
         }
-        minSamples <- max(c(
-            2,
-            smallestGroup
-        ))
+        if(   enougthSamples ) {
 
-        isoformRepExpressionLogFilt <- isoformRepExpressionLog[which(
-            rowSums( isoformRepExpressionLog > log2(1) ) >= minSamples
-        ),]
+            ### Massage
+            isoformRepExpressionLog <- isoformRepExpression
+            rownames(isoformRepExpressionLog) <- isoformRepExpressionLog$isoform_id
+            isoformRepExpressionLog$isoform_id <- NULL
+            isoformRepExpressionLog <- log2(isoformRepExpressionLog + 1)
 
-        ### Make model matrix (which also take additional factors into account)
-        if(TRUE) {
-            localDesign <- designMatrix
+            ### Filter of SVA
+            smallestGroup <- min(table(designMatrix$condition))
+            if(smallestGroup > 10) {
+                smallestGroup <- smallestGroup * 0.7
+            }
+            minSamples <- max(c(
+                2,
+                smallestGroup
+            ))
 
-            ### Convert group of interest to factors
-            localDesign$condition <- factor(
-                localDesign$condition,
-                levels=unique(localDesign$condition)
-            )
+            isoformRepExpressionLogFilt <- isoformRepExpressionLog[which(
+                rowSums( isoformRepExpressionLog > log2(1) ) >= minSamples
+            ),]
 
-            localFormula <- '~ 0 + condition'
+            ### Make model matrix (which also take additional factors into account)
+            if(TRUE) {
+                localDesign <- designMatrix
 
-            ### Check co-founders for group vs continous variables and add to fomula
-            if( ncol(localDesign) > 2 ) {
-                for(i in 3:ncol(localDesign) ) { # i <- 4
-                    if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-                        if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
+                ### Convert group of interest to factors
+                localDesign$condition <- factor(
+                    localDesign$condition,
+                    levels=unique(localDesign$condition)
+                )
+
+                localFormula <- '~ 0 + condition'
+
+                ### Check co-founders for group vs continous variables and add to fomula
+                if( ncol(localDesign) > 2 ) {
+                    for(i in 3:ncol(localDesign) ) { # i <- 4
+                        if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+                            if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
+                                localDesign[,i] <- factor(localDesign[,i])
+                            }
+                        } else {
                             localDesign[,i] <- factor(localDesign[,i])
                         }
-                    } else {
-                        localDesign[,i] <- factor(localDesign[,i])
                     }
+
+                    ### Make formula for model
+                    localFormula <- paste(
+                        localFormula,
+                        '+',
+                        paste(
+                            colnames(localDesign)[3:ncol(localDesign)],
+                            collapse = ' + '
+                        ),
+                        sep=' '
+                    )
+
+
                 }
 
-                ### Make formula for model
-                localFormula <- paste(
-                    localFormula,
-                    '+',
-                    paste(
-                        colnames(localDesign)[3:ncol(localDesign)],
-                        collapse = ' + '
-                    ),
-                    sep=' '
+
+                localFormula <- as.formula(localFormula)
+
+                ### Make model
+                localModel <- model.matrix(localFormula, data = localDesign)
+                indexToModify <- 1:length(unique( localDesign$condition ))
+                colnames(localModel)[indexToModify] <- gsub(
+                    pattern =  '^condition',
+                    replacement =  '',
+                    x =  colnames(localModel)[indexToModify]
                 )
-
-
             }
+            # localModel
 
-
-            localFormula <- as.formula(localFormula)
-
-            ### Make model
-            localModel <- model.matrix(localFormula, data = localDesign)
-            indexToModify <- 1:length(unique( localDesign$condition ))
-            colnames(localModel)[indexToModify] <- gsub(
-                pattern =  '^condition',
-                replacement =  '',
-                x =  colnames(localModel)[indexToModify]
+            ### Estimate SVAs
+            nSv = sva::num.sv(
+                dat = isoformRepExpressionLogFilt,
+                mod = localModel,
             )
-        }
-        # localModel
-
-        ### Estimate SVAs
-        nSv = sva::num.sv(
-            dat = isoformRepExpressionLogFilt,
-            mod = localModel,
-        )
-        svaAdded <- FALSE
+            svaAdded <- FALSE
 
 
-        ### Test if to may SVAs
-        if(TRUE) {
-
-            nSvaCutoff <- min(c(
-                10,
-                nrow(designMatrix) * 0.5
-            ))
-
-            skipSvas <- nSv > nSvaCutoff
-
-            if(skipSvas) {
-                nSv <- 0
-            }
-        }
-
-        ### Run SVA if nessesary
-        if( nSv > 1 ) {
-            ### Run SVA
-            tmp <- capture.output(
-                localSv <- sva::sva(
-                    dat = as.matrix(isoformRepExpressionLogFilt),
-                    mod = localModel,
-                    n.sv = nSv
-                )$sv
-            )
-
-            ### Test SVs
+            ### Test if to may SVAs
             if(TRUE) {
-                ### Test for just diagnoal
-                notDiagonal <- which( apply(
-                    localSv,
-                    MARGIN = 2,
-                    function(x) {
-                        sum( x != 1 ) > 1 & sum( x != 0 ) > 1
-                    }
-                ) )
 
-                ### Filter for correlation
-                notToHighCor <- which( apply(
-                    localSv,
-                    MARGIN = 2,
-                    function(x) {
-                        abs(cor(
-                            x,
-                            as.integer(as.factor(designMatrix$condition))
-                        )) < 0.8
-                    }
-                ) )
+                nSvaCutoff <- min(c(
+                    10,
+                    nrow(designMatrix) * 0.5
+                ))
 
-                ## Subset
-                okSvs <- intersect(notDiagonal, notToHighCor)
+                skipSvas <- nSv > nSvaCutoff
+
+                if(skipSvas) {
+                    nSv <- 0
+                }
             }
-            # okSvs
 
-
-            ### Add to design
-            if( length(okSvs) ) {
-
-                ### Subset
-                localSv <- localSv[,okSvs,drop=FALSE]
-                colnames(localSv) <- paste0(
-                    'sv', 1:ncol(localSv)
+            ### Run SVA if nessesary
+            if( nSv > 1 ) {
+                ### Run SVA
+                tmp <- capture.output(
+                    localSv <- sva::sva(
+                        dat = as.matrix(isoformRepExpressionLogFilt),
+                        mod = localModel,
+                        n.sv = nSv
+                    )$sv
                 )
 
-                ### Add SVs
-                designMatrix <- cbind(
-                    designMatrix,
-                    localSv
-                )
+                ### Test SVs
+                if(TRUE) {
+                    ### Test for just diagnoal
+                    notDiagonal <- which( apply(
+                        localSv,
+                        MARGIN = 2,
+                        function(x) {
+                            sum( x != 1 ) > 1 & sum( x != 0 ) > 1
+                        }
+                    ) )
 
-                svaAdded <- TRUE
-            }
-        }
+                    ### Filter for correlation
+                    notToHighCor <- which( apply(
+                        localSv,
+                        MARGIN = 2,
+                        function(x) {
+                            abs(cor(
+                                x,
+                                as.integer(as.factor(designMatrix$condition))
+                            )) < 0.8
+                        }
+                    ) )
 
-        ### Send messages
-        if( ! skipSvas ) {
-            if(   svaAdded ) {
-                if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
-            }
-            if( ! svaAdded ) {
-                if (!quiet) { message('    No unwanted effects found') }
-            }
-        }
-        if(   skipSvas ) {
-            if( ! svaAdded ) {
-                if (!quiet) { message('    Data not corrected for unwanted effects') }
+                    ## Subset
+                    okSvs <- intersect(notDiagonal, notToHighCor)
+                }
+                # okSvs
+
+
+                ### Add to design
+                if( length(okSvs) ) {
+
+                    ### Subset
+                    localSv <- localSv[,okSvs,drop=FALSE]
+                    colnames(localSv) <- paste0(
+                        'sv', 1:ncol(localSv)
+                    )
+
+                    ### Add SVs
+                    designMatrix <- cbind(
+                        designMatrix,
+                        localSv
+                    )
+
+                    svaAdded <- TRUE
+                }
             }
 
-            warning(paste0(
-                '\n',
-                'We found MANY unwanted effects in your dataset!',
-                '\nTo many for IsoformSwitchAnalyzeR to be trusted with the correction.',
-                '\nWe therefore highly reccomend you run sva yourself and add',
-                '\nthe nessesary surrogate variables as extra columns in the \"designMatrix\"',
-                '\n'
-            ))
+            ### Send messages
+            if( ! skipSvas ) {
+                if(   svaAdded ) {
+                    if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
+                }
+                if( ! svaAdded ) {
+                    if (!quiet) { message('    No unwanted effects found') }
+                }
+            }
+            if(   skipSvas ) {
+                if( ! svaAdded ) {
+                    if (!quiet) { message('    Data was not corrected for unwanted effects') }
+                }
+
+                warning(paste0(
+                    '\n',
+                    'We found MANY unwanted effects in your dataset!',
+                    '\nTo many for IsoformSwitchAnalyzeR to be trusted with the correction.',
+                    '\nWe therefore highly reccomend you run sva yourself and add',
+                    '\nthe nessesary surrogate variables as extra columns in the \"designMatrix\"',
+                    '\n'
+                ))
+            }
+
         }
 
 
