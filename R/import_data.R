@@ -4603,8 +4603,17 @@ importRdata <- function(
         isoformRepExpressionLog <- log2(isoformRepExpressionLog + 1)
 
         ### Filter of SVA
+        smallestGroup <- min(table(designMatrix$condition))
+        if(smallestGroup > 10) {
+            smallestGroup <- smallestGroup * 0.7
+        }
+        minSamples <- max(c(
+            2,
+            smallestGroup
+        ))
+
         isoformRepExpressionLogFilt <- isoformRepExpressionLog[which(
-            rowSums( isoformRepExpressionLog > 0.1) >= 2
+            rowSums( isoformRepExpressionLog > log2(1) ) >= minSamples
         ),]
 
         ### Make model matrix (which also take additional factors into account)
