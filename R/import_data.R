@@ -2912,6 +2912,7 @@ importRdata <- function(
     comparisonsToMake = NULL,
 
     ### Advanced arguments
+    detectAndCorrectUnwantedEffects = TRUE,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
@@ -4699,7 +4700,7 @@ importRdata <- function(
             }
 
             ### Run SVA if nessesary
-            if( nSv > 1 ) {
+            if( nSv > 1 &   detectAndCorrectUnwantedEffects ) {
                 ### Run SVA
                 tmp <- capture.output(
                     localSv <- sva::sva(
@@ -4755,6 +4756,17 @@ importRdata <- function(
 
                     svaAdded <- TRUE
                 }
+            }
+            if( nSv > 1 & ! detectAndCorrectUnwantedEffects ) {
+                if (!quiet) { message('    Skipped due to \"detectAndCorrectUnwantedEffects=FALSE\". ') }
+
+                warning(
+                    paste(
+                        '    We detected', length(okSvs), 'batch/covariates in your data.',
+                        '    These will not be corrected in any downstream analysis due to \"detectAndCorrectUnwantedEffects=FALSE\". ',
+                        '    Unless you REALLY know what you are doing we recomend setting \"detectAndCorrectUnwantedEffects=TRUE\"'
+                    )
+                )
             }
 
             ### Send messages

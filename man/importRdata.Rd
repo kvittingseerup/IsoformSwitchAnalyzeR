@@ -39,6 +39,7 @@ importRdata(
     comparisonsToMake = NULL,
 
     ### Advanced arguments
+    detectAndCorrectUnwantedEffects = TRUE,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
@@ -90,6 +91,10 @@ A (vector of) text string(s) providing the path(s) to the a fasta file containin
 
 \item{comparisonsToMake}{
 A data.frame with two columns indicating which pairwise comparisons the switchAnalyzeRlist created should contain. The two columns, called 'condition_1' and 'condition_2' indicate which conditions should be compared and the strings indicated here must match the strings in the \code{designMatrix$condition} column. If not supplied all pairwise (unique non directional) comparisons of the conditions given in \code{designMatrix$condition} are created. If only a subset of the supplied data is used in the comparisons the Un-used data is automatically removed.
+}
+
+\item{detectAndCorrectUnwantedEffects}{
+A logic indicating whether sva should be used to detect and correct for unwanted systematic variation found in your data (if TRUE) or this step should be ommitted (if FALSE). If TRUE this will correct the abundance estimates, IF and dIF values in the switchAnalyzeRlist(). Count data will remain unmodified byt IsoformSwitchAnalyzeR will take these unwanted effects into account in the downstream switch identification by incooperating them into the general linear models used for statistical analysis. Default is TRUE.
 }
 
 \item{addAnnotatedORFs}{
@@ -167,7 +172,14 @@ The importRdata() function automatically correct abundance and isoform fractions
 }
 
 \value{
-A SwitchAnalyzeRlist containing the data supplied stored into the SwitchAnalyzeRlist format (created by \code{createSwitchAnalyzeRlist()}). For details about the format see details of \code{\link{createSwitchAnalyzeRlist}}.
+A list-type object \code{switchAnalyzeRlist} object containing all the information needed to do the full analysis with IsoformSwitchAnalyzeR. Note that \code{switchAnalyzeRlist} appears as a normal list and all the information (incl that added by all the analyze* functions) can be obtained using both the named entries (f.x. myIsoSwitchList$isoformFeatures ) or indexes (f.x myIsoSwitchList[[1]] ).
+
+The main enteries are:
+\itemize{
+    \item{\code{isoformFeatures}: This is where the expression and statistical summaries of the data are kept aka where the analysis actually happen}
+    \item{\code{exons}: The genomic strucutre of the isoforms analyzed as GRange object.}
+    \item{\code{designMatrix}: Where the experimental design is kept. If \code{detectAndCorrectUnwantedEffects=TRUE} and any surrogate variables were identified these will be added here. }
+}
 
 If a GTF file was supplied to \code{isoformExonAnnoation} and \code{addAnnotatedORFs=TRUE} a \code{data.frame} containing the details of the ORF analysis have been added to the switchAnalyzeRlist under the name 'orfAnalysis'. The data.frame added have one row pr isoform and contains 11 columns:
 \itemize{
@@ -184,6 +196,9 @@ If a GTF file was supplied to \code{isoformExonAnnoation} and \code{addAnnotated
     \item{\code{PTC}: A logic indicating whether the isoform is classified as having a Premature Termination Codon. This is defined as having a stop codon more than \code{PTCDistance} (default is 50) nt upstream of the last exon exon junction.}
 }
 NA means no information was available aka no ORF (passing the \code{minORFlength} filter) was found.
+
+
+For many of the downstream steps in the IsoformSwitchAnalyzeR workflow additional data or analysis is added as additional enteries to the switchAnalyzeRlist. You can find more info on that in the details of the documentation of the function adding them.
 }
 
 

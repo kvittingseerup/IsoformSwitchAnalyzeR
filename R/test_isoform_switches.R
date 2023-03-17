@@ -195,6 +195,9 @@ isoformSwitchTestSatuRn <- function(
         for (i in 1:ncol(resultOfPairwiseTest)) {
             resultOfPairwiseTest[[i]]$condition_1 <- comparisonsToMake$condition_1[i]
             resultOfPairwiseTest[[i]]$condition_2 <- comparisonsToMake$condition_2[i]
+
+            # ensure isoform_ids are propagated
+            resultOfPairwiseTest[[i]]$isoform_id  <- rowData(sumExp)$isoform_id
         }
 
         ### check for which contrast(s) the empirical correction has failed
@@ -213,8 +216,7 @@ isoformSwitchTestSatuRn <- function(
         }
 
         resultOfPairwiseTest <- S4Vectors::do.call(S4Vectors::rbind, resultOfPairwiseTest)
-        resultOfPairwiseTest$isoform_id <- gsub(".*\\.", "", rownames(resultOfPairwiseTest))
-        rownames(resultOfPairwiseTest) <- 1:nrow(resultOfPairwiseTest)
+        rownames(resultOfPairwiseTest) <- NULL
 
         ### Replace with reference ids (which specify isoform-contrast combinations)
         resultOfPairwiseTest$iso_ref <-
@@ -243,9 +245,13 @@ isoformSwitchTestSatuRn <- function(
 
         myDiff <- setdiff(
             colnames(resultOfPairwiseTest),
-            c('iso_ref', 'gene_ref')
+            c('iso_ref', 'gene_ref','isoform_id')
         )
-        resultOfPairwiseTest <- resultOfPairwiseTest[,c('iso_ref', 'gene_ref', myDiff)]
+        resultOfPairwiseTest <- resultOfPairwiseTest[,c('iso_ref', 'gene_ref','isoform_id', myDiff)]
+
+        if(nrow(resultOfPairwiseTest) == 0) {
+            stop('Something went wrong - please contact developers')
+        }
     }
 
     ### Add results to switchAnalyzeRlist

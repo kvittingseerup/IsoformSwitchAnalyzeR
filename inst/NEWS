@@ -1,4 +1,12 @@
-Changes in version 2.01.08 (2023-03)
+Changes in version 2.01.10 (2023-03)
+- Update type: Minor.
+- Updated satuRn version requirement
+- Updated importRdata() to allow skipping sva analysis incoperation.
+- Updated importRdata() documentation accordingly.
+- Updated importRdata() documentation to better describe the switchAnalyzeRlist created.
+- Updated isoformSwitchTestSatuRn() to be more robust to various id types.
+
+Changes in version 2.01.09 (2023-03)
 - Update type: Minor.
 - Updated importRdata() to also handle when there are to few samples to run SVA.
 
