@@ -1,3 +1,7 @@
+Changes in version 2.01.11 (2023-03)
+- Update type: Minor.
+- importRdata() was updated to fix problem with fasta import.
+
 Changes in version 2.01.10 (2023-03)
 - Update type: Minor.
 - Updated satuRn version requirement

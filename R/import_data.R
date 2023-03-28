@@ -3980,7 +3980,7 @@ importRdata <- function(
             ### Subset to used
             isoSeqNames <- names(isoformNtSeq)
             isoformNtSeq <- isoformNtSeq[which(
-                names(isoformNtSeq) %in% isoformRepExpression$isoform_id
+                names(isoformNtSeq) %in% isoformCountMatrix$isoform_id
             )]
 
             ### Remove potential duplication
@@ -3995,7 +3995,7 @@ importRdata <- function(
                         'This problem might be solvable using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
                         '    3 Examples from expression matrix are :',
-                        paste0( sample(unique(isoformRepExpression$isoform_id), min(c(3, length(isoformRepExpression$isoform_id))) ), collapse = ', '),'\n',
+                        paste0( sample(unique(isoformCountMatrix$isoform_id), min(c(3, length(isoformCountMatrix$isoform_id))) ), collapse = ', '),'\n',
                         '    3 Examples of sequence annotation are :',
                         paste0( sample(isoSeqNames, min(c(3, length( isoSeqNames ))) ), collapse = ', '),'\n',
                         sep = ' '
@@ -4004,17 +4004,17 @@ importRdata <- function(
 
             }
 
-            if( ! all( isoformRepExpression$isoform_id %in% names(isoformNtSeq) ) ) {
+            if( ! all( isoformCountMatrix$isoform_id %in% names(isoformNtSeq) ) ) {
                 options(warning.length = 2000L)
                 warning(
                     paste(
                         'The fasta file supplied to \'isoformNtFasta\' does not contain the',
                         'nucleotide (DNA) sequence for all isoforms quantified and will not be added!',
                         '\nSpecifically:\n',
-                        length(unique(isoformRepExpression$isoform_id)), 'isoforms were quantified.\n',
+                        length(unique(isoformCountMatrix$isoform_id)), 'isoforms were quantified.\n',
                         length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
-                        'Only', length(intersect(names(isoformNtSeq), isoformRepExpression$isoform_id)), 'overlap.\n',
-                        length(setdiff(unique(isoformRepExpression$isoform_id), names(isoformNtSeq))), 'isoforms quantifed isoforms had no corresponding nucleotide sequence\n',
+                        'Only', length(intersect(names(isoformNtSeq), isoformCountMatrix$isoform_id)), 'overlap.\n',
+                        length(setdiff(unique(isoformCountMatrix$isoform_id), names(isoformNtSeq))), 'isoforms quantifed isoforms had no corresponding nucleotide sequence\n',
 
                         '\nIf there is no overlap (as in zero or close) there are two options:\n',
                         '1) The files do not fit together (different databases, versions etc)',
@@ -4023,7 +4023,7 @@ importRdata <- function(
                         'This problem might be solvable using some of the',
                         '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
                         '    3 Examples from expression matrix are :',
-                        paste0( sample(unique(isoformRepExpression$isoform_id), min(c(3, length(isoformRepExpression$isoform_id))) ), collapse = ', '),'\n',
+                        paste0( sample(unique(isoformCountMatrix$isoform_id), min(c(3, length(isoformCountMatrix$isoform_id))) ), collapse = ', '),'\n',
                         '    3 Examples of sequence annotation are :',
                         paste0( sample(names(isoformNtSeq), min(c(3, length( isoformNtSeq ))) ), collapse = ', '),'\n',
 
