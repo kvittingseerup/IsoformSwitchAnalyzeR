@@ -1,3 +1,8 @@
+Changes in version 2.01.12 (2023-03)
+- Update type: Minor.
+- Update of switchPlot() to turn off topology plotting
+- Update of importRdata() to better handle datasets with no replicates
+
 Changes in version 2.01.11 (2023-03)
 - Update type: Minor.
 - importRdata() was updated to fix problem with fasta import.

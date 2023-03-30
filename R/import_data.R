@@ -4597,7 +4597,9 @@ importRdata <- function(
     if(TRUE) {
         if (!quiet) { message('Step 5 of 10: Testing for unwanted effects...') }
 
-        enougthSamples <- nrow(designMatrix) >= 4
+        ### Ensure there are enougth samples to run SVA
+        #enougthSamples <- nrow(designMatrix) >= 4
+        enougthSamples <- min(table(designMatrix$condition)) >= 2
 
         if( ! enougthSamples ) {
             if (!quiet) { message('    Data was not corrected for unwanted effects since there are to few samples') }
@@ -4610,7 +4612,7 @@ importRdata <- function(
             isoformRepExpressionLog$isoform_id <- NULL
             isoformRepExpressionLog <- log2(isoformRepExpressionLog + 1)
 
-            ### Filter of SVA
+            ### Filter on expression
             smallestGroup <- min(table(designMatrix$condition))
             if(smallestGroup > 10) {
                 smallestGroup <- smallestGroup * 0.7

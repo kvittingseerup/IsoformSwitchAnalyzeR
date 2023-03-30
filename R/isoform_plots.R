@@ -2950,6 +2950,7 @@ switchPlot <- function(
     dIFcutoff = 0.1,
     alphas = c(0.05, 0.001),
     rescaleTranscripts = TRUE,
+    plotTopology = TRUE,
     reverseMinus = TRUE,
     addErrorbars = TRUE,
     logYaxis = FALSE,
@@ -3135,6 +3136,7 @@ switchPlot <- function(
                 gene                          = gene,
                 isoform_id                    = isoform_id,
                 rescaleTranscripts            = rescaleTranscripts,
+                plotTopology                  = plotTopology,
                 rescaleRoot                   = 3,
                 plotXaxis                     = !rescaleTranscripts,
                 reverseMinus                  = reverseMinus,
@@ -3199,6 +3201,7 @@ switchPlot <- function(
             isoform_id                      = expressionPlots$isoformsAnalyzed,
             # Ensures only isoforms passing IFcutoff are plotted
             rescaleTranscripts              = tArgList$rescaleTranscripts,
+            plotTopology                    = tArgList$plotTopology,
             rescaleRoot                     = tArgList$rescaleRoot,
             plotXaxis                       = tArgList$plotXaxis,
             reverseMinus                    = tArgList$reverseMinus,
