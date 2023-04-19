@@ -179,6 +179,8 @@ exampleSwitchListAnalyzed <- isoformSwitchAnalysisPart2(
     pathToPFAMresultFile      = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
     pathToIUPred2AresultFile  = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR"),
     pathToSignalPresultFile   = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR"),
+    pathToDeepLoc2resultFile  = system.file("extdata/deeploc2.csv", package = "IsoformSwitchAnalyzeR"),
+    pathToDeepTMHMMresultFile = system.file("extdata/DeepTMHMM.gff3", package = "IsoformSwitchAnalyzeR"),
     codingCutoff              = 0.5,   # since we are using CPC2
     removeNoncodinORFs        = TRUE,  # Because ORF was predicted de novo
     outputPlots               = FALSE  # keeps the function from outputting the plots from this example code

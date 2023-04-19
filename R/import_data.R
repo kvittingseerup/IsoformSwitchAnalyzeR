@@ -2912,7 +2912,7 @@ importRdata <- function(
     comparisonsToMake = NULL,
 
     ### Advanced arguments
-    detectAndCorrectUnwantedEffects = TRUE,
+    detectUnwantedEffects = TRUE,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
@@ -2922,7 +2922,6 @@ importRdata <- function(
     removeTECgenes = TRUE,
     PTCDistance = 50,
     foldChangePseudoCount = 0.01,
-    addIFmatrix = TRUE,
     fixStringTieAnnotationProblem = TRUE,
     fixStringTieViaOverlapInMultiGenes = TRUE,
     fixStringTieMinOverlapSize = 50,
@@ -4048,7 +4047,7 @@ importRdata <- function(
 
 
 
-    ### Rescue StringTie gene annoation
+    ### Rescue StringTie gene annotation
     if(TRUE) {
         if (!quiet) { message('Step 3 of 10: Fixing StringTie gene annoation problems...')}
 
@@ -4543,7 +4542,7 @@ importRdata <- function(
 
 
 
-    ### If nessesary calculate RPKM values
+    ### If necessary calculate RPKM values
     if(TRUE) {
         if (!quiet) { message('Step 4 of 10: Calculating expression estimates from count data...') }
         if ( ! abundSuppled ) {
@@ -4598,7 +4597,6 @@ importRdata <- function(
         if (!quiet) { message('Step 5 of 10: Testing for unwanted effects...') }
 
         ### Ensure there are enougth samples to run SVA
-        #enougthSamples <- nrow(designMatrix) >= 4
         enougthSamples <- min(table(designMatrix$condition)) >= 2
 
         if( ! enougthSamples ) {
@@ -4638,6 +4636,7 @@ importRdata <- function(
 
                 localFormula <- '~ 0 + condition'
 
+
                 ### Check co-founders for group vs continous variables and add to fomula
                 if( ncol(localDesign) > 2 ) {
                     for(i in 3:ncol(localDesign) ) { # i <- 4
@@ -4675,6 +4674,12 @@ importRdata <- function(
                     replacement =  '',
                     x =  colnames(localModel)[indexToModify]
                 )
+
+                ### Test model
+                if( ! limma::is.fullrank(localModel) ) {
+                    stop('The design matrix suggested by the "designMatrix" is not full rank and hence cannot be analyzed.')
+                }
+
             }
             # localModel
 
@@ -4701,19 +4706,25 @@ importRdata <- function(
                 }
             }
 
-            ### Run SVA if nessesary
-            if( nSv > 1 &   detectAndCorrectUnwantedEffects ) {
+            ### Run SVA if necessary
+            if( nSv > 0 &   detectUnwantedEffects ) {
                 ### Run SVA
                 tmp <- capture.output(
-                    localSv <- sva::sva(
-                        dat = as.matrix(isoformRepExpressionLogFilt),
-                        mod = localModel,
-                        n.sv = nSv
-                    )$sv
+                    localSv <- tryCatch({
+                        sva::sva(
+                            dat = as.matrix(isoformRepExpressionLogFilt),
+                            mod = localModel,
+                            n.sv = nSv
+                        )$sv
+                    }, error = {
+                        function(x) {
+                            NULL
+                        }
+                    })
                 )
 
                 ### Test SVs
-                if(TRUE) {
+                if( ! is.null(localSv) ) {
                     ### Test for just diagnoal
                     notDiagonal <- which( apply(
                         localSv,
@@ -4738,11 +4749,13 @@ importRdata <- function(
                     ## Subset
                     okSvs <- intersect(notDiagonal, notToHighCor)
                 }
-                # okSvs
+                if(   is.null(localSv) ) {
+                    okSvs <- integer()
+                }
 
 
                 ### Add to design
-                if( length(okSvs) ) {
+                if( length(okSvs) > 0 ) {
 
                     ### Subset
                     localSv <- localSv[,okSvs,drop=FALSE]
@@ -4759,14 +4772,14 @@ importRdata <- function(
                     svaAdded <- TRUE
                 }
             }
-            if( nSv > 1 & ! detectAndCorrectUnwantedEffects ) {
-                if (!quiet) { message('    Skipped due to \"detectAndCorrectUnwantedEffects=FALSE\". ') }
+            if( nSv > 0 & ! detectUnwantedEffects ) {
+                if (!quiet) { message('    Skipped due to \"detectUnwantedEffects=FALSE\". ') }
 
                 warning(
                     paste(
-                        '    We detected', length(okSvs), 'batch/covariates in your data.',
-                        '    These will not be corrected in any downstream analysis due to \"detectAndCorrectUnwantedEffects=FALSE\". ',
-                        '    Unless you REALLY know what you are doing we recomend setting \"detectAndCorrectUnwantedEffects=TRUE\"'
+                        '    We detected', nSv, 'batch/covariates in your data.',
+                        '\n    These will not be corrected in any downstream analysis due to \"detectUnwantedEffects=FALSE\". ',
+                        '\n    Unless you REALLY know what you are doing we recomend setting \"detectUnwantedEffects=TRUE\"'
                     )
                 )
             }
@@ -4777,7 +4790,25 @@ importRdata <- function(
                     if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
                 }
                 if( ! svaAdded ) {
-                    if (!quiet) { message('    No unwanted effects found') }
+                    if( exists('localSv' )) {
+                        if( is.null(localSv) ) {
+                            if (!quiet) { message(c(
+                                '    \n    SVA analysis failed. No unwanted effects were added.'
+                            )) }
+
+                            warning(paste0(
+                                '\n',
+                                'There were estimated unwanted effects in your dataset but the automatic sva run failed.',
+                                '\n    We highly reccomend you run sva yourself, add the nessesary surrogate variables',
+                                '\n    as extra columns in the \"designMatrix\" and re-run this function',
+                                '\n'
+                            ))
+                        } else {
+                            if (!quiet) { message('    No unwanted effects added') }
+                        }
+                    } else {
+                        if (!quiet) { message('    No unwanted effects added') }
+                    }
                 }
             }
             if(   skipSvas ) {
@@ -4805,10 +4836,10 @@ importRdata <- function(
     if(TRUE) {
         if (!quiet) { message('Step 6 of 10: Batch correcting expression estimates...') }
 
-        batchCorrectionNeeded <- ncol(designMatrix) >= 3
+        batchCorrectionNeeded <- ncol(designMatrix) >= 3 & enougthSamples
 
         if(   batchCorrectionNeeded ) {
-            ### Make new model matrix (which also take additional factors into account)
+            ### Make new model matrix (which also take SVs into account)
             if(TRUE) {
                 localDesign <- designMatrix
 
@@ -5140,10 +5171,8 @@ importRdata <- function(
             dfSwichList$orfAnalysis <- isoORF
         }
 
-        ### Add IF matrix if needed
-        if( addIFmatrix ) {
-            dfSwichList$isoformRepIF <- isoformRepIF[,c('isoform_id',designMatrix$sampleID)]
-        }
+        ### Add IF matrix
+        dfSwichList$isoformRepIF <- isoformRepIF[,c('isoform_id',designMatrix$sampleID)]
 
         ### Add nucleotide sequence
         if(addIsoformNt) {

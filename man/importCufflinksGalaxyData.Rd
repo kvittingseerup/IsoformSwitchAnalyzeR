@@ -105,7 +105,7 @@ Note that since there was an error in Cufflinks/Cuffdiff's estimation of standar
 }
 
 \examples{
-\donttest{
+\dontrun{
 ### Please note
 # The way of importing files in the following example with
 # "system.file('pathToFile', package="cummeRbund") is

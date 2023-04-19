@@ -21,6 +21,7 @@ switchPlot(
     dIFcutoff = 0.1,
     alphas = c(0.05, 0.001),
     rescaleTranscripts = TRUE,
+    plotTopology = TRUE,
     reverseMinus = TRUE,
     addErrorbars = TRUE,
     logYaxis = FALSE,
@@ -63,6 +64,10 @@ The dIF cutoff used to add usage to the transcript plot. Default is 0.1.
 
   \item{rescaleTranscripts}{
 A Logical indicating whether all the isoforms should be resealed to the square root of their original sizes. This feature is implemented because introns usually are much larger than exons making it difficult to see structural changes. This is very useful for structural visualization but the scaling might distort actual intron and exon sizes. Default is TRUE.
+}
+
+  \item{plotTopology}{
+A Logical indicating whether topology should be plotted as squares above the transcripts. Default is TRUE.
 }
 
   \item{reverseMinus}{

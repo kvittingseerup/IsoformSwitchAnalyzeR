@@ -278,8 +278,12 @@ isoformSwitchTestSatuRn <- function(
         ### reduce to genes with at least one significant isoform if TRUE
         if (reduceToSwitchingGenes) {
             if (reduceFurtherToGenesWithConsequencePotential) {
-                tmp <- IsoformSwitchAnalyzeR:::extractSwitchPairs(switchAnalyzeRlist, alpha = alpha,
-                                                                  dIFcutoff = dIFcutoff, onlySigIsoforms = onlySigIsoforms)
+                tmp <- extractSwitchPairs(
+                    switchAnalyzeRlist,
+                    alpha = alpha,
+                    dIFcutoff = dIFcutoff,
+                    onlySigIsoforms = onlySigIsoforms
+                )
                 combinedGeneIDsToKeep <- unique(tmp$gene_ref)
             } else {
                 isoResTest <- any(!is.na(switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value))
@@ -327,8 +331,6 @@ isoformSwitchTestDEXSeq <- function(
     dIFcutoff = 0.1,
 
     ### Advanced arguments
-    correctForConfoundingFactors=TRUE,
-    overwriteIFvalues=TRUE,
     reduceToSwitchingGenes = TRUE,
     reduceFurtherToGenesWithConsequencePotential = TRUE,
     onlySigIsoforms = FALSE,
@@ -415,187 +417,22 @@ isoformSwitchTestDEXSeq <- function(
         }
 
         ### Check Input
-        haveBatchEffect <- ncol(switchAnalyzeRlist$designMatrix) > 2
         countsAvailable <- !is.null( switchAnalyzeRlist$isoformCountMatrix)
-        abundAvailable <- !is.null( switchAnalyzeRlist$isoformRepExpression )
-        ifAvailable <- ! is.null ( switchAnalyzeRlist$isoformRepIF )
-
-        recalcIF <- (haveBatchEffect & correctForConfoundingFactors) | (! ifAvailable)
 
         if( ! countsAvailable ) {
             stop('isoformSwitchTestDEXSeq requires count data to work. Please remake switchAnalyzeRlist and try again')
         }
 
         ### For messages
-        nrAnalysis <- 2 +
-            as.integer(!abundAvailable) +
-            as.integer(haveBatchEffect & correctForConfoundingFactors) +
-            as.integer(recalcIF)
+        nrAnalysis <- 2
         analysisDone <- 1
-    }
-
-    ### Extract (corrected) isoform abundances
-    if(TRUE) {
-        ### Extract or calculate abundances
-        if(TRUE) {
-            if( abundAvailable ) {
-                isoformRepExpression <- switchAnalyzeRlist$isoformRepExpression
-                rownames(isoformRepExpression) <- isoformRepExpression$isoform_id
-                isoformRepExpression$isoform_id <- NULL
-            } else {
-                if (!quiet) {
-                    message(paste(
-                        'Step ',
-                        analysisDone,
-                        ' of ',
-                        nrAnalysis,
-                        ': Calculating isoform abundances (from counts)...',
-                        sep=''
-                    ))
-                }
-
-                ### Extract lengths
-                isoformLengths <- sapply(
-                    X = split(
-                        switchAnalyzeRlist$exons@ranges@width,
-                        f = switchAnalyzeRlist$exons$isoform_id
-                    ),
-                    FUN = sum
-                )
-
-                ### Calulate CPM
-                # convert to matrix
-                localCM <- switchAnalyzeRlist$isoformCountMatrix
-                rownames(localCM) <- localCM$isoform_id
-                localCM$isoform_id <- NULL
-                localCM <- as.matrix(localCM)
-
-                myCPM <- t(t(localCM) / colSums(localCM)) * 1e6
-
-                ### Calculate RPKM
-                isoformLengths <-
-                    isoformLengths[match(rownames(myCPM), names(isoformLengths))]
-
-                isoformRepExpression <-
-                    as.data.frame(myCPM / (isoformLengths / 1e3))
-
-                ### Update counter
-                analysisDone <- analysisDone + 1
-            }
-        }
-
-        ### Potentially batch correct
-        if( haveBatchEffect & correctForConfoundingFactors ) {
-            if (!quiet) {
-                message(paste(
-                    'Step ',
-                    analysisDone,
-                    ' of ',
-                    nrAnalysis,
-                    ': Correcting for batch effect...',
-                    sep=''
-                ))
-            }
-
-            ### Make model matrix (which also take additional factors into account)
-            if(TRUE) {
-                localDesign <-switchAnalyzeRlist$designMatrix
-
-                ### Convert group of interest to factors
-                localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
-
-                ### Check co-founders for group vs continous variables
-                if( ncol(localDesign) > 2 ) {
-                    for(i in 3:ncol(localDesign) ) { # i <- 4
-                        if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-                            if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
-                                localDesign[,i] <- factor(localDesign[,i])
-                            }
-                        } else {
-                            localDesign[,i] <- factor(localDesign[,i])
-                        }
-                    }
-                }
-
-                ### Make formula for model
-                localFormula <- '~ 0 + condition'
-                if (ncol(localDesign) > 2) {
-                    localFormula <- paste(
-                        localFormula,
-                        '+',
-                        paste(
-                            colnames(localDesign)[3:ncol(localDesign)],
-                            collapse = ' + '
-                        ),
-                        sep=' '
-                    )
-                }
-                localFormula <- as.formula(localFormula)
-
-                ### Make model
-                localModel <- model.matrix(localFormula, data = localDesign)
-                indexToModify <- 1:length(unique( localDesign$condition ))
-                colnames(localModel)[indexToModify] <- gsub(
-                    pattern =  '^condition',
-                    replacement =  '',
-                    x =  colnames(localModel)[indexToModify]
-                )
-            }
-
-            ### Batch correct expresison matrix
-            suppressWarnings(
-                isoRepBatch <- as.data.frame( limma::removeBatchEffect(
-                    x = log2( isoformRepExpression + 1),
-                    design     = localModel[,which(   colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
-                    covariates = localModel[,which( ! colnames(localModel) %in% switchAnalyzeRlist$designMatrix$condition), drop=FALSE],
-                    method='robust'
-                ))
-            )
-
-            isoformRepExpression <- 2^isoRepBatch - 1
-            isoformRepExpression[which( isoformRepExpression < 0, arr.ind = TRUE)] <- 0
-
-            ### update counter
-            analysisDone <- analysisDone + 1
-        }
     }
 
     ### If nessesary (re-)calculate IF matrix
     if(TRUE) {
-        if( (! ifAvailable) | recalcIF ) {
-            ### Extract annotation
-            localAnnoation <- unique(as.data.frame(
-                switchAnalyzeRlist$exons@elementMetadata[,c('gene_id','isoform_id')]
-            ))
-
-            ### Calculate IF from abundances
-            if (!quiet) {
-                message(paste(
-                    'Step ',
-                    analysisDone,
-                    ' of ',
-                    nrAnalysis,
-                    ': Calculating Isoform Fraction matrix...',
-                    sep=''
-                ))
-            }
-            localIF <- isoformToIsoformFraction(
-                isoformRepExpression  = isoformRepExpression,
-                isoformGeneAnnotation = localAnnoation,
-                quiet = TRUE
-            )
-            localIF <- localIF[,switchAnalyzeRlist$designMatrix$sampleID]
-
-            localIF <- round(localIF, digits = 3)
-
-            ### update counter
-            analysisDone <- analysisDone + 1
-
-        } else {
-            localIF <- switchAnalyzeRlist$isoformRepIF[,switchAnalyzeRlist$designMatrix$sampleID]
-            rownames(localIF) <- switchAnalyzeRlist$isoformRepIF$isoform_id
-
-        }
+        localIF <- switchAnalyzeRlist$isoformRepIF
+        rownames(localIF) <- localIF$isoform_id
+        localIF$isoform_id <- NULL
     }
 
     ### Extract mean IFs
@@ -941,41 +778,6 @@ isoformSwitchTestDEXSeq <- function(
                     switchAnalyzeRlist$isoformFeatures$iso_ref,
                     dexseqPairwiseResults$iso_ref
                 )]
-        }
-
-        ### Overwrite IF values
-        if(overwriteIFvalues & recalcIF) {
-            ### Remove old values
-            switchAnalyzeRlist$isoformFeatures$IF_overall <- NA
-            switchAnalyzeRlist$isoformFeatures$IF1        <- NA
-            switchAnalyzeRlist$isoformFeatures$IF2        <- NA
-            switchAnalyzeRlist$isoformFeatures$dIF        <- NA
-
-            ### Add new values
-            switchAnalyzeRlist$isoformFeatures$IF_overall <- ifMeans[match(
-                switchAnalyzeRlist$isoformFeatures$isoform_id, names(ifMeans)
-            )]
-
-            switchAnalyzeRlist$isoformFeatures$IF1 <-
-                dexseqPairwiseResults$IF1[match(
-                    switchAnalyzeRlist$isoformFeatures$iso_ref,
-                    dexseqPairwiseResults$iso_ref
-                )]
-            switchAnalyzeRlist$isoformFeatures$IF2 <-
-                dexseqPairwiseResults$IF2[match(
-                    switchAnalyzeRlist$isoformFeatures$iso_ref,
-                    dexseqPairwiseResults$iso_ref
-                )]
-
-            ### dIF values
-            switchAnalyzeRlist$isoformFeatures$dIF <-
-                dexseqPairwiseResults$dIF[match(
-                    switchAnalyzeRlist$isoformFeatures$iso_ref,
-                    dexseqPairwiseResults$iso_ref
-                )]
-
-            ### Full IF matrix
-            switchAnalyzeRlist$isoformRepIF <- localIF
         }
 
         switchAnalyzeRlist$isoformSwitchAnalysis <- dexseqPairwiseResults

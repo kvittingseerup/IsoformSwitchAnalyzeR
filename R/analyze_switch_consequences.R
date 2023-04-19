@@ -291,7 +291,7 @@ analyzeSwitchConsequences <- function(
 
         ### Extract Iso pairs
         pairwiseIsoComparison <- extractSwitchPairs(
-            switchAnalyzeRlist,
+            switchAnalyzeRlist = switchAnalyzeRlist,
             alpha = alpha,
             dIFcutoff = dIFcutoff,
             onlySigIsoforms = onlySigIsoforms
@@ -1390,10 +1390,10 @@ compareAnnotationOfTwoIsoforms <- function(
 
             overlapSize <- min(c(
                 nchar(gsub(
-                    '-', '', as.character(alignedSubject(localAlignment))
+                    '-', '', as.character(Biostrings::alignedSubject(localAlignment))
                 )),
                 nchar(gsub(
-                    '-', '', as.character(alignedPattern(localAlignment))
+                    '-', '', as.character(Biostrings::alignedPattern(localAlignment))
                 ))
             ))
             totalWidth <- width(localAlignment@subject@unaligned) +
@@ -1609,14 +1609,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(alignedSubject(localAlignment))
+                            as.character(Biostrings::alignedSubject(localAlignment))
                         )
                     ),
                         nchar(
                             gsub(
                                 '-',
                                 '',
-                                as.character(alignedPattern(localAlignment))
+                                as.character(Biostrings::alignedPattern(localAlignment))
                             )
                         ))
                     )
@@ -1720,13 +1720,13 @@ compareAnnotationOfTwoIsoforms <- function(
         if ('5_utr_seq_similarity'      %in% consequencesToAnalyze) {
             if (all(!is.na(transcriptData$orfTransciptStart))) {
                 localUpNt   <-
-                    subseq(upNtSeq,
+                    Biostrings::subseq(upNtSeq,
                            1,
                            transcriptData$orfTransciptStart[which(
                                transcriptData$isoform_id == upIso
                            )] - 1)
                 localDownNt <-
-                    subseq(downNtSeq,
+                    Biostrings::subseq(downNtSeq,
                            1,
                            transcriptData$orfTransciptStart[which(
                                transcriptData$isoform_id == downIso
@@ -1746,14 +1746,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(alignedSubject(localAlignment@subject))
+                            as.character(Biostrings::alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(alignedPattern(localAlignment@pattern))
+                            as.character(Biostrings::alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-
@@ -1883,14 +1883,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(alignedSubject(localAlignment))
+                            as.character(Biostrings::alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(alignedPattern(localAlignment))
+                            as.character(Biostrings::alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-

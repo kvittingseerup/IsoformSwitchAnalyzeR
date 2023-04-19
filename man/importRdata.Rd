@@ -9,7 +9,7 @@ Create SwitchAnalyzeRlist From Standard R Objects
 A general-purpose interface to constructing a switchAnalyzeRlist. The data needed for this function are:
 \itemize{
     \item{\code{1}: An isoform count expression matrix (nessesary). See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
-    \item{\code{2}: Optional. Normalized biological replicate isoform abundances. See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
+    \item{\code{2}: Optional. Normalized biological replicate isoform abundances. Must be normalized for both sequence depth and isoform length. Preferably TPM but RPKM/FPKM is a decent alternative. If not provided the function will calculate RPKM/FPKM from the count data. See \link{importIsoformExpression} for an easy way to import Salmon/Kallisto/RSEM or StringTie expression}
     \item{\code{3}: Isoform annotation (both genomic exon coordinates and which gene the isoform belongs to). This can also be supplied as the path to a GTF file from which the data is then extracted.}
     \item{\code{4}: A design matrix indicating which samples belong to which condition along with any potential confounding factors (e.g. batch effects)}
 }
@@ -20,7 +20,7 @@ Please note that
     It is possible to specify which comparisons to make using the \code{comparisonsToMake} (default is all possible pairwise of the once indicated by the design matrix).
     }
     \item{\code{2}
-    The importRdata() function automatically correct abundance and isoform fractions (IF) for confounding/batch effects annoated in the design matrix. It also automaticallt detectes unwanted effects not annoated in the design matrix. See details.
+    The importRdata() function automatically correct abundance and isoform fractions (IF) for confounding/batch effects annoated in the design matrix. It also automatically detectes unwanted effects not annoated in the design matrix. See details.
     }
     \item{\code{3}
     The importRdata() function includes an extended algorithm to correct some of the annoation problems frequently occuring when doing transcript assembly via tools such as StringTie/Cufflinks (gene merging and unassigned novel isoforms). These can be controlled via the fixStringTie* arguments.
@@ -39,7 +39,7 @@ importRdata(
     comparisonsToMake = NULL,
 
     ### Advanced arguments
-    detectAndCorrectUnwantedEffects = TRUE,
+    detectUnwantedEffects = TRUE,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
@@ -49,7 +49,6 @@ importRdata(
     removeTECgenes = TRUE,
     PTCDistance = 50,
     foldChangePseudoCount = 0.01,
-    addIFmatrix = TRUE,
     fixStringTieAnnotationProblem = TRUE,
     fixStringTieViaOverlapInMultiGenes = TRUE,
     fixStringTieMinOverlapSize = 50,
@@ -93,7 +92,7 @@ A (vector of) text string(s) providing the path(s) to the a fasta file containin
 A data.frame with two columns indicating which pairwise comparisons the switchAnalyzeRlist created should contain. The two columns, called 'condition_1' and 'condition_2' indicate which conditions should be compared and the strings indicated here must match the strings in the \code{designMatrix$condition} column. If not supplied all pairwise (unique non directional) comparisons of the conditions given in \code{designMatrix$condition} are created. If only a subset of the supplied data is used in the comparisons the Un-used data is automatically removed.
 }
 
-\item{detectAndCorrectUnwantedEffects}{
+\item{detectUnwantedEffects}{
 A logic indicating whether sva should be used to detect and correct for unwanted systematic variation found in your data (if TRUE) or this step should be ommitted (if FALSE). If TRUE this will correct the abundance estimates, IF and dIF values in the switchAnalyzeRlist(). Count data will remain unmodified byt IsoformSwitchAnalyzeR will take these unwanted effects into account in the downstream switch identification by incooperating them into the general linear models used for statistical analysis. Default is TRUE.
 }
 
@@ -116,10 +115,6 @@ Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indi
 \item{PTCDistance}{Only used if a GTF file is supplied to \code{isoformExonAnnoation} and \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50}
 
 \item{foldChangePseudoCount}{ A numeric indicating the pseudocount added to each of the average expression values before the log2 fold change is calculated. Done to prevent log2 fold changes of Inf or -Inf. Default is 0.01}
-
-\item{addIFmatrix}{
-A logic indicating whether to add the Isoform Fraction replicate matrix (if TRUE) or not (if FALSE). Keeping it will make testing with isoformSwitchTestDEXSeq faster but will also make the switchAnalyzeRlist larger - so it is a trade off for speed vs memory. For most experimental setups we expect that keeping it will be the better solution. Default is TRUE.
-}
 
 \item{fixStringTieAnnotationProblem}{
 A logic indicating whether to try and fix the following two annoation problems.
@@ -178,7 +173,7 @@ The main enteries are:
 \itemize{
     \item{\code{isoformFeatures}: This is where the expression and statistical summaries of the data are kept aka where the analysis actually happen}
     \item{\code{exons}: The genomic strucutre of the isoforms analyzed as GRange object.}
-    \item{\code{designMatrix}: Where the experimental design is kept. If \code{detectAndCorrectUnwantedEffects=TRUE} and any surrogate variables were identified these will be added here. }
+    \item{\code{designMatrix}: Where the experimental design is kept. If \code{detectUnwantedEffects=TRUE} and any surrogate variables were identified these will be added here. }
 }
 
 If a GTF file was supplied to \code{isoformExonAnnoation} and \code{addAnnotatedORFs=TRUE} a \code{data.frame} containing the details of the ORF analysis have been added to the switchAnalyzeRlist under the name 'orfAnalysis'. The data.frame added have one row pr isoform and contains 11 columns:

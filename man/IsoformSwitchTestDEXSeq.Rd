@@ -15,8 +15,6 @@ isoformSwitchTestDEXSeq(
     dIFcutoff = 0.1,
 
     ### Advanced arguments
-    correctForConfoundingFactors=TRUE,
-    overwriteIFvalues=TRUE,
     reduceToSwitchingGenes = TRUE,
     reduceFurtherToGenesWithConsequencePotential = TRUE,
     onlySigIsoforms = FALSE,
@@ -35,14 +33,6 @@ The cutoff which the FDR correct p-values must be smaller than for calling signi
 
 \item{dIFcutoff}{
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).
-}
-
-\item{correctForConfoundingFactors}{
-A logic indicating whether IsoformSwitchAnalyzeR to use limma to correct for any confounding effects (e.g. batch effects) as indicated in the design matrix (as additional columns (apart from the two default columns)). Default is TRUE.
-}
-
-\item{overwriteIFvalues}{
-A logic indicating whether to overwrite the IF and dIF stored in the switchAnalyzeRlist with the corrected IF and dIF values - if no confounding effects are present in the design matrix this will not change anything. Default is TRUE.
 }
 
 \item{reduceToSwitchingGenes}{

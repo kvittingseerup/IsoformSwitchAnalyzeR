@@ -10,6 +10,7 @@ Extract summary of how sub-celluar locations have changed due to isoform switche
 extractSubCellShifts(
     switchAnalyzeRlist,
     plotGenes = TRUE,
+    locationMinGenes = 3,
     returnResult = FALSE,
     localTheme = theme_bw()
 )
@@ -22,6 +23,10 @@ A \code{switchAnalyzeRlist} object where \code{analyzeSwitchConsequences()} have
 
 \item{plotGenes}{
 A logic indicating whether to plot number of genes (if TRUE) or isoform switches (if FALSE). Default is TRUE.
+}
+
+\item{locationMinGenes}{
+An integer determining the minimum number of genes in a sub-cell location before it is plottet. Default is 3.
 }
 
   \item{returnResult}{

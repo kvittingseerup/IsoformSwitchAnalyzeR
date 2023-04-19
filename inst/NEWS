@@ -1,3 +1,12 @@
+Changes in version 2.01.13 (2023-04)
+- Update type: Minor.
+- Fixed a problem with analysis of 5_utr_seq_similarity in analyzeSwitchConsequences()
+- importRdata() was updated to handle sva analysis better
+- importRdata() was updated by removing the addIFmatrix argument as the IF matrix is now alwasy needed
+- importRdata() had it's detectAndCorrectUnwantedEffects argument updated to
+- isoformSwitchTestDEXSeq was updated to not batch correct IF values as this is already done by importRdata
+- Various documentation updates
+
 Changes in version 2.01.12 (2023-03)
 - Update type: Minor.
 - Update of switchPlot() to turn off topology plotting

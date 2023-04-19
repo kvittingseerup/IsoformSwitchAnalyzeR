@@ -1522,20 +1522,23 @@ extractSwitchPairs <- function(
             pairwiseIsoComparison <- dplyr::inner_join(
                 sigUpData,
                 sigDnData,
-                by= 'gene_ref'
+                by= 'gene_ref',
+                multiple = "all"
             )
         } else {
             ### Sig up and all down
             upPairs <- dplyr::inner_join(
                 sigUpData,
                 justDnData,
-                by= 'gene_ref'
+                by= 'gene_ref',
+                multiple = "all"
             )
             ### Sig down and all up
             dnPairs <- dplyr::inner_join(
                 justUpData,
                 sigDnData,
-                by= 'gene_ref'
+                by= 'gene_ref',
+                multiple = "all"
             )
 
             ### Combine
