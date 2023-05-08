@@ -7,7 +7,7 @@ Description: Analysis of alternative splicing and isoform switches with predicte
 URL: http://bioconductor.org/packages/IsoformSwitchAnalyzeR/
 BugReports: https://github.com/kvittingseerup/IsoformSwitchAnalyzeR/issues
 License: GPL (>= 2)
-Depends: R (>= 4.3), limma, DEXSeq, satuRn (>= 1.7.0), sva, ggplot2 (>= 3.3.5), pfamAnalyzeR
+Depends: R (>= 4.2), limma, DEXSeq, satuRn (>= 1.7.0), sva, ggplot2 (>= 3.3.5), pfamAnalyzeR
 Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings (>= 2.50.0), IRanges,
     GenomicRanges, RColorBrewer, rtracklayer, VennDiagram, DBI, grDevices,
     graphics, stats, utils, GenomeInfoDb, grid, tximport (>= 1.7.1),
