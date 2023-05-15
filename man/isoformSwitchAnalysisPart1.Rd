@@ -86,8 +86,8 @@ Kristoffer Vitting-Seerup
 \code{\link{isoformSwitchTestSatuRn}}\cr
 \code{\link{analyzeORF}}\cr
 \code{\link{extractSequence}}
-
 }
+
 \examples{
 ### load example data
 data("exampleSwitchList")

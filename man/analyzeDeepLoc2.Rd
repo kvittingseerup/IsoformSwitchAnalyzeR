@@ -25,12 +25,13 @@ A \code{switchAnalyzeRlist} object
 A string indicating the full path to the DeepLoc2 result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the DeepLoc2 tool.
 }
 
-\item{enforceProbabilityCutoff}{ A logic indicating whether the location specific probability cutoff developed for DeepLoc2 should be strictly enforced (see details). This filter works independently from \code{probabilityCutoff}. If FALSE the localization called internally by DeepLoc2 are used. Default is NULL.}
+    \item{enforceProbabilityCutoff}{ A logic indicating whether the location specific probability cutoff developed for DeepLoc2 should be strictly enforced (see details). This filter works independently from \code{probabilityCutoff}. If FALSE the localization called internally by DeepLoc2 are used. Default is NULL.}
 
-\item{probabilityCutoff}{ A numeric between 0 and 1 indicating the minimum probability for calling a sub-cellular localization. This filter works independently from \code{enforceProbabilityCutoff}. If NULL the localization called internally by DeepLoc2 are used. Default is NULL.}
+    \item{probabilityCutoff}{ A numeric between 0 and 1 indicating the minimum probability for calling a sub-cellular localization. This filter works independently from \code{enforceProbabilityCutoff}. If NULL the localization called internally by DeepLoc2 are used. Default is NULL.}
 
 
-\item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
+    \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
+
 }
 
 \details{
@@ -91,7 +92,5 @@ exampleSwitchListAnalyzed <- analyzeDeepLoc2(
     pathToDeepLoc2resultFile = system.file("extdata/deeploc2.csv", package = "IsoformSwitchAnalyzeR"),
     quiet = FALSE
 )
-
-
 exampleSwitchListAnalyzed
 }

@@ -7,7 +7,6 @@ Plot Transcript Structure and Annotation
 This function plots the transcript structure of all (or selected) isoforms from a gene along with all the annotation added to the \code{switchAnalyzeRlist} including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains as well as annotated signal peptides.
 }
 \usage{
-
 switchPlotTranscript(
     ### Core arguments
     switchAnalyzeRlist,
@@ -35,7 +34,6 @@ switchPlotTranscript(
     alphas = c(0.05, 0.001),
     localTheme = theme_bw()
 )
-
 }
 
 \arguments{
@@ -120,23 +118,20 @@ General ggplot2 theme with which the plot is made, see \code{?ggplot2::theme} fo
 
 \details{
 This function generates a plot visualizing all the annotation for the transcripts gathered. The plot supports visualization of:
-\itemize{
 
+\itemize{
     \item \code{ORF} : Making the ORF part of the transcript thicker. Requires that ORF have been annotated (e.g.. via \code{analyzeORF}).
 
     \item{\code{Coding Potential / NMD} : The transcripts will be plotted in 3 categories: 'Coding', 'Non-coding' and 'NMD-sensitive'. The annotation of 'Coding' and 'Non-coding' requires the result of an external CPAT analysis have been added with \code{analyzeCPAT}. The NMD sensitivity is added by the \code{analyzeORF}.}
 
     \item{\code{Protein domains} : By coloring the part of the ORF containing the protein domains. Requires the result of an external Pfam analysis have been added with \code{analyzePFAM}). Structural variants (meaning non-complete protein domains) are dindicated. If multiple of the same domain is pressent they are summarized as indicated by the \code{ifMultipleIdenticalAnnotation} arugment (defualt add "(xY)" where Y is the number of identical domains ) }
 
-    \item{\code{Signal Peptide} : By coloring the part of the ORF containing the signal peptide. Requires the result of an external SignalP analysis have been added with \code{analyzeSignalP).}
+    \item{\code{Signal Peptide} : By coloring the part of the ORF containing the signal peptide. Requires the result of an external SignalP analysis have been added with \code{analyzeSignalP)}}
 
     \item{\code{Topology} : By adding a line above the transcript where the color of the line indicate whether that part of the transcript is a signale peptide, intracellular or extracellular.}
 
     \item{\code{Transcript status} : Specifically from data imported from cufflinks/cuffdiff. The status (class code) of the transcript is added in brackets after the transcript name.}
-    }
 }
-
-\cr
 
 The abbeviation used if \code{abbreviateLocations=TRUE} are:\cr
 Cyto    : Cytoplasm \cr
@@ -149,7 +144,6 @@ Mito    : Mitochondrion \cr
 Nucl    : Nucleus \cr
 Perox   : Peroxisome \cr
 Plastid : Plastid
-
 }
 
 \value{
@@ -159,6 +153,7 @@ Returns the gg object which can then be modified or plotted in a different setti
 \references{
 Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
 }
+
 \author{
 Kristoffer Vitting-Seerup
 }
@@ -180,5 +175,4 @@ mostSwitchingGene <- extractTopSwitches(
 
 ### Plot transcript structure
 switchPlotTranscript(exampleSwitchListAnalyzed, gene = mostSwitchingGene$gene_id)
-
 }
