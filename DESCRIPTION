@@ -3,7 +3,9 @@ Type: Package
 Title: Identify, Annotate and Visualize Isoform Switches with Functional Consequences from both short- and long-read RNA-seq data
 Version: 2.1.3
 Authors@R: c(person(given="Kristoffer",family="Vitting-Seerup", role=c("cre","aut"),email="k.vitting.seerup@gmail.com",comment = c(ORCID = "0000-0002-6450-0608")), person(given="Chunxu",family="Han", role=c("cre","aut"),email="chunxuhan007@gmail.com"), person(given="Jeroen",family="Gilis", role="ctb", email="jeroen.gilis@ugent.be",comment = c(ORCID = "0000-0001-8415-0943")))
-Description: Analysis of alternative splicing and isoform switches with predicted functional consequences (e.g. gain/loss of protein domains etc.) from quantification of all types of RNASeq by tools such as Kallisto, Salmon, StringTie, Cufflinks/Cuffdiff etc.
+Description: Analysis of alternative splicing and isoform switches with predicted functional
+    consequences (e.g. gain/loss of protein domains etc.) from quantification of all types of
+    RNA-seq (short/long) by tools such as Kallisto, Salmon, StringTie, Tallon, IsoQuant etc.
 URL: http://bioconductor.org/packages/IsoformSwitchAnalyzeR/
 BugReports: https://github.com/kvittingseerup/IsoformSwitchAnalyzeR/issues
 License: GPL (>= 2)
