@@ -488,9 +488,9 @@ switchPlotTranscript <- function(
                     DomainAnalysis$id <- 1:nrow(DomainAnalysis)
 
                     ### Annotate structural variants
-                    if( !is.null(DomainAnalysis$domain_structure)) {
+                    if( !is.null(DomainAnalysis$domain_isotype_simple)) {
                         DomainAnalysis$domain_sv <- ifelse(
-                            DomainAnalysis$domain_structure == 'Reference',
+                            DomainAnalysis$domain_isotype_simple == 'Reference',
                             yes = '',
                             no = ' (Non-ref Isotype)'
                         )

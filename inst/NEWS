@@ -1,3 +1,8 @@
+Changes in version 2.1.2 (2023-10)
+- Update type: Minor.
+- Fixed problem with plotting non-refrence isotypes via switchPlotTranscript
+- Chunxu Han was added as a contributer and maintainer
+
 Changes in version 2.1.2 (2023-05)
 - Update type: Minor.
 - Documentation update for Bioconductor

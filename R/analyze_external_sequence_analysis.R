@@ -62,7 +62,7 @@ analyzeCPAT <- function(
             )
 
         if( nrow(myCPATresults) == 0) {
-            stop('No results were found in the result file')
+            stop('No results were found in the CPAT result file')
         }
 
         # check if it is web file
@@ -264,7 +264,7 @@ analyzeCPC2 <- function(
             )
 
         if( nrow(myCPCresults) == 0) {
-            stop('No results were found in the result file')
+            stop('No results were found in the CPC result file')
         }
 
         # check if it is web file
@@ -1378,7 +1378,7 @@ analyzeSignalP <- function(
             ### Sanity check that it is a SignalIP result file
             if (TRUE) {
                 if (nrow(singalPresults) == 0) {
-                    stop('No signial peptides were found')
+                    stop('No signial peptides were found in the isoforms analyzed')
                 }
 
                 singalPresults <- unique(singalPresults)
