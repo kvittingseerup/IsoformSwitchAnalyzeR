@@ -1527,267 +1527,267 @@ analyzeSignalP <- function(
     return(switchAnalyzeRlist)
 }
 
-analyzeNetSurfP2 <- function(
+analyzeNetSurfP3 <- function(
     switchAnalyzeRlist,
-    pathToNetSurfP2resultFile,
+    pathToNetSurfP3resultFile,
     smoothingWindowSize = 5,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
     showProgress = TRUE,
     quiet = FALSE
 ) {
-    ### Test input
-    if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
-            stop(
-                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
-            )
-        }
-        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
-        }
-
-        # file
-        if (class(pathToNetSurfP2resultFile) != 'character') {
-            stop(
-                'The \'pathToNetSurfP2resultFile\' argument must be a string pointing to the NetSurfP2 result file'
-            )
-        }
-        if (! all( file.exists(pathToNetSurfP2resultFile)) ) {
-            stop('(At least on of) the file(s) \'pathToNetSurfP2resultFile\' points to does not exist')
-        }
-
-        if( smoothingWindowSize %% 2 != 1 | !is(smoothingWindowSize, 'numeric') ) {
-            stop('The \'smoothingWindowSize\' argument must be an odd integer')
-        }
+  ### Test input
+  if(TRUE) {
+    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+      stop(
+        'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+      )
     }
-
-    if (showProgress & !quiet) {
-        progressBar <- 'text'
-    } else {
-        progressBar <- 'none'
+    if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+      stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
     }
-
-    ### Read result file
-    if(TRUE) {
-        if (!quiet) {
-            message('Step 1 of 3: Reading results into R...')
-        }
-
-        ### Read in file
-        suppressWarnings(
-            netSurf <- do.call(rbind, plyr::llply(
-                pathToNetSurfP2resultFile,
-                .fun = function(
-                    aFile
-                ) {
-                    read_csv(
-                        file = aFile,
-                        col_names = TRUE,
-                        col_types = cols_only(
-                            id = col_character(),
-                            n = col_integer(),
-                            disorder = col_double()
-                        ),
-                        progress = showProgress & !quiet
-                    )
-                }
-            ))
-
-        )
-
-        ### Sanity check
-        if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
-            stop('The \'pathToNetSurfP2resultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
-        }
-
-        ### Subset to relecant features
-        netSurf <- netSurf[which(
-            netSurf$id %in%
-                switchAnalyzeRlist$orfAnalysis$isoform_id[which(
-                    !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
-                )]
-        ),]
-
-        netSurf <- unique(netSurf)
+    
+    # file
+    if (class(pathToNetSurfP3resultFile) != 'character') {
+      stop(
+        'The \'pathToNetSurfP3resultFile\' argument must be a string pointing to the NetSurfP3 result file'
+      )
     }
-
-    ### Reduce to those with IDR
-    if(TRUE) {
-        if (!quiet) {
-            message('Step 2 of 3: Analyzing data to extract IDRs...')
-        }
-        netSurf$idDis <- as.integer( netSurf$disorder > probabilityCutoff )
-
-
-        disRle <- RleList(
-            split(round(netSurf$disorder, digits = 3), netSurf$id)
-        )
-
-        ### Apply spliding window
-        disRle <- runmean(disRle, k=smoothingWindowSize, endrule = 'drop')
-        nRemovedByDrop <- (smoothingWindowSize-1) / 2
-
-        ### Convert to binary
-        disRle <- disRle > probabilityCutoff
-
-        ### Loop over and extract result
-        disRes <- plyr::ldply(disRle, .progress = progressBar, function(localRle) {
-            ### Extract start and stop
-            rleDf <- data.frame(
-                classification=localRle@values,
-                length=localRle@lengths,
-                orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
-            )
-            rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
-
-            ### Subset to disordered of length X
-            rleDf <- rleDf[which(
-                rleDf$classification &
-                    rleDf$length >= minIdrSize
-            ),]
-
-            rleDf$classification <- NULL
-
-            return(rleDf)
-        })
-        colnames(disRes)[1] <- 'isoform_id'
-
-        disRes <- disRes[,c('isoform_id','orf_aa_start','orf_aa_end','length')]
-
-        ### Add type
-        disRes$idr_type <- 'IDR'
+    if (! all( file.exists(pathToNetSurfP3resultFile)) ) {
+      stop('(At least one of) the file(s) \'pathToNetSurfP3resultFile\' points to does not exist')
     }
-
-    ### Convert from AA coordinats to transcript and genomic coordinats
-    if (TRUE) {
-        if (!quiet) {
-            message('Step 3 of 3: Converting AA coordinats to transcript and genomic coordinats...')
-        }
-
-        ### convert from codons to transcript position
-        orfStartDF <-
-            unique(
-                switchAnalyzeRlist$orfAnalysis[
-                    which( !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
-                    c('isoform_id', 'orfTransciptStart')
-                    ]
-            )
-        disRes$transcriptStart <-
-            (disRes$orf_aa_start  * 3 - 2) +
-            orfStartDF[
-                match(
-                    x = disRes$isoform_id,
-                    table = orfStartDF$isoform_id
-                ),
-                2] - 1
-        disRes$transcriptEnd <-
-            (disRes$orf_aa_end * 3) +
-            orfStartDF[
-                match(
-                    x = disRes$isoform_id,
-                    table = orfStartDF$isoform_id
-                ),
-                2] - 1
-
-        ### convert from transcript to genomic coordinats
-        # extract exon data
-        myExons <-
-            as.data.frame(switchAnalyzeRlist$exons[which(
-                switchAnalyzeRlist$exons$isoform_id %in% disRes$isoform_id
-            ), ])
-        myExonsSplit <- split(myExons, f = myExons$isoform_id)
-
-        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
-        disResDf <-
-            plyr::ddply(
-                disRes,
-                .progress = progressBar,
-                .variables = 'isoform_id',
-                .fun = function(aDF) {
-                    # aDF <- disRes[which(disRes$isoform_id == 'uc001isa.1'),]
-
-                    transcriptId <- aDF$isoform_id[1]
-                    localExons <-
-                        as.data.frame(myExonsSplit[[transcriptId]])
-
-                    # extract domain allignement
-                    localORFalignment <- aDF
-                    colnames(localORFalignment)[match(
-                        x = c('transcriptStart', 'transcriptEnd'),
-                        table = colnames(localORFalignment)
-                    )] <- c('start', 'end')
-
-                    # loop over domain alignment (migh be several)
-                    orfPosList <- list()
-                    for (j in 1:nrow(localORFalignment)) {
-                        domainInfo <-
-                            convertCoordinatsTranscriptToGenomic(
-                                transcriptCoordinats =  localORFalignment[j, ],
-                                exonStructure = localExons
-                            )
-
-                        orfPosList[[as.character(j)]] <- domainInfo
-
-                    }
-                    orfPosDf <- do.call(rbind, orfPosList)
-
-                    return(cbind(aDF, orfPosDf))
-                }
-            )
-
-        colnames(disResDf) <- gsub(
-            'pfam',
-            'idr',
-            colnames(disResDf)
-        )
-
+    
+    if( smoothingWindowSize %% 2 != 1 | !is(smoothingWindowSize, 'numeric') ) {
+      stop('The \'smoothingWindowSize\' argument must be an odd integer')
     }
-
-    ### Add analysis to switchAnalyzeRlist
-    if (TRUE) {
-        # sort
-        disResDf <-
-            disResDf[order(
-                disResDf$isoform_id,
-                disResDf$transcriptStart
-            ), ]
-
-        #disResDf$idrStarExon <- NULL
-        #disResDf$idrEndExon <- NULL
-
-        # add the results to the switchAnalyzeRlist object
-        switchAnalyzeRlist$idrAnalysis <- disResDf
-
-        # add indication to transcriptDf
-        switchAnalyzeRlist$isoformFeatures$idr_identified <- 'no'
-        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
-            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
-        )] <- NA # sets NA for those not analyzed
-
-        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
-            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
-                disResDf$isoform_id
-        )] <- 'yes'
-    }
-
-    n <- length(unique(disResDf$isoform_id))
-    p <-
-        round(n / length(unique(
-            switchAnalyzeRlist$isoformFeatures$isoform_id
-        )) * 100, digits = 2)
-
+  }
+  
+  if (showProgress & !quiet) {
+    progressBar <- 'text'
+  } else {
+    progressBar <- 'none'
+  }
+  
+  ### Read result file
+  if(TRUE) {
     if (!quiet) {
-        message(paste(
-            'Added IDR information to ',
-            n,
-            ' (',
-            p,
-            '%) transcripts',
-            sep = ''
-        ))
+      message('Step 1 of 3: Reading results into R...')
     }
-    return(switchAnalyzeRlist)
+    
+    ### Read in file
+    suppressWarnings(
+      netSurf <- do.call(rbind, plyr::llply(
+        pathToNetSurfP3resultFile,
+        .fun = function(
+    aFile
+        ) {
+          read_csv(
+            file = aFile,
+            col_names = TRUE,
+            col_types = cols_only(
+              id = col_character(),
+              n = col_integer(),
+              disorder = col_double()
+            ),
+            progress = showProgress & !quiet
+          ) %>%
+            dplyr::mutate(id = sub("^>", "", id))
+        }
+      ))
+    
+    )
+    ### Sanity check
+    if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
+      stop('The \'pathToNetSurfP3resultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
+    }
+    
+    ### Subset to relevant features
+    netSurf <- netSurf[which(
+      netSurf$id %in%
+        switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+          !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+        )]
+    ),]
+    
+    netSurf <- unique(netSurf)
+  }
+  
+  ### Reduce to those with IDR
+  if(TRUE) {
+    if (!quiet) {
+      message('Step 2 of 3: Analyzing data to extract IDRs...')
+    }
+    netSurf$idDis <- as.integer( netSurf$disorder > probabilityCutoff )
+    
+    
+    disRle <- RleList(
+      split(round(netSurf$disorder, digits = 3), netSurf$id)
+    )
+    
+    ### Apply spliding window
+    disRle <- runmean(disRle, k=smoothingWindowSize, endrule = 'drop')
+    nRemovedByDrop <- (smoothingWindowSize-1) / 2
+    
+    ### Convert to binary
+    disRle <- disRle > probabilityCutoff
+    
+    ### Loop over and extract result
+    disRes <- plyr::ldply(disRle, .progress = progressBar, function(localRle) {
+      ### Extract start and stop
+      rleDf <- data.frame(
+        classification=localRle@values,
+        length=localRle@lengths,
+        orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
+      )
+      rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
+      
+      ### Subset to disordered of length X
+      rleDf <- rleDf[which(
+        rleDf$classification &
+          rleDf$length >= minIdrSize
+      ),]
+      
+      rleDf$classification <- NULL
+      
+      return(rleDf)
+    })
+    colnames(disRes)[1] <- 'isoform_id'
+    
+    disRes <- disRes[,c('isoform_id','orf_aa_start','orf_aa_end','length')]
+    
+    ### Add type
+    disRes$idr_type <- 'IDR'
+  }
+  
+  ### Convert from AA coordinates to transcript and genomic coordinates
+  if (TRUE) {
+    if (!quiet) {
+      message('Step 3 of 3: Converting AA coordinates to transcript and genomic coordinates...')
+    }
+    
+    ### convert from codons to transcript position
+    orfStartDF <-
+      unique(
+        switchAnalyzeRlist$orfAnalysis[
+          which( !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+          c('isoform_id', 'orfTransciptStart')
+        ]
+      )
+    disRes$transcriptStart <-
+      (disRes$orf_aa_start  * 3 - 2) +
+      orfStartDF[
+        match(
+          x = disRes$isoform_id,
+          table = orfStartDF$isoform_id
+        ),
+        2] - 1
+    disRes$transcriptEnd <-
+      (disRes$orf_aa_end * 3) +
+      orfStartDF[
+        match(
+          x = disRes$isoform_id,
+          table = orfStartDF$isoform_id
+        ),
+        2] - 1
+    
+    ### convert from transcript to genomic coordinates
+    # extract exon data
+    myExons <-
+      as.data.frame(switchAnalyzeRlist$exons[which(
+        switchAnalyzeRlist$exons$isoform_id %in% disRes$isoform_id
+      ), ])
+    myExonsSplit <- split(myExons, f = myExons$isoform_id)
+    
+    # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
+    disResDf <-
+      plyr::ddply(
+        disRes,
+        .progress = progressBar,
+        .variables = 'isoform_id',
+        .fun = function(aDF) {
+          # aDF <- disRes[which(disRes$isoform_id == 'uc001isa.1'),]
+          
+          transcriptId <- aDF$isoform_id[1]
+          localExons <-
+            as.data.frame(myExonsSplit[[transcriptId]])
+          
+          # extract domain allignement
+          localORFalignment <- aDF
+          colnames(localORFalignment)[match(
+            x = c('transcriptStart', 'transcriptEnd'),
+            table = colnames(localORFalignment)
+          )] <- c('start', 'end')
+          
+          # loop over domain alignment (migh be several)
+          orfPosList <- list()
+          for (j in 1:nrow(localORFalignment)) {
+            domainInfo <-
+              convertCoordinatsTranscriptToGenomic(
+                transcriptCoordinats =  localORFalignment[j, ],
+                exonStructure = localExons
+              )
+            
+            orfPosList[[as.character(j)]] <- domainInfo
+            
+          }
+          orfPosDf <- do.call(rbind, orfPosList)
+          
+          return(cbind(aDF, orfPosDf))
+        }
+      )
+    
+    colnames(disResDf) <- gsub(
+      'pfam',
+      'idr',
+      colnames(disResDf)
+    )
+    
+  }
+  
+  ### Add analysis to switchAnalyzeRlist
+  if (TRUE) {
+    # sort
+    disResDf <-
+      disResDf[order(
+        disResDf$isoform_id,
+        disResDf$transcriptStart
+      ), ]
+    
+    #disResDf$idrStarExon <- NULL
+    #disResDf$idrEndExon <- NULL
+    
+    # add the results to the switchAnalyzeRlist object
+    switchAnalyzeRlist$idrAnalysis <- disResDf
+    
+    # add indication to transcriptDf
+    switchAnalyzeRlist$isoformFeatures$idr_identified <- 'no'
+    switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+      is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+    )] <- NA # sets NA for those not analyzed
+    
+    switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+      switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+        disResDf$isoform_id
+    )] <- 'yes'
+  }
+  
+  n <- length(unique(disResDf$isoform_id))
+  p <-
+    round(n / length(unique(
+      switchAnalyzeRlist$isoformFeatures$isoform_id
+    )) * 100, digits = 2)
+  
+  if (!quiet) {
+    message(paste(
+      'Added IDR information to ',
+      n,
+      ' (',
+      p,
+      '%) transcripts',
+      sep = ''
+    ))
+  }
+  return(switchAnalyzeRlist)
 }
 
 analyzeIUPred2A <- function(
