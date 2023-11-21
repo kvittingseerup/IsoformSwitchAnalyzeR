@@ -1,16 +1,16 @@
-\name{analyzeNetSurfP2}
-\alias{analyzeNetSurfP2}
+\name{analyzeNetSurfP3}
+\alias{analyzeNetSurfP3}
 
 \title{
-Import Result of NetSurfP2 analysis
+Import Result of NetSurfP3 analysis
 }
 \description{
-Allows for easy integration of the result of NetSurfP2 (performing external sequence analysis which include Intrinsically Disordered Regions (IDR)) in the IsoformSwitchAnalyzeR workflow. This function also supports using a sliding window to extract IDRs. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeNetSurfP2, analyzePFAM and analyzeSignalP if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the result of NetSurfP3 (performing external sequence analysis which include Intrinsically Disordered Regions (IDR)) in the IsoformSwitchAnalyzeR workflow. This function also supports using a sliding window to extract IDRs. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeNetSurfP3, analyzePFAM and analyzeSignalP if you have predicted the ORFs with \code{analyzeORF}.
 }
 \usage{
-analyzeNetSurfP2(
+analyzeNetSurfP3(
     switchAnalyzeRlist,
-    pathToNetSurfP2resultFile,
+    pathToNetSurfP3resultFile,
     smoothingWindowSize = 5,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
@@ -23,8 +23,8 @@ analyzeNetSurfP2(
   \item{switchAnalyzeRlist}{
 A \code{switchAnalyzeRlist} object
 }
-  \item{pathToNetSurfP2resultFile}{
-A string indicating the full path to the NetSurfP-2 result file. Can be gziped. If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings.
+  \item{pathToNetSurfP3resultFile}{
+A string indicating the full path to the NetSurfP-3 result file. Can be gziped. If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings.
 }
 
 \item{smoothingWindowSize}{
@@ -48,23 +48,23 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 \details{
 Intrinsically Disordered Regions (IDR) are regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). Such regions are thought to play important roles in all aspects of biology (and when it goes wrong) through multiple different functional aspects - including facilitating protein interactions.
 
-The NetSurfP web-server currently have a restriction of max 4000 sequences in the file uploaded. If you have more than that (one for each isoform in \code{summary( switchAnalyzeRlist)}) we recommend multiple runs each with one of the the files containing subsets - else you can just run the combined fasta file. See \link{extractSequence} for info on how to split the amino acid fasta files.
+The NetSurfP-3.0 web-server currently have a restriction of max 10,000 sequences in the file uploaded. If you have more than that (one for each isoform in \code{summary( switchAnalyzeRlist)}) we recommend multiple runs each with one of the the files containing subsets - else you can just run the combined fasta file. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools: \cr
 Use default parameters. If you want to use the webserver it is easily done as follows:
-1) Go to \url{http://www.cbs.dtu.dk/services/NetSurfP-2.0/}
+1) Go to \url{https://services.healthtech.dtu.dk/services/NetSurfP-3.0/}
 2) Upload the amino avoid file (_AA) created with \code{extractSequence}.
 3) Submit your job.
 4) Wait till job is finished (if you submit your email you will receive a notification).
-5) In the top-right corner of the result site use the "Export All" bottom to download the results as a CNV file.
-6) Supply a string indicating the path to the downloaded cnv file directly to the "pathToNetSurfP2resultFile" argument.
+5) In the top-right corner of the result site use the "Export All" bottom to download the results as a CSV file.
+6) Supply a string indicating the path to the downloaded cnv file directly to the "pathToNetSurfP3resultFile" argument.
 
-If you run NetSurfP-2 locally just use the "--csv" argument and provide the resulting csv file to the \code{pathToNetSurfP2resultFile} argument.
+If you runNetSurfP-3.0 locally just use the "--csv" argument and provide the resulting csv file to the \code{pathToNetSurfP3resultFile} argument.
 
 
-IDR are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run NetSurfP2 once on all isoforms and then supply the entire file to \code{analyzeNetSurfP2}.
+IDR are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run NetSurfP3 once on all isoforms and then supply the entire file to \code{analyzeNetSurfP3}.
 
-Please note that the \code{analyzeNetSurfP2()} function will automatically only import the NetSurfP-2 results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
+Please note that the \code{analyzeNetSurfP3()} function will automatically only import the NetSurfP-3.0 results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 }
 
 \value{
@@ -88,7 +88,7 @@ The data.frame added have one row per isoform and contains the columns:
 \references{
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{\code{NetSurfP-2} : Klausen et al: NetSurfP-2.0: improved prediction of protein structural features by integrated deep learning. BioRxiv (2018).}
+    \item{\code{NetSurfP-3} : Høie et al: NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning. Nucleic Acids Research (2022).}
 }
 }
 

@@ -207,7 +207,7 @@ If you are using the:
 - **Pfam**: Please cite reference _8_.
 - **Pfam isotypes**: Please cite reference _20_.
 - **SignalP**: Please cite reference _9_.
-- **NetSurf2-P**: Please cite reference _15_.
+- **NetSurf3-P**: Please cite reference _15_.
 - **IUPred2A**: Please cite reference _16_.
 - **Deeploc2**: Please cite reference _18_.
 - **DeepTMHMM**: Please cite reference _19_.
@@ -234,7 +234,7 @@ If you are using the:
 12. _Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)_ [link](https://academic.oup.com/nar/article/43/7/e47/2414268).
 13. _Anders et al. **Detecting differential usage of exons from RNA-seq data**. Genome Research (2012)_ [link](https://genome.cshlp.org/content/22/10/2008.long).
 14. _Kang et al. **CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features**. Nucleic Acids Res (2017)_ [link](https://academic.oup.com/nar/article/45/W1/W12/3831091).
-15. _Klausen et al. **NetSurfP-2.0: improved prediction of protein structural features by integrated deep learning**. Proteins (2019)_ [link](https://doi.org/10.1002/prot.25674)
+15. _Høie et al. **NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning**. Nucleic Acids Research (2022)_ [link](https://doi.org/10.1093/nar/gkac439)
 16. _Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018)_ [link](https://doi.org/10.1093/nar/gky384)
 17. _Love et al. Tximeta: Reference sequence checksums for provenance identification in RNA-seq. PLoS Comput. Biol (2020)_ [link](http://dx.doi.org/10.1371/journal.pcbi.1007664)
 18. _Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res  (2022)_ [link](http://dx.doi.org/10.1093/nar/gkac278)
@@ -287,7 +287,7 @@ The resulting fasta files enables the usage of external sequence analysis tools.
 - SignalP: Prediction of Signal Peptides, which can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (V5 is supported).
 - Tools Prediction of Intrinsically Disordered Regions (IDR):
     + IUPred2A: Which both predict IDRs and Intrinsically Disordered Binding Regions (IDBR) It can be run either locally or via their [webserver](https://iupred2a.elte.hu)
-    + NetSurfP-2: Which as parts of its predicitons also predict IDR. It can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/).
+    + NetSurfP-3: Which as parts of its predicitons also predict IDR. It can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
 - Tools for localization prediction
     + DeepTMHMM: Predicts protein toplology (location compared to cell membrane) and can be run from from this [webserver](https://biolib.com/DTU/DeepTMHMM) 
     + DeepLoc2: Predicts sub-cellular location and can be run from this [webserver](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0).
@@ -511,7 +511,7 @@ extractSwitchSummary( exampleSwitchList )
 
 <br />
 
-In a typical workflow, the user would here have to use produced fasta files to perform the external analysis tools (Pfam (for prediction of protein domains), SignalP (for prediction of signal peptides), CPAT or CPC2 (for prediction of coding potential, since they perform similar analysis so it is only necessary to run one of them)), Prediction of sub-cellular location (DeepLoc2) and isoform toplogy (DeepTmHmm), IUPred2A or NetSurfP-2 (for prediction of Intrinsically Disordered Regions (IDR), since they perform similar analysis so it is only necessary to run one of them. The main difference is that NetSurfP-2 is newer but IUPred2A also allows for prediction of IDBS (which are also integrated into the IsoformSwitchAnalyzeR workflow)). For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
+In a typical workflow, the user would here have to use produced fasta files to perform the external analysis tools (Pfam (for prediction of protein domains), SignalP (for prediction of signal peptides), CPAT or CPC2 (for prediction of coding potential, since they perform similar analysis so it is only necessary to run one of them)), Prediction of sub-cellular location (DeepLoc2) and isoform toplogy (DeepTmHmm), IUPred2A or NetSurfP-3 (for prediction of Intrinsically Disordered Regions (IDR), since they perform similar analysis so it is only necessary to run one of them. The main difference is that NetSurfP-3 is newer but IUPred2A also allows for prediction of IDBS (which are also integrated into the IsoformSwitchAnalyzeR workflow)). For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
 
 <br />
 
@@ -853,7 +853,7 @@ mySwitchList <- analyzePFAM( mySwitchList )
 mySwitchList <- analyzeSignalP( mySwitchList )
 
 analyzeIUPred2A() # OR
-analyzeNetSurfP2()
+analyzeNetSurfP3()
 
 mySwitchList <- analyzeAlternativeSplicing( mySwitchList )
 
@@ -1508,15 +1508,15 @@ The two fasta files that are the output by _extractSequence()_ (if writeToFile=T
 * Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
 * SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (v5 and v6 is supported).
 * IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) --- the parts of a protein protein which does not have a fixed three-dimensional structure (as opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu). IUPred3 is also supported by IsoformSwitchAnalyzeR (as it produces identical result files).
-* NetSurfP-2 : Prediction of Intrinsically Disordered Regions (IDR) --- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-2 can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/).
+* NetSurfP-3 : Prediction of Intrinsically Disordered Regions (IDR) --- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-3 can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
 * analyzeDeepTMHMM : Prediction of protein topology --- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
 * analyzeDeepLoc2 : Prediction of sub-cellular localization(s) of protein.
 
 Please note that:
 
 * CPAT and CPC2 performs the same type of analysis so it is only necessary to run one of them.
-* IUPred2A and NetSurfP-2 performs the same type of analysis so it is only necessary to run one of them. The main difference is that NetSurfP-2 is newer but IUPred2A also allows for prediction of IDBS (which are also integrated into the IsoformSwitchAnalyzeR workflow).
-* Some webservers (Pfam, SignalP, NetSurfP-2 and IUPred2A) have (quite) strict limits on the number (and length) of amino acid sequences one can submit at the time. As indicated above extractSequence() can generate multiple filtered amino acid fasta files that can be uploaded one at the time (aka as multiple runs) to circumvent this.
+* IUPred2A and NetSurfP-3 performs the same type of analysis so it is only necessary to run one of them. The main difference is that NetSurfP-3 is newer but IUPred2A also allows for prediction of IDBS (which are also integrated into the IsoformSwitchAnalyzeR workflow).
+* Some webservers (Pfam, SignalP, NetSurfP-3 and IUPred2A) have (quite) strict limits on the number (and length) of amino acid sequences one can submit at the time. As indicated above extractSequence() can generate multiple filtered amino acid fasta files that can be uploaded one at the time (aka as multiple runs) to circumvent this.
 * These ools are the ones currently supported, but if you have additional ideas please do not hesitate to contact us as described in [How To Get Help].
 
 
@@ -1527,7 +1527,7 @@ We suggest that the external sequence analysis tools are run as follows:
 * Pfam : Use default parameters and the amino acid fasta file (_AA.fasta). If the [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan) is used you need to copy/paste the result part of the mail you receive into an empty plain text document (notepad, sublimetext, TextEdit or similar (not Word)) and save that to a plain text (txt) file. The path to that file should be supplied. If a stand-alone version was used, just supply the path to the result file. A more detailed walkthrough is found under details in the documentation of the analyzePFAM() function (?analyzePFAM).
 * SignalP : Use the amino acid fasta file (_AA.fasta). If using the [webserver](http://www.cbs.dtu.dk/services/SignalP/) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the webserver the results can be downloaded using the "Downloads" button in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the "pathToSignalPresultFile" argument. If a stand-alone version was just supply the path to the summary result file.
 * IUPred2A : 1) Go to the [webserver](https://iupred2a.elte.hu) 2) Upload the amino acoid file (_AA) created with extractSequence() function. 3) Add your email (you will recieve a notification when the job is done). 4) In the email use the link indicated by "The text file can be found here:" and save the result (right click on a blank space and use "save as" or use the keybord shortcut "ctrl/cmd + s"). 5) Supply a string indicating the path to the downloaded file to the "pathToIUPred2AresultFile" argument. If multiple files are created (multiple web-server runs) just supply the path to all of them as a string.
-* NetSurfP-2 : 1) Go to [webserver](http://www.cbs.dtu.dk/services/NetSurfP-2.0/). 2) Upload the amino acid file (_AA) created with extractSequence() function. 3) Submit your job. 4) Wait till job is finished (if you submit your email you will receive a notification). 5) In the top-right corner of the result site use the "Export All" button to download the results as a CNV file. 6) Supply a string indicating the path to the downloaded csv file directly to the "pathToNetSurfP2resultFile" argument. If you run NetSurfP-2 locally just use the "--csv" argument and provide the resulting csv file to the _pathToNetSurfP2resultFile_ argument.
+* NetSurfP-3 : 1) Go to [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/). 2) Upload the amino acid file (_AA) created with extractSequence() function. 3) Submit your job. 4) Wait till job is finished (if you submit your email you will receive a notification). 5) In the top-right corner of the result site use the "Export All" button to download the results as a CSV file. 6) Supply a string indicating the path to the downloaded csv file directly to the "pathToNetSurfP3resultFile" argument. If you run NetSurfP-3 locally just use the "--csv" argument and provide the resulting csv file to the _pathToNetSurfP3resultFile_ argument.
 * analyzeDeepTMHMM: DeepTMHMM can be run from from this [website](https://biolib.com/DTU/DeepTMHMM) and afterwards all files can be downloaded as a "gff3 format" file can be used as input to this function.
 * analyzeDeepLoc2 can be run from this [website](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0) and choose "Short output (no figures)". Once it is done you can download by pressing the "Download prediction results: CSV Summary" at the top of the result section (just above the red "Probability thresholds" button).
 
@@ -1543,11 +1543,11 @@ After the external sequence analysis with have been performed (please remember t
     analyzePFAM()
     analyzeSignalP()
     analyzeIUPred2A() # OR
-    analyzeNetSurfP2()
+    analyzeNetSurfP3()
     analyzeDeepLoc2()
     analyzeDeepTMHMM()
 
-Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP2.
+Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP3.
 
 
 The functions are used as:
@@ -1595,6 +1595,13 @@ exampleSwitchListAnalyzed <- analyzeSignalP(
 exampleSwitchListAnalyzed <- analyzeIUPred2A(
     switchAnalyzeRlist        = exampleSwitchListAnalyzed,
     pathToIUPred2AresultFile = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR"),
+    showProgress = FALSE
+)
+
+### Add NetSurfP3 analysis
+exampleSwitchListAnalyzed <- analyzeNetSurfP3(
+    switchAnalyzeRlist = exampleSwitchListAnalyzed,
+    pathToNetSurfP3resultFile = system.file("extdata/netsurfp3_result.csv.gz", package = "IsoformSwitchAnalyzeR"),
     showProgress = FALSE
 )
 
