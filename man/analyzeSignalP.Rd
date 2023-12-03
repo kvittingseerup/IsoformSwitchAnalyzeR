@@ -12,6 +12,9 @@ analyzeSignalP(
     switchAnalyzeRlist,
     pathToSignalPresultFile,
     minSignalPeptideProbability = 0.5,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet=FALSE
 )
 }
@@ -24,6 +27,9 @@ A \code{switchAnalyzeRlist} object
 A string indicating the full path to the summary SignalP result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the SignalP tool.
 }
 \item{minSignalPeptideProbability}{ A numeric between 0 and 1 indicating the minimum probability for calling a signal peptide. Default is 0.5}
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
+\item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
+\item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
