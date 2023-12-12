@@ -1,3 +1,7 @@
+Changes in version 2.1.2(2023-12)
+- Update type: Minor.
+- Advanced arguments ignoreAfterBar, ignoreAfterSpace and ignoreAfterPeriod are introduced to the import of external analysis to fix the ID names of external analysis results
+
 Changes in version 2.1.2(2023-11)
 - Update type: Minor.
 - analyzeNetSurfP3() was introducted to replace analyzeNetSurfP2() to support import of results predicted with NetSurfP-3

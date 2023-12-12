@@ -13,6 +13,9 @@ analyzeCPAT(
     pathToCPATresultFile,
     codingCutoff,
     removeNoncodinORFs,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet=FALSE
 )
 }
@@ -22,6 +25,11 @@ analyzeCPAT(
     \item{pathToCPATresultFile}{: A string indicating the full path to the CPAT result file. See \code{details} for suggestion of how to run and obtain the result of the CPAT tool.}
     \item{codingCutoff}{: Numeric indicating the cutoff used by CPAT for distinguishing between coding and non-coding transcripts. The cutoff is dependent on species analyzed. Our analysis suggest that the optimal cutoff for overlapping coding and noncoding isoforms are 0.725 for human and 0.721 for mouse - HOWEVER the suggested cutoffs from the CPAT article (see references) derived by comparing known genes to random non-coding regions of the genome is 0.364 for human and 0.44 for mouse.}
     \item{removeNoncodinORFs}{: A logic indicating whether to remove ORF information from the isoforms which the CPAT analysis classifies as non-coding. This can be particular useful if the isoform (and ORF) was predicted de-novo but is not recommended if ORFs was imported from a GTF file. This will affect all downstream analysis and plots as both analysis of domains and signal peptides requires that ORFs are annotated (e.g. analyzeSwitchConsequences will not consider the domains (potentially) found by Pfam if the ORF have been removed).}
+    \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
+
+    \item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
+
+    \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
     \item{quiet}{: A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
 

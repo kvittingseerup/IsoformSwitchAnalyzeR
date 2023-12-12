@@ -14,6 +14,9 @@ analyzeNetSurfP3(
     smoothingWindowSize = 5,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 )
@@ -38,6 +41,12 @@ A double indicating the cutoff applied to the (smoothed) disordered probability 
 \item{minIdrSize}{
 An integer indicating how long a stretch of disordered amino acid constitute the "region" part of the Intrinsically Disordered Region (IDR) definition. The default, 30 amino acids, is an accepted standard for long IDRs.
 }
+
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
+
+\item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
+
+\item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.

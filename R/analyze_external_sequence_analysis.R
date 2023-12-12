@@ -5,10 +5,16 @@
 
 ### Actural functions
 analyzeCPAT <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToCPATresultFile,
     codingCutoff,
     removeNoncodinORFs,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Check input
@@ -123,6 +129,16 @@ analyzeCPAT <- function(
                 'There seems to be a problem with the CPAT result file. Please check it is the rigth file and try again'
             )
         }
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          myCPATresults$id <- fixNames(
+            nameVec = myCPATresults$id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
 
         ### Massage
         # check ids
@@ -209,10 +225,16 @@ analyzeCPAT <- function(
 }
 
 analyzeCPC2 <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToCPC2resultFile,
     codingCutoff = 0.5,
     removeNoncodinORFs,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Check input
@@ -314,7 +336,16 @@ analyzeCPC2 <- function(
         }
         # rename to match non-web file
         colnames(myCPCresults)[1] <- 'id'
-
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          myCPCresults$id <- fixNames(
+            nameVec = myCPCresults$id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
 
         ### Massage
         # check ids
@@ -402,8 +433,14 @@ analyzeCPC2 <- function(
 }
 
 analyzePFAM <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToPFAMresultFile,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -735,6 +772,16 @@ analyzePFAM <- function(
             myPfamResult$seq_id <- gsub('^>', '', myPfamResult$seq_id)
             warning('Removed the prefix ">" from all Pfam results since we suspect they are not supposed to be there.')
         }
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          myPfamResult$seq_id <- fixNames(
+            nameVec = myPfamResult$seq_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
 
         ### test names
         if (!any(myPfamResult$seq_id %in%
@@ -1025,9 +1072,15 @@ analyzePFAM <- function(
 }
 
 analyzeSignalP <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToSignalPresultFile,
+    
+    ### Advanced arguments
     minSignalPeptideProbability = 0.5,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Test input
@@ -1136,6 +1189,15 @@ analyzeSignalP <- function(
 
                 if( any( c(t1,t2,t3,t4,t5))) {
                     stop('The pathToSignalPresultFile does not seam to be the result of a SignalP 6 analysis')
+                }
+                
+                if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+                  singalPresults$transcript_id <- fixNames(
+                    nameVec = singalPresults$transcript_id,
+                    ignoreAfterBar = ignoreAfterBar,
+                    ignoreAfterSpace = ignoreAfterSpace,
+                    ignoreAfterPeriod = ignoreAfterPeriod
+                  )
                 }
 
                 if( ! any( singalPresults$isoform_id %in% switchAnalyzeRlist$isoformFeatures$isoform_id) ) {
@@ -1271,6 +1333,15 @@ analyzeSignalP <- function(
 
                 if( any( c(t1,t2,t3,t4,t5))) {
                     stop('The pathToSignalPresultFile does not seam to be the result of a SignalP 5 analysis')
+                }
+                
+                if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+                  singalPresults$transcript_id <- fixNames(
+                    nameVec = singalPresults$transcript_id,
+                    ignoreAfterBar = ignoreAfterBar,
+                    ignoreAfterSpace = ignoreAfterSpace,
+                    ignoreAfterPeriod = ignoreAfterPeriod
+                  )
                 }
 
                 if( ! any( singalPresults$isoform_id %in% switchAnalyzeRlist$isoformFeatures$isoform_id) ) {
@@ -1414,6 +1485,14 @@ analyzeSignalP <- function(
                         x[2]
                     }
                 )
+            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+              singalPresults$transcript_id <- fixNames(
+                nameVec = singalPresults$transcript_id,
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+              )
+            }
 
             # test names
             if (!any(
@@ -1528,11 +1607,17 @@ analyzeSignalP <- function(
 }
 
 analyzeNetSurfP3 <- function(
+    ### Advanced arguments
     switchAnalyzeRlist,
     pathToNetSurfP3resultFile,
+    
+    ### Advanced arguments
     smoothingWindowSize = 5,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -1596,6 +1681,16 @@ analyzeNetSurfP3 <- function(
       ))
     
     )
+    ### Fix names
+    if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+      netSurf$id <- fixNames(
+        nameVec = netSurf$id,
+        ignoreAfterBar = ignoreAfterBar,
+        ignoreAfterSpace = ignoreAfterSpace,
+        ignoreAfterPeriod = ignoreAfterPeriod
+      )
+    }
+    
     ### Sanity check
     if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
       stop('The \'pathToNetSurfP3resultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
@@ -1791,14 +1886,20 @@ analyzeNetSurfP3 <- function(
 }
 
 analyzeIUPred2A <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToIUPred2AresultFile,
+    
+    ### Advanced arguments
     smoothingWindowSize = 11,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
     annotateBindingSites = TRUE,
     minIdrBindingSize = 15,
     minIdrBindingOverlapFrac = 0.8,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -1887,7 +1988,17 @@ analyzeIUPred2A <- function(
                 '^>',
                 '',
                 iupred2a$V1[which(is.na(iupred2a$V3))]
-            )
+            ) 
+            
+            ### Fix names
+            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+                myNames <- fixNames(
+                nameVec = myNames,
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+              )
+            }
 
             ### Sanity check
             if( ! any( myNames %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
@@ -2277,10 +2388,16 @@ analyzeIUPred2A <- function(
 }
 
 analyzeDeepLoc2 <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToDeepLoc2resultFile,
+    
+    ### Advanced arguments
     enforceProbabilityCutoff = TRUE,
     probabilityCutoff = NULL,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Test input
@@ -2384,7 +2501,16 @@ analyzeDeepLoc2 <- function(
         colnames(deepLocRes) <- stringr::str_replace_all( colnames(deepLocRes) , ' ','_')
         colnames(deepLocRes) <- stringr::str_replace_all( colnames(deepLocRes) , '/','_')
 
-
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          deepLocRes$isoform_id <- fixNames(
+            nameVec = deepLocRes$isoform_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
+        
         ### Subset to analyzed files
         deepLocRes <- deepLocRes[which(
             deepLocRes$isoform_id %in% switchAnalyzeRlist$orfAnalysis$isoform_id[which(
@@ -2520,8 +2646,14 @@ analyzeDeepLoc2 <- function(
 }
 
 analyzeDeepTMHMM <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToDeepTMHMMresultFile,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -2592,8 +2724,17 @@ analyzeDeepTMHMM <- function(
         )
 
         deepTmRes$length <- deepTmRes$orf_aa_end - deepTmRes$orf_aa_start + 1
-
-
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          deepTmRes$isoform_id <- fixNames(
+            nameVec = deepTmRes$isoform_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
+        
         ### Subset to those in switchList
         deepTmRes <- deepTmRes[which(
             deepTmRes$isoform_id %in%
