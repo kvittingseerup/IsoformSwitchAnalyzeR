@@ -1,3 +1,7 @@
+Changes in version 2.1.2(2024-01)
+- Update type: Minor.
+- Fix a bug in addORFfromGTF() function while onlyConsiderFullORF = TRUE
+
 Changes in version 2.1.2(2023-12)
 - Update type: Minor.
 - Advanced arguments ignoreAfterBar, ignoreAfterSpace and ignoreAfterPeriod are introduced to the import of external analysis to fix the ID names of external analysis results
