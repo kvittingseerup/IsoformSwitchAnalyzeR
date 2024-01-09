@@ -1231,7 +1231,11 @@ importGTF <- function(
             tmp <- capture.output(
                 suppressWarnings(
                     suppressMessages(
+                      if(onlyConsiderFullORF){
+                        mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS','exon','start_codon','stop_codon'))
+                      } else {
                         mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS','exon'))
+                      }
                     )
                 )
             )

@@ -948,10 +948,10 @@ analyseCds <- function(
             as.data.frame(sort(
                 mfGTF[which(
                     mfGTF$type %in% c('start_codon', 'stop_codon')),
-                    c('isoform_id', 'type')]))
+                    c('transcript_id', 'type')]))
         fullyAnnoatedSplit <-
             split(as.character(fullyAnnoated$type),
-                  f = fullyAnnoated$isoform_id)
+                  f = fullyAnnoated$transcript_id)
         fullyAnnoatedCount <-
             sapply(fullyAnnoatedSplit, function(x)
                 length(unique(x)))
