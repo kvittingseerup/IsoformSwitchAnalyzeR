@@ -44,9 +44,9 @@ importFrom('limma', 'topTable')
 importFrom('BiocGenerics', 'start','end','do.call')
 importFrom('RCurl','url.exists')
 importFrom("sva", "num.sv", 'sva')
-importFrom("SummarizedExperiment", "SummarizedExperiment", "assay")
+importFrom("SummarizedExperiment", "SummarizedExperiment", "assay", "rowData")
 importFrom("BiocParallel", "bpparam")
-importFrom("S4Vectors", "queryHits", "subjectHits")
+importFrom("S4Vectors", "metadata", "queryHits", "subjectHits")
 importFrom("pwalign", "pairwiseAlignment", "alignedPattern", "alignedSubject")
 
 # plyr
