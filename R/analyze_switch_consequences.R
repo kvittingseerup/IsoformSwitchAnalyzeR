@@ -1384,16 +1384,16 @@ compareAnnotationOfTwoIsoforms <- function(
 
         if ('isoform_seq_similarity'    %in% consequencesToAnalyze) {
             localAlignment <-
-                Biostrings::pairwiseAlignment(pattern = upNtSeq,
+                pwalign::pairwiseAlignment(pattern = upNtSeq,
                                   subject = downNtSeq,
                                   type = 'global')
 
             overlapSize <- min(c(
                 nchar(gsub(
-                    '-', '', as.character(Biostrings::alignedSubject(localAlignment))
+                    '-', '', as.character(pwalign::alignedSubject(localAlignment))
                 )),
                 nchar(gsub(
-                    '-', '', as.character(Biostrings::alignedPattern(localAlignment))
+                    '-', '', as.character(pwalign::alignedPattern(localAlignment))
                 ))
             ))
             totalWidth <- width(localAlignment@subject@unaligned) +
@@ -1599,7 +1599,7 @@ compareAnnotationOfTwoIsoforms <- function(
             if (all(!is.na(transcriptData$orfTransciptLength))) {
                 if (length(aaSeq) == 2) {
                     localAlignment <-
-                        Biostrings::pairwiseAlignment(
+                        pwalign::pairwiseAlignment(
                             pattern = upAAseq,
                             subject = downAAseq,
                             type = 'global'
@@ -1609,14 +1609,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedSubject(localAlignment))
+                            as.character(pwalign::alignedSubject(localAlignment))
                         )
                     ),
                         nchar(
                             gsub(
                                 '-',
                                 '',
-                                as.character(Biostrings::alignedPattern(localAlignment))
+                                as.character(pwalign::alignedPattern(localAlignment))
                             )
                         ))
                     )
@@ -1736,7 +1736,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 if (width(localUpNt) > 0 &
                     width(localDownNt) > 0) {
                     localAlignment <-
-                        Biostrings::pairwiseAlignment(
+                        pwalign::pairwiseAlignment(
                             pattern = localUpNt,
                             subject = localDownNt,
                             type = 'overlap'
@@ -1746,14 +1746,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedSubject(localAlignment))
+                            as.character(pwalign::alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedPattern(localAlignment))
+                            as.character(pwalign::alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-
@@ -1873,7 +1873,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 if (width(localUpNt) > 0 &
                     width(localDownNt) > 0) {
                     localAlignment <-
-                        Biostrings::pairwiseAlignment(
+                        pwalign::pairwiseAlignment(
                             pattern = localUpNt,
                             subject = localDownNt,
                             type = 'overlap'
@@ -1883,14 +1883,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedSubject(localAlignment))
+                            as.character(pwalign::alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedPattern(localAlignment))
+                            as.character(pwalign::alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-
