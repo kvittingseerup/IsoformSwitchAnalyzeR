@@ -123,7 +123,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzePFAM}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

@@ -75,7 +75,7 @@ Kristoffer Vitting-Seerup
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }

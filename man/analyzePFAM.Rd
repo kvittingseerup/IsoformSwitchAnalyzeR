@@ -101,7 +101,7 @@ Kristoffer Vitting-Seerup
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{
