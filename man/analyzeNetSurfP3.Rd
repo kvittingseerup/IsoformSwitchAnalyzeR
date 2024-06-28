@@ -97,7 +97,7 @@ The data.frame added have one row per isoform and contains the columns:
 \references{
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{\code{NetSurfP-3} : Høie et al: NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning. Nucleic Acids Research (2022).}
+    \item{\code{NetSurfP-3} : Hoeie et al: NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning. Nucleic Acids Research (2022).}
 }
 }
 

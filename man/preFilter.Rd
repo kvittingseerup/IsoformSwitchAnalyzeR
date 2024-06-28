@@ -9,38 +9,42 @@ This function removes genes/isoforms from a switchAnalyzeRlist with the aim of a
 }
 
 \usage{
-preFilter(
+preFilter <- function(
     switchAnalyzeRlist,
-    geneExpressionCutoff = 1,
-    isoformExpressionCutoff = 0,
-    IFcutoff=0.01,
+    isoCount = 10,
+    min.Count.prop = 0.7,
+    IFcutoff = 0.1,
+    min.IF.prop = 0.5,
     acceptedGeneBiotype = NULL,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
-    reduceToSwitchingGenes=FALSE,
+    reduceToSwitchingGenes = FALSE,
     reduceFurtherToGenesWithConsequencePotential = FALSE,
     onlySigIsoforms = FALSE,
-    keepIsoformInAllConditions=FALSE,
-    alpha=0.05,
-    dIFcutoff = 0.1,
-    quiet=FALSE
+    keepIsoformInAllConditions = FALSE,
+    alpha = 0.05,
+    dIFcutoff = 0.1
 )
-
 }
+
 \arguments{
   \item{switchAnalyzeRlist}{
 A \code{switchAnalyzeRlist} object.
 }
-  \item{geneExpressionCutoff}{
-The expression cutoff (most likely in TPM/RPKM/FPKM) which the average expression in BOTH condisions must be higher than. NULL disables the filter (Not recomended). Default is 1 FPKM/TPM/RPKM.).
+  \item{isoCount}{
+The cutoff specifies the minimum isoform counts level for a certain proportion of samples in each comparison. Setting this to NULL disables the filter (not recommended). The default is 10.
 }
 
-  \item{isoformExpressionCutoff}{
-The expression cutoff (most likely in RPKM/FPKM) which isoforms must be expressed more than, in at least one conditions of a comparison. NULL disables the filter. Default is 0 (which removes completely unused isoforms).
+  \item{min.Count.prop}{
+The cutoff specifies the minimum proportion of samples in each comparison that must express isoforms at certain counts. It should be used with isoCount. Setting this to NULL disables the filter (not recommended). The default value is 0.7.
 }
 
   \item{IFcutoff}{
-The cutoff on isoform usage (measured as Isoform Fraction, see details) which isoforms must be used more than in at least one conditions of a comparison. NULL disables the filter. Default is 0 (which removes non-contributing isoforms).
+The cutoff specifies the minimum isoform usage (measured as Isoform Fraction, see details) for a certain proportion of samples in each comparison. Setting this to NULL disables the filter (not recommended). The default is 0.1.
+}
+
+  \item{min.IF.prop}{
+The cutoff specifies the minimum proportion of samples in each comparison with more than certain isoform usage. It should be used with IFcutoff. Setting this to NULL disables the filter (not recommended). The default value is 0.5.
 }
 
   \item{acceptedGeneBiotype}{
@@ -84,9 +88,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 
 
 \details{
-The filtering works by first requiring that the average isoforms/genes expression/usage across all samples is expressed above the cutoffs supplied, then the data is filtered for isoform classes and lastly for single-isoform genes.\cr
-
-Especially the filter for gene expression can be important since a fundamental problem with the IF values (calculated as <isoform_exp> / <gene_exp>) is when the gene expression is low it causes the IF measure to loose precision. This can easily be illustrated with the following example: Lets consider a gene with two isoforms which are expressed so they contribute to the gene expression with 73.3\% and 26.7\%, if we have 100 RNA-seq reads to describe these the problem is easy and we recapitulate the 73\%/27\% ratio. If we only have 10 reads the measurements get a little more inaccurate since the estimates now will be 70\% vs 30\%. If the gene is even lower expressed say 5 reads the estimates become 80\%/20\%. Therefore we want to filter out these genes.
+The filtering process starts by retaining isoforms with at least isoCount reads and IFcutoff usage in a significant proportion of samples within comparisons. This proportion addresses variable and unbalanced (10 vs 3) sample sizes in the comparisons. Next, the data is filtered for isoform classes, and finally, for single-isoform genes.\cr
 
 Please note that for the exon entry as well as any replicate matrix entry (counts, abundances or isoform fractions) all isoforms from genes where at least one isoform passed the filters are kept.
 }
@@ -111,9 +113,10 @@ Kristoffer Vitting-Seerup
 data("exampleSwitchList")
 exampleSwitchListFiltered <- preFilter(
     exampleSwitchList,
-    geneExpressionCutoff = 1,
-    isoformExpressionCutoff = 0,
+    isoCount = 10,
+    min.Count.prop = 0.7,
+    IFcutoff = 0.1,
+    min.IF.prop = 0.5,
     removeSingleIsoformGenes = TRUE
 )
-
 }

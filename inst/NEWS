@@ -1,3 +1,8 @@
+Changes in version 2.1.3(2024-06)
+- Update type: Minor.
+- Updated the preFilter function to allow filtering on the isoform counts (isoCount) and isoform usage (IF) across a significant proportion of samples within each comparison. 
+- Now ISAR supports the application on single-cell data. Updated vignette to include the recommended workflow for single cell data.
+
 Changes in version 2.1.2(2024-01)
 - Update type: Minor.
 - Fix a bug in addORFfromGTF() function while onlyConsiderFullORF = TRUE

@@ -22,12 +22,12 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 <!-- Title --> 
 <center> <h1>IsoformSwitchAnalyzeR</h1> </center>
 <center> <h2>Enabling Analysis of Isoform Switches with Functional Consequences and the Underlying Alternative Splicing</h2> </center>
-<center> <h3>Kristoffer Vitting-Seerup</h3> </center>
+<center> <h3>Kristoffer Vitting-Seerup, Chunxu Han</h3> </center>
 <center> <h4>`r Sys.Date()`</h4> </center>
 
 <!-- Abstract -->
 ## Abstract
-Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as StringTie, Kallisto and Salmon. Alternatively long-read RNA-seq (third generation sequencing) now routinely provide us with full length transcripts. These full length transcripts makes it possible to analyze changes in isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential. 
+Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as StringTie, Kallisto and Salmon. Alternatively long-read RNA-seq (third generation sequencing) now routinely provide us with full length transcripts, and moreover, single-cell sequencing has emerged to measure the expression of individual cells which unveils the hidden cellular heterogeneity. These full-length as well as single cell level transcripts makes it possible to analyze changes in isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential.
 
 To solve this problem, we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switches from RNA-seq derived quantification of novel and/or known full-length isoforms. IsoformSwitchAnalyzeR facilitates integration of many sources of annotation such as protein domains, signal peptides, Intrinsically Disordered Regions (IDR), subcellular localization, sensitivity to Non-sense Mediated Decay (NMD) and more. The combination of identified isoform switches and their annotation enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization of isoform switches of individual genes, the genome-wide consequences of isoform switches, and the associated changes in alternative splicing.
 
@@ -84,6 +84,8 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 
 [Other workflows]
 
+- [Applying on Long-read Sequencing Data]
+- [Applying on Single-cell Sequencing Data]
 - [Augmenting ORF Predictions with Pfam Results]
 - [Analyze Small Upstream ORFs]
 - [Remove Sequences Stored in SwitchAnalyzeRlist]
@@ -249,7 +251,7 @@ If you are using the:
 
 In this section, we will outline the IsoformSwitchAnalyzeR workflow - in the following sections we will show you how to do it including example data and code which can be copy/pasted to do your own analysis.
 
-The idea behind IsoformSwitchAnalyzeR is to make it easy to do advanced post-analysis of full-length RNA-seq derived isoform/transcript level quantification of RNASeq data with a focus on finding, annotating and visualizing isoform switches with functional consequences as well as its associated alternative splicing. If you want to know more about considerations and recommendations for bioinformatic tools which can perform the initial isoform quantification, please refer to [What Quantification Tool(s) Should I Use?] and note that IsoformSwitchAnalyzeR both supports analysis of short- and long-read sequencing data.
+The idea behind IsoformSwitchAnalyzeR is to make it easy to do advanced post-analysis of full-length RNA-seq derived isoform/transcript level quantification of RNASeq data with a focus on finding, annotating and visualizing isoform switches with functional consequences as well as its associated alternative splicing. If you want to know more about considerations and recommendations for bioinformatic tools which can perform the initial isoform quantification, please refer to [What Quantification Tool(s) Should I Use?] and note that IsoformSwitchAnalyzeR both supports analysis of short- and long-read as well as single-cell sequencing data.
 
 From the isoform quantification IsoformSwitchAnalyzeR performs five high-level tasks:
 
@@ -257,7 +259,7 @@ From the isoform quantification IsoformSwitchAnalyzeR performs five high-level t
 
 2) Integration of a wide range of (predicted) annotations for the isoforms involved in the identified switches (e.g. protein domains).
 
-3) Identification of which isoforms have a predicited functional consequnce (e.g. loss/gain of protein domain).
+3) Identification of which isoforms have a predicted functional consequence (e.g. loss/gain of protein domain).
 
 4) Visualization of predicted consequences of the isoform switches for individual genes
 
@@ -476,7 +478,7 @@ data("exampleSwitchList")
 ### Subset for quick runtime
 exampleSwitchList <- subsetSwitchAnalyzeRlist(
     switchAnalyzeRlist = exampleSwitchList,
-    subset = abs(exampleSwitchList$isoformFeatures$dIF) > 0.4
+    subset = abs(exampleSwitchList$isoformFeatures$dIF) > 0.1
 )
 
 ### Print summary of switchAnalyzeRlist
@@ -1266,8 +1268,7 @@ Once you have a switchAnalyzeRlist, there is a good chance that it contains a lo
 By using _preFilter()_ it is possible to remove genes and isoforms from all aspects of the switchAnalyzeRlist by filtering on:
 
 * Multi-isoform genes
-* Gene expression
-* Isoform expression
+* Isoform counts
 * Isoform Fraction (isoform usage)
 * Unwanted isoform classes
 * Unwanted gene biotypes
@@ -1275,7 +1276,7 @@ By using _preFilter()_ it is possible to remove genes and isoforms from all aspe
 
 Removal of single isoform genes is the default setting in _preFilter()_ since these genes, per definition, cannot have changes in isoform usage. 
 
-Filtering on isoform expression allows removal of non-used isoforms that only appear in the switchAnalyzeRlist because they were in the isoform/gene annotation used. Furthermore, the expression filtering allows removal of lowly expressed isoforms where the expression levels might be untrustworthy. The filtering on gene expression allows for removal of lowly expressed genes which causes the calculations of the Isoform Fractions (IF) to become untrustworthy. 
+Filtering on isoform counts allows removal of non-used isoforms that only appear in the switchAnalyzeRlist because they were in the isoform/gene annotation used. Furthermore, the expression filtering allows removal of lowly expressed isoforms where the expression levels might be untrustworthy.
 
 The filter on Isoform Fraction allows removal of isoforms that only contribute minimally to the gene expression thereby speeding up and simplifying the rest of the downstream analysis without losing important isoforms.
 
@@ -1288,17 +1289,13 @@ data("exampleSwitchList")
 
 exampleSwitchListFiltered <- preFilter(
     switchAnalyzeRlist = exampleSwitchList,
-    geneExpressionCutoff = 1,
-    isoformExpressionCutoff = 0,
+    isoCount = 10,
+    min.Count.prop = 0.7,
+    IFcutoff = 0.1,
+    min.IF.prop = 0.5,
     removeSingleIsoformGenes = TRUE
 )
 
-exampleSwitchListFilteredStrict <- preFilter(
-    switchAnalyzeRlist = exampleSwitchList,
-    geneExpressionCutoff = 10,
-    isoformExpressionCutoff = 3,
-    removeSingleIsoformGenes = TRUE
-)
 ```
 
 Back to [Table of Content]
@@ -1369,7 +1366,7 @@ The _isoformSwitchTestSatuRn()_ function is used as follows:
 ```{r, warning=FALSE}
 # Load example data and pre-filter
 data("exampleSwitchList")
-exampleSwitchList <- preFilter(exampleSwitchList, geneExpressionCutoff = 4) # preFilter for fast runtime
+exampleSwitchList <- preFilter(exampleSwitchList) # preFilter for fast runtime
 
 # Perform test (takes ~10 sec)
 exampleSwitchListAnalyzed <- isoformSwitchTestSatuRn(
@@ -1954,6 +1951,20 @@ Back to [Table of Content]
 <br />
 
 ## Other workflows
+### Applying on Long-read Sequencing Data
+Long-read sequencing enables the profiling of the complete RNA transcript which enhances the accuracy of isoform detection and quantification. These full-length transcripts enable the analysis of changes in isoform usage, which can be achieved by applying the [Detailed Workflow] mentioned above.
+
+Back to [Table of Content]
+
+<br />
+
+### Applying on Single-cell Sequencing Data
+Single-cell sequencing has emerged to measure the expression of individual cells which unveils the hidden cellular heterogeneity. IsoformSwitchAnalyzeR enables isoform switch analysis between different conditions for each cell type. To achieve this, we recommend the employment of [AggregateExpression()](https://satijalab.org/seurat/reference/aggregateexpression) function from the Seurat package to achieve psedobulk, which sums together gene counts of all the cells from the same sample for each cell type. Then proceed with [Detailed Workflow] mentioned above.
+
+Back to [Table of Content]
+
+<br />
+
 ### Augmenting ORF Predictions with Pfam Results
 The workflow described here is an extension of the workflow enabled in the _analyzeCPAT()_ function via the "removeNoncodinORFs" argument which if TRUE removes ORF information from the isoforms where the CPAT analysis classifies them as non-coding. Please note this can be done exactly the same way if coding potential were analyzed with _analyzeCPC2()_. Here we will "rescue" the ORF of isoforms predicted to be noncoding by CPAT/CPC2 but which have a predicted protein domain. This workflow is an alternative approach to setting "removeNoncodinORFs=TRUE" and should be used instead of that option.
 
@@ -2259,7 +2270,7 @@ Back to [Table of Content]
 - [Can I use quantificaiton files from Galaxy?]
 
 ### What Quantification Tool(s) Should I Use?
-This section is about considerations and recommendations for quantification of both short- (standard) and long-read RNASeq data and are relevant both if you are:
+This section is about considerations and recommendations for quantification of both short- (standard) and long-read as well as single-cell RNASeq data and are relevant both if you are:
 
 1) Interested in isoform/transcript level quantification (as necessary for using with IsoformSwitchAnalyzeR (see [Abstract])) 
 2) Interest in any gene analysis (as described in the end of this paragraph)

@@ -136,12 +136,13 @@ aSwitchList <- importRdata(
     isoformExonAnnoation = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR")
 )
 
-### Filter with very strict cutoffs to enable short runtime
+### Filtering
 aSwitchListAnalyzed <- preFilter(
     switchAnalyzeRlist = aSwitchList,
-    isoformExpressionCutoff = 10,
-    IFcutoff = 0.3,
-    geneExpressionCutoff = 50
+    isoCount = 10,
+    min.Count.prop = 0.7,
+    IFcutoff = 0.1,
+    min.IF.prop = 0.5,
 )
 aSwitchListAnalyzed <- subsetSwitchAnalyzeRlist(
     aSwitchListAnalyzed,
