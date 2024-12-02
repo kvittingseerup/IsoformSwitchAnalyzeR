@@ -2898,7 +2898,7 @@ importIsoformExpression <- function(
         )
 
         if (!quiet) {
-            message('Done\n')
+            message('GTF file imported successfully.\n')
         }
     }
 
@@ -6014,4 +6014,138 @@ preFilter <- function(
   
   ### return result
   return(switchAnalyzeRlist)
+}
+
+importPairedGSEA <- function(
+    ### Core arguments
+  pairedGSEAResults,
+  pathToGTF,
+  
+  ### Advanced arguments
+  expressionCutoff = 0.05,
+  splicingCutoff = 0.05,
+  minLogFCExpression = 0,
+  minLogFCSplicing = 0,
+  
+  ### Arguments from importGTF
+  isoformNtFasta = NULL,
+  extractAaSeq = FALSE,
+  addAnnotatedORFs = TRUE,
+  onlyConsiderFullORF = FALSE,
+  removeNonConvensionalChr = FALSE,
+  ignoreAfterBar = TRUE,
+  ignoreAfterSpace = TRUE,
+  ignoreAfterPeriod = FALSE,
+  removeTECgenes = TRUE,
+  PTCDistance = 50,
+  removeFusionTranscripts = TRUE,
+  removeUnstrandedTranscripts = TRUE,
+  quiet = FALSE
+) {
+  if (!quiet) message("Importing pairedGSEA results...")
+  
+  # Convert DFrame to data.frame if necessary
+  if (inherits(pairedGSEAResults, "DFrame")) {
+    pairedGSEAResults <- as.data.frame(pairedGSEAResults)
+  }
+  
+  # Validate pairedGSEAResults
+  if (!is.data.frame(pairedGSEAResults)) {
+    stop("The pairedGSEAResults must be a data frame or a DFrame object.")
+  }
+  requiredColumns <- c("gene", "lfc_expression", "padj_expression", 
+                       "lfc_splicing", "padj_splicing")
+  missingColumns <- setdiff(requiredColumns, colnames(pairedGSEAResults))
+  if (length(missingColumns) > 0) {
+    stop(paste("The following required columns are missing from pairedGSEAResults:",
+               paste(missingColumns, collapse = ", ")))
+  }
+  
+  # Count total genes before filtering
+  totalGenes <- nrow(pairedGSEAResults)
+  
+  # Filter significant genes
+  filteredResults <- pairedGSEAResults %>%
+    dplyr::filter(
+      padj_expression <= expressionCutoff &
+        abs(lfc_expression) >= minLogFCExpression &
+        padj_splicing <= splicingCutoff &
+        abs(lfc_splicing) >= minLogFCSplicing
+    )
+  filteredGeneCount <- nrow(filteredResults)
+  
+  if (!quiet) {
+    retainedPercentage <- (filteredGeneCount / totalGenes) * 100
+    message(sprintf(
+      "Filtered %d genes from %d total (%.2f%% retained).",
+      filteredGeneCount, totalGenes, retainedPercentage
+    ))
+  }
+  
+  # Warn if no genes pass the filter
+  if (filteredGeneCount == 0) {
+    warning("No genes passed the filtering criteria. Returning an empty IsoformSwitchAnalyzeRList.")
+    return(createSwitchAnalyzeRlist())
+  }
+  
+  significantGenes <- unique(filteredResults$gene)
+  
+  # Fix names
+  if (ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+    significantGenes <- fixNames(
+      nameVec = significantGenes,
+      ignoreAfterBar = ignoreAfterBar,
+      ignoreAfterSpace = ignoreAfterSpace,
+      ignoreAfterPeriod = ignoreAfterPeriod
+    )
+  }
+  
+  # Process GTF file
+  isoformSwitchAnalyzeRList <- importGTF(
+    pathToGTF = pathToGTF,
+    isoformNtFasta = isoformNtFasta,
+    extractAaSeq = extractAaSeq,
+    addAnnotatedORFs = addAnnotatedORFs,
+    onlyConsiderFullORF = onlyConsiderFullORF,
+    removeNonConvensionalChr = removeNonConvensionalChr,
+    ignoreAfterBar = ignoreAfterBar,
+    ignoreAfterSpace = ignoreAfterSpace,
+    ignoreAfterPeriod = ignoreAfterPeriod,
+    removeTECgenes = removeTECgenes,
+    PTCDistance = PTCDistance,
+    removeFusionTranscripts = removeFusionTranscripts,
+    removeUnstrandedTranscripts = removeUnstrandedTranscripts,
+    quiet = quiet
+  )
+  
+  ### Fix names for GTF
+  if (ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+    isoformSwitchAnalyzeRList$isoformFeatures$gene_id <- fixNames(
+      nameVec = isoformSwitchAnalyzeRList$isoformFeatures$gene_id,
+      ignoreAfterBar = ignoreAfterBar,
+      ignoreAfterSpace = ignoreAfterSpace,
+      ignoreAfterPeriod = ignoreAfterPeriod
+    )
+  }
+  
+  # Filter IsoformSwitchAnalyzeRList to only significant genes
+  if (!quiet) message("Filtering to only significant genes...")
+  isoformSwitchAnalyzeRList <- subsetSwitchAnalyzeRlist(
+    switchAnalyzeRlist = isoformSwitchAnalyzeRList,
+    subset = isoformSwitchAnalyzeRList$isoformFeatures$gene_id %in% significantGenes
+  )
+  
+  # Check if any genes remain after filtering
+  remainingGenes <- nrow(isoformSwitchAnalyzeRList$isoformFeatures)
+  if (remainingGenes == 0) {
+    warning(
+      "No genes matched between GTF and pairedGSEA results. ",
+      "This could be due to differences in gene naming conventions or mismatched GTF versions. ",
+      "Try adjusting the ignore* arguments or ensure the GTF file and pairedGSEA results are compatible."
+    )
+    return(createSwitchAnalyzeRlist())
+  }
+  
+  if (!quiet) message("Done.")
+  return(isoformSwitchAnalyzeRList)
 }
