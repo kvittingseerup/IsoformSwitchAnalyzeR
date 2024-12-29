@@ -1,8 +1,8 @@
 Changes in version 2.1.4(2024-12)
 - Update type: Minor.
-- Added a new function importPairedGSEA() for integrating pairedGSEA results with GTF files into IsoformSwitchAnalyzeR. This function allows filtering of significant genes based on paired differential expression and splicing results, leveraging both p-values and log fold changes.
+- Added a new function importPairedGSEA() for importing paired differential expression and splicing results from pairedGSEA, along with a (gziped or unpacked) GTF file into R as a switchAnalyzeRlist.
 - Fixed bugs in the analyzePFAM() function:
-    * Skip irrelevent lines while input with web server results
+    * Skip irrelevent lines while input with web server results 
     * While testing shifts, the lines with "significant" column as 0 are not regarded as shift which need to be fixed.
 
 

@@ -1,21 +1,30 @@
 \name{importPairedGSEA}
 \alias{importPairedGSEA}
 \title{
-Import PairedGSEA Results and GTF File into IsoformSwitchAnalyzeR
+Import PairedGSEA Results into IsoformSwitchAnalyzeR
 }
 \description{
-Function for importing paired differential expression and splicing results from pairedGSEA, along with a (gziped or unpacked) GTF file into R as a \code{switchAnalyzeRlist}. This function filters the input based on specified significance thresholds and ensures compatibility with IsoformSwitchAnalyzeR.
+Function for importing paired differential expression and splicing results from pairedGSEA, along with a (gziped or unpacked) GTF file into R as a \code{switchAnalyzeRlist}.
 }
 \usage{
 importPairedGSEA(
-    pairedGSEAResults,
+    splicing_results,
+    diff_results,
     pathToGTF,
-    expressionCutoff = 0.05,
-    splicingCutoff = 0.05,
-    minLogFCExpression = 0,
-    minLogFCSplicing = 0,
-    isoformNtFasta = NULL,
-    extractAaSeq = FALSE,
+    isoCount = 10,
+    min.Count.prop = 0.7,
+    IFcutoff = 0.1,
+    min.IF.prop = 0.5,
+    acceptedGeneBiotype = NULL,
+    acceptedIsoformClassCode = NULL,
+    removeSingleIsoformGenes = TRUE,
+    reduceToSwitchingGenes = FALSE,
+    reduceFurtherToGenesWithConsequencePotential = FALSE,
+    onlySigIsoforms = FALSE,
+    keepIsoformInAllConditions = FALSE,
+    alpha = 0.05,
+    dIFcutoff = 0.1,
+    detectUnwantedEffects = TRUE,
     addAnnotatedORFs = TRUE,
     onlyConsiderFullORF = FALSE,
     removeNonConvensionalChr = FALSE,
@@ -24,20 +33,30 @@ importPairedGSEA(
     ignoreAfterPeriod = FALSE,
     removeTECgenes = TRUE,
     PTCDistance = 50,
-    removeFusionTranscripts = TRUE,
-    removeUnstrandedTranscripts = TRUE,
+    foldChangePseudoCount = 0.01,
+    fixStringTieAnnotationProblem = TRUE,
+    fixStringTieViaOverlapInMultiGenes = TRUE,
+    fixStringTieMinOverlapSize = 50,
+    fixStringTieMinOverlapFrac = 0.2,
+    fixStringTieMinOverlapLog2RatioToContender = 0.65,
+    estimateDifferentialGeneRange = TRUE,
+    showProgress = TRUE,
     quiet = FALSE
 )
 }
+
 \arguments{
-\item{pairedGSEAResults}{
-A \code{data.frame} or \code{DFrame} containing the paired differential expression and splicing results from pairedGSEA. It must contain the following columns:
+\item{splicing_results}{
+A \code{DEXSeqResults} object or a data frame from pairedGSEA, which contains splicing results, including isoform-level p-values (\code{padj}) and other splicing metrics. It is the intermediate isoform-level output of \code{paired_diff()} when you set \code{store_results = FALSE}. The object must contain columns such as \code{groupID}, \code{featureID}, and \code{padj}.
+}
+
+\item{diff_results}{
+A \code{data.frame} containing the paired differential expression results from pairedGSEA. It must include the following columns:
 \itemize{
     \item{\code{gene}: Gene identifiers.}
     \item{\code{lfc_expression}: Log fold change for expression.}
+    \item{\code{pvalue_expression}: Raw p-value for expression.}
     \item{\code{padj_expression}: Adjusted p-value for expression.}
-    \item{\code{lfc_splicing}: Log fold change for splicing.}
-    \item{\code{padj_splicing}: Adjusted p-value for splicing.}
 }
 }
 
@@ -49,83 +68,45 @@ Can either be:
 }
 }
 
-\item{expressionCutoff}{
-A numeric specifying the maximum adjusted p-value for filtering significant differential expression. Default is 0.05.
+\item{isoCount, min.Count.prop, IFcutoff, min.IF.prop}{
+Arguments for the filtering step. See \code{\link{preFilter}} for details.
 }
 
-\item{splicingCutoff}{
-A numeric specifying the maximum adjusted p-value for filtering significant splicing changes. Default is 0.05.
+\item{acceptedGeneBiotype, acceptedIsoformClassCode, removeSingleIsoformGenes}{
+Arguments to control which genes and isoforms are retained. See \code{\link{preFilter}} for details.
 }
 
-\item{minLogFCExpression}{
-A numeric specifying the minimum absolute log fold change for filtering significant differential expression. Default is 0.
+\item{reduceToSwitchingGenes, reduceFurtherToGenesWithConsequencePotential, onlySigIsoforms, keepIsoformInAllConditions}{
+Arguments for filtering based on isoform switches and downstream consequences. See \code{\link{preFilter}} for details.
 }
 
-\item{minLogFCSplicing}{
-A numeric specifying the minimum absolute log fold change for filtering significant splicing changes. Default is 0.
+\item{alpha, dIFcutoff}{
+Thresholds for significance and differential isoform fraction used in filtering. See \code{\link{preFilter}} for details.
 }
 
-\item{isoformNtFasta}{
-A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 
-\itemize{
-    \item{1) People working with non-model organisms where extracting the sequence from a BSgenome might require extra work.}
-    \item{2) Workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto, or RSEM for the quantification have as that is used to build the index).}
-}
-The file will automatically be subsetted to the isoforms found in the GTF file, so additional sequences (such as decoys) do not need to be manually removed. Note this differs from a fasta file with sequences of the entire genome.
+\item{detectUnwantedEffects, addAnnotatedORFs, onlyConsiderFullORF, removeNonConvensionalChr, ignoreAfterBar, ignoreAfterSpace, ignoreAfterPeriod, removeTECgenes, PTCDistance, foldChangePseudoCount, fixStringTieAnnotationProblem, fixStringTieViaOverlapInMultiGenes, fixStringTieMinOverlapSize, fixStringTieMinOverlapFrac, fixStringTieMinOverlapLog2RatioToContender, estimateDifferentialGeneRange}{
+Advanced arguments for handling isoform annotations and data preprocessing. See \code{\link{importRdata}} for details.
 }
 
-\item{extractAaSeq}{
-A logic indicating whether the nucleotide sequence imported via \code{isoformNtFasta} should be translated to amino acid sequence and stored in the \code{switchAnalyzeRlist}. Requires ORFs to be imported, see \code{addAnnotatedORFs}. Default is FALSE.
-}
-
-\item{addAnnotatedORFs}{
-A logic indicating whether the ORFs from the GTF should be added to the \code{switchAnalyzeRlist}. ORFs are defined as regions annotated as 'CDS' in the 'type' column (column 3). Default is TRUE.
-}
-
-\item{onlyConsiderFullORF}{
- A logic indicating whether the ORFs added should only be added if they are fully annotated. Here fully annotated is defined as those that both have a annotated 'start_codon' and 'stop_codon' in the 'type' column (column 3). This argument is only considered if onlyConsiderFullORF=TRUE. Default is FALSE.
-}
-
-\item{removeNonConvensionalChr}{
- A logic indicating whether non-conventional chromosomes, here defined as chromosome names containing either a '_' or a period ('.'). These regions are typically used to annotate regions that cannot be associated to a specific region (such as the human 'chr1_gl000191_random') or regions quite different due to different haplotypes (e.g. the 'chr6_cox_hap2'). Default is FALSE.
-}
-
-\item{ignoreAfterBar}{
-A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE files. Default is TRUE.
-}
-
-\item{ignoreAfterSpace}{
-A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.
-}
-
-\item{ignoreAfterPeriod}{
-A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.
-}
-
-\item{removeTECgenes}{
-A logic indicating whether to remove genes marked as "To be Experimentally Confirmed" (if annotation is available). The default is TRUE aka to remove them which is in line with Gencode recommendations (TEC are not in Gencode annotations). For more info about TEC see \url{https://www.gencodegenes.org/pages/biotypes.html}.
-}
-
-\item{PTCDistance}{
-Only considered if \code{addAnnotatedORFs=TRUE}. A numeric giving the premature termination codon-distance: The minimum distance from the annotated STOP to the final exon-exon junction, for a transcript to be marked as NMD-sensitive. Default is 50
-}
-
-\item{removeFusionTranscripts}{
-A logic indicating whether to remove genes with cross-chromosome fusion transcripts as IsoformSwitchAnalyzeR cannot handle them.
-}
-
-\item{removeUnstrandedTranscripts}{
-A logic indicating whether to remove non-stranded isoforms as the IsoformSwitchAnalyzeR workflow cannot handle them.
+\item{showProgress}{
+Logical, indicating whether progress messages should be displayed. Default is TRUE.
 }
 
 \item{quiet}{
-A logic indicating whether to suppress progress messages. Default is FALSE.
+Logical, indicating whether to suppress all output messages. Default is FALSE.
 }
 }
 \details{
-This function is designed to import a GTF file (leveraging the \code{importGTF} function) and integrate differential expression and splicing results from pairedGSEA. By combining these datasets, the function filters the transcripts in the GTF file to retain only those associated with significant genes, as defined by user-specified thresholds for p-values and log fold changes.
+This function is specifically designed to import the paired differential gene expression and splicing analyses from \code{pairedGSEA} (particularly the \code{paired_diff()} function) into IsoformSwitchAnalyzeR. By integrating these results with GTF annotations, the function generates a \code{switchAnalyzeRlist} object that is ready for downstream analysis.
 
-The primary goal is to streamline downstream analyses by focusing on a reduced set of transcripts relevant to the genes identified as significant in pairedGSEA results.
+The function leverages the pre-built IsoformSwitchAnalyzeR functions \code{importRdata()} and \code{preFilter()} to streamline the integration and filtering process. Specifically, it:
+\itemize{
+    \item Extracts and processes count and design matrices from \code{splicing_results}.
+    \item Integrates gene-level differential expression results, and splicing analyses into the \code{switchAnalyzeRlist}.
+    \item Applies the \code{preFilter()} function to refine the dataset based on user-defined thresholds for significance, log fold change, expression levels, and isoform switching criteria.}
+
+
+If you encounter issues regarding specific arguments, refer to the documentation for \code{\link{importRdata}} and \code{\link{preFilter}} for detailed explanations of their functionality and parameters.
 }
 \value{
 A \code{switchAnalyzeRlist} containing filtered and annotated gene and isoform information. See ?switchAnalyzeRlist for more details.
@@ -141,6 +122,6 @@ Dam, S.H., Olsen, L.R. & Vitting-Seerup, K. Expression and splicing mediate dist
 Kristoffer Vitting-Seerup, Chunxu Han
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
-\code{\link{importGTF}}
+\code{\link{importRdata}}\cr
+\code{\link{preFilter}}
 }
