@@ -1,3 +1,11 @@
+Changes in version 2.1.4(2024-12)
+- Update type: Minor.
+- Added a new function importPairedGSEA() for importing paired differential expression and splicing results from pairedGSEA, along with a (gziped or unpacked) GTF file into R as a switchAnalyzeRlist.
+- Fixed bugs in the analyzePFAM() function:
+    * Skip irrelevent lines while input with web server results 
+    * While testing shifts, the lines with "significant" column as 0 are not regarded as shift which need to be fixed.
+
+
 Changes in version 2.1.3(2024-06)
 - Update type: Minor.
 - Updated the preFilter function to allow filtering on the isoform counts (isoCount) and isoform usage (IF) across a significant proportion of samples within each comparison. 

@@ -500,13 +500,13 @@ analyzePFAM <- function(
             headerIncluded <- grepl('^<seq|^seq', temp[1, 1])
 
             ### Figure out number of lines to skip
-            if(   headerIncluded) {
+            if(!headerIncluded) {
                 tmp2 <-
                     readLines(
                         con = pathToPFAMresultFile[1],
                         n = 50
                     )
-                skipLine <- which(grepl('^<seq|^seq', tmp2))[1]
+                skipLine <- which(grepl('^# <seq|^seq', tmp2))[1]
 
                 temp3 <-
                     read.table(
@@ -518,7 +518,7 @@ analyzePFAM <- function(
                         skip = skipLine,
                     )
             }
-            if( ! headerIncluded) {
+            if(headerIncluded) {
                 skipLine <- 0
             }
         }
@@ -574,7 +574,7 @@ analyzePFAM <- function(
                         testShiftedValues <- function(aDF) {
                             try1 <- unique(c(
                                 which(is.na( aDF[,14]     )),              # via "significant" column (will either be NA or a clan indication)
-                                which(       aDF[,14] != 1 ),              # via "significant" column (will either be NA or a clan indication)
+                                which(       aDF[,14] != 1 & 0),              # via "significant" column (will either be NA or a clan indication)
                                 which( ! stringr::str_detect(aDF[,6], '^PF|^PB') )  # via pfam_hmm id which should start with PF or PB
                             ))
 

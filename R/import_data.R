@@ -2898,7 +2898,7 @@ importIsoformExpression <- function(
         )
 
         if (!quiet) {
-            message('Done\n')
+            message('GTF file imported successfully.\n')
         }
     }
 
@@ -6014,4 +6014,183 @@ preFilter <- function(
   
   ### return result
   return(switchAnalyzeRlist)
+}
+
+importPairedGSEA <- function(
+    # Core arguments (intermidiate and final output of pairedGSEA)
+  splicing_results,
+  diff_results,
+  pathToGTF,
+  
+  # importRdata() function relevant
+  detectUnwantedEffects = TRUE,
+  addAnnotatedORFs = TRUE,
+  onlyConsiderFullORF = FALSE,
+  removeNonConvensionalChr = FALSE,
+  ignoreAfterBar = TRUE,
+  ignoreAfterSpace = TRUE,
+  ignoreAfterPeriod = FALSE,
+  removeTECgenes = TRUE,
+  PTCDistance = 50,
+  foldChangePseudoCount = 0.01,
+  fixStringTieAnnotationProblem = TRUE,
+  fixStringTieViaOverlapInMultiGenes = TRUE,
+  fixStringTieMinOverlapSize = 50,
+  fixStringTieMinOverlapFrac = 0.2,
+  fixStringTieMinOverlapLog2RatioToContender = 0.65,
+  estimateDifferentialGeneRange = TRUE,
+  
+  # preFilter() function relevant
+  isoCount = 10,
+  min.Count.prop = 0.7,
+  IFcutoff = 0.1,
+  min.IF.prop = 0.5,
+  acceptedGeneBiotype = NULL,
+  acceptedIsoformClassCode = NULL,
+  removeSingleIsoformGenes = TRUE,
+  reduceToSwitchingGenes = FALSE,
+  reduceFurtherToGenesWithConsequencePotential = FALSE,
+  onlySigIsoforms = FALSE,
+  keepIsoformInAllConditions = FALSE,
+  alpha = 0.05,
+  dIFcutoff = 0.1,
+  
+  # Advanced arguments
+  showProgress = TRUE,
+  quiet = FALSE
+  
+) {
+  ### Step 1: Extract Count Matrix and Design Matrix
+  message("Extracting count matrix and design matrix from splicing_results...")
+  
+  # Extract count matrix from splicing_results
+  tryCatch({
+    count_matrix <- as.data.frame(splicing_results@listData$countData)
+    sample_data <- as.data.frame(splicing_results@sampleData)
+  }, error = function(e) {
+    stop(
+      paste0(
+        "The input splicing_results appears to be invalid. ",
+        "Please ensure that it is the transcript-level DGS splicing_reaults, which is the intermediate output of paired_diff() from pairedGSEA.\n"
+      )
+    )
+  })
+  ### count_matrix <- as.data.frame(splicing_results@listData$countData)
+  colnames(count_matrix) <- gsub("^.*\\.", "", colnames(count_matrix)) # Ensure column names match sample IDs
+  count_matrix$isoform_id <- sapply(rownames(count_matrix), function(x) strsplit(x, ":")[[1]][2])
+  
+  # Extract design matrix from splicing_results
+  ### sample_data <- as.data.frame(splicing_results@sampleData)
+  design_matrix <- sample_data[, c("sample", "condition")]
+  colnames(design_matrix) <- c("sampleID", "condition") # Rename for compatibility
+  
+  ### Step 2: Apply `importRdata()` to Create Initial SwitchAnalyzeRlist
+  message("Creating SwitchAnalyzeRlist...")
+  switch_list <- importRdata(
+    isoformCountMatrix = count_matrix,
+    designMatrix = design_matrix,
+    isoformExonAnnoation = pathToGTF,
+    detectUnwantedEffects = detectUnwantedEffects,
+    addAnnotatedORFs = addAnnotatedORFs,
+    onlyConsiderFullORF = onlyConsiderFullORF,
+    removeNonConvensionalChr = removeNonConvensionalChr,
+    ignoreAfterBar = ignoreAfterBar,
+    ignoreAfterSpace = ignoreAfterSpace,
+    ignoreAfterPeriod = ignoreAfterPeriod,
+    removeTECgenes = removeTECgenes,
+    PTCDistance = PTCDistance,
+    foldChangePseudoCount = foldChangePseudoCount,
+    fixStringTieAnnotationProblem = fixStringTieAnnotationProblem,
+    fixStringTieViaOverlapInMultiGenes = fixStringTieViaOverlapInMultiGenes,
+    fixStringTieMinOverlapSize = fixStringTieMinOverlapSize,
+    fixStringTieMinOverlapFrac = fixStringTieMinOverlapFrac,
+    fixStringTieMinOverlapLog2RatioToContender = fixStringTieMinOverlapLog2RatioToContender,
+    estimateDifferentialGeneRange = estimateDifferentialGeneRange,
+    showProgress = showProgress,
+    quiet = quiet
+  )
+  
+  message("Integrating adjusted p-values from splicing_results...")
+  
+  # Extract isoform-level p-values (padj) from splicing_results
+  dexseq_results <- as.data.frame(splicing_results)
+  dexseq_results <- dexseq_results[!is.na(dexseq_results$padj), ] # Filter rows with valid p-values
+  
+  # Map DEXSeq results to `SwitchAnalyzeRlist`
+  switch_list$isoformFeatures$isoform_switch_q_value <- dexseq_results$padj[
+    match(switch_list$isoformFeatures$isoform_id, dexseq_results$featureID)
+  ]
+  
+  # Aggregate isoform-level p-values to gene-level p-values
+  gene_padj <- tapply(
+    dexseq_results$padj, dexseq_results$groupID,
+    function(x) min(x, na.rm = TRUE) # Gene-level p-value is the minimum adjusted p-value of its isoforms
+  )
+  switch_list$isoformFeatures$gene_switch_q_value <- gene_padj[
+    match(switch_list$isoformFeatures$gene_id, names(gene_padj))
+  ]
+  
+  # Add DEXSeq results to `isoformSwitchAnalysis` for further analysis
+  ### switch_list$isoformSwitchAnalysis <- dexseq_results
+  
+  ### Step 4: Integrating Gene-Level Differential Expression Results
+  message("Integrating gene-level differential expression results...")
+  
+  # Ensure that diff_results has the required columns
+  required_cols <- c("gene", "lfc_expression", "pvalue_expression", "padj_expression")
+  tryCatch({
+    missing_cols <- setdiff(required_cols, colnames(diff_results))
+    if (length(missing_cols) > 0) {
+      stop(
+        paste0(
+          "The input diff_results is missing required columns: ",
+          paste(missing_cols, collapse = ", "), ".\n",
+          "Please provide a differential expression result table containing at least ",
+          "'gene', 'lfc_expression', 'pvalue_expression', and 'padj_expression'."
+        )
+      )
+    }
+  }, error = function(e) {
+    stop(
+      paste0(
+        "The input diff_results appears to be invalid. ",
+        "Please ensure it is a valid paired DGE/DGS analysis result, which is the output of paired_diff() from pairedGSEA."
+      )
+    )
+  })
+  
+  # Match and add gene-level results to isoformFeatures
+  switch_list$isoformFeatures$gene_log2_fold_change <- diff_results$lfc_expression[
+    match(switch_list$isoformFeatures$gene_id, diff_results$gene)
+  ]
+  
+  switch_list$isoformFeatures$gene_p_value <- diff_results$pvalue_expression[
+    match(switch_list$isoformFeatures$gene_id, diff_results$gene)
+  ]
+  
+  switch_list$isoformFeatures$gene_q_value <- diff_results$padj_expression[
+    match(switch_list$isoformFeatures$gene_id, diff_results$gene)
+  ]
+  
+  switch_list$isoformFeatures$gene_significant <- ifelse(
+    switch_list$isoformFeatures$gene_q_value < alpha, "yes", "no"
+  )
+  
+  ### Step 5: Apply PreFilter to Filter SwitchAnalyzeRlist
+  message("Applying preFilter...")
+  
+  switch_list <- preFilter(
+    switchAnalyzeRlist = switch_list,
+    isoCount = isoCount,
+    min.Count.prop = min.Count.prop,
+    IFcutoff = IFcutoff,
+    min.IF.prop = min.IF.prop,
+    removeSingleIsoformGenes = removeSingleIsoformGenes,
+    reduceToSwitchingGenes = reduceToSwitchingGenes,
+    reduceFurtherToGenesWithConsequencePotential = reduceFurtherToGenesWithConsequencePotential,
+    alpha = alpha,
+    dIFcutoff = dIFcutoff
+  )
+  
+  return(switch_list)
 }
