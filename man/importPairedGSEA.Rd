@@ -31,6 +31,7 @@ importPairedGSEA(
     ignoreAfterBar = TRUE,
     ignoreAfterSpace = TRUE,
     ignoreAfterPeriod = FALSE,
+    ignoreSurplusIsoforms = TRUE,
     removeTECgenes = TRUE,
     PTCDistance = 50,
     foldChangePseudoCount = 0.01,
@@ -84,7 +85,7 @@ Arguments for filtering based on isoform switches and downstream consequences. S
 Thresholds for significance and differential isoform fraction used in filtering. See \code{\link{preFilter}} for details.
 }
 
-\item{detectUnwantedEffects, addAnnotatedORFs, onlyConsiderFullORF, removeNonConvensionalChr, ignoreAfterBar, ignoreAfterSpace, ignoreAfterPeriod, removeTECgenes, PTCDistance, foldChangePseudoCount, fixStringTieAnnotationProblem, fixStringTieViaOverlapInMultiGenes, fixStringTieMinOverlapSize, fixStringTieMinOverlapFrac, fixStringTieMinOverlapLog2RatioToContender, estimateDifferentialGeneRange}{
+\item{detectUnwantedEffects, addAnnotatedORFs, onlyConsiderFullORF, removeNonConvensionalChr, ignoreAfterBar, ignoreAfterSpace, ignoreAfterPeriod, ignoreSurplusIsoforms, removeTECgenes, PTCDistance, foldChangePseudoCount, fixStringTieAnnotationProblem, fixStringTieViaOverlapInMultiGenes, fixStringTieMinOverlapSize, fixStringTieMinOverlapFrac, fixStringTieMinOverlapLog2RatioToContender, estimateDifferentialGeneRange}{
 Advanced arguments for handling isoform annotations and data preprocessing. See \code{\link{importRdata}} for details.
 }
 

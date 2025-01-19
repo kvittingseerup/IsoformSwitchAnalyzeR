@@ -46,6 +46,7 @@ importRdata(
     ignoreAfterBar = TRUE,
     ignoreAfterSpace = TRUE,
     ignoreAfterPeriod = FALSE,
+    ignoreSurplusIsoforms = FALSE,
     removeTECgenes = TRUE,
     PTCDistance = 50,
     foldChangePseudoCount = 0.01,
@@ -109,6 +110,8 @@ Only used if a GTF file is supplied to \code{isoformExonAnnoation}. A logic indi
 \item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
 
 \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
+
+\item{ignoreSurplusIsoforms}{A logic indicating whether to ignore the surplus isoforms in the annotation file. Default is FALSE. This argument is only for internal use so please DO NOT set it TRUE!}
 
 \item{removeTECgenes}{A logic indicating whether to remove genes marked as "To be Experimentally Confirmed" (if annotation is available). The default is TRUE aka to remove them which is in line with Gencode recommendations (TEC are not in Gencode annotations). For more info about TEC see \url{https://www.gencodegenes.org/pages/biotypes.html}.}
 
