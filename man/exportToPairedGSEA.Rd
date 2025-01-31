@@ -12,7 +12,7 @@ exportToPairedGSEA(
     pathToOutput = getwd(),
     writeToFile = FALSE,
     rdsFileName = "pairedGSEA_input.rds",
-    overwrite = FALSE,
+    overwrite = TRUE,
     quiet = FALSE
 )
 }
@@ -59,7 +59,7 @@ data("exampleSwitchList")
 # Export data for paired GSEA without saving to file
 pairedGSEAList <- exportToPairedGSEA(
     switchAnalyzeRlist = exampleSwitchList,
-    writeToFile = FALSE
+    writeToFile = TRUE
 )
 }
 
@@ -68,5 +68,5 @@ Chunxu Han, Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{switchAnalyzeRlist}}}
+\code{\link{switchAnalyzeRlist}}
 }

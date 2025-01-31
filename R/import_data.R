@@ -6172,6 +6172,7 @@ importPairedGSEA <- function(
   splicing_results,
   diff_results,
   pathToGTF,
+  condition_labels = c("B", "C"), # Default to "B" (baseline) and "C" (case)
   
   # importRdata() function relevant
   detectUnwantedEffects = TRUE,
@@ -6235,6 +6236,17 @@ importPairedGSEA <- function(
   ### sample_data <- as.data.frame(splicing_results@sampleData)
   design_matrix <- sample_data[, c("sample", "condition")]
   colnames(design_matrix) <- c("sampleID", "condition") # Rename for compatibility
+  
+  # Validate custom condition labels
+  if (length(condition_labels) != 2) {
+    stop("Error: condition_labels must be a vector of length 2, e.g., c('Healthy', 'Lung_cancer').")
+  }
+  
+  # Replace "B" and "C" with user-specified condition labels
+  design_matrix$condition <- ifelse(
+    design_matrix$condition == "B", condition_labels[1],
+    ifelse(design_matrix$condition == "C", condition_labels[2], design_matrix$condition)
+  )
   
   ### Step 2: Apply `importRdata()` to Create Initial SwitchAnalyzeRlist
   message("Creating SwitchAnalyzeRlist...")

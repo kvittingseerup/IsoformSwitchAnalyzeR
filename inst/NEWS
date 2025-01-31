@@ -5,6 +5,7 @@ Changes in version 2.1.4(2025-01)
     * about manuplatition of sample names in count matrix
     * GTF file incompability resulting from the filteration process in pairedGSEA
 - Added a new function exportToPairedGSEA() which prepares input data for paired paired DGE/DGS analysis by extracting a count matrix and corresponding metadata (design matrix) from a switchAnalyzeRlist object.
+- Update the vignette.
 
 Changes in version 2.1.4(2024-12)
 - Update type: Minor.

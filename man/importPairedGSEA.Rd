@@ -8,41 +8,49 @@ Function for importing paired differential expression and splicing results from 
 }
 \usage{
 importPairedGSEA(
-    splicing_results,
-    diff_results,
-    pathToGTF,
-    isoCount = 10,
-    min.Count.prop = 0.7,
-    IFcutoff = 0.1,
-    min.IF.prop = 0.5,
-    acceptedGeneBiotype = NULL,
-    acceptedIsoformClassCode = NULL,
-    removeSingleIsoformGenes = TRUE,
-    reduceToSwitchingGenes = FALSE,
-    reduceFurtherToGenesWithConsequencePotential = FALSE,
-    onlySigIsoforms = FALSE,
-    keepIsoformInAllConditions = FALSE,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    detectUnwantedEffects = TRUE,
-    addAnnotatedORFs = TRUE,
-    onlyConsiderFullORF = FALSE,
-    removeNonConvensionalChr = FALSE,
-    ignoreAfterBar = TRUE,
-    ignoreAfterSpace = TRUE,
-    ignoreAfterPeriod = FALSE,
-    ignoreSurplusIsoforms = TRUE,
-    removeTECgenes = TRUE,
-    PTCDistance = 50,
-    foldChangePseudoCount = 0.01,
-    fixStringTieAnnotationProblem = TRUE,
-    fixStringTieViaOverlapInMultiGenes = TRUE,
-    fixStringTieMinOverlapSize = 50,
-    fixStringTieMinOverlapFrac = 0.2,
-    fixStringTieMinOverlapLog2RatioToContender = 0.65,
-    estimateDifferentialGeneRange = TRUE,
-    showProgress = TRUE,
-    quiet = FALSE
+  # Core arguments (intermidiate and final output of pairedGSEA)
+  splicing_results,
+  diff_results,
+  pathToGTF,
+  condition_labels = c("B", "C"), # Default to "B" (baseline) and "C" (case)
+  
+  # importRdata() function relevant
+  detectUnwantedEffects = TRUE,
+  addAnnotatedORFs = TRUE,
+  onlyConsiderFullORF = FALSE,
+  removeNonConvensionalChr = FALSE,
+  ignoreAfterBar = TRUE,
+  ignoreAfterSpace = TRUE,
+  ignoreAfterPeriod = FALSE,
+  ignoreSurplusIsoforms = TRUE,
+  removeTECgenes = TRUE,
+  PTCDistance = 50,
+  foldChangePseudoCount = 0.01,
+  fixStringTieAnnotationProblem = TRUE,
+  fixStringTieViaOverlapInMultiGenes = TRUE,
+  fixStringTieMinOverlapSize = 50,
+  fixStringTieMinOverlapFrac = 0.2,
+  fixStringTieMinOverlapLog2RatioToContender = 0.65,
+  estimateDifferentialGeneRange = TRUE,
+  
+  # preFilter() function relevant
+  isoCount = 10,
+  min.Count.prop = 0.7,
+  IFcutoff = 0.1,
+  min.IF.prop = 0.5,
+  acceptedGeneBiotype = NULL,
+  acceptedIsoformClassCode = NULL,
+  removeSingleIsoformGenes = TRUE,
+  reduceToSwitchingGenes = FALSE,
+  reduceFurtherToGenesWithConsequencePotential = FALSE,
+  onlySigIsoforms = FALSE,
+  keepIsoformInAllConditions = FALSE,
+  alpha = 0.05,
+  dIFcutoff = 0.1,
+  
+  # Advanced arguments
+  showProgress = TRUE,
+  quiet = FALSE
 )
 }
 
@@ -67,6 +75,10 @@ Can either be:
     \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "myAnnotation/myGenome/isoformsQuantified.gtf")}
     \item{\code{2}: A string indicating the full path to the (gziped or unpacked) RefSeq GFF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GFF file. Please note only GFF files from RefSeq downloaded from \url{ftp://ftp.ncbi.nlm.nih.gov/genomes/} are supported (see database FAQ in vignette for more info). An example could be "RefSeq/isoformsQuantified.gff")}
 }
+}
+
+\item{condition_labels}{
+  A character vector of length 2 specifying custom labels for the baseline and case groups in the design matrix. The first element corresponds to the baseline group (originally labeled as "B"), and the second element corresponds to the case group (originally labeled as "C").(e.g., \code{c("control", "cancer")}). Default is \code{c("B", "C")}.
 }
 
 \item{isoCount, min.Count.prop, IFcutoff, min.IF.prop}{
