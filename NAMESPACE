@@ -146,6 +146,7 @@ export('isoformSwitchAnalysisCombined')
 export('extractGeneExpression')
 export('isoformToGeneExp')
 export('isoformToIsoformFraction')
+export('exportToPairedGSEA')
 
 ### Export classes
 exportClasses("switchAnalyzeRlist")

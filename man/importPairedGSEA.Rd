@@ -8,40 +8,49 @@ Function for importing paired differential expression and splicing results from 
 }
 \usage{
 importPairedGSEA(
-    splicing_results,
-    diff_results,
-    pathToGTF,
-    isoCount = 10,
-    min.Count.prop = 0.7,
-    IFcutoff = 0.1,
-    min.IF.prop = 0.5,
-    acceptedGeneBiotype = NULL,
-    acceptedIsoformClassCode = NULL,
-    removeSingleIsoformGenes = TRUE,
-    reduceToSwitchingGenes = FALSE,
-    reduceFurtherToGenesWithConsequencePotential = FALSE,
-    onlySigIsoforms = FALSE,
-    keepIsoformInAllConditions = FALSE,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    detectUnwantedEffects = TRUE,
-    addAnnotatedORFs = TRUE,
-    onlyConsiderFullORF = FALSE,
-    removeNonConvensionalChr = FALSE,
-    ignoreAfterBar = TRUE,
-    ignoreAfterSpace = TRUE,
-    ignoreAfterPeriod = FALSE,
-    removeTECgenes = TRUE,
-    PTCDistance = 50,
-    foldChangePseudoCount = 0.01,
-    fixStringTieAnnotationProblem = TRUE,
-    fixStringTieViaOverlapInMultiGenes = TRUE,
-    fixStringTieMinOverlapSize = 50,
-    fixStringTieMinOverlapFrac = 0.2,
-    fixStringTieMinOverlapLog2RatioToContender = 0.65,
-    estimateDifferentialGeneRange = TRUE,
-    showProgress = TRUE,
-    quiet = FALSE
+  # Core arguments (intermidiate and final output of pairedGSEA)
+  splicing_results,
+  diff_results,
+  pathToGTF,
+  condition_labels = c("B", "C"), # Default to "B" (baseline) and "C" (case)
+  
+  # importRdata() function relevant
+  detectUnwantedEffects = TRUE,
+  addAnnotatedORFs = TRUE,
+  onlyConsiderFullORF = FALSE,
+  removeNonConvensionalChr = FALSE,
+  ignoreAfterBar = TRUE,
+  ignoreAfterSpace = TRUE,
+  ignoreAfterPeriod = FALSE,
+  ignoreSurplusIsoforms = TRUE,
+  removeTECgenes = TRUE,
+  PTCDistance = 50,
+  foldChangePseudoCount = 0.01,
+  fixStringTieAnnotationProblem = TRUE,
+  fixStringTieViaOverlapInMultiGenes = TRUE,
+  fixStringTieMinOverlapSize = 50,
+  fixStringTieMinOverlapFrac = 0.2,
+  fixStringTieMinOverlapLog2RatioToContender = 0.65,
+  estimateDifferentialGeneRange = TRUE,
+  
+  # preFilter() function relevant
+  isoCount = 10,
+  min.Count.prop = 0.7,
+  IFcutoff = 0.1,
+  min.IF.prop = 0.5,
+  acceptedGeneBiotype = NULL,
+  acceptedIsoformClassCode = NULL,
+  removeSingleIsoformGenes = TRUE,
+  reduceToSwitchingGenes = FALSE,
+  reduceFurtherToGenesWithConsequencePotential = FALSE,
+  onlySigIsoforms = FALSE,
+  keepIsoformInAllConditions = FALSE,
+  alpha = 0.05,
+  dIFcutoff = 0.1,
+  
+  # Advanced arguments
+  showProgress = TRUE,
+  quiet = FALSE
 )
 }
 
@@ -68,6 +77,10 @@ Can either be:
 }
 }
 
+\item{condition_labels}{
+  A character vector of length 2 specifying custom labels for the baseline and case groups in the design matrix. The first element corresponds to the baseline group (originally labeled as "B"), and the second element corresponds to the case group (originally labeled as "C").(e.g., \code{c("control", "cancer")}). Default is \code{c("B", "C")}.
+}
+
 \item{isoCount, min.Count.prop, IFcutoff, min.IF.prop}{
 Arguments for the filtering step. See \code{\link{preFilter}} for details.
 }
@@ -84,7 +97,7 @@ Arguments for filtering based on isoform switches and downstream consequences. S
 Thresholds for significance and differential isoform fraction used in filtering. See \code{\link{preFilter}} for details.
 }
 
-\item{detectUnwantedEffects, addAnnotatedORFs, onlyConsiderFullORF, removeNonConvensionalChr, ignoreAfterBar, ignoreAfterSpace, ignoreAfterPeriod, removeTECgenes, PTCDistance, foldChangePseudoCount, fixStringTieAnnotationProblem, fixStringTieViaOverlapInMultiGenes, fixStringTieMinOverlapSize, fixStringTieMinOverlapFrac, fixStringTieMinOverlapLog2RatioToContender, estimateDifferentialGeneRange}{
+\item{detectUnwantedEffects, addAnnotatedORFs, onlyConsiderFullORF, removeNonConvensionalChr, ignoreAfterBar, ignoreAfterSpace, ignoreAfterPeriod, ignoreSurplusIsoforms, removeTECgenes, PTCDistance, foldChangePseudoCount, fixStringTieAnnotationProblem, fixStringTieViaOverlapInMultiGenes, fixStringTieMinOverlapSize, fixStringTieMinOverlapFrac, fixStringTieMinOverlapLog2RatioToContender, estimateDifferentialGeneRange}{
 Advanced arguments for handling isoform annotations and data preprocessing. See \code{\link{importRdata}} for details.
 }
 

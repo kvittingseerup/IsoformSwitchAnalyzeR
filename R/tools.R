@@ -226,6 +226,23 @@ jaccardSimilarity <- function(x, y) {
     length(intersect(x, y)) / length(union(x, y))
 }
 
+overlapCoefficient <- function(set1, set2) {
+    # Convert to unique sets
+    set1 <- unique(set1)
+    set2 <- unique(set2)
+    
+    # Calculate the intersection and minimum cardinality
+    intersection <- length(intersect(set1, set2))
+    min_size <- min(length(set1), length(set2))
+    
+    # Avoid division by zero and calculate the coefficient
+    if (min_size == 0) {
+        return(0)
+    }
+    
+    return(intersection / min_size)
+}
+
 ### Summmarize isoform exp to gene exp
 isoformToGeneExp <- function(
     isoformRepExpression,
@@ -2132,4 +2149,98 @@ addZeroes <- function(aVec, n=8) {
     return(
         localData$combinedId
     )
+}
+
+exportToPairedGSEA <- function(
+    switchAnalyzeRlist,
+    pathToOutput = getwd(),
+    writeToFile = FALSE,
+    rdsFileName = "pairedGSEA_input.rds",
+    overwrite = TRUE,
+    quiet = FALSE
+) {
+  # Step 1: Check input validity
+  if (!is(switchAnalyzeRlist, "switchAnalyzeRlist")) {
+    stop("The input 'switchAnalyzeRlist' must be a valid 'SwitchAnalyzeRlist' object.")
+  }
+  
+  # Check for necessary components in SwitchAnalyzeRlist
+  requiredFields <- c("isoformFeatures", "designMatrix", "isoformCountMatrix")
+  missingFields <- setdiff(requiredFields, names(switchAnalyzeRlist))
+  if (length(missingFields) > 0) {
+    stop(paste(
+      "The 'SwitchAnalyzeRlist' object is missing the following fields:",
+      paste(missingFields, collapse = ", "),
+      ". Please ensure the input is valid."
+    ))
+  }
+  
+  # Validate `designMatrix` and `isoformFeatures`
+  if (!all(c("sampleID", "condition") %in% colnames(switchAnalyzeRlist$designMatrix))) {
+    stop("The 'designMatrix' must contain 'sampleID' and 'condition' columns.")
+  }
+  
+  if (!all(c("gene_id", "isoform_id") %in% colnames(switchAnalyzeRlist$isoformFeatures))) {
+    stop("The 'isoformFeatures' must contain 'gene_id' and 'isoform_id' columns.")
+  }
+  
+  # Step 2: Path and file handling
+  if (writeToFile) {
+    # Check or create output directory
+    if (!dir.exists(pathToOutput)) {
+      if (!quiet) message("The specified output path does not exist. Creating it...")
+      dir.create(pathToOutput, recursive = TRUE)
+    }
+    
+    # Ensure the file name ends with .rds
+    if (!grepl("\\.rds$", rdsFileName)) {
+      rdsFileName <- paste0(rdsFileName, ".rds")
+    }
+    
+    # Check overwrite
+    rdsFilePath <- normalizePath(file.path(pathToOutput, rdsFileName), mustWork = FALSE)
+    if (file.exists(rdsFilePath) && !overwrite) {
+      stop(paste(
+        "The file", rdsFileName, "already exists in the specified output path.",
+        "Set 'overwrite = TRUE' to replace the existing file."
+      ))
+    }
+  }
+  
+  # Step 3: Prepare data for export
+  if (!quiet) message("Preparing data for pairedGSEA...")
+  
+  # Extract and process the count matrix
+  isoformFeatures <- switchAnalyzeRlist$isoformFeatures[, c("gene_id", "isoform_id")]
+  countMatrix <- switchAnalyzeRlist$isoformCountMatrix
+  rownames(countMatrix) <- paste(
+    isoformFeatures$gene_id[match(countMatrix$isoform_id, isoformFeatures$isoform_id)],
+    countMatrix$isoform_id,
+    sep = ":"
+  )
+  
+  if ("isoform_id" %in% colnames(countMatrix)) {
+    countMatrix <- countMatrix[, !(colnames(countMatrix) %in% "isoform_id")]
+  }
+  countMatrix <- as.matrix(countMatrix)
+  
+  
+  # Extract the design matrix
+  designMatrix <- switchAnalyzeRlist$designMatrix
+  designMatrix$condition <- as.factor(designMatrix$condition)
+  
+  # Create the result list
+  pairedGSEAList <- list(
+    count_matrix = countMatrix,
+    metadata = designMatrix
+  )
+  
+  # Step 4: Save the result if required
+  if (writeToFile) {
+    saveRDS(pairedGSEAList, file = rdsFilePath)
+    if (!quiet) message(paste("PairedGSEA input list successfully saved as RDS file at:", rdsFilePath))
+  }
+  
+  # Return the result list
+  return(pairedGSEAList)
 }

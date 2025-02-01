@@ -1,3 +1,12 @@
+Changes in version 2.1.4(2025-01)
+- Update type: Minor.
+- Added a new argument ignoreSurplusIsoforms into importRdata() function which set defaultly FALSE. Only for internal usage in importPairedGSEA() to deal with the GTF file incompability resulting from the filteration process in pairedGSEA
+- Fixed two bugs in importPairedGSEA()
+    * about manuplatition of sample names in count matrix
+    * GTF file incompability resulting from the filteration process in pairedGSEA
+- Added a new function exportToPairedGSEA() which prepares input data for paired paired DGE/DGS analysis by extracting a count matrix and corresponding metadata (design matrix) from a switchAnalyzeRlist object.
+- Update the vignette.
+
 Changes in version 2.1.4(2024-12)
 - Update type: Minor.
 - Added a new function importPairedGSEA() for importing paired differential expression and splicing results from pairedGSEA, along with a (gziped or unpacked) GTF file into R as a switchAnalyzeRlist.

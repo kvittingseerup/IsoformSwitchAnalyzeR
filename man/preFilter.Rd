@@ -23,7 +23,8 @@ preFilter <- function(
     onlySigIsoforms = FALSE,
     keepIsoformInAllConditions = FALSE,
     alpha = 0.05,
-    dIFcutoff = 0.1
+    dIFcutoff = 0.1,
+    quiet = FALSE
 )
 }
 
