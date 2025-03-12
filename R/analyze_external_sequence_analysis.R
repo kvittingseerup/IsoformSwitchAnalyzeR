@@ -126,7 +126,7 @@ analyzeCPAT <- function(
 
         } else if (ncol(myCPATresults) == 11) { # Handling CPAT3
             temp <- myCPATresults$seq_ID
-            myCPATresults <- myCPATresults[, c("mRNA", "ORF", "Fickett", "Hexamer", "Coding_prob")]
+            myCPATresults <- myCPATresults[, c(3, 8, 9, 10, 11)]  # Extract 'mRNA', 'ORF', 'Fickett', 'Hexamer', 'Coding_prob'
             myCPATresults$id <- temp
             if (!all(
                 colnames(myCPATresults) %in% c(
