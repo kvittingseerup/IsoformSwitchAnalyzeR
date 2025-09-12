@@ -5902,7 +5902,7 @@ preFilter <- function(
       okBiotypes <- unique(switchAnalyzeRlist$isoformFeatures$gene_biotype)
       
       if( !all(acceptedGeneBiotype %in% okBiotypes) ) {
-        notAnnot <- setdff(acceptedGeneBiotype, okBiotypes)
+        notAnnot <- setdiff(acceptedGeneBiotype, okBiotypes)
         
         warning(
           paste(
