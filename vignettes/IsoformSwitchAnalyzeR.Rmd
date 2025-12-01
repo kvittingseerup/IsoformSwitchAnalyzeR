@@ -666,7 +666,7 @@ Furthermore, note that:
 -   The differential gene/isoform expression analysis shown here is not a part of the standard IsoformSwitchAnalyzeR workflow but can easily be added as described in [Adding differential gene expression].
 -   the *switchPlot()* function has an argument called *IFcutoff* which requires the Isoform Fraction of an isoform to be larger than IFcutoff (default 0.05) to be included in the plot. Increasing this cutoff can result in "simpler" plots as less used isoforms will be removed.
 -   Some regions of transcripts might be marked as "Not Analyzed" if you have been using webservers - for more info on that see [The switchPlot contains regions "Not Annotated"]
--   The dIFcutoff argument in the *switchPlot()* function is what determines the "increased/decreased/unchanged usage" underneed the isoform names in the transcript plots. Please refer to the isoform usage (bottom right) for indication of the statistical analysis.
+-   The dIFcutoff argument in the *switchPlot()* function is what determines the "increased/decreased/unchanged usage" underneath the isoform names in the transcript plots. Please refer to the isoform usage (bottom right) for indication of the statistical analysis.
 
 <br />
 

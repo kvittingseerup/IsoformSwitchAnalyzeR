@@ -271,7 +271,7 @@ switchPlotTopSwitches <- function(
                     if (!is.infinite(n)) {
                         if (n > nrow(localDataSorted)) {
                             warning(
-                                'The chosen n was larger than the number of advailable genes, only advailable genes were considered'
+                                'The chosen n was larger than the number of available genes, only available genes were considered'
                             )
                             n2 <- nrow(localDataSorted)
                         } else {

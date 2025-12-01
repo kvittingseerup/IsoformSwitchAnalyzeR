@@ -1384,7 +1384,7 @@ compareAnnotationOfTwoIsoforms <- function(
 
         if ('isoform_seq_similarity'    %in% consequencesToAnalyze) {
             localAlignment <-
-                Biostrings::pairwiseAlignment(pattern = upNtSeq,
+                pwalign::pairwiseAlignment(pattern = upNtSeq,
                                   subject = downNtSeq,
                                   type = 'global')
 
@@ -1599,7 +1599,7 @@ compareAnnotationOfTwoIsoforms <- function(
             if (all(!is.na(transcriptData$orfTransciptLength))) {
                 if (length(aaSeq) == 2) {
                     localAlignment <-
-                        Biostrings::pairwiseAlignment(
+                        pwalign::pairwiseAlignment(
                             pattern = upAAseq,
                             subject = downAAseq,
                             type = 'global'
@@ -1736,7 +1736,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 if (width(localUpNt) > 0 &
                     width(localDownNt) > 0) {
                     localAlignment <-
-                        Biostrings::pairwiseAlignment(
+                        pwalign::pairwiseAlignment(
                             pattern = localUpNt,
                             subject = localDownNt,
                             type = 'overlap'
@@ -1873,7 +1873,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 if (width(localUpNt) > 0 &
                     width(localDownNt) > 0) {
                     localAlignment <-
-                        Biostrings::pairwiseAlignment(
+                        pwalign::pairwiseAlignment(
                             pattern = localUpNt,
                             subject = localDownNt,
                             type = 'overlap'

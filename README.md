@@ -46,4 +46,4 @@ The vignette contains a lot of information on how to use IsoformSwitchAnalyzeR a
 browseVignettes("IsoformSwitchAnalyzeR")
 ```
 
-Alternatively, it can be accessed online (through Bioconductor) [here](https://bioconductor.org/packages/devel/bioc/vignettes/IsoformSwitchAnalyzeR/inst/doc/IsoformSwitchAnalyzeR.html)
+Alternatively, it can be accessed online (through Bioconductor) [here](https://www.bioconductor.org/packages/release/bioc/vignettes/IsoformSwitchAnalyzeR/inst/doc/IsoformSwitchAnalyzeR.html)

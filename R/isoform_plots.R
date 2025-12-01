@@ -10,7 +10,7 @@ switchPlotTranscript <- function(
     plotXaxis = !rescaleTranscripts,
     reverseMinus = TRUE,
     ifMultipleIdenticalAnnotation = 'summarize',
-    annotationImportance = c('signal_peptide','protein_domain','idr'),
+    annotationImportance = c('signal_peptide', 'protein_domain','idr'),
     plotTopology = TRUE,
     IFcutoff = 0.05,
     abbreviateLocations = TRUE,
@@ -2528,7 +2528,7 @@ expressionAnalysisPlot <- function(
                 localTheme + # modify to rotate labels
                 theme(strip.background = element_rect(
                     fill = "white",
-                    size = 0.5)
+                    linewidth = 0.5)
                 )
 
             if( optimizeForCombinedPlot ) {
@@ -2781,7 +2781,7 @@ expressionAnalysisPlot <- function(
                 localTheme + # modify to tilt conditions
                 theme(strip.background = element_rect(
                     fill = "white",
-                    size = 0.5
+                    linewidth = 0.5
                 ))
 
             if (logYaxis) {
@@ -2913,7 +2913,7 @@ expressionAnalysisPlot <- function(
                 localTheme + # modify to tilt conditions
                 theme(strip.background = element_rect(
                     fill = "white",
-                    size = 0.5)
+                    linewidth = 0.5)
                 )
 
             if( ! optimizeForCombinedPlot ) {
@@ -3401,7 +3401,9 @@ switchPlot <- function(
     }
 
     # Title
-    myTitle <- qplot(1:3, 1, geom = "blank") + theme(
+    myTitle <- ggplot(data.frame(x = 1:3, y = 1), aes(x, y)) +
+      geom_blank() +
+      theme(
         panel.background = element_blank(),
         line = element_blank(),
         text = element_blank(),
@@ -3472,12 +3474,14 @@ switchPlot <- function(
             return(legend)
         }
 
-        ### Convert the legneds to ggplot2 via annotation_custom
+        ### Convert the legends to ggplot2 via annotation_custom
         if (anyDomains) {
             tLegend <- g_legend(transcriptPlot)
 
             transcriptLegend <-
-                qplot(1:10, 1:10, geom = "blank") + theme_bw() + theme(
+                ggplot(data.frame(x = 1:10, y = 1:10), aes(x, y)) +
+                geom_blank() + theme_bw() +
+                theme(
                     line = element_blank(),
                     text = element_blank(),
                     panel.border = element_blank()
@@ -3508,7 +3512,10 @@ switchPlot <- function(
 
         } else {
             transcriptLegend <-
-                qplot(1:10, 1:10, geom = "blank") + theme_bw() + theme(
+                ggplot(data.frame(x = 1:10, y = 1:10), aes(x, y)) +
+                geom_blank() +
+                theme_bw() +
+                theme(
                     line = element_blank(),
                     text = element_blank(),
                     panel.border = element_blank()
@@ -3517,7 +3524,10 @@ switchPlot <- function(
 
         eLegend <- g_legend(expressionPlots[[2]])
         expressionLegend <-
-            qplot(1:10, 1:10, geom = "blank") + theme_bw() + theme(
+            ggplot(data.frame(x = 1:10, y = 1:10), aes(x, y)) +
+            geom_blank() +
+            theme_bw() +
+            theme(
                 line = element_blank(),
                 text = element_blank(),
                 panel.border = element_blank()
@@ -3568,7 +3578,7 @@ switchPlot <- function(
         layout.pos.col = 1:(nColToUse - legendSize)
     ))
 
-    # transctipt plot
+    # transcript plot
     suppressWarnings(print(
         transcriptPlot2 + guides(fill = "none"),
         vp = viewport(
