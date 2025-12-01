@@ -1231,7 +1231,11 @@ importGTF <- function(
             tmp <- capture.output(
                 suppressWarnings(
                     suppressMessages(
+                      if(onlyConsiderFullORF){
+                        mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS','exon','start_codon','stop_codon'))
+                      } else {
                         mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS','exon'))
+                      }
                     )
                 )
             )
@@ -1383,6 +1387,13 @@ importGTF <- function(
             ignoreAfterBar = ignoreAfterBar,
             ignoreAfterSpace = ignoreAfterSpace,
             ignoreAfterPeriod = ignoreAfterPeriod
+        )
+        
+        mfGTF$gene_id <- fixNames(
+          nameVec = mfGTF$gene_id,
+          ignoreAfterBar = ignoreAfterBar,
+          ignoreAfterSpace = ignoreAfterSpace,
+          ignoreAfterPeriod = ignoreAfterPeriod
         )
 
     }
@@ -2894,7 +2905,7 @@ importIsoformExpression <- function(
         )
 
         if (!quiet) {
-            message('Done\n')
+            message('GTF file imported successfully.\n')
         }
     }
 
@@ -2904,2314 +2915,2458 @@ importIsoformExpression <- function(
 
 importRdata <- function(
     ### Core arguments
-    isoformCountMatrix,
-    isoformRepExpression = NULL,
-    designMatrix,
-    isoformExonAnnoation,
-    isoformNtFasta = NULL,
-    comparisonsToMake = NULL,
-
-    ### Advanced arguments
-    detectUnwantedEffects = TRUE,
-    addAnnotatedORFs = TRUE,
-    onlyConsiderFullORF = FALSE,
-    removeNonConvensionalChr = FALSE,
-    ignoreAfterBar = TRUE,
-    ignoreAfterSpace = TRUE,
-    ignoreAfterPeriod = FALSE,
-    removeTECgenes = TRUE,
-    PTCDistance = 50,
-    foldChangePseudoCount = 0.01,
-    fixStringTieAnnotationProblem = TRUE,
-    fixStringTieViaOverlapInMultiGenes = TRUE,
-    fixStringTieMinOverlapSize = 50,
-    fixStringTieMinOverlapFrac = 0.2,
-    fixStringTieMinOverlapLog2RatioToContender = 0.65,
-    estimateDifferentialGeneRange = TRUE,
-    showProgress = TRUE,
-    quiet = FALSE
+  isoformCountMatrix,
+  isoformRepExpression = NULL,
+  designMatrix,
+  isoformExonAnnoation,
+  isoformNtFasta = NULL,
+  comparisonsToMake = NULL,
+  
+  ### Advanced arguments
+  detectUnwantedEffects = TRUE,
+  addAnnotatedORFs = TRUE,
+  onlyConsiderFullORF = FALSE,
+  removeNonConvensionalChr = FALSE,
+  ignoreAfterBar = TRUE,
+  ignoreAfterSpace = TRUE,
+  ignoreAfterPeriod = FALSE,
+  ignoreSurplusIsoforms = FALSE,
+  removeTECgenes = TRUE,
+  PTCDistance = 50,
+  foldChangePseudoCount = 0.01,
+  fixStringTieAnnotationProblem = TRUE,
+  fixStringTieViaOverlapInMultiGenes = TRUE,
+  fixStringTieMinOverlapSize = 50,
+  fixStringTieMinOverlapFrac = 0.2,
+  fixStringTieMinOverlapLog2RatioToContender = 0.65,
+  estimateDifferentialGeneRange = TRUE,
+  showProgress = TRUE,
+  quiet = FALSE
 ) {
-    ### Test existence of files
-    if(TRUE) {
-        if( !is.null(isoformNtFasta)) {
-            if( ! is(isoformNtFasta, 'character') ) {
-                stop('The \'isoformNtFasta\' argument must be a string (or vector of strings) pointing to the fasta file on the disk.')
-            }
-
-            if( any( isoformNtFasta == '') ) {
-                stop(
-                    paste(
-                        'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
-                        '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
-                        'to import your own data? The system.file() should only be used',
-                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
-                        'To access your own data simply provide the string to the directory with the data as:',
-                        '"path/to/quantification/".',
-                        sep=' '
-                    )
-                )
-            }
-            if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
-                stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
-            }
-            if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
-                stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to be a fasta file...')
-            }
-        }
-
-        if( class(isoformExonAnnoation) == 'character' ) {
-            if( isoformExonAnnoation == '' ) {
-                stop(
-                    paste(
-                        'The \'isoformExonAnnoation\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
-                        '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
-                        'to import your own data? The system.file() should only be used',
-                        'to access the example data stored in the IsoformSwitchAnalyzeR package.',
-                        'To access your own data simply provide the string to the directory with the data as:',
-                        '"path/to/quantification/".',
-                        sep=' '
-                    )
-                )
-            }
-            if( ! (file.exists(isoformExonAnnoation) | RCurl::url.exists(isoformExonAnnoation)) ) {
-                stop(
-                    paste(
-                        'The file pointed to with the \'isoformExonAnnoation\' argument does not exists.',
-                        '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
-                        sep=' '
-                    )
-                )
-            }
-        }
-    }
-
-    ### Test whether input data fits together
-    if (!quiet) { message('Step 1 of 10: Checking data...')}
-    if (TRUE) {
-        ### Set up progress
-        if (showProgress &  !quiet) {
-            progressBar <- 'text'
-            progressBarLogic <- TRUE
-        } else {
-            progressBar <- 'none'
-            progressBarLogic <- FALSE
-        }
-
-        ### Test supplied expression
-        if(TRUE) {
-            countsSuppled <- ! is.null(isoformCountMatrix)
-            abundSuppled  <- ! is.null(isoformRepExpression)
-
-            if( ! countsSuppled ) {
-                stop('You must supply a count matrix to \'isoformCountMatrix\'.')
-            }
-
-            if( ! class(isoformCountMatrix)[1] %in% c('data.frame','matrix','tbl_df')) {
-                stop('The input given as isoformCountMatrix must be a data.frame or matrix.')
-            }
-
-
-            if( abundSuppled ) {
-                isoformRepExpression <- as.data.frame(isoformRepExpression)
-
-                if( any( apply(isoformRepExpression[,which(colnames(isoformRepExpression) != 'isoform_id')],2, class) %in% c('character', 'factor') )) {
-                    stop('The isoformCountMatrix contains character/factor column(s) (other than the isoform_id column)')
-                }
-
-                extremeValues <- range( isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')], na.rm = TRUE )
-                if( max(extremeValues) < 30 ) {
-                    warning('The expression data supplied to \'isoformRepExpression\' seems very small - please double-check that it is NOT log-transformed')
-                }
-                if( min(extremeValues) < 0 ) {
-                    stop('The expression data supplied to \'isoformRepExpression\' contains negative values - please double-check that it is NOT log-transformed')
-                }
-
-            }
-
-            if( countsSuppled ) {
-                isoformCountMatrix <- as.data.frame(isoformCountMatrix)
-
-                if( any( apply(isoformCountMatrix[,which(colnames(isoformCountMatrix) != 'isoform_id')],2, class) %in% c('character', 'factor') )) {
-                    stop('The isoformCountMatrix contains character/factor column(s) (other than the isoform_id column)')
-                }
-
-                extremeValues <- range( isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')], na.rm = TRUE )
-                if( max(extremeValues) < 30 ) {
-                    warning('The count data supplied to \'isoformCountMatrix\' seems very small - please double-check that it is NOT log-transformed')
-                }
-                if( min(extremeValues) < 0 ) {
-                    stop('The count data supplied to \'isoformCountMatrix\' contains negative values - please double-check that it is NOT log-transformed')
-                }
-            }
-        }
-
-        ### Contains the colums they should
-        if (TRUE) {
-            ### Colnames
-            if( countsSuppled ) {
-                if (!any(colnames(isoformCountMatrix) == 'isoform_id')) {
-                    #stop(paste(
-                    #    'The data.frame passed to the \'isoformCountMatrix\'',
-                    #    'argument must contain a \'isoform_id\' column'
-                    #))
-                    warning(
-                        paste(
-                        '    Using row.names as \'isoform_id\' for \'isoformCountMatrix\'.',
-                        'If not suitable you must add them manually.',
-                        sep=' '
-                        )
-                    )
-                    isoformCountMatrix$isoform_id <- rownames(isoformCountMatrix)
-
-                }
-
-                if(any(duplicated( isoformCountMatrix$isoform_id) )) {
-                    stop('The \'isoform_id\' of the count matrix must have unique ids.')
-                }
-            }
-            if ( abundSuppled ) {
-                if (!any(colnames(isoformRepExpression) == 'isoform_id')) {
-                    #stop(paste(
-                    #    'The data.frame passed to the \'isoformRepExpression\'',
-                    #    'argument must contain a \'isoform_id\' column'
-                    #))
-                    message(paste(
-                        '    Using row.names as \'isoform_id\' for \'isoformRepExpression\'. If not suitable you must add them manually.'
-                    ))
-                    isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
-                }
-                if(any(duplicated( isoformRepExpression$isoform_id) )) {
-                    stop('The \'isoform_id\' of the expression matrix must have unique ids.')
-                }
-            }
-
-            ### Potentially convert from tibble
-            if( class(designMatrix)[1] == 'tbl_df') {
-                designMatrix <- as.data.frame(designMatrix)
-            }
-            if (!all(c('sampleID', 'condition') %in% colnames(designMatrix))) {
-                stop(paste(
-                    'The data.frame passed to the \'designMatrix\'',
-                    'argument must contain both a \'sampleID\' and a',
-                    '\'condition\' column'
-                ))
-            }
-            if (length(unique(designMatrix$condition)) < 2) {
-                stop('The supplied \'designMatrix\' only contains 1 condition')
-            }
-            # test information content in design matrix
-            if( ncol(designMatrix) > 2 ) {
-                otherDesign <- designMatrix[,which(
-                    ! colnames(designMatrix) %in% c('sampleID', 'condition')
-                ),drop=FALSE]
-
-                nonInformaticColms <- which(
-                    apply(otherDesign, 2, function(x) {
-                        length(unique(x)) == 1
-                    })
-                )
-
-                if(length(nonInformaticColms)) {
-                    stop(
-                        paste(
-                            'In the designMatrix the following column(s): ',
-                            paste(names(nonInformaticColms), collapse = ', '),
-                            '\n Contain constant information. Columns apart from \'sampleID\' and \'condition\'\n',
-                            'must describe cofounding effects not if interest. See ?importRdata and\n',
-                            'vignette ("How to handle cofounding effects (including batches)" section) for more information.',
-                            sep=' '
-                        )
-                    )
-                }
-            }
-
-            # test comparisonsToMake
-            if (!is.null(comparisonsToMake)) {
-                if (!all(c('condition_1', 'condition_2') %in%
-                         colnames(comparisonsToMake))) {
-                    stop(paste(
-                        'The data.frame passed to the \'comparisonsToMake\'',
-                        'argument must contain both a \'condition_1\' and a',
-                        '\'condition_2\' column indicating',
-                        'the comparisons to make'
-                    ))
-                }
-            }
-        }
-
-        ### Convert potential factors
-        if (TRUE) {
-            orgCond <- designMatrix$condition
-
-            designMatrix$sampleID  <- as.character(designMatrix$sampleID)
-            designMatrix$condition <- as.character(designMatrix$condition)
-
-            if (!is.null(comparisonsToMake)) {
-                comparisonsToMake$condition_1 <-
-                    as.character(comparisonsToMake$condition_1)
-                comparisonsToMake$condition_2 <-
-                    as.character(comparisonsToMake$condition_2)
-            }
-
-            if (!is.null(isoformRepExpression)) {
-                isoformRepExpression$isoform_id <-
-                    as.character(isoformRepExpression$isoform_id)
-            }
-            if (!is.null(isoformCountMatrix)) {
-                isoformCountMatrix$isoform_id <-
-                    as.character(isoformCountMatrix$isoform_id)
-            }
-
-        }
-
-        ### Check supplied data fits togehter
-        if (TRUE) {
-            if(countsSuppled) {
-                if (!all(designMatrix$sampleID %in% colnames(isoformCountMatrix))) {
-                    stop(paste(
-                        'Each sample stored in \'designMatrix$sampleID\' must have',
-                        'a corresponding expression column in \'isoformCountMatrix\''
-                    ))
-                }
-            }
-            if ( abundSuppled ) {
-                if (!all(designMatrix$sampleID %in%
-                         colnames(isoformRepExpression))) {
-                    stop(paste(
-                        'Each sample stored in \'designMatrix$sampleID\' must',
-                        'have a corresponding expression column',
-                        'in \'isoformRepExpression\''
-                    ))
-                }
-            }
-            if( abundSuppled & countsSuppled ) {
-                if( !  identical( colnames(isoformCountMatrix) , colnames(isoformRepExpression)) ) {
-                    stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
-                }
-
-                if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
-                    stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
-                }
-            }
-
-            if (!is.null(comparisonsToMake)) {
-                if (!all(
-                    c(
-                        comparisonsToMake$condition_1,
-                        comparisonsToMake$condition_2
-                    ) %in% designMatrix$condition
-                )) {
-                    stop(paste(
-                        'The conditions supplied in comparisonsToMake and',
-                        'designMatrix does not match'
-                    ))
-                }
-            } else {
-                # create it
-                comparisonsToMake <-
-                    allPairwiseFeatures(orgCond)
-                colnames(comparisonsToMake) <-
-                    c('condition_1', 'condition_2')
-            }
-        }
-
-        ### Test complexity of setup
-        if(TRUE) {
-            nCond <- length(unique(designMatrix$condition))
-            n <- nrow(designMatrix)
-            if(  nCond/n > 2/3  ) {
-                warning(paste(
-                    'The experimental design seems to be of very low complexity - very few samples per replicate.',
-                    'Please check the supplied design matrixt to make sure no mistakes were made.'
-                ))
-            }
-
-            nComp <- nrow(comparisonsToMake)
-            if( nComp > 6 ) {
-                warning(paste0(
-                    'The number of comparisons (n=', nComp,') is unusually high.',
-                    '\n - If this intended please note that with a large number of comparisons IsoformSwitchAnalyzeR might use quite a lot of memmory (aka running on a small computer might be problematic).',
-                    '\n - If this was not intended please check the supplied design matrixt to make sure no mistakes were made.'
-                ))
-            }
-
-            ### Test conditions with n=1
-            cndCnt <- table(designMatrix$condition)
-            if( any(cndCnt == 1) ) {
-                warning(
-                    paste0(
-                        '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!',
-                        '\nIsoformSwitchAnalyzeR is not made to work with conditions without indepdendet biological replicates and results will not be trustworthy!',
-                        '\nAt best data without replicates should be analyzed as a pilot study before investing in more replicates.',
-                        '\nPlase consult the "Analysing experiments without replicates" and "What constitute an independent biological replicate?" sections of the vignette.',
-                        '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!\n'
-                    )
-                )
-            }
-
-            ### Test for full rank
-            isFullRank <- testFullRank( designMatrix )
-
-            if( ! isFullRank ) {
-                stop(
-                    paste(
-                        'The supplied design matrix will result in a model matrix that is not full rank',
-                        '\nPlease make sure there are no co-linearities in the design'
-                    )
-                )
-            }
-
-        }
-
-        ### Test NT input
-        if(TRUE) {
-            if( !is.null( isoformNtFasta )) {
-                if( !is.character( isoformNtFasta)) {
-                    stop('The \'isoformNtFasta\' argument must be a charachter string.')
-                }
-
-                if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
-                    stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
-                }
-                if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
-                    stop('The file pointed to via the \'isoformNtFasta\' argument does not seem to be a fasta file...')
-                }
-            }
-        }
-
-    }
-
-    ### Giver proper R names
-    if(TRUE) {
-        ### Double check order
-        designMatrix <- designMatrix[,c(
-            match( c('sampleID','condition'), colnames(designMatrix) ),
-            which( ! colnames(designMatrix) %in% c('sampleID','condition') )
-        )]
-
-        tmp <- designMatrix
-
-        for( i in 2:ncol(designMatrix) ) { # i <- 2
-            if( class(designMatrix[,i]) %in% c('character','factor') ) {
-                designMatrix[,i] <- makeProperNames( designMatrix[,i] )
-            }
-        }
-
-        if( ! identical(tmp, designMatrix) ) {
-            message('Please note that some condition names were changed due to names not suited for modeling in R.')
-        }
-
-        if( !is.null(comparisonsToMake) ) {
-            comparisonsToMake$condition_1 <- makeProperNames(
-                comparisonsToMake$condition_1
-            )
-            comparisonsToMake$condition_2 <- makeProperNames(
-                comparisonsToMake$condition_2
-            )
-        }
-    }
-
-    ### Fix names (done before input is handled and compared)
-    if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
-        if( countsSuppled ) {
-            isoformCountMatrix$isoform_id <- fixNames(
-                nameVec = isoformCountMatrix$isoform_id,
-                ignoreAfterBar = ignoreAfterBar,
-                ignoreAfterSpace = ignoreAfterSpace,
-                ignoreAfterPeriod = ignoreAfterPeriod
-            )
-        }
-        if ( abundSuppled ) {
-            isoformRepExpression$isoform_id <- fixNames(
-                nameVec = isoformRepExpression$isoform_id,
-                ignoreAfterBar = ignoreAfterBar,
-                ignoreAfterSpace = ignoreAfterSpace,
-                ignoreAfterPeriod = ignoreAfterPeriod
-            )
-        }
-
-    }
-
-
-
-    ### Obtain isoform annotation
-    if (!quiet) { message('Step 2 of 10: Obtaining annotation...')}
-    if (TRUE) {
-        ### Massage annoation input
-        if(TRUE) {
-            ### Import GTF is nessesary
-            if( class(isoformExonAnnoation) == 'character' ) {
-                gtfImported <- TRUE
-
-                ### Test input
-                if(TRUE) {
-                    if (length(isoformExonAnnoation) != 1) {
-                        stop(paste(
-                            'You can only supply 1 file to isoformExonAnnoation'
-                        ))
-                    }
-                    if( ! grepl('\\.gtf$|\\.gtf\\.gz$', isoformExonAnnoation, ignore.case = TRUE) ) {
-                        warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
-                    }
-
-                    if (!quiet) {
-                        message('    importing GTF (this may take a while)...')
-                    }
-
-                }
-
-                ### Note: Isoform names are fixed by importGTF
-                suppressWarnings(
-                    gtfSwichList <- importGTF(
-                        pathToGTF = isoformExonAnnoation,
-                        addAnnotatedORFs = addAnnotatedORFs,
-                        onlyConsiderFullORF = onlyConsiderFullORF,
-                        removeNonConvensionalChr = FALSE,
-                        ignoreAfterBar = ignoreAfterBar,
-                        ignoreAfterSpace = ignoreAfterSpace,
-                        ignoreAfterPeriod = ignoreAfterPeriod,
-                        removeTECgenes = FALSE,
-                        PTCDistance = PTCDistance,
-                        removeFusionTranscripts = FALSE,
-                        removeUnstrandedTranscripts = FALSE,
-                        quiet = TRUE
-                    )
-                )
-
-                ### Extract isoforms which are quantified
-                if(TRUE) {
-                    ### Get genes with iso quantified
-                    if( countsSuppled ) {
-                        genesToKeep <- gtfSwichList$isoformFeatures$gene_id[which(
-                            gtfSwichList$isoformFeatures$isoform_id %in% isoformCountMatrix$isoform_id
-                        )]
-
-                        ### Ensure all isoforms quantified are kept
-                        isoToKeep <- union(
-                            gtfSwichList$isoformFeatures$isoform_id[which(
-                                gtfSwichList$isoformFeatures$gene_id %in% genesToKeep
-                            )],
-                            isoformCountMatrix$isoform_id
-                        )
-                    } else {
-                        genesToKeep <- gtfSwichList$isoformFeatures$gene_id[which(
-                            gtfSwichList$isoformFeatures$isoform_id %in% isoformRepExpression$isoform_id
-                        )]
-
-                        ### Ensure all isoforms quantified are kept
-                        isoToKeep <- union(
-                            gtfSwichList$isoformFeatures$isoform_id[which(
-                                gtfSwichList$isoformFeatures$gene_id %in% genesToKeep
-                            )],
-                            isoformRepExpression$isoform_id
-                        )
-                    }
-                }
-
-                ### Extract isoforms to remove due to non chanonical nature
-                if(TRUE) {
-                    ### Identify isoforms to remove
-                    isoformsToRemove <- character()
-
-                    ### TEC genes
-                    if( removeTECgenes & any(!is.na( gtfSwichList$isoformFeatures$gene_biotype)) ) {
-                        isoformsToRemove <- c(
-                            isoformsToRemove,
-                            unique(gtfSwichList$isoformFeatures$isoform_id[which(
-                                gtfSwichList$isoformFeatures$gene_biotype == 'TEC'
-                            )])
-                        )
-                    }
-
-                    ### Strange chromosomes
-                    if( removeNonConvensionalChr ) {
-                        nonChanonicalChrsIso <- unique(
-                            gtfSwichList$exons$isoform_id[which(
-                                grepl('_|\\.'  , as.character(gtfSwichList$exons@seqnames))
-                            )]
-                        )
-
-                        isoformsToRemove <- unique(c(
-                            isoformsToRemove,
-                            nonChanonicalChrsIso
-                        ))
-                    }
-
-                    ### Unstranded transcripts
-                    if(TRUE) {
-                        unstrandedIso <- unique(
-                            gtfSwichList$exons$isoform_id[which(
-                                grepl('\\*'  , as.character(gtfSwichList$exons@strand))
-                            )]
-                        )
-
-                        isoformsToRemove <- unique(c(
-                            isoformsToRemove,
-                            unstrandedIso
-                        ))
-
-                        if(length(unstrandedIso)) {
-                            warning(
-                                paste0(
-                                    'We found ', length(unstrandedIso),
-                                    ' (', round(
-                                        length(unstrandedIso) / length(isoToKeep) * 100,
-                                        digits = 2
-                                    ),
-                                    '%) unstranded transcripts.',
-                                    '\n  These were removed as unstranded transcripts cannot be analysed'
-                                )
-                            )
-                        }
-                    }
-
-                    ### Note:
-                    # No need to extend to genes since they per definition are all genes
-
-                    ### Remove non chanonical isoforms
-                    if(length(isoformsToRemove)) {
-                        isoToKeep <- setdiff(
-                            isoToKeep,
-                            isoformsToRemove
-                        )
-                    }
-                }
-
-                ### Subset to used data
-                if(TRUE) {
-                    if( countsSuppled ) {
-                        isoformCountMatrix <- isoformCountMatrix[which(
-                            isoformCountMatrix$isoform_id %in% isoToKeep
-                        ),]
-                    }
-                    if( abundSuppled ) {
-                        isoformRepExpression <- isoformRepExpression[which(
-                            isoformRepExpression$isoform_id %in% isoToKeep
-                        ),]
-                    }
-
-                    if(any(isoToKeep %in% gtfSwichList$isoformFeatures$isoform_id)) {
-                        gtfSwichList$isoformFeatures <- gtfSwichList$isoformFeatures[which(
-                            gtfSwichList$isoformFeatures$isoform_id %in% isoToKeep
-                        ),]
-                        gtfSwichList$exons <- gtfSwichList$exons[which(
-                            gtfSwichList$exons$isoform_id %in% isoToKeep
-                        ),]
-                        gtfSwichList$orfAnalysis <- gtfSwichList$orfAnalysis[which(
-                            gtfSwichList$orfAnalysis$isoform_id %in% isoToKeep
-                        ),]
-                    }
-                }
-
-                ### Extract wanted annotation files form the GTF switchAnalyzeR object
-                if(TRUE) {
-                    isoformExonStructure <-
-                        gtfSwichList$exons[, c('isoform_id', 'gene_id')]
-                    isoformExonStructure <- sort(isoformExonStructure)
-
-                    colsToExtract <- c(
-                        'isoform_id', 'gene_id', 'gene_name',
-                        'ref_gene_id', # stringtie annotation
-                        'gene_biotype','iso_biotype'
-                    )
-                    isoformAnnotation <-
-                        unique(gtfSwichList$isoformFeatures[,na.omit(
-                            match(colsToExtract , colnames(gtfSwichList$isoformFeatures))
-                        )])
-                }
-                # where isoformAnnotation and isoformExonStructure is made
-
-                if (addAnnotatedORFs & gtfImported) {
-                    isoORF <- gtfSwichList$orfAnalysis
-
-                    if( all( is.na(isoORF$PTC)) ) {
-                        warning(
-                            paste(
-                                '   No CDS annotation was found in the GTF files meaning ORFs could not be annotated.\n',
-                                '    (But ORFs can still be predicted with the analyzeORF() function)'
-                            )
-                        )
-
-                        addAnnotatedORFs <- FALSE
-                    }
-                }
-            }
-
-            if( class(isoformExonAnnoation) != 'character' ) {
-                gtfImported <- FALSE
-
-                ### Test input
-                if(TRUE) {
-                    if( ! is(object = isoformExonAnnoation, 'GRanges') ) {
-                        stop('When not using a GTF file (by supplying a text string with the path to the file) the "isoformExonAnnoation" argument must be a GRange.')
-                    }
-
-                    if( length(isoformExonAnnoation) == 0 ) {
-                        stop('The GRange supplied to the "isoformExonAnnoation" argument have zero enteries (rows).')
-                    }
-
-                    ### Test
-                    if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
-                        stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
-                    }
-
-                    ### Test for other than exons by annotation
-                    if(any(  colnames(isoformExonAnnoation@elementMetadata) == 'type' )) {
-                        stop(
-                            paste(
-                                'The \'type\' column of the data supplied to \'isoformExonAnnoation\'',
-                                'indicate there are multiple levels of data.',
-                                'Please fix this (providing only exon-level) or simply',
-                                '\nprovide a string with the path to the GTF file to the \'isoformExonAnnoation\' - ',
-                                'then IsoformSwitchAnalyzeR will import and massage the GTF file for you.'
-                            )
-                        )
-                    }
-
-                    ### Test for other than exons by overlap of transcript features
-                    localExonList <- split(isoformExonAnnoation@ranges, isoformExonAnnoation$isoform_id)
-                    localExonListReduced <- GenomicRanges::reduce(localExonList)
-                    if(
-                        any( sapply( width(localExonList), sum) != sapply( width(localExonListReduced), sum) )
-                    ) {
-                        stop(
-                            paste(
-                                'The data supplied to \'isoformExonAnnoation\' appears to be multi-leveled',
-                                '(Fx both containing exon and CDS information for transcripts - which a GTF file does).',
-                                'If your annotation data originate from a GTF file please supply a string',
-                                'indicating the path to the GTF file to the \'isoformExonAnnoation\' argument',
-                                'instead - then IsoformSwitchAnalyzeR will handle the multi-levels.'
-                            )
-                        )
-                    }
-
-                }
-
-                ### Fix names
-                if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
-                    isoformExonAnnoation$isoform_id <- fixNames(
-                        nameVec = isoformExonAnnoation$isoform_id,
-                        ignoreAfterBar = ignoreAfterBar,
-                        ignoreAfterSpace = ignoreAfterSpace,
-                        ignoreAfterPeriod = ignoreAfterPeriod
-                    )
-                }
-
-                ### Collaps ajecent exons (aka thouse without any intron between)
-                if(TRUE) {
-                    ### Reduce ajecent exons
-                    tmp <- unlist(
-                        GenomicRanges::reduce(
-                            split(
-                                isoformExonAnnoation,
-                                isoformExonAnnoation$isoform_id
-                            )
-                        )
-                    )
-                    ### Add isoform id
-                    tmp$isoform_id <- tmp@ranges@NAMES
-                    tmp@ranges@NAMES <- NULL
-
-                    ### add gene id
-                    tmp$gene_id <-isoformExonAnnoation$gene_id[match(
-                        tmp$isoform_id, isoformExonAnnoation$isoform_id
-                    )]
-
-                    ### Add gene names if used
-                    if('gene_name' %in% colnames(isoformExonAnnoation@elementMetadata)) {
-                        tmp$gene_name <-isoformExonAnnoation$gene_name[match(
-                            tmp$isoform_id, isoformExonAnnoation$isoform_id
-                        )]
-                    }
-
-                    ### sort
-                    tmp <- tmp[sort.list(tmp$isoform_id),]
-
-                    ### Overwrite
-                    isoformExonAnnoation <- tmp
-                }
-
-                ### Extract isoforms which are quantified
-                if(TRUE) {
-                    ### Get genes with iso quantified
-                    if( countsSuppled ) {
-                        genesToKeep <- isoformExonAnnoation$gene_id[which(
-                            isoformExonAnnoation$isoform_id %in% isoformCountMatrix$isoform_id
-                        )]
-
-                        ### Ensure all isoforms quantified are kept
-                        isoToKeep <- union(
-                            isoformExonAnnoation$isoform_id[which(
-                                isoformExonAnnoation$gene_id %in% genesToKeep
-                            )],
-                            isoformCountMatrix$isoform_id
-                        )
-                    } else {
-                        genesToKeep <- isoformExonAnnoation$gene_id[which(
-                            isoformExonAnnoation$isoform_id %in% isoformRepExpression$isoform_id
-                        )]
-
-                        ### Ensure all isoforms quantified are kept
-                        isoToKeep <- union(
-                            isoformExonAnnoation$isoform_id[which(
-                                isoformExonAnnoation$gene_id %in% genesToKeep
-                            )],
-                            isoformCountMatrix$isoform_id
-                        )
-                    }
-                }
-
-                ### Subset to used data
-                if(TRUE) {
-                    if( countsSuppled ) {
-                        isoformCountMatrix <- isoformCountMatrix[which(
-                            isoformCountMatrix$isoform_id %in% isoToKeep
-                        ),]
-                    }
-                    if( abundSuppled ) {
-                        isoformRepExpression <- isoformRepExpression[which(
-                            isoformRepExpression$isoform_id %in% isoToKeep
-                        ),]
-                    }
-
-                    if(any(isoToKeep %in% isoformExonAnnoation$isoform_id)) {
-                        isoformExonAnnoation <- isoformExonAnnoation[which(
-                            isoformExonAnnoation$isoform_id %in% isoToKeep
-                        ),]
-                    }
-                }
-
-                ### Devide the data
-                colsToUse <-  c(
-                    'isoform_id',
-                    'gene_id',
-                    'gene_name'
-                )
-
-                isoformExonStructure <-
-                    isoformExonAnnoation[,na.omit(match(
-                        colsToUse, colnames(isoformExonAnnoation@elementMetadata)
-                    ))]
-
-                isoformAnnotation <-
-                    unique(as.data.frame(isoformExonAnnoation@elementMetadata))
-                if (!'gene_name' %in% colnames(isoformAnnotation)) {
-                    isoformAnnotation$gene_name <- NA
-                }
-
-                isoformAnnotation <- isoformAnnotation[order(
-                    isoformAnnotation$gene_id,
-                    isoformAnnotation$gene_name,
-                    isoformAnnotation$isoform_id
-                ),]
-            }
-
-        }
-
-        ### Test the columns of obtained annoation
-        if(TRUE) {
-            if (!all(c('isoform_id', 'gene_id', 'gene_name') %in%
-                     colnames(isoformAnnotation))) {
-                stop(paste(
-                    'The data.frame passed to the \'isoformAnnotation\' argument',
-                    'must contain the following columns \'isoform_id\',',
-                    '\'gene_id\' and \'gene_name\''
-                ))
-            }
-            if (any(is.na(isoformAnnotation[, c('isoform_id', 'gene_id')]))) {
-                stop(paste(
-                    'The \'isoform_id\' and \'gene_id\' columns in the data.frame',
-                    'passed to the \'isoformAnnotation\' argument are not allowed',
-                    'to contain NAs'
-                ))
-            }
-            if (!'isoform_id' %in% colnames(isoformExonStructure@elementMetadata)) {
-                stop(paste(
-                    'The GenomicRanges (GRanges) object passed to the',
-                    '\'isoformExonStructure\' argument must contain both a',
-                    '\'isoform_id\' and \'gene_id\' metadata column'
-                ))
-            }
-        }
-
-        ### Test overlap with expression data
-        if(TRUE) {
-            if( countsSuppled ) {
-                j1 <- jaccardSimilarity(
-                    isoformCountMatrix$isoform_id,
-                    isoformAnnotation$isoform_id
-                )
-
-                expIso <- isoformCountMatrix$isoform_id
-            } else {
-                j1 <- jaccardSimilarity(
-                    isoformRepExpression$isoform_id,
-                    isoformAnnotation$isoform_id
-                )
-
-                expIso <- isoformRepExpression$isoform_id
-            }
-
-            jcCutoff <- 0.925
-
-            onlyInExp <- setdiff(expIso, isoformAnnotation$isoform_id)
-
-            if (j1 != 1 ) {
-                if( j1 < jcCutoff | length(onlyInExp) ) {
-                    options(warning.length = 2000L)
-                    stop(
-                        paste(
-                            'The annotation and quantification (count/abundance matrix and isoform annotation)',
-                            'seems to be different (Jaccard similarity < 0.925).',
-                            '\nEither isforoms found in the annotation are',
-                            'not quantifed or vise versa.',
-                            '\nSpecifically:\n',
-                            length(unique(expIso)), 'isoforms were quantified.\n',
-                            length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
-                            'Only', length(intersect(expIso, isoformAnnotation$isoform_id)), 'overlap.\n',
-                            length(setdiff(unique(expIso), isoformAnnotation$isoform_id)), 'isoforms quantifed had no corresponding annoation\n',
-                            '\nThis combination cannot be analyzed since it will',
-                            'cause discrepencies between quantification and annotation thereby skewing all analysis.\n',
-
-                            '\nIf there is no overlap (as in zero or close) there are two options:\n',
-                            '1) The files do not fit together (e.g. different databases, versions, etc)',
-                                '(no fix except using propperly paired files).\n',
-                            '2) It is somthing to do with how the isoform ids are stored in the different files.',
-                            'This problem might be solvable using some of the',
-                            '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
-                            '    Examples from expression matrix are :',
-                            paste0( sample(expIso, min(c(3, length(expIso)))), collapse = ', '),'\n',
-                            '    Examples of annoation are :',
-                            paste0( sample(isoformAnnotation$isoform_id, min(c(3, length(isoformAnnotation$isoform_id)))), collapse = ', '),'\n',
-                            '    Examples of isoforms which were only found im the quantification are  :',
-                            paste0( sample(onlyInExp, min(c(3, length(onlyInExp)))), collapse = ', '),'\n',
-
-                            '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
-                            '1) The files do not fit together (e.g different databases versions etc.)',
-                            '(no fix except using propperly paired files).\n',
-                            '2) If you are using Ensembl data you have supplied the GTF without phaplotyps. You need to supply the',
-                            '<Ensembl_version>.chr_patch_hapl_scaff.gtf file - NOT the <Ensembl_version>.chr.gtf\n',
-                            '3) One file could contain non-chanonical chromosomes while the other do not',
-                            '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
-                            '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
-                            'This problem might be solvable using some of the',
-                            '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
-
-                            '\nFor more info see the FAQ in the vignette.\n',
-                            sep=' '
-                        )
-                    )
-                }
-                if( j1 >= jcCutoff ) {
-                    warning(
-                        paste(
-                            'The annotation and quantification (count/abundance matrix and isoform annotation)',
-                            'Seem to be slightly different.',
-
-                            '\nSpecifically:\n',
-                            length(setdiff(isoformAnnotation$isoform_id, unique(expIso))), 'isoforms were only found in the annotation\n',
-
-                            '\nPlease make sure this is on purpouse since differences',
-                            'will cause inaccurate quantification and thereby skew all analysis.\n',
-
-                            'If you have quantified with Salmon this could be normal since it as default only keep one copy of identical sequnces (can be prevented using the --keepDuplicates option)\n',
-                            'We strongly encurage you to go back and figure out why this is the case.\n\n',
-                            sep=' '
-                        )
-                    )
-
-                    ### Reduce to those found in all
-                    if( countsSuppled ) {
-                        isoformsUsed <- intersect(
-                            isoformCountMatrix$isoform_id,
-                            isoformAnnotation$isoform_id
-                        )
-                    } else {
-                        isoformsUsed <- intersect(
-                            isoformRepExpression$isoform_id,
-                            isoformAnnotation$isoform_id
-                        )
-                    }
-
-                    isoformExonStructure <- isoformExonStructure[which(
-                        isoformExonStructure$isoform_id %in% isoformsUsed
-                    ), ]
-                    isoformAnnotation <-isoformAnnotation[which(
-                        isoformAnnotation$isoform_id %in% isoformsUsed
-                    ), ]
-
-                    if( countsSuppled ) {
-                        isoformCountMatrix <-isoformCountMatrix[which(
-                            isoformCountMatrix$isoform_id %in% isoformsUsed
-                        ), ]
-                    }
-                    if( abundSuppled ) {
-                        isoformRepExpression <-isoformRepExpression[which(
-                            isoformRepExpression$isoform_id %in% isoformsUsed
-                        ), ]
-                    }
-
-                }
-            }
-
-        }
-    }
-
-    ### Subset to libraries used
-    if (TRUE) {
-        designMatrix <-
-            designMatrix[which(
-                designMatrix$condition %in% c(
-                    comparisonsToMake$condition_1,
-                    comparisonsToMake$condition_2
-                )
-            ), ]
-
-        if( countsSuppled ) {
-            isoformCountMatrix <-
-                isoformCountMatrix[, which(
-                    colnames(isoformCountMatrix) %in%
-                        c('isoform_id', designMatrix$sampleID))]
-            isoformCountMatrix <-
-                isoformCountMatrix[,c(
-                    which(colnames(isoformCountMatrix) == 'isoform_id'),
-                    which(colnames(isoformCountMatrix) != 'isoform_id')
-                )]
-            rownames(isoformCountMatrix) <- NULL
-        }
-
-        if ( abundSuppled ) {
-            isoformRepExpression <-
-                isoformRepExpression[, which(
-                    colnames(isoformRepExpression) %in%
-                        c('isoform_id', designMatrix$sampleID)
-                )]
-
-            isoformRepExpression <-
-                isoformRepExpression[,c(
-                    which(colnames(isoformRepExpression) == 'isoform_id'),
-                    which(colnames(isoformRepExpression) != 'isoform_id')
-                )]
-            rownames(isoformRepExpression) <- NULL
-        }
-    }
-
-    ### Remove isoforms not expressed
-    if (TRUE) {
-        if( countsSuppled ) {
-            okIsoforms <- isoformCountMatrix$isoform_id[which(
-                rowSums(isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')]) > 0
-            )]
-            nTot <- nrow(isoformCountMatrix)
-        } else {
-            okIsoforms <-isoformRepExpression$isoform_id[which(
-                rowSums(isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')]) > 0
-            )]
-            nTot <- nrow(isoformRepExpression)
-        }
-
-        nOk <- length(okIsoforms)
-        if( nOk != nTot ) {
-            if (!quiet) {
-                ### Message
-                message(
-                    paste(
-                        '   ',
-                        nTot - nOk,
-                        paste0( '( ', round( (nTot - nOk) / nTot *100, digits = 2),'%)'),
-                        'isoforms were removed since they were not expressed in any samples.'
-                    )
-                )
-            }
-
-            ### Subset expression
-            if(abundSuppled) {
-                isoformRepExpression <- isoformRepExpression[which(
-                    isoformRepExpression$isoform_id %in% okIsoforms
-                ),]
-            }
-            if(countsSuppled) {
-                isoformCountMatrix <- isoformCountMatrix[which(
-                    isoformCountMatrix$isoform_id %in% okIsoforms
-                ),]
-            }
-
-            ### Annotation
-            isoformExonStructure <- isoformExonStructure[which( isoformExonStructure$isoform_id %in% okIsoforms),]
-            isoformAnnotation    <- isoformAnnotation[which( isoformAnnotation$isoform_id %in% okIsoforms),]
-
-            if (addAnnotatedORFs & gtfImported) {
-                isoORF <- isoORF[which( isoORF$isoform_id %in% okIsoforms),]
-            }
-
-        }
-    }
-
-    ### Handle sequence input
-    if(TRUE) {
-        addIsoformNt <- FALSE
-
-        if(!is.null(isoformNtFasta)) {
-            isoformNtSeq <- do.call(
-                c,
-                lapply(isoformNtFasta, function(aFile) {
-                    Biostrings::readDNAStringSet(
-                        filepath = isoformNtFasta, format = 'fasta'
-                    )
-                })
-            )
-
-            if(!is(isoformNtSeq, "DNAStringSet")) {
-                stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
-            }
-
-            ### Fix names
-            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
-
-                names(isoformNtSeq) <- fixNames(
-                    nameVec = names(isoformNtSeq),
-                    ignoreAfterBar = ignoreAfterBar,
-                    ignoreAfterSpace = ignoreAfterSpace,
-                    ignoreAfterPeriod = ignoreAfterPeriod
-                )
-            }
-
-            ### Subset to used
-            isoSeqNames <- names(isoformNtSeq)
-            isoformNtSeq <- isoformNtSeq[which(
-                names(isoformNtSeq) %in% isoformCountMatrix$isoform_id
-            )]
-
-            ### Remove potential duplication
-            isoformNtSeq <- isoformNtSeq[which(
-                ! duplicated(names(isoformNtSeq))
-            )]
-
-            if(length(isoformNtSeq) == 0) {
-                stop(
-                    paste(
-                        'No sequences in the fasta files had IDs matching the expression data.',
-                        'This problem might be solvable using some of the',
-                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
-                        '    3 Examples from expression matrix are :',
-                        paste0( sample(unique(isoformCountMatrix$isoform_id), min(c(3, length(isoformCountMatrix$isoform_id))) ), collapse = ', '),'\n',
-                        '    3 Examples of sequence annotation are :',
-                        paste0( sample(isoSeqNames, min(c(3, length( isoSeqNames ))) ), collapse = ', '),'\n',
-                        sep = ' '
-                    )
-                )
-
-            }
-
-            if( ! all( isoformCountMatrix$isoform_id %in% names(isoformNtSeq) ) ) {
-                options(warning.length = 2000L)
-                warning(
-                    paste(
-                        'The fasta file supplied to \'isoformNtFasta\' does not contain the',
-                        'nucleotide (DNA) sequence for all isoforms quantified and will not be added!',
-                        '\nSpecifically:\n',
-                        length(unique(isoformCountMatrix$isoform_id)), 'isoforms were quantified.\n',
-                        length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
-                        'Only', length(intersect(names(isoformNtSeq), isoformCountMatrix$isoform_id)), 'overlap.\n',
-                        length(setdiff(unique(isoformCountMatrix$isoform_id), names(isoformNtSeq))), 'isoforms quantifed isoforms had no corresponding nucleotide sequence\n',
-
-                        '\nIf there is no overlap (as in zero or close) there are two options:\n',
-                        '1) The files do not fit together (different databases, versions etc)',
-                        '(no fix except using propperly paired files).\n',
-                        '2) It is somthing to do with how the isoform ids are stored in the different files.',
-                        'This problem might be solvable using some of the',
-                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
-                        '    3 Examples from expression matrix are :',
-                        paste0( sample(unique(isoformCountMatrix$isoform_id), min(c(3, length(isoformCountMatrix$isoform_id))) ), collapse = ', '),'\n',
-                        '    3 Examples of sequence annotation are :',
-                        paste0( sample(names(isoformNtSeq), min(c(3, length( isoformNtSeq ))) ), collapse = ', '),'\n',
-
-                        '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
-                        '1) The files do not fit together (different databases versions)',
-                        '(no fix except using propperly paired files).\n',
-                        '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
-                        'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
-                        '3) One file could contain non-chanonical chromosomes while the other do not',
-                        '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
-                        '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
-                        'This problem might be solvable using some of the',
-                        '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
-                        sep = ' '
-                    )
-                )
-            } else {
-                addIsoformNt <- TRUE
-            }
-        }
-    }
-
-
-
-    ### Rescue StringTie gene annotation
-    if(TRUE) {
-        if (!quiet) { message('Step 3 of 10: Fixing StringTie gene annoation problems...')}
-
-        ### Add original gene_ids already assigned to gene_id back to ref_gene_id
-        if(TRUE) {
-            indexToModify <- which(
-                is.na( isoformAnnotation$ref_gene_id  ) &
-                    ! is.na( isoformAnnotation$gene_name  )
-            )
-            isoformAnnotation$ref_gene_id[indexToModify] <- isoformAnnotation$gene_id[indexToModify]
-        }
-
-        ### Assign isoforms to ref_gene_id and gene_names
-        if(   fixStringTieAnnotationProblem ) {
-            ### variables for messages
-            anyFixed1 <- FALSE
-            anyFixed2 <- FALSE
-            anyFixed3 <- FALSE
-            anyFixed4 <- FALSE
-
-            ### Fix missing ref_gene_id
-            if( any(is.na(isoformAnnotation$ref_gene_id)) ) {
-
-                ### Fix simple missing ref_gene_id (within single ref_gene_id gene_id)
-                if( TRUE ) {
-                    ### Make list with ref_gene_id (same order)
-                    geneNameList <- split(isoformAnnotation$ref_gene_id, isoformAnnotation$gene_id)
-                    geneNameList <- geneNameList[unique(isoformAnnotation$gene_id)]
-
-                    ### Count problems
-                    nIsoWihoutNames <- sum(
-                        is.na(isoformAnnotation$ref_gene_id)
-                    )
-
-                    ### Add ref_gene_ids to novel StringTie transcripts when possible (only 1 ref_gene_id candidate)
-                    isoformAnnotation$ref_gene_id <- unlist(
-                        lapply(
-                            geneNameList,
-                            function(geneNameVec) {
-                                localGeneNames <- unique(na.omit( geneNameVec ))
-
-                                if( length( localGeneNames ) == 1 ) {
-                                    return(
-                                        rep(localGeneNames, times = length(geneNameVec))
-                                    )
-                                } else {
-                                    return(geneNameVec)
-                                }
-                            }
-                        )
-                    )
-
-                    ### Re-count problems
-                    nIsoWihoutNames2 <- sum(
-                        is.na(isoformAnnotation$ref_gene_id)
-                    )
-
-                    anyFixed1 <- nIsoWihoutNames - nIsoWihoutNames2 > 0
-
-                    if( anyFixed1 ) {
-                        if (!quiet) {
-                            message(
-                                paste(
-                                    '   ',
-                                    nIsoWihoutNames - nIsoWihoutNames2,
-                                    ' isoforms were assigned the ref_gene_id and gene_name of their associated gene_id.',
-                                    '\n        This was only done when the parent gene_id were associated with a single ref_gene_id/gene_name.',
-                                    #'\n',
-                                    sep = ''
-                                )
-                            )
-                        }
-                    }
-
-                }
-
-                ### Fix non-simple missing ref_gene_ids (within multi ref_gene_ids gene_id)
-                if(TRUE) {
-                    ### Identify gene_ids with problems
-                    if(TRUE) {
-                        ### Summazie gene properties
-                        multiGeneDf <-
-                            isoformAnnotation %>%
-                            dplyr::select(isoform_id, gene_id, ref_gene_id) %>%
-                            dplyr::distinct()
-
-                        geneNameSummary <-
-                            multiGeneDf %>%
-                            group_by(gene_id) %>%
-                            dplyr::summarise(
-                                n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
-                                n_iso_na = sum(is.na(ref_gene_id)),
-                                .groups = 'drop'
-                            )
-
-                        ### Identify genes with both missing and multiple gene names
-                        multiGenesWithNa <-
-                            geneNameSummary %>%
-                            dplyr::filter(
-                                n_ref_gene_ids >= 2 & # at least two genes
-                                    n_iso_na > 0           # no novel once
-                            )
-                    }
-
-                    ### Rescue via genomic overlap of known isoforms (aka with ref_gene_id annotation)
-                    if(nrow(multiGenesWithNa) & fixStringTieViaOverlapInMultiGenes) {
-                        ### Extract all isoforms with problems
-                        genesWithProblems <-
-                            multiGeneDf %>%
-                            dplyr::filter(gene_id %in% multiGenesWithNa$gene_id)
-
-                        ### Extract exons of interest
-                        exonsOi <- isoformExonStructure[which(
-                            isoformExonStructure$isoform_id %in% genesWithProblems$isoform_id
-                        ),]
-
-                        ### Modify seqnames to ensure only searching within same gene_id?
-                        exonsOi <- GRanges(
-                            seqnames = exonsOi$gene_id,
-                            ranges = IRanges(
-                                start = BiocGenerics::start(exonsOi),
-                                end   = BiocGenerics::end(exonsOi)
-                            ),
-                            strand = exonsOi@strand,
-                            isoform_id = exonsOi$isoform_id,
-                            gene_id = exonsOi$gene_id
-                        )
-
-                        ### Convert to list
-                        exonsOiList <- split(exonsOi, exonsOi$isoform_id)
-
-                        ### Devide into novel and known
-                        knownIsoforms <- genesWithProblems$isoform_id[which(
-                            ! is.na(genesWithProblems$ref_gene_id)
-                        )]
-                        novelIsoforms <- genesWithProblems$isoform_id[which(
-                            is.na(genesWithProblems$ref_gene_id)
-                        )]
-                        knownList <- exonsOiList[ knownIsoforms ]
-                        novelList <- exonsOiList[ novelIsoforms ]
-                        novelLength <- sapply(width(novelList), sum)
-
-                        ### Identify overlapping isoforms
-                        novelIsoOverlap <- findOverlaps(query = novelList, subject = knownList)
-                        novelIsoOverlapDf <- as.data.frame(novelIsoOverlap)
-                        novelIsoOverlapDf$novel_iso <- names(novelList)[novelIsoOverlapDf$queryHits]
-                        novelIsoOverlapDf$known_iso <- names(knownList)[novelIsoOverlapDf$subjectHits]
-                        novelIsoOverlapDf <- novelIsoOverlapDf[,c('novel_iso','known_iso')]
-                        novelIsoOverlapDf$known_ref_gene_id <- genesWithProblems$ref_gene_id[match(
-                            novelIsoOverlapDf$known_iso, genesWithProblems$isoform_id
-                        )]
-
-                        ### Calculate overlap
-                        novelOverlap <- intersect(novelList[queryHits(novelIsoOverlap)], knownList[subjectHits(novelIsoOverlap)])
-                        novelIsoOverlapDf$nt_overlap <- sapply(width(novelOverlap), sum)
-                        novelIsoOverlapDf$novel_length <- novelLength[match(
-                            novelIsoOverlapDf$novel_iso, names(novelLength)
-                        )]
-                        novelIsoOverlapDf$frac_overlap <- novelIsoOverlapDf$nt_overlap / novelIsoOverlapDf$novel_length
-
-                        ### For each novel isoform assign gene_name via cutoffs
-                        novelAssigned <-
-                            novelIsoOverlapDf %>%
-                            as_tibble() %>%
-                            group_by(novel_iso, known_ref_gene_id) %>%
-                            ### For each known_gene extract top contender
-                            dplyr::arrange(dplyr::desc(nt_overlap), .by_group = TRUE)  %>%
-                            dplyr::slice(1L) %>%
-                            ### For each isoform calculate ratios betwen top genes
-                            group_by(novel_iso) %>%
-                            dplyr::arrange(dplyr::desc(nt_overlap), .by_group = TRUE)  %>%
-                            mutate(
-                                log2_overlap_ratio = c(
-                                    log2( nt_overlap[-length(nt_overlap)] / nt_overlap[-1] ),
-                                    Inf # assign Inf if only 1 gene is overlapping
-                                )
-                            ) %>%
-                            ### For each isoform Filter
-                            dplyr::filter(
-                                nt_overlap         >= fixStringTieMinOverlapSize,
-                                frac_overlap       >= fixStringTieMinOverlapFrac,
-                                log2_overlap_ratio >= fixStringTieMinOverlapLog2RatioToContender
-                            ) %>%
-                            ### For each isoform : Extract top contender
-                            dplyr::slice(1L)
-
-                        ### Modify annoation
-                        toModify <- which(isoformAnnotation$isoform_id %in% novelAssigned$novel_iso)
-                        isoformAnnotation$ref_gene_id[toModify] <- novelAssigned$known_ref_gene_id[match(
-                            isoformAnnotation$isoform_id[toModify], novelAssigned$novel_iso
-                        )]
-
-                        ### Redo problem calculations
-                        nIsoWihoutNames3 <- sum(
-                            is.na(isoformAnnotation$ref_gene_id)
-                        )
-
-                        anyFixed2 <- nIsoWihoutNames2 - nIsoWihoutNames3
-
-                        if( anyFixed2) {
-                            if (!quiet) {
-                                message(
-                                    paste(
-                                        '   ',
-                                        nIsoWihoutNames2 - nIsoWihoutNames3,
-                                        ' isoforms were assigned the ref_gene_id and gene_name of the most similar',
-                                        '\n        annotated isoform (defined via overlap in genomic exon coordinates).',
-                                        '\n        This was only done if the overlap met the requriements',
-                                        '\n        indicated by the three fixStringTieViaOverlap* arguments.',
-                                        #'\n',
-                                        sep = ''
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            ### Remove non-assigned isoforms within known genes
-            if(TRUE) {
-                genesWithProblems <-
-                    isoformAnnotation %>%
-                    dplyr::select(gene_id, ref_gene_id) %>%
-                    dplyr::distinct() %>%
-                    group_by(gene_id) %>%
-                    dplyr::summarise(
-                        has_ref_gene_id = any(! is.na(ref_gene_id)),
-                        has_novel_iso = any(  is.na(ref_gene_id)),
-                        .groups = 'drop'
-                    ) %>%
-                    dplyr::filter(
-                        has_ref_gene_id,
-                        has_novel_iso
-                    )
-
-                ### Extract isoforms to remove
-                isoToRemove <- isoformAnnotation$isoform_id[which(
-                    isoformAnnotation$gene_id %in% genesWithProblems$gene_id &
-                        is.na(isoformAnnotation$ref_gene_id)
-                )]
-
-                anyFixed3 <- length(isoToRemove) > 0
-
-                if(length(isoToRemove)) {
-                    ### Remove
-                    isoformAnnotation <- isoformAnnotation[which(
-                        ! isoformAnnotation$isoform_id %in% isoToRemove
-                    ),]
-
-                    isoformExonStructure <- isoformExonStructure[which(
-                        ! isoformExonStructure$isoform_id %in% isoToRemove
-                    ),]
-
-                    if(! is.null(isoformCountMatrix)) {
-                        isoformCountMatrix <- isoformCountMatrix[which(
-                            ! isoformCountMatrix$isoform_id %in% isoToRemove
-                        ),]
-                    }
-
-                    if(! is.null(isoformRepExpression)) {
-                        isoformRepExpression <- isoformRepExpression[which(
-                            ! isoformRepExpression$isoform_id %in% isoToRemove
-                        ),]
-                    }
-
-                    ### Write message
-                    if (!quiet) {
-                        message(
-                            paste(
-                                '   We were unable to assign', length(isoToRemove),
-                                'isoforms (located within annotated genes) to a known ref_gene_id/gene_name.',
-                                '\n        These were removed to enable analysis of the rest of the isoform from within the merged genes.'
-                            )
-                        )
-                    }
-                }
-            }
-
-            ### Split gene_ids of gene_id with mutiple gene_names
-            if(TRUE) {
-                ### Summarize problem
-                if(TRUE) {
-                    multiGeneDf <-
-                        isoformAnnotation %>%
-                        dplyr::select(isoform_id, gene_id, ref_gene_id) %>%
-                        dplyr::distinct()
-
-                    multiGenes <-
-                        multiGeneDf %>%
-                        group_by(gene_id) %>%
-                        dplyr::summarise(
-                            n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
-                            n_iso_na = sum(is.na(ref_gene_id)),
-                            .groups = 'drop'
-                        ) %>%
-                        dplyr::filter(
-                            n_ref_gene_ids >= 2 & # at least two genes
-                                n_iso_na == 0           # no novel once
-                        )
-
-                    nProblems <- nrow(multiGenes)
-                }
-
-                ### Split gene_ids
-                if(nrow(multiGenes)) {
-                    ### Extract corresponding iso data
-                    multiGeneDf <-
-                        multiGeneDf %>%
-                        dplyr::filter(gene_id %in% multiGenes$gene_id)
-
-                    ### Create new gene_ids (by merging with ref_gene_id)
-                    multiGeneDf$new_gene_id <- stringr::str_c(
-                        multiGeneDf$gene_id,
-                        ':',
-                        multiGeneDf$ref_gene_id
-                    )
-
-                    ### Overwrite in annotation
-                    indexToModify <- which(
-                        isoformAnnotation$gene_id %in% multiGeneDf$gene_id
-                    )
-                    isoformAnnotation$gene_id[indexToModify] <-
-                        multiGeneDf$new_gene_id[match(
-                            isoformAnnotation$isoform_id[indexToModify], multiGeneDf$isoform_id
-                        )]
-
-                    ### Overwrite ref_gene_id and gene_ids in exon annotation
-                    isoformExonStructure$gene_id <- isoformAnnotation$gene_id[match(
-                        isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
-                    )]
-                }
-
-                ### Message summary
-                if(TRUE) {
-                    ### Redo problem calculations
-                    multiGenes <-
-                        isoformAnnotation %>%
-                        dplyr::select(gene_id, ref_gene_id) %>%
-                        dplyr::distinct() %>%
-                        group_by(gene_id) %>%
-                        dplyr::summarise(
-                            n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
-                            n_iso_na = sum(is.na(ref_gene_id)),
-                            .groups = 'drop'
-                        ) %>%
-                        dplyr::filter(
-                            n_ref_gene_ids >= 2 & # at least two genes
-                                n_iso_na == 0           # no novel once
-                        )
-
-                    nProblems2 <- nrow(multiGenes)
-
-                    anyFixed4 <- nProblems - nProblems2 > 0
-
-                    if( anyFixed4 ) {
-                        if (!quiet) {
-                            message(
-                                paste(
-                                    '   ',
-                                    nProblems - nProblems2 ,
-                                    ' gene_ids which were associated with multiple ref_gene_id/gene_names',
-                                    '\n        were split into mutliple genes via their ref_gene_id/gene_names.',
-                                    #'\n',
-                                    sep = ''
-                                )
-                            )
-                        }
-                    }
-                }
-
-            }
-
-            ### Generalize ref_gene_id assignment to gene_names and update both annotaion objects
-            if(TRUE) {
-                geneNameDf <-
-                    isoformAnnotation %>%
-                    dplyr::select(gene_name, ref_gene_id) %>%
-                    dplyr::filter(!is.na(gene_name)) %>%
-                    dplyr::distinct()
-
-                isoformAnnotation$gene_name <- geneNameDf$gene_name[match(
-                    isoformAnnotation$ref_gene_id, geneNameDf$ref_gene_id
-                )]
-
-                isoformExonStructure$gene_name <- isoformAnnotation$gene_name[match(
-                    isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
-                )]
-            }
-
-            if(
-                ! anyFixed1 &
-                ! anyFixed2 &
-                ! anyFixed3 &
-                ! anyFixed4
-            ) {
-                message(
-                    paste(
-                        '    There were no need to rescue any annotation',
-                        sep = ' '
-                    )
-                )
-            }
-
-            ### Overwrite with original gene ids if doable
-            if('ref_gene_id' %in% colnames(isoformAnnotation)) {
-                ### Figure out those with potential
-                geneIdsWithRef <- isoformAnnotation$gene_id[which(
-                    ! is.na(isoformAnnotation$ref_gene_id)
-                )]
-
-                ### Devide
-                isoAnnotAlreadCorrect <-
-                    isoformAnnotation %>%
-                    dplyr::filter(! gene_id %in% geneIdsWithRef)
-
-                isoAnnotToCorrect <-
-                    isoformAnnotation %>%
-                    dplyr::filter(gene_id %in% geneIdsWithRef)
-
-                ### Figure out which one can be corrected
-                isoAnnotToCorrect <-
-                    isoAnnotToCorrect %>%
-                    dplyr::group_by(gene_id) %>%
-                    dplyr::mutate(
-                        n_ref = n_distinct(na.omit(ref_gene_id))
-                    ) %>%
-                    dplyr::ungroup()
-
-                ### Devide into those that can be corrected and those that cannot
-                isoAnnotCannotBeCorrected <-
-                    isoAnnotToCorrect %>%
-                    dplyr::filter(n_ref != 1)
-
-                isoAnnotCanBeCorrected <-
-                    isoAnnotToCorrect %>%
-                    dplyr::filter(n_ref == 1)
-
-                if(nrow(isoAnnotCanBeCorrected)) {
-                    message(
-                        paste(
-                            '    ',
-                            length(unique(isoAnnotCanBeCorrected$gene_id)),
-                            ' genes_id were assigned their original gene_id instead of the StringTie gene_id.',
-                            '\n        This was only done when it could be done unambiguous.',
-                            #'\n',
-                            sep = ''
-                        )
-                    )
-                }
-
-                ### Correct annnotation
-                isoAnnotCorrected <-
-                    isoAnnotCanBeCorrected %>%
-                    dplyr::group_by(gene_id) %>%
-                    dplyr::mutate(
-                        gene_id = unique(na.omit(ref_gene_id))
-                    ) %>%
-                    dplyr::ungroup()
-
-                isoAnnotCorrected$n_ref <- NULL
-                isoAnnotCannotBeCorrected$n_ref <- NULL
-
-                ### Combine the 3 datafames
-                isoformAnnotationCorrected <- rbind(
-                    isoAnnotAlreadCorrect,
-                    isoAnnotCorrected,
-                    isoAnnotCannotBeCorrected
-                )
-
-                ### Reorder
-                isoformAnnotationCorrected <-
-                    isoformAnnotationCorrected[match(
-                        isoformAnnotation$isoform_id,
-                        isoformAnnotationCorrected$isoform_id
-                    ),]
-                isoformAnnotationCorrected$ref_gene_id <- NULL
-
-                ### Overwrite
-                isoformAnnotation <- isoformAnnotationCorrected
-                isoformExonStructure$gene_id <- isoformAnnotation$gene_id[match(
-                    isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
-                )]
-            }
-        }
-        if( ! fixStringTieAnnotationProblem ) {
-            if (!quiet) { message('    Was skipped as instructed via the \"fixStringTieAnnotationProblem\" argument...')}
-        }
-
-
-    }
-
-
-
-    ### If necessary calculate RPKM values
-    if(TRUE) {
-        if (!quiet) { message('Step 4 of 10: Calculating expression estimates from count data...') }
-        if ( ! abundSuppled ) {
-            ### Extract isoform lengths
-            isoformLengths <- sapply(
-                X = split(
-                    isoformExonStructure@ranges@width,
-                    f = isoformExonStructure$isoform_id
-                ),
-                FUN = sum
-            )
-
-            ### Calulate CPM
-            # convert to matrix
-            localCM <- isoformCountMatrix
-            rownames(localCM) <- localCM$isoform_id
-            localCM$isoform_id <- NULL
-            localCM <- as.matrix(localCM)
-
-            myCPM <- t(t(localCM) / colSums(localCM)) * 1e6
-
-            ### Calculate RPKM
-            isoformLengths <-
-                isoformLengths[match(rownames(myCPM), names(isoformLengths))]
-
-            isoformRepExpression <-
-                as.data.frame(myCPM / (isoformLengths / 1e3))
-
-            ### Massage
-            isoformRepExpression$isoform_id <-
-                rownames(isoformRepExpression)
-            isoformRepExpression <-
-                isoformRepExpression[, c(
-                    which(colnames(isoformRepExpression) == 'isoform_id'),
-                    which(colnames(isoformRepExpression) != 'isoform_id')
-                )]
-            rownames(isoformRepExpression) <- NULL
-        }
-        if (   abundSuppled ) {
-            if (!quiet) { message('    Skipped as user supplied expression via the \"isoformRepExpression\" argument...')}
-        }
-        # isoformRepExpression
-
-    }
-
-
-
-
-
-    ### Run SVA
-    if(TRUE) {
-        if (!quiet) { message('Step 5 of 10: Testing for unwanted effects...') }
-
-        ### Ensure there are enougth samples to run SVA
-        enougthSamples <- min(table(designMatrix$condition)) >= 2
-
-        if( ! enougthSamples ) {
-            if (!quiet) { message('    Data was not corrected for unwanted effects since there are to few samples') }
-        }
-        if(   enougthSamples ) {
-
-            ### Massage
-            isoformRepExpressionLog <- isoformRepExpression
-            rownames(isoformRepExpressionLog) <- isoformRepExpressionLog$isoform_id
-            isoformRepExpressionLog$isoform_id <- NULL
-            isoformRepExpressionLog <- log2(isoformRepExpressionLog + 1)
-
-            ### Filter on expression
-            smallestGroup <- min(table(designMatrix$condition))
-            if(smallestGroup > 10) {
-                smallestGroup <- smallestGroup * 0.7
-            }
-            minSamples <- max(c(
-                2,
-                smallestGroup
-            ))
-
-            isoformRepExpressionLogFilt <- isoformRepExpressionLog[which(
-                rowSums( isoformRepExpressionLog > log2(1) ) >= minSamples
-            ),]
-
-            ### Make model matrix (which also take additional factors into account)
-            if(TRUE) {
-                localDesign <- designMatrix
-
-                ### Convert group of interest to factors
-                localDesign$condition <- factor(
-                    localDesign$condition,
-                    levels=unique(localDesign$condition)
-                )
-
-                localFormula <- '~ 0 + condition'
-
-
-                ### Check co-founders for group vs continous variables and add to fomula
-                if( ncol(localDesign) > 2 ) {
-                    for(i in 3:ncol(localDesign) ) { # i <- 4
-                        if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-                            if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
-                                localDesign[,i] <- factor(localDesign[,i])
-                            }
-                        } else {
-                            localDesign[,i] <- factor(localDesign[,i])
-                        }
-                    }
-
-                    ### Make formula for model
-                    localFormula <- paste(
-                        localFormula,
-                        '+',
-                        paste(
-                            colnames(localDesign)[3:ncol(localDesign)],
-                            collapse = ' + '
-                        ),
-                        sep=' '
-                    )
-
-
-                }
-
-
-                localFormula <- as.formula(localFormula)
-
-                ### Make model
-                localModel <- model.matrix(localFormula, data = localDesign)
-                indexToModify <- 1:length(unique( localDesign$condition ))
-                colnames(localModel)[indexToModify] <- gsub(
-                    pattern =  '^condition',
-                    replacement =  '',
-                    x =  colnames(localModel)[indexToModify]
-                )
-
-                ### Test model
-                if( ! limma::is.fullrank(localModel) ) {
-                    stop('The design matrix suggested by the "designMatrix" is not full rank and hence cannot be analyzed.')
-                }
-
-            }
-            # localModel
-
-            ### Estimate SVAs
-            nSv = sva::num.sv(
-                dat = isoformRepExpressionLogFilt,
-                mod = localModel,
-            )
-            svaAdded <- FALSE
-
-
-            ### Test if to may SVAs
-            if(TRUE) {
-
-                nSvaCutoff <- min(c(
-                    10,
-                    nrow(designMatrix) * 0.5
-                ))
-
-                skipSvas <- nSv > nSvaCutoff
-
-                if(skipSvas) {
-                    nSv <- 0
-                }
-            }
-
-            ### Run SVA if necessary
-            if( nSv > 0 &   detectUnwantedEffects ) {
-                ### Run SVA
-                tmp <- capture.output(
-                    localSv <- tryCatch({
-                        sva::sva(
-                            dat = as.matrix(isoformRepExpressionLogFilt),
-                            mod = localModel,
-                            n.sv = nSv
-                        )$sv
-                    }, error = {
-                        function(x) {
-                            NULL
-                        }
-                    })
-                )
-
-                ### Test SVs
-                if( ! is.null(localSv) ) {
-                    ### Test for just diagnoal
-                    notDiagonal <- which( apply(
-                        localSv,
-                        MARGIN = 2,
-                        function(x) {
-                            sum( x != 1 ) > 1 & sum( x != 0 ) > 1
-                        }
-                    ) )
-
-                    ### Filter for correlation
-                    notToHighCor <- which( apply(
-                        localSv,
-                        MARGIN = 2,
-                        function(x) {
-                            abs(cor(
-                                x,
-                                as.integer(as.factor(designMatrix$condition))
-                            )) < 0.8
-                        }
-                    ) )
-
-                    ## Subset
-                    okSvs <- intersect(notDiagonal, notToHighCor)
-                }
-                if(   is.null(localSv) ) {
-                    okSvs <- integer()
-                }
-
-
-                ### Add to design
-                if( length(okSvs) > 0 ) {
-
-                    ### Subset
-                    localSv <- localSv[,okSvs,drop=FALSE]
-                    colnames(localSv) <- paste0(
-                        'sv', 1:ncol(localSv)
-                    )
-
-                    ### Add SVs
-                    designMatrix <- cbind(
-                        designMatrix,
-                        localSv
-                    )
-
-                    svaAdded <- TRUE
-                }
-            }
-            if( nSv > 0 & ! detectUnwantedEffects ) {
-                if (!quiet) { message('    Skipped due to \"detectUnwantedEffects=FALSE\". ') }
-
-                warning(
-                    paste(
-                        '    We detected', nSv, 'batch/covariates in your data.',
-                        '\n    These will not be corrected in any downstream analysis due to \"detectUnwantedEffects=FALSE\". ',
-                        '\n    Unless you REALLY know what you are doing we recomend setting \"detectUnwantedEffects=TRUE\"'
-                    )
-                )
-            }
-
-            ### Send messages
-            if( ! skipSvas ) {
-                if(   svaAdded ) {
-                    if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
-                }
-                if( ! svaAdded ) {
-                    if( exists('localSv' )) {
-                        if( is.null(localSv) ) {
-                            if (!quiet) { message(c(
-                                '    \n    SVA analysis failed. No unwanted effects were added.'
-                            )) }
-
-                            warning(paste0(
-                                '\n',
-                                'There were estimated unwanted effects in your dataset but the automatic sva run failed.',
-                                '\n    We highly reccomend you run sva yourself, add the nessesary surrogate variables',
-                                '\n    as extra columns in the \"designMatrix\" and re-run this function',
-                                '\n'
-                            ))
-                        } else {
-                            if (!quiet) { message('    No unwanted effects added') }
-                        }
-                    } else {
-                        if (!quiet) { message('    No unwanted effects added') }
-                    }
-                }
-            }
-            if(   skipSvas ) {
-                if( ! svaAdded ) {
-                    if (!quiet) { message('    Data was not corrected for unwanted effects') }
-                }
-
-                warning(paste0(
-                    '\n',
-                    'We found MANY unwanted effects in your dataset!',
-                    '\nTo many for IsoformSwitchAnalyzeR to be trusted with the correction.',
-                    '\nWe therefore highly reccomend you run sva yourself and add',
-                    '\nthe nessesary surrogate variables as extra columns in the \"designMatrix\"',
-                    '\n'
-                ))
-            }
-
-        }
-
-
-
-    }
-
-    ### Batch correct if necessary
-    if(TRUE) {
-        if (!quiet) { message('Step 6 of 10: Batch correcting expression estimates...') }
-
-        batchCorrectionNeeded <- ncol(designMatrix) >= 3 & enougthSamples
-
-        if(   batchCorrectionNeeded ) {
-            ### Make new model matrix (which also take SVs into account)
-            if(TRUE) {
-                localDesign <- designMatrix
-
-                ### Convert group of interest to factors
-                localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
-
-                ### Check co-founders for group vs continous variables
-                if( ncol(localDesign) > 2 ) {
-                    for(i in 3:ncol(localDesign) ) { # i <- 4
-                        if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-                            if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
-                                localDesign[,i] <- factor(localDesign[,i])
-                            }
-                        } else {
-                            localDesign[,i] <- factor(localDesign[,i])
-                        }
-                    }
-                }
-
-                ### Make formula for model
-                localFormula <- paste(
-                    '~ 0 + condition',
-                    '+',
-                    paste(
-                        colnames(localDesign)[3:ncol(localDesign)],
-                        collapse = ' + '
-                    ),
-                    sep=' '
-                )
-
-                localFormula <- as.formula(localFormula)
-
-                ### Make model
-                localModel <- model.matrix(localFormula, data = localDesign)
-                indexToModify <- 1:length(unique( localDesign$condition ))
-                colnames(localModel)[indexToModify] <- gsub(
-                    pattern =  '^condition',
-                    replacement =  '',
-                    x =  colnames(localModel)[indexToModify]
-                )
-            }
-
-            ### Batch correct expression matrix
-            suppressWarnings(
-                isoRepBatch <- as.data.frame( limma::removeBatchEffect(
-                    x = isoformRepExpressionLog,
-                    design     = localModel[,which(   colnames(localModel) %in% localDesign$condition), drop=FALSE],
-                    covariates = localModel[,which( ! colnames(localModel) %in% localDesign$condition), drop=FALSE],
-                    method='robust'
-                ))
-            )
-
-            ### Overwrite expression
-            isoformRepExpression <- 2^isoRepBatch - 1
-            isoformRepExpression[which( isoformRepExpression < 0, arr.ind = TRUE)] <- 0
-
-            ### Massage back
-            isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
-            rownames(isoformRepExpression) <- NULL
-
-            isoformRepExpression <- isoformRepExpression[,c(
-                which(colnames(isoformRepExpression) == 'isoform_id'),
-                which(colnames(isoformRepExpression) != 'isoform_id')
-            )]
-        }
-        if( ! batchCorrectionNeeded ) {
-            if (!quiet) { message('    Skipped as no batch effects were found or annoated...')}
-        }
-    }
-
-
-
-    ### Calculate gene and IF
-    if (!quiet) {
-        message('Step 7 of 10: Extracting data from each condition...')
-    }
-    if(TRUE) {
-        ### Sum to gene level gene expression - updated
-        if(TRUE) {
-            ### add gene_id
-            isoformRepExpression$gene_id <-
-                isoformAnnotation$gene_id[match(isoformRepExpression$isoform_id,
-                                                isoformAnnotation$isoform_id)]
-
-            ### Sum to gene level
-            geneRepExpression <- isoformToGeneExp(
-                isoformRepExpression =  isoformRepExpression,
-                quiet = TRUE
-            )
-
-            ### Remove gene id
-            isoformRepExpression$gene_id <- NULL
-        }
-
-        ### Calculate IF rep matrix
-        if(TRUE) {
-            isoformRepIF <- isoformToIsoformFraction(
-                isoformRepExpression=isoformRepExpression,
-                geneRepExpression=geneRepExpression,
-                isoformGeneAnnotation=isoformAnnotation,
-                quiet = TRUE
-            )
-        }
-    }
-
-
-
-    ### in each condition analyzed get mean and standard error of gene and isoforms
-    if (TRUE) {
-        conditionList <-
-            split(designMatrix$sampleID, f = designMatrix$condition)
-        conditionSummary <-
-            plyr::llply(
-                .data = conditionList,
-                .progress = progressBar,
-                .fun = function(sampleVec) {
-                    # sampleVec <- conditionList[[1]]
-                    ### Isoform and IF
-                    isoIndex <-
-                        which(colnames(isoformRepExpression) %in% sampleVec)
-
-                    isoIndex2 <-
-                        which(colnames(isoformRepIF) %in% sampleVec)
-
-                    isoSummary <- data.frame(
-                        isoform_id       = isoformRepExpression$isoform_id,
-                        iso_overall_mean = rowMeans(isoformRepExpression[,designMatrix$sampleID, drop=FALSE]),
-                        iso_value        = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
-                        iso_std          = apply(   isoformRepExpression[, isoIndex, drop=FALSE], 1, sd),
-                        IF_overall       = rowMeans(isoformRepIF[,designMatrix$sampleID, drop=FALSE], na.rm = TRUE),
-                        IF               = rowMeans(isoformRepIF[, isoIndex2, drop=FALSE], na.rm = TRUE),
-                        stringsAsFactors = FALSE
-                    )
-                    isoSummary$iso_stderr <-
-                        isoSummary$iso_std / sqrt(length(sampleVec))
-                    isoSummary$iso_std <- NULL
-
-                    ### Gene
-                    geneIndex <-
-                        which(colnames(geneRepExpression) %in% sampleVec)
-
-                    geneSummary <- data.frame(
-                        gene_id = geneRepExpression$gene_id,
-                        gene_overall_mean = rowMeans(geneRepExpression[,designMatrix$sampleID, drop=FALSE]),
-                        gene_value = rowMeans(geneRepExpression[, geneIndex, drop=FALSE]),
-                        gene_std = apply(geneRepExpression[, geneIndex, drop=FALSE], 1, sd),
-                        stringsAsFactors = FALSE
-                    )
-                    geneSummary$gene_stderr <-
-                        geneSummary$gene_std / sqrt(length(sampleVec))
-                    geneSummary$gene_std <- NULL
-
-                    ### Combine
-                    combinedData <-
-                        dplyr::inner_join(isoformAnnotation, geneSummary, by = 'gene_id')
-                    combinedData <-
-                        dplyr::inner_join(combinedData, isoSummary, by = 'isoform_id')
-                    ### return result
-                    return(combinedData)
-                }
-            )
-    }
-
-    ### Use comparisonsToMake to create the isoform comparisons
-    if (!quiet) {
-        message('Step 8 of 10: Making comparisons...')
-    }
-    if (TRUE) {
-        isoAnnot <-
-            plyr::ddply(
-                .data = comparisonsToMake,
-                .variables = c('condition_1', 'condition_2'),
-                .drop = TRUE,
-                .progress = progressBar,
-                .fun = function(aDF) { # aDF <- comparisonsToMake[1,]
-                    ### Extract data
-                    cond1data <- conditionSummary[[aDF$condition_1]]
-                    cond2data <- conditionSummary[[aDF$condition_2]]
-
-                    ### modify colnames in condition 1
-                    matchIndex <-
-                        match(
-                            c(
-                                'gene_value',
-                                'gene_stderr',
-                                'iso_value',
-                                'iso_stderr'
-                            ),
-                            colnames(cond1data)
-                        )
-                    colnames(cond1data)[matchIndex] <-
-                        paste(colnames(cond1data)[matchIndex], '_1', sep = '')
-                    colnames(cond1data)[which( colnames(cond1data) == 'IF')] <- 'IF1'
-
-                    ### modify colnames in condition 2
-                    matchIndex <-
-                        match(
-                            c(
-                                'gene_value',
-                                'gene_stderr',
-                                'iso_value',
-                                'iso_stderr'
-                            ),
-                            colnames(cond2data)
-                        )
-                    colnames(cond2data)[matchIndex] <-
-                        paste(colnames(cond2data)[matchIndex], '_2', sep = '')
-                    colnames(cond2data)[which( colnames(cond2data) == 'IF')] <- 'IF2'
-
-                    combinedIso <- dplyr::inner_join(
-                        cond1data,
-                        cond2data[, c(
-                            'isoform_id',
-                            'gene_value_2',
-                            'gene_stderr_2',
-                            'iso_value_2',
-                            'iso_stderr_2',
-                            'IF2'
-                        )],
-                        by = 'isoform_id'
-                    )
-
-                    ### Add comparison data
-                    combinedIso$condition_1 <- aDF$condition_1
-                    combinedIso$condition_2 <- aDF$condition_2
-                    return(combinedIso)
-                }
-            )
-
-        ### Add comparison data
-        # Log2FC
-        ps <- foldChangePseudoCount
-
-        isoAnnot$gene_log2_fold_change <-
-            log2((isoAnnot$gene_value_2 + ps) / (isoAnnot$gene_value_1 + ps))
-        isoAnnot$iso_log2_fold_change  <-
-            log2((isoAnnot$iso_value_2  + ps) / (isoAnnot$iso_value_1  + ps))
-
-        # qValues
-        isoAnnot$gene_q_value <- NA
-        isoAnnot$iso_q_value  <- NA
-
-        # Isoform fraction values
-        isoAnnot$dIF <- isoAnnot$IF2 - isoAnnot$IF1
-
-        # Swich values
-        isoAnnot$isoform_switch_q_value <- NA
-        isoAnnot$gene_switch_q_value    <- NA
-
-        ### Sort
-        matchVector <-
-            c(
-                'isoform_id',
-                'gene_id',
-                'condition_1',
-                'condition_2',
-                'gene_name',
-                'class_code',
-                'gene_biotype',
-                'iso_biotype',
-                'gene_overall_mean',
-                'gene_value_1',
-                'gene_value_2',
-                'gene_stderr_1',
-                'gene_stderr_2',
-                'gene_log2_fold_change',
-                'gene_q_value',
-                'iso_overall_mean',
-                'iso_value_1',
-                'iso_value_2',
-                'iso_stderr_1',
-                'iso_stderr_2',
-                'iso_log2_fold_change',
-                'iso_q_value',
-                'IF_overall',
-                'IF1',
-                'IF2',
-                'dIF',
-                'isoform_switch_q_value',
-                'gene_switch_q_value'
-            )
-        matchVector <-
-            na.omit(match(matchVector, colnames(isoAnnot)))
-
-        isoAnnot <- isoAnnot[, matchVector]
-    }
-
-
-
-    ### Create the swichList
-    if (!quiet) {
-        message('Step 9 of 10: Making switchAnalyzeRlist object...')
-    }
-    if (TRUE) {
-        if( countsSuppled ) {
-
-            isoformCountMatrix <- isoformCountMatrix[colnames(isoformRepExpression)]
-
-            ### Create switchList
-            dfSwichList <- createSwitchAnalyzeRlist(
-                isoformFeatures = isoAnnot,
-                exons = isoformExonStructure,
-                designMatrix = designMatrix,
-                isoformCountMatrix = isoformCountMatrix,     # nessesary for drimseq
-                isoformRepExpression = isoformRepExpression, # nessesary for limma
-                sourceId = 'data.frames'
-            )
-        } else {
-            ### Create switchList
-            dfSwichList <- createSwitchAnalyzeRlist(
-                isoformFeatures = isoAnnot,
-                exons = isoformExonStructure,
-                designMatrix = designMatrix,
-                isoformRepExpression = isoformRepExpression, # nessesary for limma
-                sourceId = 'data.frames'
-            )
-        }
-
-        ### Add orf if extracted
-        if (addAnnotatedORFs & gtfImported) {
-            dfSwichList$isoformFeatures$PTC <-
-                isoORF$PTC[match(dfSwichList$isoformFeatures$isoform_id,
-                                 isoORF$isoform_id)]
-
-            isoORF <-
-                isoORF[which(isoORF$isoform_id %in%
-                                 isoformRepExpression$isoform_id), ]
-
-            dfSwichList$orfAnalysis <- isoORF
-        }
-
-        ### Add IF matrix
-        dfSwichList$isoformRepIF <- isoformRepIF[,c('isoform_id',designMatrix$sampleID)]
-
-        ### Add nucleotide sequence
-        if(addIsoformNt) {
-            dfSwichList$ntSequence <- isoformNtSeq[which(
-                names(isoformNtSeq) %in% dfSwichList$isoformFeatures$isoform_id
-            )]
-
-        }
-
-    }
-
-    ### Estimate DTU
-    if (!quiet) {
-        message('Step 10 of 10: Guestimating differential usage...')
-    }
-    if(estimateDifferentialGeneRange & !quiet) {
-        localEstimate <- estimateDifferentialRange(
-            switchAnalyzeRlist = dfSwichList
+  ### Test existence of files
+  if(TRUE) {
+    if( !is.null(isoformNtFasta)) {
+      if( ! is(isoformNtFasta, 'character') ) {
+        stop('The \'isoformNtFasta\' argument must be a string (or vector of strings) pointing to the fasta file on the disk.')
+      }
+      
+      if( any( isoformNtFasta == '') ) {
+        stop(
+          paste(
+            'The \'isoformNtFasta\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+            '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+            'to import your own data? The system.file() should only be used',
+            'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+            'To access your own data simply provide the string to the directory with the data as:',
+            '"path/to/quantification/".',
+            sep=' '
+          )
         )
-        if( !is.null(localEstimate)) {
-            message('    The GUESSTIMATED number of genes with differential isoform usage are:')
-            print(localEstimate)
-        } else {
-            message('    The estimation of DTU failed. Please proceed with the normal workflow.')
-        }
+      }
+      if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
+        stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
+      }
+      if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
+        stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to be a fasta file...')
+      }
+    }
+    
+    if( class(isoformExonAnnoation) == 'character' ) {
+      if( isoformExonAnnoation == '' ) {
+        stop(
+          paste(
+            'The \'isoformExonAnnoation\' argument does not lead anywhere (acutally you just suppled "" to the argument).',
+            '\nDid you try to use the system.file("your/quant/dir/", package="IsoformSwitchAnalyzeR")',
+            'to import your own data? The system.file() should only be used',
+            'to access the example data stored in the IsoformSwitchAnalyzeR package.',
+            'To access your own data simply provide the string to the directory with the data as:',
+            '"path/to/quantification/".',
+            sep=' '
+          )
+        )
+      }
+      if( ! (file.exists(isoformExonAnnoation) | RCurl::url.exists(isoformExonAnnoation)) ) {
+        stop(
+          paste(
+            'The file pointed to with the \'isoformExonAnnoation\' argument does not exists.',
+            '\nDid you accidentially make a spelling mistake or added a unwanted "/" infront of the text string?',
+            sep=' '
+          )
+        )
+      }
+    }
+  }
+  
+  ### Test whether input data fits together
+  if (!quiet) { message('Step 1 of 10: Checking data...')}
+  if (TRUE) {
+    ### Set up progress
+    if (showProgress &  !quiet) {
+      progressBar <- 'text'
+      progressBarLogic <- TRUE
     } else {
-        if (!quiet) {
-            message('    Skipping due to the \"estimateDifferentialGeneRange\" argument...')
+      progressBar <- 'none'
+      progressBarLogic <- FALSE
+    }
+    
+    ### Test supplied expression
+    if(TRUE) {
+      countsSuppled <- ! is.null(isoformCountMatrix)
+      abundSuppled  <- ! is.null(isoformRepExpression)
+      
+      if( ! countsSuppled ) {
+        stop('You must supply a count matrix to \'isoformCountMatrix\'.')
+      }
+      
+      if( ! class(isoformCountMatrix)[1] %in% c('data.frame','matrix','tbl_df')) {
+        stop('The input given as isoformCountMatrix must be a data.frame or matrix.')
+      }
+      
+      
+      if( abundSuppled ) {
+        isoformRepExpression <- as.data.frame(isoformRepExpression)
+        
+        if( any( apply(isoformRepExpression[,which(colnames(isoformRepExpression) != 'isoform_id')],2, class) %in% c('character', 'factor') )) {
+          stop('The isoformCountMatrix contains character/factor column(s) (other than the isoform_id column)')
         }
+        
+        extremeValues <- range( isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')], na.rm = TRUE )
+        if( max(extremeValues) < 30 ) {
+          warning('The expression data supplied to \'isoformRepExpression\' seems very small - please double-check that it is NOT log-transformed')
+        }
+        if( min(extremeValues) < 0 ) {
+          stop('The expression data supplied to \'isoformRepExpression\' contains negative values - please double-check that it is NOT log-transformed')
+        }
+        
+      }
+      
+      if( countsSuppled ) {
+        isoformCountMatrix <- as.data.frame(isoformCountMatrix)
+        
+        if( any( apply(isoformCountMatrix[,which(colnames(isoformCountMatrix) != 'isoform_id')],2, class) %in% c('character', 'factor') )) {
+          stop('The isoformCountMatrix contains character/factor column(s) (other than the isoform_id column)')
+        }
+        
+        extremeValues <- range( isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')], na.rm = TRUE )
+        if( max(extremeValues) < 30 ) {
+          warning('The count data supplied to \'isoformCountMatrix\' seems very small - please double-check that it is NOT log-transformed')
+        }
+        if( min(extremeValues) < 0 ) {
+          stop('The count data supplied to \'isoformCountMatrix\' contains negative values - please double-check that it is NOT log-transformed')
+        }
+      }
     }
-
-
-
-
-    ### Return switchList
+    
+    ### Contains the colums they should
+    if (TRUE) {
+      ### Colnames
+      if( countsSuppled ) {
+        if (!any(colnames(isoformCountMatrix) == 'isoform_id')) {
+          #stop(paste(
+          #    'The data.frame passed to the \'isoformCountMatrix\'',
+          #    'argument must contain a \'isoform_id\' column'
+          #))
+          warning(
+            paste(
+              '    Using row.names as \'isoform_id\' for \'isoformCountMatrix\'.',
+              'If not suitable you must add them manually.',
+              sep=' '
+            )
+          )
+          isoformCountMatrix$isoform_id <- rownames(isoformCountMatrix)
+          
+        }
+        
+        if(any(duplicated( isoformCountMatrix$isoform_id) )) {
+          stop('The \'isoform_id\' of the count matrix must have unique ids.')
+        }
+      }
+      if ( abundSuppled ) {
+        if (!any(colnames(isoformRepExpression) == 'isoform_id')) {
+          #stop(paste(
+          #    'The data.frame passed to the \'isoformRepExpression\'',
+          #    'argument must contain a \'isoform_id\' column'
+          #))
+          message(paste(
+            '    Using row.names as \'isoform_id\' for \'isoformRepExpression\'. If not suitable you must add them manually.'
+          ))
+          isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
+        }
+        if(any(duplicated( isoformRepExpression$isoform_id) )) {
+          stop('The \'isoform_id\' of the expression matrix must have unique ids.')
+        }
+      }
+      
+      ### Potentially convert from tibble
+      if( class(designMatrix)[1] == 'tbl_df') {
+        designMatrix <- as.data.frame(designMatrix)
+      }
+      if (!all(c('sampleID', 'condition') %in% colnames(designMatrix))) {
+        stop(paste(
+          'The data.frame passed to the \'designMatrix\'',
+          'argument must contain both a \'sampleID\' and a',
+          '\'condition\' column'
+        ))
+      }
+      if (length(unique(designMatrix$condition)) < 2) {
+        stop('The supplied \'designMatrix\' only contains 1 condition')
+      }
+      # test information content in design matrix
+      if( ncol(designMatrix) > 2 ) {
+        otherDesign <- designMatrix[,which(
+          ! colnames(designMatrix) %in% c('sampleID', 'condition')
+        ),drop=FALSE]
+        
+        nonInformaticColms <- which(
+          apply(otherDesign, 2, function(x) {
+            length(unique(x)) == 1
+          })
+        )
+        
+        if(length(nonInformaticColms)) {
+          stop(
+            paste(
+              'In the designMatrix the following column(s): ',
+              paste(names(nonInformaticColms), collapse = ', '),
+              '\n Contain constant information. Columns apart from \'sampleID\' and \'condition\'\n',
+              'must describe cofounding effects not if interest. See ?importRdata and\n',
+              'vignette ("How to handle cofounding effects (including batches)" section) for more information.',
+              sep=' '
+            )
+          )
+        }
+      }
+      
+      # test comparisonsToMake
+      if (!is.null(comparisonsToMake)) {
+        if (!all(c('condition_1', 'condition_2') %in%
+                 colnames(comparisonsToMake))) {
+          stop(paste(
+            'The data.frame passed to the \'comparisonsToMake\'',
+            'argument must contain both a \'condition_1\' and a',
+            '\'condition_2\' column indicating',
+            'the comparisons to make'
+          ))
+        }
+      }
+    }
+    
+    ### Convert potential factors
+    if (TRUE) {
+      orgCond <- designMatrix$condition
+      
+      designMatrix$sampleID  <- as.character(designMatrix$sampleID)
+      designMatrix$condition <- as.character(designMatrix$condition)
+      
+      if (!is.null(comparisonsToMake)) {
+        comparisonsToMake$condition_1 <-
+          as.character(comparisonsToMake$condition_1)
+        comparisonsToMake$condition_2 <-
+          as.character(comparisonsToMake$condition_2)
+      }
+      
+      if (!is.null(isoformRepExpression)) {
+        isoformRepExpression$isoform_id <-
+          as.character(isoformRepExpression$isoform_id)
+      }
+      if (!is.null(isoformCountMatrix)) {
+        isoformCountMatrix$isoform_id <-
+          as.character(isoformCountMatrix$isoform_id)
+      }
+      
+    }
+    
+    ### Check supplied data fits togehter
+    if (TRUE) {
+      if(countsSuppled) {
+        if (!all(designMatrix$sampleID %in% colnames(isoformCountMatrix))) {
+          stop(paste(
+            'Each sample stored in \'designMatrix$sampleID\' must have',
+            'a corresponding expression column in \'isoformCountMatrix\''
+          ))
+        }
+      }
+      if ( abundSuppled ) {
+        if (!all(designMatrix$sampleID %in%
+                 colnames(isoformRepExpression))) {
+          stop(paste(
+            'Each sample stored in \'designMatrix$sampleID\' must',
+            'have a corresponding expression column',
+            'in \'isoformRepExpression\''
+          ))
+        }
+      }
+      if( abundSuppled & countsSuppled ) {
+        if( !  identical( colnames(isoformCountMatrix) , colnames(isoformRepExpression)) ) {
+          stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
+        }
+        
+        if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
+          stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
+        }
+      }
+      
+      if (!is.null(comparisonsToMake)) {
+        if (!all(
+          c(
+            comparisonsToMake$condition_1,
+            comparisonsToMake$condition_2
+          ) %in% designMatrix$condition
+        )) {
+          stop(paste(
+            'The conditions supplied in comparisonsToMake and',
+            'designMatrix does not match'
+          ))
+        }
+      } else {
+        # create it
+        comparisonsToMake <-
+          allPairwiseFeatures(orgCond)
+        colnames(comparisonsToMake) <-
+          c('condition_1', 'condition_2')
+      }
+    }
+    
+    ### Test complexity of setup
+    if(TRUE) {
+      nCond <- length(unique(designMatrix$condition))
+      n <- nrow(designMatrix)
+      if(  nCond/n > 2/3  ) {
+        warning(paste(
+          'The experimental design seems to be of very low complexity - very few samples per replicate.',
+          'Please check the supplied design matrixt to make sure no mistakes were made.'
+        ))
+      }
+      
+      nComp <- nrow(comparisonsToMake)
+      if( nComp > 6 ) {
+        warning(paste0(
+          'The number of comparisons (n=', nComp,') is unusually high.',
+          '\n - If this intended please note that with a large number of comparisons IsoformSwitchAnalyzeR might use quite a lot of memmory (aka running on a small computer might be problematic).',
+          '\n - If this was not intended please check the supplied design matrixt to make sure no mistakes were made.'
+        ))
+      }
+      
+      ### Test conditions with n=1
+      cndCnt <- table(designMatrix$condition)
+      if( any(cndCnt == 1) ) {
+        warning(
+          paste0(
+            '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!',
+            '\nIsoformSwitchAnalyzeR is not made to work with conditions without indepdendet biological replicates and results will not be trustworthy!',
+            '\nAt best data without replicates should be analyzed as a pilot study before investing in more replicates.',
+            '\nPlase consult the "Analysing experiments without replicates" and "What constitute an independent biological replicate?" sections of the vignette.',
+            '\n!!! NB !!! NB !!! NB !!!NB !!! NB !!!\n'
+          )
+        )
+      }
+      
+      ### Test for full rank
+      isFullRank <- testFullRank( designMatrix )
+      
+      if( ! isFullRank ) {
+        stop(
+          paste(
+            'The supplied design matrix will result in a model matrix that is not full rank',
+            '\nPlease make sure there are no co-linearities in the design'
+          )
+        )
+      }
+      
+    }
+    
+    ### Test NT input
+    if(TRUE) {
+      if( !is.null( isoformNtFasta )) {
+        if( !is.character( isoformNtFasta)) {
+          stop('The \'isoformNtFasta\' argument must be a charachter string.')
+        }
+        
+        if( any( ! sapply(isoformNtFasta, file.exists) ) ) {
+          stop('At least one of the file(s) pointed to with \'isoformNtFasta\' seems not to exist.')
+        }
+        if( any(! grepl('\\.fa|\\.fasta|\\.fa.gz|\\.fasta.gz', isoformNtFasta)) ) {
+          stop('The file pointed to via the \'isoformNtFasta\' argument does not seem to be a fasta file...')
+        }
+      }
+    }
+    
+  }
+  
+  ### Giver proper R names
+  if(TRUE) {
+    ### Double check order
+    designMatrix <- designMatrix[,c(
+      match( c('sampleID','condition'), colnames(designMatrix) ),
+      which( ! colnames(designMatrix) %in% c('sampleID','condition') )
+    )]
+    
+    tmp <- designMatrix
+    
+    for( i in 2:ncol(designMatrix) ) { # i <- 2
+      if( class(designMatrix[,i]) %in% c('character','factor') ) {
+        designMatrix[,i] <- makeProperNames( designMatrix[,i] )
+      }
+    }
+    
+    if( ! identical(tmp, designMatrix) ) {
+      message('Please note that some condition names were changed due to names not suited for modeling in R.')
+    }
+    
+    if( !is.null(comparisonsToMake) ) {
+      comparisonsToMake$condition_1 <- makeProperNames(
+        comparisonsToMake$condition_1
+      )
+      comparisonsToMake$condition_2 <- makeProperNames(
+        comparisonsToMake$condition_2
+      )
+    }
+  }
+  
+  ### Fix names (done before input is handled and compared)
+  if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+    if( countsSuppled ) {
+      isoformCountMatrix$isoform_id <- fixNames(
+        nameVec = isoformCountMatrix$isoform_id,
+        ignoreAfterBar = ignoreAfterBar,
+        ignoreAfterSpace = ignoreAfterSpace,
+        ignoreAfterPeriod = ignoreAfterPeriod
+      )
+    }
+    if ( abundSuppled ) {
+      isoformRepExpression$isoform_id <- fixNames(
+        nameVec = isoformRepExpression$isoform_id,
+        ignoreAfterBar = ignoreAfterBar,
+        ignoreAfterSpace = ignoreAfterSpace,
+        ignoreAfterPeriod = ignoreAfterPeriod
+      )
+    }
+    
+  }
+  
+  
+  
+  ### Obtain isoform annotation
+  if (!quiet) { message('Step 2 of 10: Obtaining annotation...')}
+  if (TRUE) {
+    ### Massage annoation input
+    if(TRUE) {
+      ### Import GTF is nessesary
+      if( class(isoformExonAnnoation) == 'character' ) {
+        gtfImported <- TRUE
+        
+        ### Test input
+        if(TRUE) {
+          if (length(isoformExonAnnoation) != 1) {
+            stop(paste(
+              'You can only supply 1 file to isoformExonAnnoation'
+            ))
+          }
+          if( ! grepl('\\.gtf$|\\.gtf\\.gz$', isoformExonAnnoation, ignore.case = TRUE) ) {
+            warning('The file appearts not to be a GTF file as it does not end with \'.gtf\' or \'.gtf.gz\' - are you sure it is the rigth file?')
+          }
+          
+          if (!quiet) {
+            message('    importing GTF (this may take a while)...')
+          }
+          
+        }
+        
+        ### Note: Isoform names are fixed by importGTF
+        suppressWarnings(
+          gtfSwichList <- importGTF(
+            pathToGTF = isoformExonAnnoation,
+            addAnnotatedORFs = addAnnotatedORFs,
+            onlyConsiderFullORF = onlyConsiderFullORF,
+            removeNonConvensionalChr = FALSE,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod,
+            removeTECgenes = FALSE,
+            PTCDistance = PTCDistance,
+            removeFusionTranscripts = FALSE,
+            removeUnstrandedTranscripts = FALSE,
+            quiet = TRUE
+          )
+        )
+        
+        ### Extract isoforms which are quantified
+        if(TRUE) {
+          ### Get genes with iso quantified
+          if( countsSuppled ) {
+            genesToKeep <- gtfSwichList$isoformFeatures$gene_id[which(
+              gtfSwichList$isoformFeatures$isoform_id %in% isoformCountMatrix$isoform_id
+            )]
+            
+            ### Ensure all isoforms quantified are kept
+            isoToKeep <- union(
+              gtfSwichList$isoformFeatures$isoform_id[which(
+                gtfSwichList$isoformFeatures$gene_id %in% genesToKeep
+              )],
+              isoformCountMatrix$isoform_id
+            )
+          } else {
+            genesToKeep <- gtfSwichList$isoformFeatures$gene_id[which(
+              gtfSwichList$isoformFeatures$isoform_id %in% isoformRepExpression$isoform_id
+            )]
+            
+            ### Ensure all isoforms quantified are kept
+            isoToKeep <- union(
+              gtfSwichList$isoformFeatures$isoform_id[which(
+                gtfSwichList$isoformFeatures$gene_id %in% genesToKeep
+              )],
+              isoformRepExpression$isoform_id
+            )
+          }
+        }
+        
+        ### Extract isoforms to remove due to non chanonical nature
+        if(TRUE) {
+          ### Identify isoforms to remove
+          isoformsToRemove <- character()
+          
+          ### TEC genes
+          if( removeTECgenes & any(!is.na( gtfSwichList$isoformFeatures$gene_biotype)) ) {
+            isoformsToRemove <- c(
+              isoformsToRemove,
+              unique(gtfSwichList$isoformFeatures$isoform_id[which(
+                gtfSwichList$isoformFeatures$gene_biotype == 'TEC'
+              )])
+            )
+          }
+          
+          ### Strange chromosomes
+          if( removeNonConvensionalChr ) {
+            nonChanonicalChrsIso <- unique(
+              gtfSwichList$exons$isoform_id[which(
+                grepl('_|\\.'  , as.character(gtfSwichList$exons@seqnames))
+              )]
+            )
+            
+            isoformsToRemove <- unique(c(
+              isoformsToRemove,
+              nonChanonicalChrsIso
+            ))
+          }
+          
+          ### Unstranded transcripts
+          if(TRUE) {
+            unstrandedIso <- unique(
+              gtfSwichList$exons$isoform_id[which(
+                grepl('\\*'  , as.character(gtfSwichList$exons@strand))
+              )]
+            )
+            
+            isoformsToRemove <- unique(c(
+              isoformsToRemove,
+              unstrandedIso
+            ))
+            
+            if(length(unstrandedIso)) {
+              warning(
+                paste0(
+                  'We found ', length(unstrandedIso),
+                  ' (', round(
+                    length(unstrandedIso) / length(isoToKeep) * 100,
+                    digits = 2
+                  ),
+                  '%) unstranded transcripts.',
+                  '\n  These were removed as unstranded transcripts cannot be analysed'
+                )
+              )
+            }
+          }
+          
+          ### Note:
+          # No need to extend to genes since they per definition are all genes
+          
+          ### Remove non chanonical isoforms
+          if(length(isoformsToRemove)) {
+            isoToKeep <- setdiff(
+              isoToKeep,
+              isoformsToRemove
+            )
+          }
+        }
+        
+        ### Subset to used data
+        if(TRUE) {
+          if( countsSuppled ) {
+            isoformCountMatrix <- isoformCountMatrix[which(
+              isoformCountMatrix$isoform_id %in% isoToKeep
+            ),]
+          }
+          if( abundSuppled ) {
+            isoformRepExpression <- isoformRepExpression[which(
+              isoformRepExpression$isoform_id %in% isoToKeep
+            ),]
+          }
+          
+          if(any(isoToKeep %in% gtfSwichList$isoformFeatures$isoform_id)) {
+            gtfSwichList$isoformFeatures <- gtfSwichList$isoformFeatures[which(
+              gtfSwichList$isoformFeatures$isoform_id %in% isoToKeep
+            ),]
+            gtfSwichList$exons <- gtfSwichList$exons[which(
+              gtfSwichList$exons$isoform_id %in% isoToKeep
+            ),]
+            gtfSwichList$orfAnalysis <- gtfSwichList$orfAnalysis[which(
+              gtfSwichList$orfAnalysis$isoform_id %in% isoToKeep
+            ),]
+          }
+        }
+        
+        ### Extract wanted annotation files form the GTF switchAnalyzeR object
+        if(TRUE) {
+          isoformExonStructure <-
+            gtfSwichList$exons[, c('isoform_id', 'gene_id')]
+          isoformExonStructure <- sort(isoformExonStructure)
+          
+          colsToExtract <- c(
+            'isoform_id', 'gene_id', 'gene_name',
+            'ref_gene_id', # stringtie annotation
+            'gene_biotype','iso_biotype'
+          )
+          isoformAnnotation <-
+            unique(gtfSwichList$isoformFeatures[,na.omit(
+              match(colsToExtract , colnames(gtfSwichList$isoformFeatures))
+            )])
+        }
+        # where isoformAnnotation and isoformExonStructure is made
+        
+        if (addAnnotatedORFs & gtfImported) {
+          isoORF <- gtfSwichList$orfAnalysis
+          
+          if( all( is.na(isoORF$PTC)) ) {
+            warning(
+              paste(
+                '   No CDS annotation was found in the GTF files meaning ORFs could not be annotated.\n',
+                '    (But ORFs can still be predicted with the analyzeORF() function)'
+              )
+            )
+            
+            addAnnotatedORFs <- FALSE
+          }
+        }
+      }
+      
+      if( class(isoformExonAnnoation) != 'character' ) {
+        gtfImported <- FALSE
+        
+        ### Test input
+        if(TRUE) {
+          if( ! is(object = isoformExonAnnoation, 'GRanges') ) {
+            stop('When not using a GTF file (by supplying a text string with the path to the file) the "isoformExonAnnoation" argument must be a GRange.')
+          }
+          
+          if( length(isoformExonAnnoation) == 0 ) {
+            stop('The GRange supplied to the "isoformExonAnnoation" argument have zero enteries (rows).')
+          }
+          
+          ### Test
+          if( !all( c('isoform_id', 'gene_id') %in% colnames(isoformExonAnnoation@elementMetadata) )) {
+            stop('The supplied annotation must contain to meta data collumns: \'isoform_id\' and \'gene_id\'')
+          }
+          
+          ### Test for other than exons by annotation
+          if(any(  colnames(isoformExonAnnoation@elementMetadata) == 'type' )) {
+            stop(
+              paste(
+                'The \'type\' column of the data supplied to \'isoformExonAnnoation\'',
+                'indicate there are multiple levels of data.',
+                'Please fix this (providing only exon-level) or simply',
+                '\nprovide a string with the path to the GTF file to the \'isoformExonAnnoation\' - ',
+                'then IsoformSwitchAnalyzeR will import and massage the GTF file for you.'
+              )
+            )
+          }
+          
+          ### Test for other than exons by overlap of transcript features
+          localExonList <- split(isoformExonAnnoation@ranges, isoformExonAnnoation$isoform_id)
+          localExonListReduced <- GenomicRanges::reduce(localExonList)
+          if(
+            any( sapply( width(localExonList), sum) != sapply( width(localExonListReduced), sum) )
+          ) {
+            stop(
+              paste(
+                'The data supplied to \'isoformExonAnnoation\' appears to be multi-leveled',
+                '(Fx both containing exon and CDS information for transcripts - which a GTF file does).',
+                'If your annotation data originate from a GTF file please supply a string',
+                'indicating the path to the GTF file to the \'isoformExonAnnoation\' argument',
+                'instead - then IsoformSwitchAnalyzeR will handle the multi-levels.'
+              )
+            )
+          }
+          
+        }
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+          isoformExonAnnoation$isoform_id <- fixNames(
+            nameVec = isoformExonAnnoation$isoform_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
+        
+        ### Collaps ajecent exons (aka thouse without any intron between)
+        if(TRUE) {
+          ### Reduce ajecent exons
+          tmp <- unlist(
+            GenomicRanges::reduce(
+              split(
+                isoformExonAnnoation,
+                isoformExonAnnoation$isoform_id
+              )
+            )
+          )
+          ### Add isoform id
+          tmp$isoform_id <- tmp@ranges@NAMES
+          tmp@ranges@NAMES <- NULL
+          
+          ### add gene id
+          tmp$gene_id <-isoformExonAnnoation$gene_id[match(
+            tmp$isoform_id, isoformExonAnnoation$isoform_id
+          )]
+          
+          ### Add gene names if used
+          if('gene_name' %in% colnames(isoformExonAnnoation@elementMetadata)) {
+            tmp$gene_name <-isoformExonAnnoation$gene_name[match(
+              tmp$isoform_id, isoformExonAnnoation$isoform_id
+            )]
+          }
+          
+          ### sort
+          tmp <- tmp[sort.list(tmp$isoform_id),]
+          
+          ### Overwrite
+          isoformExonAnnoation <- tmp
+        }
+        
+        ### Extract isoforms which are quantified
+        if(TRUE) {
+          ### Get genes with iso quantified
+          if( countsSuppled ) {
+            genesToKeep <- isoformExonAnnoation$gene_id[which(
+              isoformExonAnnoation$isoform_id %in% isoformCountMatrix$isoform_id
+            )]
+            
+            ### Ensure all isoforms quantified are kept
+            isoToKeep <- union(
+              isoformExonAnnoation$isoform_id[which(
+                isoformExonAnnoation$gene_id %in% genesToKeep
+              )],
+              isoformCountMatrix$isoform_id
+            )
+          } else {
+            genesToKeep <- isoformExonAnnoation$gene_id[which(
+              isoformExonAnnoation$isoform_id %in% isoformRepExpression$isoform_id
+            )]
+            
+            ### Ensure all isoforms quantified are kept
+            isoToKeep <- union(
+              isoformExonAnnoation$isoform_id[which(
+                isoformExonAnnoation$gene_id %in% genesToKeep
+              )],
+              isoformCountMatrix$isoform_id
+            )
+          }
+        }
+        
+        ### Subset to used data
+        if(TRUE) {
+          if( countsSuppled ) {
+            isoformCountMatrix <- isoformCountMatrix[which(
+              isoformCountMatrix$isoform_id %in% isoToKeep
+            ),]
+          }
+          if( abundSuppled ) {
+            isoformRepExpression <- isoformRepExpression[which(
+              isoformRepExpression$isoform_id %in% isoToKeep
+            ),]
+          }
+          
+          if(any(isoToKeep %in% isoformExonAnnoation$isoform_id)) {
+            isoformExonAnnoation <- isoformExonAnnoation[which(
+              isoformExonAnnoation$isoform_id %in% isoToKeep
+            ),]
+          }
+        }
+        
+        ### Devide the data
+        colsToUse <-  c(
+          'isoform_id',
+          'gene_id',
+          'gene_name'
+        )
+        
+        isoformExonStructure <-
+          isoformExonAnnoation[,na.omit(match(
+            colsToUse, colnames(isoformExonAnnoation@elementMetadata)
+          ))]
+        
+        isoformAnnotation <-
+          unique(as.data.frame(isoformExonAnnoation@elementMetadata))
+        if (!'gene_name' %in% colnames(isoformAnnotation)) {
+          isoformAnnotation$gene_name <- NA
+        }
+        
+        isoformAnnotation <- isoformAnnotation[order(
+          isoformAnnotation$gene_id,
+          isoformAnnotation$gene_name,
+          isoformAnnotation$isoform_id
+        ),]
+      }
+      
+    }
+    
+    ### Test the columns of obtained annoation
+    if(TRUE) {
+      if (!all(c('isoform_id', 'gene_id', 'gene_name') %in%
+               colnames(isoformAnnotation))) {
+        stop(paste(
+          'The data.frame passed to the \'isoformAnnotation\' argument',
+          'must contain the following columns \'isoform_id\',',
+          '\'gene_id\' and \'gene_name\''
+        ))
+      }
+      if (any(is.na(isoformAnnotation[, c('isoform_id', 'gene_id')]))) {
+        stop(paste(
+          'The \'isoform_id\' and \'gene_id\' columns in the data.frame',
+          'passed to the \'isoformAnnotation\' argument are not allowed',
+          'to contain NAs'
+        ))
+      }
+      if (!'isoform_id' %in% colnames(isoformExonStructure@elementMetadata)) {
+        stop(paste(
+          'The GenomicRanges (GRanges) object passed to the',
+          '\'isoformExonStructure\' argument must contain both a',
+          '\'isoform_id\' and \'gene_id\' metadata column'
+        ))
+      }
+    }
+    
+    ### Test overlap with expression data
+    if(!ignoreSurplusIsoforms) {
+      if( countsSuppled ) {
+        j1 <- jaccardSimilarity(
+          isoformCountMatrix$isoform_id,
+          isoformAnnotation$isoform_id
+        )
+        
+        expIso <- isoformCountMatrix$isoform_id
+      } else {
+        j1 <- jaccardSimilarity(
+          isoformRepExpression$isoform_id,
+          isoformAnnotation$isoform_id
+        )
+        
+        expIso <- isoformRepExpression$isoform_id
+      }
+      
+      jcCutoff <- 0.925
+      
+      onlyInExp <- setdiff(expIso, isoformAnnotation$isoform_id)
+      
+      if (j1 != 1 ) {
+        if( j1 < jcCutoff | length(onlyInExp) ) {
+          options(warning.length = 2000L)
+          stop(
+            paste(
+              'The annotation and quantification (count/abundance matrix and isoform annotation)',
+              'seems to be different (Jaccard similarity < 0.925).',
+              '\nEither isforoms found in the annotation are',
+              'not quantifed or vise versa.',
+              '\nSpecifically:\n',
+              length(unique(expIso)), 'isoforms were quantified.\n',
+              length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
+              'Only', length(intersect(expIso, isoformAnnotation$isoform_id)), 'overlap.\n',
+              length(setdiff(unique(expIso), isoformAnnotation$isoform_id)), 'isoforms quantifed had no corresponding annoation\n',
+              '\nThis combination cannot be analyzed since it will',
+              'cause discrepencies between quantification and annotation thereby skewing all analysis.\n',
+              
+              '\nIf there is no overlap (as in zero or close) there are two options:\n',
+              '1) The files do not fit together (e.g. different databases, versions, etc)',
+              '(no fix except using propperly paired files).\n',
+              '2) It is somthing to do with how the isoform ids are stored in the different files.',
+              'This problem might be solvable using some of the',
+              '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+              '    Examples from expression matrix are :',
+              paste0( sample(expIso, min(c(3, length(expIso)))), collapse = ', '),'\n',
+              '    Examples of annoation are :',
+              paste0( sample(isoformAnnotation$isoform_id, min(c(3, length(isoformAnnotation$isoform_id)))), collapse = ', '),'\n',
+              '    Examples of isoforms which were only found im the quantification are  :',
+              paste0( sample(onlyInExp, min(c(3, length(onlyInExp)))), collapse = ', '),'\n',
+              
+              '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+              '1) The files do not fit together (e.g different databases versions etc.)',
+              '(no fix except using propperly paired files).\n',
+              '2) If you are using Ensembl data you have supplied the GTF without phaplotyps. You need to supply the',
+              '<Ensembl_version>.chr_patch_hapl_scaff.gtf file - NOT the <Ensembl_version>.chr.gtf\n',
+              '3) One file could contain non-chanonical chromosomes while the other do not',
+              '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+              '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+              'This problem might be solvable using some of the',
+              '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
+              
+              '\nFor more info see the FAQ in the vignette.\n',
+              sep=' '
+            )
+          )
+        }
+        if( j1 >= jcCutoff ) {
+          warning(
+            paste(
+              'The annotation and quantification (count/abundance matrix and isoform annotation)',
+              'Seem to be slightly different.',
+              
+              '\nSpecifically:\n',
+              length(setdiff(isoformAnnotation$isoform_id, unique(expIso))), 'isoforms were only found in the annotation\n',
+              
+              '\nPlease make sure this is on purpouse since differences',
+              'will cause inaccurate quantification and thereby skew all analysis.\n',
+              
+              'If you have quantified with Salmon this could be normal since it as default only keep one copy of identical sequnces (can be prevented using the --keepDuplicates option)\n',
+              'We strongly encurage you to go back and figure out why this is the case.\n\n',
+              sep=' '
+            )
+          )
+          
+          ### Reduce to those found in all
+          if( countsSuppled ) {
+            isoformsUsed <- intersect(
+              isoformCountMatrix$isoform_id,
+              isoformAnnotation$isoform_id
+            )
+          } else {
+            isoformsUsed <- intersect(
+              isoformRepExpression$isoform_id,
+              isoformAnnotation$isoform_id
+            )
+          }
+          
+          isoformExonStructure <- isoformExonStructure[which(
+            isoformExonStructure$isoform_id %in% isoformsUsed
+          ), ]
+          isoformAnnotation <-isoformAnnotation[which(
+            isoformAnnotation$isoform_id %in% isoformsUsed
+          ), ]
+          
+          if( countsSuppled ) {
+            isoformCountMatrix <-isoformCountMatrix[which(
+              isoformCountMatrix$isoform_id %in% isoformsUsed
+            ), ]
+          }
+          if( abundSuppled ) {
+            isoformRepExpression <-isoformRepExpression[which(
+              isoformRepExpression$isoform_id %in% isoformsUsed
+            ), ]
+          }
+          
+        }
+      }
+      
+    }
+    
+    ### Now test overlap with expression data (updated: overlap coefficient)
+    if(ignoreSurplusIsoforms){
+      
+      if (countsSuppled) {
+        overlapCoef <- overlapCoefficient(
+          isoformCountMatrix$isoform_id,
+          isoformAnnotation$isoform_id
+        )
+        expIso <- isoformCountMatrix$isoform_id
+      } else {
+        overlapCoef <- overlapCoefficient(
+          isoformRepExpression$isoform_id,
+          isoformAnnotation$isoform_id
+        )
+        expIso <- isoformRepExpression$isoform_id
+      }
+      
+      overlapCutoff <- 0.95
+      
+      onlyInExp <- setdiff(expIso, isoformAnnotation$isoform_id)
+      onlyInAnno <- setdiff(isoformAnnotation$isoform_id, expIso)
+      
+      if(overlapCoef == 1){
+        if(length(onlyInExp)){
+          options(warning.length = 2000L)
+          stop(
+            paste('The annotation and quantification (count/abundance matrix and isoform annotation)',
+                  'seems to be different',length(unique(onlyInExp)),'are quantified but without any annotation information',
+                  sep = ' '))
+        } else{
+          warning(
+            paste(
+              'Ignoring surplus isoforms as requested by `ignoreSurplusIsoforms = TRUE`.',
+              '\nQuantified isoforms: ', length(unique(expIso)),
+              '\nAnnotated isoforms: ', length(unique(isoformAnnotation$isoform_id)),
+              '\n', length(onlyInAnno), 'isoforms in the annotation will be ignored.\n','Note that the ignoration of isoforms would slightly affect the accuracy of IF!\n',
+              sep = ' '
+            )
+          )
+        }
+      }
+      
+      if (overlapCoef != 1 ) {
+        if( overlapCoef < overlapCutoff | length(onlyInExp) ) {
+          options(warning.length = 2000L)
+          stop(
+            paste(
+              'The annotation and quantification (count/abundance matrix and isoform annotation)',
+              'seems to be different (Overlap Coefficient < 0.925).',
+              '\nEither isforoms found in the annotation are',
+              'not quantifed or vise versa.',
+              '\nSpecifically:\n',
+              length(unique(expIso)), 'isoforms were quantified.\n',
+              length(unique(isoformAnnotation$isoform_id)), 'isoforms are annotated.\n',
+              'Only', length(intersect(expIso, isoformAnnotation$isoform_id)), 'overlap.\n',
+              length(setdiff(unique(expIso), isoformAnnotation$isoform_id)), 'isoforms quantifed had no corresponding annoation\n',
+              '\nThis combination cannot be analyzed since it will',
+              'cause discrepencies between quantification and annotation thereby skewing all analysis.\n',
+              
+              '\nIf there is no overlap (as in zero or close) there are two options:\n',
+              '1) The files do not fit together (e.g. different databases, versions, etc)',
+              '(no fix except using propperly paired files).\n',
+              '2) It is somthing to do with how the isoform ids are stored in the different files.',
+              'This problem might be solvable using some of the',
+              '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+              '    Examples from expression matrix are :',
+              paste0( sample(expIso, min(c(3, length(expIso)))), collapse = ', '),'\n',
+              '    Examples of annoation are :',
+              paste0( sample(isoformAnnotation$isoform_id, min(c(3, length(isoformAnnotation$isoform_id)))), collapse = ', '),'\n',
+              '    Examples of isoforms which were only found im the quantification are  :',
+              paste0( sample(onlyInExp, min(c(3, length(onlyInExp)))), collapse = ', '),'\n',
+              
+              '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+              '1) The files do not fit together (e.g different databases versions etc.)',
+              '(no fix except using propperly paired files).\n',
+              '2) If you are using Ensembl data you have supplied the GTF without phaplotyps. You need to supply the',
+              '<Ensembl_version>.chr_patch_hapl_scaff.gtf file - NOT the <Ensembl_version>.chr.gtf\n',
+              '3) One file could contain non-chanonical chromosomes while the other do not',
+              '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+              '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+              'This problem might be solvable using some of the',
+              '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
+              
+              '\nFor more info see the FAQ in the vignette.\n',
+              sep=' '
+            )
+          )
+        }
+        if( overlapCoef >= overlapCutoff ) {
+          warning(
+            paste(
+              'The annotation and quantification (count/abundance matrix and isoform annotation)',
+              'Seem to be slightly different.',
+              
+              '\nSpecifically:\n',
+              length(setdiff(isoformAnnotation$isoform_id, unique(expIso))), 'isoforms were only found in the annotation\n',
+              
+              '\nPlease make sure this is on purpouse since differences',
+              'will cause inaccurate quantification and thereby skew all analysis.\n',
+              
+              'If you have quantified with Salmon this could be normal since it as default only keep one copy of identical sequnces (can be prevented using the --keepDuplicates option)\n',
+              'We strongly encurage you to go back and figure out why this is the case.\n\n',
+              sep=' '
+            )
+          )
+          
+        }
+      }
+      
+      ### Reduce to those found in all
+      if( countsSuppled ) {
+        isoformsUsed <- intersect(
+          isoformCountMatrix$isoform_id,
+          isoformAnnotation$isoform_id
+        )
+      } else {
+        isoformsUsed <- intersect(
+          isoformRepExpression$isoform_id,
+          isoformAnnotation$isoform_id
+        )
+      }
+      
+      isoformExonStructure <- isoformExonStructure[which(
+        isoformExonStructure$isoform_id %in% isoformsUsed
+      ), ]
+      isoformAnnotation <-isoformAnnotation[which(
+        isoformAnnotation$isoform_id %in% isoformsUsed
+      ), ]
+      
+      if( countsSuppled ) {
+        isoformCountMatrix <-isoformCountMatrix[which(
+          isoformCountMatrix$isoform_id %in% isoformsUsed
+        ), ]
+      }
+      if( abundSuppled ) {
+        isoformRepExpression <-isoformRepExpression[which(
+          isoformRepExpression$isoform_id %in% isoformsUsed
+        ), ]
+      }
+      
+      
+    }
+  }
+  
+  ### Subset to libraries used
+  if (TRUE) {
+    designMatrix <-
+      designMatrix[which(
+        designMatrix$condition %in% c(
+          comparisonsToMake$condition_1,
+          comparisonsToMake$condition_2
+        )
+      ), ]
+    
+    if( countsSuppled ) {
+      isoformCountMatrix <-
+        isoformCountMatrix[, which(
+          colnames(isoformCountMatrix) %in%
+            c('isoform_id', designMatrix$sampleID))]
+      isoformCountMatrix <-
+        isoformCountMatrix[,c(
+          which(colnames(isoformCountMatrix) == 'isoform_id'),
+          which(colnames(isoformCountMatrix) != 'isoform_id')
+        )]
+      rownames(isoformCountMatrix) <- NULL
+    }
+    
+    if ( abundSuppled ) {
+      isoformRepExpression <-
+        isoformRepExpression[, which(
+          colnames(isoformRepExpression) %in%
+            c('isoform_id', designMatrix$sampleID)
+        )]
+      
+      isoformRepExpression <-
+        isoformRepExpression[,c(
+          which(colnames(isoformRepExpression) == 'isoform_id'),
+          which(colnames(isoformRepExpression) != 'isoform_id')
+        )]
+      rownames(isoformRepExpression) <- NULL
+    }
+  }
+  
+  ### Remove isoforms not expressed
+  if (TRUE) {
+    if( countsSuppled ) {
+      okIsoforms <- isoformCountMatrix$isoform_id[which(
+        rowSums(isoformCountMatrix[,which( colnames(isoformCountMatrix) != 'isoform_id')]) > 0
+      )]
+      nTot <- nrow(isoformCountMatrix)
+    } else {
+      okIsoforms <-isoformRepExpression$isoform_id[which(
+        rowSums(isoformRepExpression[,which( colnames(isoformRepExpression) != 'isoform_id')]) > 0
+      )]
+      nTot <- nrow(isoformRepExpression)
+    }
+    
+    nOk <- length(okIsoforms)
+    if( nOk != nTot ) {
+      if (!quiet) {
+        ### Message
+        message(
+          paste(
+            '   ',
+            nTot - nOk,
+            paste0( '( ', round( (nTot - nOk) / nTot *100, digits = 2),'%)'),
+            'isoforms were removed since they were not expressed in any samples.'
+          )
+        )
+      }
+      
+      ### Subset expression
+      if(abundSuppled) {
+        isoformRepExpression <- isoformRepExpression[which(
+          isoformRepExpression$isoform_id %in% okIsoforms
+        ),]
+      }
+      if(countsSuppled) {
+        isoformCountMatrix <- isoformCountMatrix[which(
+          isoformCountMatrix$isoform_id %in% okIsoforms
+        ),]
+      }
+      
+      ### Annotation
+      isoformExonStructure <- isoformExonStructure[which( isoformExonStructure$isoform_id %in% okIsoforms),]
+      isoformAnnotation    <- isoformAnnotation[which( isoformAnnotation$isoform_id %in% okIsoforms),]
+      
+      if (addAnnotatedORFs & gtfImported) {
+        isoORF <- isoORF[which( isoORF$isoform_id %in% okIsoforms),]
+      }
+      
+    }
+  }
+  
+  ### Handle sequence input
+  if(TRUE) {
+    addIsoformNt <- FALSE
+    
+    if(!is.null(isoformNtFasta)) {
+      isoformNtSeq <- do.call(
+        c,
+        lapply(isoformNtFasta, function(aFile) {
+          Biostrings::readDNAStringSet(
+            filepath = isoformNtFasta, format = 'fasta'
+          )
+        })
+      )
+      
+      if(!is(isoformNtSeq, "DNAStringSet")) {
+        stop('The fasta file supplied to \'isoformNtFasta\' does not contain the nucleotide (DNA) sequence...')
+      }
+      
+      ### Fix names
+      if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+        
+        names(isoformNtSeq) <- fixNames(
+          nameVec = names(isoformNtSeq),
+          ignoreAfterBar = ignoreAfterBar,
+          ignoreAfterSpace = ignoreAfterSpace,
+          ignoreAfterPeriod = ignoreAfterPeriod
+        )
+      }
+      
+      ### Subset to used
+      isoSeqNames <- names(isoformNtSeq)
+      isoformNtSeq <- isoformNtSeq[which(
+        names(isoformNtSeq) %in% isoformCountMatrix$isoform_id
+      )]
+      
+      ### Remove potential duplication
+      isoformNtSeq <- isoformNtSeq[which(
+        ! duplicated(names(isoformNtSeq))
+      )]
+      
+      if(length(isoformNtSeq) == 0) {
+        stop(
+          paste(
+            'No sequences in the fasta files had IDs matching the expression data.',
+            'This problem might be solvable using some of the',
+            '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+            '    3 Examples from expression matrix are :',
+            paste0( sample(unique(isoformCountMatrix$isoform_id), min(c(3, length(isoformCountMatrix$isoform_id))) ), collapse = ', '),'\n',
+            '    3 Examples of sequence annotation are :',
+            paste0( sample(isoSeqNames, min(c(3, length( isoSeqNames ))) ), collapse = ', '),'\n',
+            sep = ' '
+          )
+        )
+        
+      }
+      
+      if( ! all( isoformCountMatrix$isoform_id %in% names(isoformNtSeq) ) ) {
+        options(warning.length = 2000L)
+        warning(
+          paste(
+            'The fasta file supplied to \'isoformNtFasta\' does not contain the',
+            'nucleotide (DNA) sequence for all isoforms quantified and will not be added!',
+            '\nSpecifically:\n',
+            length(unique(isoformCountMatrix$isoform_id)), 'isoforms were quantified.\n',
+            length(unique(names(isoformNtSeq))), 'isoforms have a sequence.\n',
+            'Only', length(intersect(names(isoformNtSeq), isoformCountMatrix$isoform_id)), 'overlap.\n',
+            length(setdiff(unique(isoformCountMatrix$isoform_id), names(isoformNtSeq))), 'isoforms quantifed isoforms had no corresponding nucleotide sequence\n',
+            
+            '\nIf there is no overlap (as in zero or close) there are two options:\n',
+            '1) The files do not fit together (different databases, versions etc)',
+            '(no fix except using propperly paired files).\n',
+            '2) It is somthing to do with how the isoform ids are stored in the different files.',
+            'This problem might be solvable using some of the',
+            '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n',
+            '    3 Examples from expression matrix are :',
+            paste0( sample(unique(isoformCountMatrix$isoform_id), min(c(3, length(isoformCountMatrix$isoform_id))) ), collapse = ', '),'\n',
+            '    3 Examples of sequence annotation are :',
+            paste0( sample(names(isoformNtSeq), min(c(3, length( isoformNtSeq ))) ), collapse = ', '),'\n',
+            
+            '\nIf there is a large overlap but still far from complete there are 3 possibilites:\n',
+            '1) The files do not fit together (different databases versions)',
+            '(no fix except using propperly paired files).\n',
+            '2) The isoforms quantified have their nucleotide sequence stored in multiple fasta files (common for Ensembl).',
+            'Just supply a vector with the path to each of them to the \'isoformNtFasta\' argument.\n',
+            '3) One file could contain non-chanonical chromosomes while the other do not',
+            '(might be solved using the \'removeNonConvensionalChr\' argument.)\n',
+            '4) It is somthing to do with how a subset of the isoform ids are stored in the different files.',
+            'This problem might be solvable using some of the',
+            '\'ignoreAfterBar\', \'ignoreAfterSpace\' or \'ignoreAfterPeriod\' arguments.\n\n',
+            sep = ' '
+          )
+        )
+      } else {
+        addIsoformNt <- TRUE
+      }
+    }
+  }
+  
+  
+  
+  ### Rescue StringTie gene annotation
+  if(TRUE) {
+    if (!quiet) { message('Step 3 of 10: Fixing StringTie gene annoation problems...')}
+    
+    ### Add original gene_ids already assigned to gene_id back to ref_gene_id
+    if(TRUE) {
+      indexToModify <- which(
+        is.na( isoformAnnotation$ref_gene_id  ) &
+          ! is.na( isoformAnnotation$gene_name  )
+      )
+      isoformAnnotation$ref_gene_id[indexToModify] <- isoformAnnotation$gene_id[indexToModify]
+    }
+    
+    ### Assign isoforms to ref_gene_id and gene_names
+    if(   fixStringTieAnnotationProblem ) {
+      ### variables for messages
+      anyFixed1 <- FALSE
+      anyFixed2 <- FALSE
+      anyFixed3 <- FALSE
+      anyFixed4 <- FALSE
+      
+      ### Fix missing ref_gene_id
+      if( any(is.na(isoformAnnotation$ref_gene_id)) ) {
+        
+        ### Fix simple missing ref_gene_id (within single ref_gene_id gene_id)
+        if( TRUE ) {
+          ### Make list with ref_gene_id (same order)
+          geneNameList <- split(isoformAnnotation$ref_gene_id, isoformAnnotation$gene_id)
+          geneNameList <- geneNameList[unique(isoformAnnotation$gene_id)]
+          
+          ### Count problems
+          nIsoWihoutNames <- sum(
+            is.na(isoformAnnotation$ref_gene_id)
+          )
+          
+          ### Add ref_gene_ids to novel StringTie transcripts when possible (only 1 ref_gene_id candidate)
+          isoformAnnotation$ref_gene_id <- unlist(
+            lapply(
+              geneNameList,
+              function(geneNameVec) {
+                localGeneNames <- unique(na.omit( geneNameVec ))
+                
+                if( length( localGeneNames ) == 1 ) {
+                  return(
+                    rep(localGeneNames, times = length(geneNameVec))
+                  )
+                } else {
+                  return(geneNameVec)
+                }
+              }
+            )
+          )
+          
+          ### Re-count problems
+          nIsoWihoutNames2 <- sum(
+            is.na(isoformAnnotation$ref_gene_id)
+          )
+          
+          anyFixed1 <- nIsoWihoutNames - nIsoWihoutNames2 > 0
+          
+          if( anyFixed1 ) {
+            if (!quiet) {
+              message(
+                paste(
+                  '   ',
+                  nIsoWihoutNames - nIsoWihoutNames2,
+                  ' isoforms were assigned the ref_gene_id and gene_name of their associated gene_id.',
+                  '\n        This was only done when the parent gene_id were associated with a single ref_gene_id/gene_name.',
+                  #'\n',
+                  sep = ''
+                )
+              )
+            }
+          }
+          
+        }
+        
+        ### Fix non-simple missing ref_gene_ids (within multi ref_gene_ids gene_id)
+        if(TRUE) {
+          ### Identify gene_ids with problems
+          if(TRUE) {
+            ### Summazie gene properties
+            multiGeneDf <-
+              isoformAnnotation %>%
+              dplyr::select(isoform_id, gene_id, ref_gene_id) %>%
+              dplyr::distinct()
+            
+            geneNameSummary <-
+              multiGeneDf %>%
+              group_by(gene_id) %>%
+              dplyr::summarise(
+                n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
+                n_iso_na = sum(is.na(ref_gene_id)),
+                .groups = 'drop'
+              )
+            
+            ### Identify genes with both missing and multiple gene names
+            multiGenesWithNa <-
+              geneNameSummary %>%
+              dplyr::filter(
+                n_ref_gene_ids >= 2 & # at least two genes
+                  n_iso_na > 0           # no novel once
+              )
+          }
+          
+          ### Rescue via genomic overlap of known isoforms (aka with ref_gene_id annotation)
+          if(nrow(multiGenesWithNa) & fixStringTieViaOverlapInMultiGenes) {
+            ### Extract all isoforms with problems
+            genesWithProblems <-
+              multiGeneDf %>%
+              dplyr::filter(gene_id %in% multiGenesWithNa$gene_id)
+            
+            ### Extract exons of interest
+            exonsOi <- isoformExonStructure[which(
+              isoformExonStructure$isoform_id %in% genesWithProblems$isoform_id
+            ),]
+            
+            ### Modify seqnames to ensure only searching within same gene_id?
+            exonsOi <- GRanges(
+              seqnames = exonsOi$gene_id,
+              ranges = IRanges(
+                start = BiocGenerics::start(exonsOi),
+                end   = BiocGenerics::end(exonsOi)
+              ),
+              strand = exonsOi@strand,
+              isoform_id = exonsOi$isoform_id,
+              gene_id = exonsOi$gene_id
+            )
+            
+            ### Convert to list
+            exonsOiList <- split(exonsOi, exonsOi$isoform_id)
+            
+            ### Devide into novel and known
+            knownIsoforms <- genesWithProblems$isoform_id[which(
+              ! is.na(genesWithProblems$ref_gene_id)
+            )]
+            novelIsoforms <- genesWithProblems$isoform_id[which(
+              is.na(genesWithProblems$ref_gene_id)
+            )]
+            knownList <- exonsOiList[ knownIsoforms ]
+            novelList <- exonsOiList[ novelIsoforms ]
+            novelLength <- sapply(width(novelList), sum)
+            
+            ### Identify overlapping isoforms
+            novelIsoOverlap <- findOverlaps(query = novelList, subject = knownList)
+            novelIsoOverlapDf <- as.data.frame(novelIsoOverlap)
+            novelIsoOverlapDf$novel_iso <- names(novelList)[novelIsoOverlapDf$queryHits]
+            novelIsoOverlapDf$known_iso <- names(knownList)[novelIsoOverlapDf$subjectHits]
+            novelIsoOverlapDf <- novelIsoOverlapDf[,c('novel_iso','known_iso')]
+            novelIsoOverlapDf$known_ref_gene_id <- genesWithProblems$ref_gene_id[match(
+              novelIsoOverlapDf$known_iso, genesWithProblems$isoform_id
+            )]
+            
+            ### Calculate overlap
+            novelOverlap <- intersect(novelList[queryHits(novelIsoOverlap)], knownList[subjectHits(novelIsoOverlap)])
+            novelIsoOverlapDf$nt_overlap <- sapply(width(novelOverlap), sum)
+            novelIsoOverlapDf$novel_length <- novelLength[match(
+              novelIsoOverlapDf$novel_iso, names(novelLength)
+            )]
+            novelIsoOverlapDf$frac_overlap <- novelIsoOverlapDf$nt_overlap / novelIsoOverlapDf$novel_length
+            
+            ### For each novel isoform assign gene_name via cutoffs
+            novelAssigned <-
+              novelIsoOverlapDf %>%
+              as_tibble() %>%
+              group_by(novel_iso, known_ref_gene_id) %>%
+              ### For each known_gene extract top contender
+              dplyr::arrange(dplyr::desc(nt_overlap), .by_group = TRUE)  %>%
+              dplyr::slice(1L) %>%
+              ### For each isoform calculate ratios betwen top genes
+              group_by(novel_iso) %>%
+              dplyr::arrange(dplyr::desc(nt_overlap), .by_group = TRUE)  %>%
+              mutate(
+                log2_overlap_ratio = c(
+                  log2( nt_overlap[-length(nt_overlap)] / nt_overlap[-1] ),
+                  Inf # assign Inf if only 1 gene is overlapping
+                )
+              ) %>%
+              ### For each isoform Filter
+              dplyr::filter(
+                nt_overlap         >= fixStringTieMinOverlapSize,
+                frac_overlap       >= fixStringTieMinOverlapFrac,
+                log2_overlap_ratio >= fixStringTieMinOverlapLog2RatioToContender
+              ) %>%
+              ### For each isoform : Extract top contender
+              dplyr::slice(1L)
+            
+            ### Modify annoation
+            toModify <- which(isoformAnnotation$isoform_id %in% novelAssigned$novel_iso)
+            isoformAnnotation$ref_gene_id[toModify] <- novelAssigned$known_ref_gene_id[match(
+              isoformAnnotation$isoform_id[toModify], novelAssigned$novel_iso
+            )]
+            
+            ### Redo problem calculations
+            nIsoWihoutNames3 <- sum(
+              is.na(isoformAnnotation$ref_gene_id)
+            )
+            
+            anyFixed2 <- nIsoWihoutNames2 - nIsoWihoutNames3
+            
+            if( anyFixed2) {
+              if (!quiet) {
+                message(
+                  paste(
+                    '   ',
+                    nIsoWihoutNames2 - nIsoWihoutNames3,
+                    ' isoforms were assigned the ref_gene_id and gene_name of the most similar',
+                    '\n        annotated isoform (defined via overlap in genomic exon coordinates).',
+                    '\n        This was only done if the overlap met the requriements',
+                    '\n        indicated by the three fixStringTieViaOverlap* arguments.',
+                    #'\n',
+                    sep = ''
+                  )
+                )
+              }
+            }
+          }
+        }
+      }
+      
+      ### Remove non-assigned isoforms within known genes
+      if(TRUE) {
+        genesWithProblems <-
+          isoformAnnotation %>%
+          dplyr::select(gene_id, ref_gene_id) %>%
+          dplyr::distinct() %>%
+          group_by(gene_id) %>%
+          dplyr::summarise(
+            has_ref_gene_id = any(! is.na(ref_gene_id)),
+            has_novel_iso = any(  is.na(ref_gene_id)),
+            .groups = 'drop'
+          ) %>%
+          dplyr::filter(
+            has_ref_gene_id,
+            has_novel_iso
+          )
+        
+        ### Extract isoforms to remove
+        isoToRemove <- isoformAnnotation$isoform_id[which(
+          isoformAnnotation$gene_id %in% genesWithProblems$gene_id &
+            is.na(isoformAnnotation$ref_gene_id)
+        )]
+        
+        anyFixed3 <- length(isoToRemove) > 0
+        
+        if(length(isoToRemove)) {
+          ### Remove
+          isoformAnnotation <- isoformAnnotation[which(
+            ! isoformAnnotation$isoform_id %in% isoToRemove
+          ),]
+          
+          isoformExonStructure <- isoformExonStructure[which(
+            ! isoformExonStructure$isoform_id %in% isoToRemove
+          ),]
+          
+          if(! is.null(isoformCountMatrix)) {
+            isoformCountMatrix <- isoformCountMatrix[which(
+              ! isoformCountMatrix$isoform_id %in% isoToRemove
+            ),]
+          }
+          
+          if(! is.null(isoformRepExpression)) {
+            isoformRepExpression <- isoformRepExpression[which(
+              ! isoformRepExpression$isoform_id %in% isoToRemove
+            ),]
+          }
+          
+          ### Write message
+          if (!quiet) {
+            message(
+              paste(
+                '   We were unable to assign', length(isoToRemove),
+                'isoforms (located within annotated genes) to a known ref_gene_id/gene_name.',
+                '\n        These were removed to enable analysis of the rest of the isoform from within the merged genes.'
+              )
+            )
+          }
+        }
+      }
+      
+      ### Split gene_ids of gene_id with mutiple gene_names
+      if(TRUE) {
+        ### Summarize problem
+        if(TRUE) {
+          multiGeneDf <-
+            isoformAnnotation %>%
+            dplyr::select(isoform_id, gene_id, ref_gene_id) %>%
+            dplyr::distinct()
+          
+          multiGenes <-
+            multiGeneDf %>%
+            group_by(gene_id) %>%
+            dplyr::summarise(
+              n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
+              n_iso_na = sum(is.na(ref_gene_id)),
+              .groups = 'drop'
+            ) %>%
+            dplyr::filter(
+              n_ref_gene_ids >= 2 & # at least two genes
+                n_iso_na == 0           # no novel once
+            )
+          
+          nProblems <- nrow(multiGenes)
+        }
+        
+        ### Split gene_ids
+        if(nrow(multiGenes)) {
+          ### Extract corresponding iso data
+          multiGeneDf <-
+            multiGeneDf %>%
+            dplyr::filter(gene_id %in% multiGenes$gene_id)
+          
+          ### Create new gene_ids (by merging with ref_gene_id)
+          multiGeneDf$new_gene_id <- stringr::str_c(
+            multiGeneDf$gene_id,
+            ':',
+            multiGeneDf$ref_gene_id
+          )
+          
+          ### Overwrite in annotation
+          indexToModify <- which(
+            isoformAnnotation$gene_id %in% multiGeneDf$gene_id
+          )
+          isoformAnnotation$gene_id[indexToModify] <-
+            multiGeneDf$new_gene_id[match(
+              isoformAnnotation$isoform_id[indexToModify], multiGeneDf$isoform_id
+            )]
+          
+          ### Overwrite ref_gene_id and gene_ids in exon annotation
+          isoformExonStructure$gene_id <- isoformAnnotation$gene_id[match(
+            isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
+          )]
+        }
+        
+        ### Message summary
+        if(TRUE) {
+          ### Redo problem calculations
+          multiGenes <-
+            isoformAnnotation %>%
+            dplyr::select(gene_id, ref_gene_id) %>%
+            dplyr::distinct() %>%
+            group_by(gene_id) %>%
+            dplyr::summarise(
+              n_ref_gene_ids = n_distinct(na.omit(ref_gene_id)),
+              n_iso_na = sum(is.na(ref_gene_id)),
+              .groups = 'drop'
+            ) %>%
+            dplyr::filter(
+              n_ref_gene_ids >= 2 & # at least two genes
+                n_iso_na == 0           # no novel once
+            )
+          
+          nProblems2 <- nrow(multiGenes)
+          
+          anyFixed4 <- nProblems - nProblems2 > 0
+          
+          if( anyFixed4 ) {
+            if (!quiet) {
+              message(
+                paste(
+                  '   ',
+                  nProblems - nProblems2 ,
+                  ' gene_ids which were associated with multiple ref_gene_id/gene_names',
+                  '\n        were split into mutliple genes via their ref_gene_id/gene_names.',
+                  #'\n',
+                  sep = ''
+                )
+              )
+            }
+          }
+        }
+        
+      }
+      
+      ### Generalize ref_gene_id assignment to gene_names and update both annotaion objects
+      if(TRUE) {
+        geneNameDf <-
+          isoformAnnotation %>%
+          dplyr::select(gene_name, ref_gene_id) %>%
+          dplyr::filter(!is.na(gene_name)) %>%
+          dplyr::distinct()
+        
+        isoformAnnotation$gene_name <- geneNameDf$gene_name[match(
+          isoformAnnotation$ref_gene_id, geneNameDf$ref_gene_id
+        )]
+        
+        isoformExonStructure$gene_name <- isoformAnnotation$gene_name[match(
+          isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
+        )]
+      }
+      
+      if(
+        ! anyFixed1 &
+        ! anyFixed2 &
+        ! anyFixed3 &
+        ! anyFixed4
+      ) {
+        message(
+          paste(
+            '    There were no need to rescue any annotation',
+            sep = ' '
+          )
+        )
+      }
+      
+      ### Overwrite with original gene ids if doable
+      if('ref_gene_id' %in% colnames(isoformAnnotation)) {
+        ### Figure out those with potential
+        geneIdsWithRef <- isoformAnnotation$gene_id[which(
+          ! is.na(isoformAnnotation$ref_gene_id)
+        )]
+        
+        ### Devide
+        isoAnnotAlreadCorrect <-
+          isoformAnnotation %>%
+          dplyr::filter(! gene_id %in% geneIdsWithRef)
+        
+        isoAnnotToCorrect <-
+          isoformAnnotation %>%
+          dplyr::filter(gene_id %in% geneIdsWithRef)
+        
+        ### Figure out which one can be corrected
+        isoAnnotToCorrect <-
+          isoAnnotToCorrect %>%
+          dplyr::group_by(gene_id) %>%
+          dplyr::mutate(
+            n_ref = n_distinct(na.omit(ref_gene_id))
+          ) %>%
+          dplyr::ungroup()
+        
+        ### Devide into those that can be corrected and those that cannot
+        isoAnnotCannotBeCorrected <-
+          isoAnnotToCorrect %>%
+          dplyr::filter(n_ref != 1)
+        
+        isoAnnotCanBeCorrected <-
+          isoAnnotToCorrect %>%
+          dplyr::filter(n_ref == 1)
+        
+        if(nrow(isoAnnotCanBeCorrected)) {
+          message(
+            paste(
+              '    ',
+              length(unique(isoAnnotCanBeCorrected$gene_id)),
+              ' genes_id were assigned their original gene_id instead of the StringTie gene_id.',
+              '\n        This was only done when it could be done unambiguous.',
+              #'\n',
+              sep = ''
+            )
+          )
+        }
+        
+        ### Correct annnotation
+        isoAnnotCorrected <-
+          isoAnnotCanBeCorrected %>%
+          dplyr::group_by(gene_id) %>%
+          dplyr::mutate(
+            gene_id = unique(na.omit(ref_gene_id))
+          ) %>%
+          dplyr::ungroup()
+        
+        isoAnnotCorrected$n_ref <- NULL
+        isoAnnotCannotBeCorrected$n_ref <- NULL
+        
+        ### Combine the 3 datafames
+        isoformAnnotationCorrected <- rbind(
+          isoAnnotAlreadCorrect,
+          isoAnnotCorrected,
+          isoAnnotCannotBeCorrected
+        )
+        
+        ### Reorder
+        isoformAnnotationCorrected <-
+          isoformAnnotationCorrected[match(
+            isoformAnnotation$isoform_id,
+            isoformAnnotationCorrected$isoform_id
+          ),]
+        isoformAnnotationCorrected$ref_gene_id <- NULL
+        
+        ### Overwrite
+        isoformAnnotation <- isoformAnnotationCorrected
+        isoformExonStructure$gene_id <- isoformAnnotation$gene_id[match(
+          isoformExonStructure$isoform_id, isoformAnnotation$isoform_id
+        )]
+      }
+    }
+    if( ! fixStringTieAnnotationProblem ) {
+      if (!quiet) { message('    Was skipped as instructed via the \"fixStringTieAnnotationProblem\" argument...')}
+    }
+    
+    
+  }
+  
+  
+  
+  ### If necessary calculate RPKM values
+  if(TRUE) {
+    if (!quiet) { message('Step 4 of 10: Calculating expression estimates from count data...') }
+    if ( ! abundSuppled ) {
+      ### Extract isoform lengths
+      isoformLengths <- sapply(
+        X = split(
+          isoformExonStructure@ranges@width,
+          f = isoformExonStructure$isoform_id
+        ),
+        FUN = sum
+      )
+      
+      ### Calulate CPM
+      # convert to matrix
+      localCM <- isoformCountMatrix
+      rownames(localCM) <- localCM$isoform_id
+      localCM$isoform_id <- NULL
+      localCM <- as.matrix(localCM)
+      
+      myCPM <- t(t(localCM) / colSums(localCM)) * 1e6
+      
+      ### Calculate RPKM
+      isoformLengths <-
+        isoformLengths[match(rownames(myCPM), names(isoformLengths))]
+      
+      isoformRepExpression <-
+        as.data.frame(myCPM / (isoformLengths / 1e3))
+      
+      ### Massage
+      isoformRepExpression$isoform_id <-
+        rownames(isoformRepExpression)
+      isoformRepExpression <-
+        isoformRepExpression[, c(
+          which(colnames(isoformRepExpression) == 'isoform_id'),
+          which(colnames(isoformRepExpression) != 'isoform_id')
+        )]
+      rownames(isoformRepExpression) <- NULL
+    }
+    if (   abundSuppled ) {
+      if (!quiet) { message('    Skipped as user supplied expression via the \"isoformRepExpression\" argument...')}
+    }
+    # isoformRepExpression
+    
+  }
+  
+  
+  
+  
+  
+  ### Run SVA
+  if(TRUE) {
+    if (!quiet) { message('Step 5 of 10: Testing for unwanted effects...') }
+    
+    ### Ensure there are enougth samples to run SVA
+    enougthSamples <- min(table(designMatrix$condition)) >= 2
+    
+    if( ! enougthSamples ) {
+      if (!quiet) { message('    Data was not corrected for unwanted effects since there are to few samples') }
+    }
+    if(   enougthSamples ) {
+      
+      ### Massage
+      isoformRepExpressionLog <- isoformRepExpression
+      rownames(isoformRepExpressionLog) <- isoformRepExpressionLog$isoform_id
+      isoformRepExpressionLog$isoform_id <- NULL
+      isoformRepExpressionLog <- log2(isoformRepExpressionLog + 1)
+      
+      ### Filter on expression
+      smallestGroup <- min(table(designMatrix$condition))
+      if(smallestGroup > 10) {
+        smallestGroup <- smallestGroup * 0.7
+      }
+      minSamples <- max(c(
+        2,
+        smallestGroup
+      ))
+      
+      isoformRepExpressionLogFilt <- isoformRepExpressionLog[which(
+        rowSums( isoformRepExpressionLog > log2(1) ) >= minSamples
+      ),]
+      
+      ### Make model matrix (which also take additional factors into account)
+      if(TRUE) {
+        localDesign <- designMatrix
+        
+        ### Convert group of interest to factors
+        localDesign$condition <- factor(
+          localDesign$condition,
+          levels=unique(localDesign$condition)
+        )
+        
+        localFormula <- '~ 0 + condition'
+        
+        
+        ### Check co-founders for group vs continous variables and add to fomula
+        if( ncol(localDesign) > 2 ) {
+          for(i in 3:ncol(localDesign) ) { # i <- 4
+            if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+              if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
+                localDesign[,i] <- factor(localDesign[,i])
+              }
+            } else {
+              localDesign[,i] <- factor(localDesign[,i])
+            }
+          }
+          
+          ### Make formula for model
+          localFormula <- paste(
+            localFormula,
+            '+',
+            paste(
+              colnames(localDesign)[3:ncol(localDesign)],
+              collapse = ' + '
+            ),
+            sep=' '
+          )
+          
+          
+        }
+        
+        
+        localFormula <- as.formula(localFormula)
+        
+        ### Make model
+        localModel <- model.matrix(localFormula, data = localDesign)
+        indexToModify <- 1:length(unique( localDesign$condition ))
+        colnames(localModel)[indexToModify] <- gsub(
+          pattern =  '^condition',
+          replacement =  '',
+          x =  colnames(localModel)[indexToModify]
+        )
+        
+        ### Test model
+        if( ! limma::is.fullrank(localModel) ) {
+          stop('The design matrix suggested by the "designMatrix" is not full rank and hence cannot be analyzed.')
+        }
+        
+      }
+      # localModel
+      
+      ### Estimate SVAs
+      nSv = sva::num.sv(
+        dat = isoformRepExpressionLogFilt,
+        mod = localModel,
+      )
+      svaAdded <- FALSE
+      
+      
+      ### Test if to may SVAs
+      if(TRUE) {
+        
+        nSvaCutoff <- min(c(
+          10,
+          nrow(designMatrix) * 0.5
+        ))
+        
+        skipSvas <- nSv > nSvaCutoff
+        
+        if(skipSvas) {
+          nSv <- 0
+        }
+      }
+      
+      ### Run SVA if necessary
+      if( nSv > 0 &   detectUnwantedEffects ) {
+        ### Run SVA
+        tmp <- capture.output(
+          localSv <- tryCatch({
+            sva::sva(
+              dat = as.matrix(isoformRepExpressionLogFilt),
+              mod = localModel,
+              n.sv = nSv
+            )$sv
+          }, error = {
+            function(x) {
+              NULL
+            }
+          })
+        )
+        
+        ### Test SVs
+        if( ! is.null(localSv) ) {
+          ### Test for just diagnoal
+          notDiagonal <- which( apply(
+            localSv,
+            MARGIN = 2,
+            function(x) {
+              sum( x != 1 ) > 1 & sum( x != 0 ) > 1
+            }
+          ) )
+          
+          ### Filter for correlation
+          notToHighCor <- which( apply(
+            localSv,
+            MARGIN = 2,
+            function(x) {
+              abs(cor(
+                x,
+                as.integer(as.factor(designMatrix$condition))
+              )) < 0.8
+            }
+          ) )
+          
+          ## Subset
+          okSvs <- intersect(notDiagonal, notToHighCor)
+        }
+        if(   is.null(localSv) ) {
+          okSvs <- integer()
+        }
+        
+        
+        ### Add to design
+        if( length(okSvs) > 0 ) {
+          
+          ### Subset
+          localSv <- localSv[,okSvs,drop=FALSE]
+          colnames(localSv) <- paste0(
+            'sv', 1:ncol(localSv)
+          )
+          
+          ### Add SVs
+          designMatrix <- cbind(
+            designMatrix,
+            localSv
+          )
+          
+          svaAdded <- TRUE
+        }
+      }
+      if( nSv > 0 & ! detectUnwantedEffects ) {
+        if (!quiet) { message('    Skipped due to \"detectUnwantedEffects=FALSE\". ') }
+        
+        warning(
+          paste(
+            '    We detected', nSv, 'batch/covariates in your data.',
+            '\n    These will not be corrected in any downstream analysis due to \"detectUnwantedEffects=FALSE\". ',
+            '\n    Unless you REALLY know what you are doing we recomend setting \"detectUnwantedEffects=TRUE\"'
+          )
+        )
+      }
+      
+      ### Send messages
+      if( ! skipSvas ) {
+        if(   svaAdded ) {
+          if (!quiet) { message(paste('    Added', length(okSvs), 'batch/covariates to the design matrix')) }
+        }
+        if( ! svaAdded ) {
+          if( exists('localSv' )) {
+            if( is.null(localSv) ) {
+              if (!quiet) { message(c(
+                '    \n    SVA analysis failed. No unwanted effects were added.'
+              )) }
+              
+              warning(paste0(
+                '\n',
+                'There were estimated unwanted effects in your dataset but the automatic sva run failed.',
+                '\n    We highly reccomend you run sva yourself, add the nessesary surrogate variables',
+                '\n    as extra columns in the \"designMatrix\" and re-run this function',
+                '\n'
+              ))
+            } else {
+              if (!quiet) { message('    No unwanted effects added') }
+            }
+          } else {
+            if (!quiet) { message('    No unwanted effects added') }
+          }
+        }
+      }
+      if(   skipSvas ) {
+        if( ! svaAdded ) {
+          if (!quiet) { message('    Data was not corrected for unwanted effects') }
+        }
+        
+        warning(paste0(
+          '\n',
+          'We found MANY unwanted effects in your dataset!',
+          '\nTo many for IsoformSwitchAnalyzeR to be trusted with the correction.',
+          '\nWe therefore highly reccomend you run sva yourself and add',
+          '\nthe nessesary surrogate variables as extra columns in the \"designMatrix\"',
+          '\n'
+        ))
+      }
+      
+    }
+    
+    
+    
+  }
+  
+  ### Batch correct if necessary
+  if(TRUE) {
+    if (!quiet) { message('Step 6 of 10: Batch correcting expression estimates...') }
+    
+    batchCorrectionNeeded <- ncol(designMatrix) >= 3 & enougthSamples
+    
+    if(   batchCorrectionNeeded ) {
+      ### Make new model matrix (which also take SVs into account)
+      if(TRUE) {
+        localDesign <- designMatrix
+        
+        ### Convert group of interest to factors
+        localDesign$condition <- factor(localDesign$condition, levels=unique(localDesign$condition))
+        
+        ### Check co-founders for group vs continous variables
+        if( ncol(localDesign) > 2 ) {
+          for(i in 3:ncol(localDesign) ) { # i <- 4
+            if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+              if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
+                localDesign[,i] <- factor(localDesign[,i])
+              }
+            } else {
+              localDesign[,i] <- factor(localDesign[,i])
+            }
+          }
+        }
+        
+        ### Make formula for model
+        localFormula <- paste(
+          '~ 0 + condition',
+          '+',
+          paste(
+            colnames(localDesign)[3:ncol(localDesign)],
+            collapse = ' + '
+          ),
+          sep=' '
+        )
+        
+        localFormula <- as.formula(localFormula)
+        
+        ### Make model
+        localModel <- model.matrix(localFormula, data = localDesign)
+        indexToModify <- 1:length(unique( localDesign$condition ))
+        colnames(localModel)[indexToModify] <- gsub(
+          pattern =  '^condition',
+          replacement =  '',
+          x =  colnames(localModel)[indexToModify]
+        )
+      }
+      
+      ### Batch correct expression matrix
+      suppressWarnings(
+        isoRepBatch <- as.data.frame( limma::removeBatchEffect(
+          x = isoformRepExpressionLog,
+          design     = localModel[,which(   colnames(localModel) %in% localDesign$condition), drop=FALSE],
+          covariates = localModel[,which( ! colnames(localModel) %in% localDesign$condition), drop=FALSE],
+          method='robust'
+        ))
+      )
+      
+      ### Overwrite expression
+      isoformRepExpression <- 2^isoRepBatch - 1
+      isoformRepExpression[which( isoformRepExpression < 0, arr.ind = TRUE)] <- 0
+      
+      ### Massage back
+      isoformRepExpression$isoform_id <- rownames(isoformRepExpression)
+      rownames(isoformRepExpression) <- NULL
+      
+      isoformRepExpression <- isoformRepExpression[,c(
+        which(colnames(isoformRepExpression) == 'isoform_id'),
+        which(colnames(isoformRepExpression) != 'isoform_id')
+      )]
+    }
+    if( ! batchCorrectionNeeded ) {
+      if (!quiet) { message('    Skipped as no batch effects were found or annoated...')}
+    }
+  }
+  
+  
+  
+  ### Calculate gene and IF
+  if (!quiet) {
+    message('Step 7 of 10: Extracting data from each condition...')
+  }
+  if(TRUE) {
+    ### Sum to gene level gene expression - updated
+    if(TRUE) {
+      ### add gene_id
+      isoformRepExpression$gene_id <-
+        isoformAnnotation$gene_id[match(isoformRepExpression$isoform_id,
+                                        isoformAnnotation$isoform_id)]
+      
+      ### Sum to gene level
+      geneRepExpression <- isoformToGeneExp(
+        isoformRepExpression =  isoformRepExpression,
+        quiet = TRUE
+      )
+      
+      ### Remove gene id
+      isoformRepExpression$gene_id <- NULL
+    }
+    
+    ### Calculate IF rep matrix
+    if(TRUE) {
+      isoformRepIF <- isoformToIsoformFraction(
+        isoformRepExpression=isoformRepExpression,
+        geneRepExpression=geneRepExpression,
+        isoformGeneAnnotation=isoformAnnotation,
+        quiet = TRUE
+      )
+    }
+  }
+  
+  
+  
+  ### in each condition analyzed get mean and standard error of gene and isoforms
+  if (TRUE) {
+    conditionList <-
+      split(designMatrix$sampleID, f = designMatrix$condition)
+    conditionSummary <-
+      plyr::llply(
+        .data = conditionList,
+        .progress = progressBar,
+        .fun = function(sampleVec) {
+          # sampleVec <- conditionList[[1]]
+          ### Isoform and IF
+          isoIndex <-
+            which(colnames(isoformRepExpression) %in% sampleVec)
+          
+          isoIndex2 <-
+            which(colnames(isoformRepIF) %in% sampleVec)
+          
+          isoSummary <- data.frame(
+            isoform_id       = isoformRepExpression$isoform_id,
+            iso_overall_mean = rowMeans(isoformRepExpression[,designMatrix$sampleID, drop=FALSE]),
+            iso_value        = rowMeans(isoformRepExpression[, isoIndex, drop=FALSE]),
+            iso_std          = apply(   isoformRepExpression[, isoIndex, drop=FALSE], 1, sd),
+            IF_overall       = rowMeans(isoformRepIF[,designMatrix$sampleID, drop=FALSE], na.rm = TRUE),
+            IF               = rowMeans(isoformRepIF[, isoIndex2, drop=FALSE], na.rm = TRUE),
+            stringsAsFactors = FALSE
+          )
+          isoSummary$iso_stderr <-
+            isoSummary$iso_std / sqrt(length(sampleVec))
+          isoSummary$iso_std <- NULL
+          
+          ### Gene
+          geneIndex <-
+            which(colnames(geneRepExpression) %in% sampleVec)
+          
+          geneSummary <- data.frame(
+            gene_id = geneRepExpression$gene_id,
+            gene_overall_mean = rowMeans(geneRepExpression[,designMatrix$sampleID, drop=FALSE]),
+            gene_value = rowMeans(geneRepExpression[, geneIndex, drop=FALSE]),
+            gene_std = apply(geneRepExpression[, geneIndex, drop=FALSE], 1, sd),
+            stringsAsFactors = FALSE
+          )
+          geneSummary$gene_stderr <-
+            geneSummary$gene_std / sqrt(length(sampleVec))
+          geneSummary$gene_std <- NULL
+          
+          ### Combine
+          combinedData <-
+            dplyr::inner_join(isoformAnnotation, geneSummary, by = 'gene_id')
+          combinedData <-
+            dplyr::inner_join(combinedData, isoSummary, by = 'isoform_id')
+          ### return result
+          return(combinedData)
+        }
+      )
+  }
+  
+  ### Use comparisonsToMake to create the isoform comparisons
+  if (!quiet) {
+    message('Step 8 of 10: Making comparisons...')
+  }
+  if (TRUE) {
+    isoAnnot <-
+      plyr::ddply(
+        .data = comparisonsToMake,
+        .variables = c('condition_1', 'condition_2'),
+        .drop = TRUE,
+        .progress = progressBar,
+        .fun = function(aDF) { # aDF <- comparisonsToMake[1,]
+          ### Extract data
+          cond1data <- conditionSummary[[aDF$condition_1]]
+          cond2data <- conditionSummary[[aDF$condition_2]]
+          
+          ### modify colnames in condition 1
+          matchIndex <-
+            match(
+              c(
+                'gene_value',
+                'gene_stderr',
+                'iso_value',
+                'iso_stderr'
+              ),
+              colnames(cond1data)
+            )
+          colnames(cond1data)[matchIndex] <-
+            paste(colnames(cond1data)[matchIndex], '_1', sep = '')
+          colnames(cond1data)[which( colnames(cond1data) == 'IF')] <- 'IF1'
+          
+          ### modify colnames in condition 2
+          matchIndex <-
+            match(
+              c(
+                'gene_value',
+                'gene_stderr',
+                'iso_value',
+                'iso_stderr'
+              ),
+              colnames(cond2data)
+            )
+          colnames(cond2data)[matchIndex] <-
+            paste(colnames(cond2data)[matchIndex], '_2', sep = '')
+          colnames(cond2data)[which( colnames(cond2data) == 'IF')] <- 'IF2'
+          
+          combinedIso <- dplyr::inner_join(
+            cond1data,
+            cond2data[, c(
+              'isoform_id',
+              'gene_value_2',
+              'gene_stderr_2',
+              'iso_value_2',
+              'iso_stderr_2',
+              'IF2'
+            )],
+            by = 'isoform_id'
+          )
+          
+          ### Add comparison data
+          combinedIso$condition_1 <- aDF$condition_1
+          combinedIso$condition_2 <- aDF$condition_2
+          return(combinedIso)
+        }
+      )
+    
+    ### Add comparison data
+    # Log2FC
+    ps <- foldChangePseudoCount
+    
+    isoAnnot$gene_log2_fold_change <-
+      log2((isoAnnot$gene_value_2 + ps) / (isoAnnot$gene_value_1 + ps))
+    isoAnnot$iso_log2_fold_change  <-
+      log2((isoAnnot$iso_value_2  + ps) / (isoAnnot$iso_value_1  + ps))
+    
+    # qValues
+    isoAnnot$gene_q_value <- NA
+    isoAnnot$iso_q_value  <- NA
+    
+    # Isoform fraction values
+    isoAnnot$dIF <- isoAnnot$IF2 - isoAnnot$IF1
+    
+    # Swich values
+    isoAnnot$isoform_switch_q_value <- NA
+    isoAnnot$gene_switch_q_value    <- NA
+    
+    ### Sort
+    matchVector <-
+      c(
+        'isoform_id',
+        'gene_id',
+        'condition_1',
+        'condition_2',
+        'gene_name',
+        'class_code',
+        'gene_biotype',
+        'iso_biotype',
+        'gene_overall_mean',
+        'gene_value_1',
+        'gene_value_2',
+        'gene_stderr_1',
+        'gene_stderr_2',
+        'gene_log2_fold_change',
+        'gene_q_value',
+        'iso_overall_mean',
+        'iso_value_1',
+        'iso_value_2',
+        'iso_stderr_1',
+        'iso_stderr_2',
+        'iso_log2_fold_change',
+        'iso_q_value',
+        'IF_overall',
+        'IF1',
+        'IF2',
+        'dIF',
+        'isoform_switch_q_value',
+        'gene_switch_q_value'
+      )
+    matchVector <-
+      na.omit(match(matchVector, colnames(isoAnnot)))
+    
+    isoAnnot <- isoAnnot[, matchVector]
+  }
+  
+  
+  
+  ### Create the swichList
+  if (!quiet) {
+    message('Step 9 of 10: Making switchAnalyzeRlist object...')
+  }
+  if (TRUE) {
+    if( countsSuppled ) {
+      
+      isoformCountMatrix <- isoformCountMatrix[colnames(isoformRepExpression)]
+      
+      ### Create switchList
+      dfSwichList <- createSwitchAnalyzeRlist(
+        isoformFeatures = isoAnnot,
+        exons = isoformExonStructure,
+        designMatrix = designMatrix,
+        isoformCountMatrix = isoformCountMatrix,     # nessesary for drimseq
+        isoformRepExpression = isoformRepExpression, # nessesary for limma
+        sourceId = 'data.frames'
+      )
+    } else {
+      ### Create switchList
+      dfSwichList <- createSwitchAnalyzeRlist(
+        isoformFeatures = isoAnnot,
+        exons = isoformExonStructure,
+        designMatrix = designMatrix,
+        isoformRepExpression = isoformRepExpression, # nessesary for limma
+        sourceId = 'data.frames'
+      )
+    }
+    
+    ### Add orf if extracted
+    if (addAnnotatedORFs & gtfImported) {
+      dfSwichList$isoformFeatures$PTC <-
+        isoORF$PTC[match(dfSwichList$isoformFeatures$isoform_id,
+                         isoORF$isoform_id)]
+      
+      isoORF <-
+        isoORF[which(isoORF$isoform_id %in%
+                       isoformRepExpression$isoform_id), ]
+      
+      dfSwichList$orfAnalysis <- isoORF
+    }
+    
+    ### Add IF matrix
+    dfSwichList$isoformRepIF <- isoformRepIF[,c('isoform_id',designMatrix$sampleID)]
+    
+    ### Add nucleotide sequence
+    if(addIsoformNt) {
+      dfSwichList$ntSequence <- isoformNtSeq[which(
+        names(isoformNtSeq) %in% dfSwichList$isoformFeatures$isoform_id
+      )]
+      
+    }
+    
+  }
+  
+  ### Estimate DTU
+  if (!quiet) {
+    message('Step 10 of 10: Guestimating differential usage...')
+  }
+  if(estimateDifferentialGeneRange & !quiet) {
+    localEstimate <- estimateDifferentialRange(
+      switchAnalyzeRlist = dfSwichList
+    )
+    if( !is.null(localEstimate)) {
+      message('    The GUESSTIMATED number of genes with differential isoform usage are:')
+      print(localEstimate)
+    } else {
+      message('    The estimation of DTU failed. Please proceed with the normal workflow.')
+    }
+  } else {
     if (!quiet) {
-        message('Done\n')
+      message('    Skipping due to the \"estimateDifferentialGeneRange\" argument...')
     }
-    return(dfSwichList)
+  }
+  
+  
+  
+  
+  ### Return switchList
+  if (!quiet) {
+    message('Done\n')
+  }
+  return(dfSwichList)
 }
 
 ### Supporting tximeta
@@ -5656,9 +5811,10 @@ importSalmonData <- function(
 ### Prefilter
 preFilter <- function(
     switchAnalyzeRlist,
-    geneExpressionCutoff = 1,
-    isoformExpressionCutoff = 0,
-    IFcutoff = 0.01,
+    isoCount = 10,
+    min.Count.prop = 0.7,
+    IFcutoff = 0.1,
+    min.IF.prop = 0.5,
     acceptedGeneBiotype = NULL,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
@@ -5670,310 +5826,536 @@ preFilter <- function(
     dIFcutoff = 0.1,
     quiet = FALSE
 ) {
-    ### Test input
-    if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
-            stop(paste(
-                'The object supplied to \'switchAnalyzeRlist\'',
-                'must be a \'switchAnalyzeRlist\''
-            ))
-        }
-
-        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
-            stop(
-                paste(
-                    'The switchAnalyzeRlist is made from pre-defined isoform switches.',
-                    'All filtering should be done before you used the approach',
-                    'that gave rise to the isoform pairs you have pre-defined',
-                    sep = ' '
-                )
-            )
-        }
-
-        if( switchAnalyzeRlist$sourceId == 'gtf') {
-            warning(
-                paste(
-                    'The switchAnalyzeRlist seems to be created from a gtf file',
-                    'wereby expression is probably not annotated.',
-                    'Running preFilter() might not be what you want.',
-                    '\nIf expression info was manually added afterwards',
-                    'please ignore this warning.',
-                    sep=' '
-                )
-            )
-        }
-
-        if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches') {
-            if( all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall)) ) {
-                stop('The switchAnalyzeRlist was created without expression data whereby it cannot be filtered')
-            }
-        }
-
-
-        if (!is.null(isoformExpressionCutoff)) {
-            if (!is.numeric(isoformExpressionCutoff)) {
-                stop('The isoformExpressionCutoff argument must be a numeric')
-            }
-        }
-        if (!is.null(geneExpressionCutoff)) {
-            if (!is.numeric(geneExpressionCutoff)) {
-                stop('The geneExpressionCutoff argument must be a numeric')
-            }
-        }
-        if (!is.null(IFcutoff)) {
-            if (!is.numeric(IFcutoff)) {
-                stop('The IFcutoff argument must be a numeric')
-            }
-        }
-
-        if (!is.null(acceptedIsoformClassCode)) {
-            if (!'class_code' %in%
-                colnames(switchAnalyzeRlist$isoformFeatures)) {
-                stop(paste(
-                    'The filter on class codes can only be used if',
-                    'the switchAnalyzeRlist was generated from cufflinks data'
-                ))
-            }
-        }
-
-        if( !is.null(acceptedGeneBiotype) & 'gene_biotype' %in% colnames(switchAnalyzeRlist$isoformFeatures) ) {
-            okBiotypes <- unique(switchAnalyzeRlist$isoformFeatures$gene_biotype)
-
-            if( !all(acceptedGeneBiotype %in% okBiotypes) ) {
-                notAnnot <- setdff(acceptedGeneBiotype, okBiotypes)
-
-                warning(
-                    paste(
-                        'Some of the supplied biotypes are not found in the isoforms supplied and will be ignored\n',
-                        'These are:', paste(notAnnot, collapse = ', ')
-                    )
-                )
-            }
-        }
-
-        if (!is.logical(removeSingleIsoformGenes)) {
-            stop('The removeSingleIsoformGenes must be either TRUE or FALSE')
-        }
-
-        if (reduceToSwitchingGenes) {
-            hasTest <- any(!is.na(
-                c(
-                    switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value,
-                    switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
-                )
-            ))
-            if( ! hasTest) {
-                stop(
-                    paste(
-                        'The switchAnalyzeRlist does not contain the result',
-                        'of a switch analysis.\nPlease turn off','
+  ### Test input
+  if (TRUE) {
+    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+      stop(paste(
+        'The object supplied to \'switchAnalyzeRlist\'',
+        'must be a \'switchAnalyzeRlist\''
+      ))
+    }
+    
+    if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
+      stop(
+        paste(
+          'The switchAnalyzeRlist is made from pre-defined isoform switches.',
+          'All filtering should be done before you used the approach',
+          'that gave rise to the isoform pairs you have pre-defined',
+          sep = ' '
+        )
+      )
+    }
+    
+    if( switchAnalyzeRlist$sourceId == 'gtf') {
+      warning(
+        paste(
+          'The switchAnalyzeRlist seems to be created from a gtf file',
+          'wereby expression is probably not annotated.',
+          'Running preFilter() might not be what you want.',
+          '\nIf expression info was manually added afterwards',
+          'please ignore this warning.',
+          sep=' '
+        )
+      )
+    }
+    
+    if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches') {
+      if( all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall)) ) {
+        stop('The switchAnalyzeRlist was created without expression data whereby it cannot be filtered')
+      }
+    }
+    
+    
+    if (!is.null(isoCount)) {
+      if (!is.numeric(isoCount)) {
+        stop('The isoCount argument must be a numeric')
+      }
+    }
+    if (!is.null(min.Count.prop)) {
+      if (!is.numeric(min.Count.prop)) {
+        stop('The min.Count.prop argument must be a numeric')
+      }
+    }
+    if (!is.null(IFcutoff)) {
+      if (!is.numeric(IFcutoff)) {
+        stop('The IFcutoff argument must be a numeric')
+      }
+    }
+    
+    if (!is.null(min.IF.prop)) {
+      if (!is.numeric(min.IF.prop)) {
+        stop('The min.IF.prop argument must be a numeric')
+      }
+    }
+    
+    if (!is.null(acceptedIsoformClassCode)) {
+      if (!'class_code' %in%
+          colnames(switchAnalyzeRlist$isoformFeatures)) {
+        stop(paste(
+          'The filter on class codes can only be used if',
+          'the switchAnalyzeRlist was generated from cufflinks data'
+        ))
+      }
+    }
+    
+    if( !is.null(acceptedGeneBiotype) & 'gene_biotype' %in% colnames(switchAnalyzeRlist$isoformFeatures) ) {
+      okBiotypes <- unique(switchAnalyzeRlist$isoformFeatures$gene_biotype)
+      
+      if( !all(acceptedGeneBiotype %in% okBiotypes) ) {
+        notAnnot <- setdiff(acceptedGeneBiotype, okBiotypes)
+        
+        warning(
+          paste(
+            'Some of the supplied biotypes are not found in the isoforms supplied and will be ignored\n',
+            'These are:', paste(notAnnot, collapse = ', ')
+          )
+        )
+      }
+    }
+    
+    if (!is.logical(removeSingleIsoformGenes)) {
+      stop('The removeSingleIsoformGenes must be either TRUE or FALSE')
+    }
+    
+    if (reduceToSwitchingGenes) {
+      hasTest <- any(!is.na(
+        c(
+          switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value,
+          switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
+        )
+      ))
+      if( ! hasTest) {
+        stop(
+          paste(
+            'The switchAnalyzeRlist does not contain the result',
+            'of a switch analysis.\nPlease turn off','
                         the "reduceToSwitchingGenes" argument try again.',
-                        sep=' '
-                    )
-                )
-            }
-
-
-            if (alpha < 0 |
-                alpha > 1) {
-                stop('The alpha parameter must be between 0 and 1 ([0,1]).')
-            }
-            if (alpha > 0.05) {
-                warning(paste(
-                    'Most journals and scientists consider an alpha larger',
-                    'than 0.05 untrustworthy. We therefore recommend using',
-                    'alpha values smaller than or queal to 0.05'
-                ))
-            }
-        }
-    }
-
-    ### Find which isoforms to keep
-    if (TRUE) {
-        ### Extract data to filter on
-        if(TRUE) {
-            columnsToExtraxt <-
-                c(
-                    'iso_ref',
-                    'gene_ref',
-                    'isoform_id',
-                    'gene_id',
-                    'gene_biotype',
-                    'class_code',
-                    'gene_value_1',
-                    'gene_value_2',
-                    'iso_overall_mean',
-                    'iso_value_1',
-                    'iso_value_2',
-                    'IF_overall',
-                    'IF1',
-                    'IF2',
-                    'dIF',
-                    'gene_switch_q_value',
-                    'isoform_switch_q_value'
-                )
-            columnsToExtraxt <-
-                na.omit(match(
-                    columnsToExtraxt,
-                    colnames(switchAnalyzeRlist$isoformFeature)
-                ))
-            #localData <- unique( switchAnalyzeRlist$isoformFeature[, columnsToExtraxt ] ) # no need
-            localData <-
-                switchAnalyzeRlist$isoformFeature[, columnsToExtraxt]
-
-            # Count features
-            transcriptCount <- length(unique(localData$isoform_id))
-        }
-
-        ### Reduce to genes with switches
-        if (reduceToSwitchingGenes ) {
-            if( reduceFurtherToGenesWithConsequencePotential ) {
-                tmp <- extractSwitchPairs(
-                    switchAnalyzeRlist,
-                    alpha = alpha,
-                    dIFcutoff = dIFcutoff,
-                    onlySigIsoforms = onlySigIsoforms
-                )
-                deGenes <- unique(tmp$gene_ref)
-
-            } else {
-                isoResTest <-
-                    any(!is.na(
-                        localData$isoform_switch_q_value
-                    ))
-                if (isoResTest) {
-                    deGenes <- localData$gene_ref[which(
-                        localData$isoform_switch_q_value < alpha &
-                            abs(localData$dIF) > dIFcutoff
-                    )]
-                } else {
-                    deGenes <- localData$gene_ref[which(
-                        localData$gene_switch_q_value < alpha &
-                            abs(localData$dIF) > dIFcutoff
-                    )]
-                }
-            }
-
-            localData <- localData[which(
-                localData$gene_ref %in% deGenes
-            ),]
-
-            if (!nrow(localData)) {
-                stop('No genes were left after filtering for switching genes')
-            }
-
-
-        }
-
-
-
-        if (!is.null(geneExpressionCutoff)) {
-            localData <- localData[which(
-                localData$gene_value_1 > geneExpressionCutoff &
-                localData$gene_value_2 > geneExpressionCutoff
-            ), ]
-            if (!nrow(localData)) {
-                stop('No genes were left after filtering for gene expression')
-            }
-        }
-
-        if (!is.null(isoformExpressionCutoff)) {
-            localData <- localData[which(
-                #localData$iso_value_1 > isoformExpressionCutoff |
-                #localData$iso_value_2 > isoformExpressionCutoff
-                localData$iso_overall_mean > isoformExpressionCutoff
-            ), ]
-            if (!nrow(localData)) {
-                stop('No isoforms were left after filtering for isoform expression')
-            }
-        }
-
-        if (!is.null(IFcutoff)) {
-            localData <- localData[which(
-                #localData$IF1 > IFcutoff |
-                #localData$IF2 > IFcutoff
-                localData$IF_overall > IFcutoff
-            ), ]
-            if (!nrow(localData)) {
-                stop('No isoforms were left after filtering for isoform fraction (IF) values')
-            }
-        }
-
-        if (!is.null(acceptedGeneBiotype)) {
-            if( 'gene_biotype' %in% colnames(localData) ) {
-                localData <- localData[which(localData$gene_biotype %in% acceptedGeneBiotype), ]
-
-                if (!nrow(localData)) {
-                    stop('No genes were left after filtering for acceptedGeneBiotype.')
-                }
-            } else {
-                warning('Gene biotypes were not annotated so the \'acceptedGeneBiotype\' argument was ignored.')
-            }
-
-        }
-
-        if (!is.null(acceptedIsoformClassCode)) {
-            localData <- localData[which(localData$class_code %in% acceptedIsoformClassCode), ]
-
-            if (!nrow(localData)) {
-                stop('No genes were left after filtering for isoform class codes')
-            }
-        }
-
-        if (removeSingleIsoformGenes) {
-            transcriptsPrGene <-
-                split(localData$iso_ref, f = localData$gene_ref)
-            transcriptsPrGene <- lapply(transcriptsPrGene, unique)
-
-            genesToKeep <-
-                names(transcriptsPrGene)[which(sapply(transcriptsPrGene, function(x)
-                    length(x) > 1))]
-
-            if (!length(genesToKeep)) {
-                stop('No genes were left after filtering for mutlipe transcrip genes')
-            }
-
-            localData <-
-                localData[which(localData$gene_ref %in% genesToKeep),]
-        }
-
-    }
-
-    ### Do filtering
-    if (keepIsoformInAllConditions) {
-        switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
-            switchAnalyzeRlist,
-            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
-                localData$isoform_id
+            sep=' '
+          )
         )
-    } else {
-        switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
-            switchAnalyzeRlist,
-            switchAnalyzeRlist$isoformFeatures$iso_ref %in% localData$iso_ref
-        )
+      }
+      
+      
+      if (alpha < 0 |
+          alpha > 1) {
+        stop('The alpha parameter must be between 0 and 1 ([0,1]).')
+      }
+      if (alpha > 0.05) {
+        warning(paste(
+          'Most journals and scientists consider an alpha larger',
+          'than 0.05 untrustworthy. We therefore recommend using',
+          'alpha values smaller than or queal to 0.05'
+        ))
+      }
     }
-
-    ### Repport filtering
-    transcriptsLeft <- length(unique(localData$isoform_id))
-    transcriptsRemoved <- transcriptCount - transcriptsLeft
-    percentRemoved <-
-        round(transcriptsRemoved / transcriptCount, digits = 4) * 100
-
-    if (!quiet) {
-        message(
-            paste(
-                'The filtering removed ',
-                transcriptsRemoved,
-                ' ( ',
-                percentRemoved,
-                '% of ) transcripts. There is now ',
-                transcriptsLeft,
-                ' isoforms left',
-                sep = ''
-            )
+  }
+  
+  ### Find which isoforms to keep
+  if (TRUE) {
+    ### Extract data to filter on
+    if(TRUE) {
+      columnsToExtraxt <-
+        c(
+          'iso_ref',
+          'gene_ref',
+          'isoform_id',
+          'gene_id',
+          'gene_biotype',
+          'condition_1',
+          'condition_2',
+          'class_code',
+          'gene_value_1',
+          'gene_value_2',
+          'iso_overall_mean',
+          'iso_value_1',
+          'iso_value_2',
+          'IF_overall',
+          'IF1',
+          'IF2',
+          'dIF',
+          'gene_switch_q_value',
+          'isoform_switch_q_value'
         )
+      columnsToExtraxt <-
+        na.omit(match(
+          columnsToExtraxt,
+          colnames(switchAnalyzeRlist$isoformFeature)
+        ))
+      #localData <- unique( switchAnalyzeRlist$isoformFeature[, columnsToExtraxt ] ) # no need
+      isoformCountData <- switchAnalyzeRlist$isoformCountMatrix %>%
+        rename_with(~ paste0("Count_", .), -isoform_id)
+      IFData <- switchAnalyzeRlist$isoformRepIF %>%
+        #rownames_to_column(var = "isoform_id") %>%
+        rename_with(~ paste0("IF_", .), -isoform_id)
+      localData <-
+        switchAnalyzeRlist$isoformFeature[, columnsToExtraxt]
+      localData <- localData %>%
+        inner_join(isoformCountData, by = "isoform_id") %>%
+        inner_join(IFData, by = "isoform_id")
+      
+      # Count features
+      transcriptCount <- length(unique(localData$isoform_id))
     }
+    
+    ### Reduce to genes with switches
+    if (reduceToSwitchingGenes ) {
+      if( reduceFurtherToGenesWithConsequencePotential ) {
+        tmp <- extractSwitchPairs(
+          switchAnalyzeRlist,
+          alpha = alpha,
+          dIFcutoff = dIFcutoff,
+          onlySigIsoforms = onlySigIsoforms
+        )
+        deGenes <- unique(tmp$gene_ref)
+        
+      } else {
+        isoResTest <-
+          any(!is.na(
+            localData$isoform_switch_q_value
+          ))
+        if (isoResTest) {
+          deGenes <- localData$gene_ref[which(
+            localData$isoform_switch_q_value < alpha &
+              abs(localData$dIF) > dIFcutoff
+          )]
+        } else {
+          deGenes <- localData$gene_ref[which(
+            localData$gene_switch_q_value < alpha &
+              abs(localData$dIF) > dIFcutoff
+          )]
+        }
+      }
+      
+      localData <- localData[which(
+        localData$gene_ref %in% deGenes
+      ),]
+      
+      if (!nrow(localData)) {
+        stop('No genes were left after filtering for switching genes')
+      }
+      
+      
+    }
+    
+    ### Select distinct pairs of conditions as comparisons
+    comparisons <- localData %>% dplyr::select(condition_1, condition_2) %>% distinct()
+    
+    ### Function to filter based on the cutoff and min proportion 
+    filter_comparison <- function(data, comparison, cutoff, min.prop, designMatrix,prefix = "") {
+      
+      sampleIDs <- designMatrix %>%
+        filter(condition %in% c(comparison$condition_1, comparison$condition_2)) %>%
+        pull(sampleID)
+      
+      filter_logic <- function(row) {
+        sample_values <- row[match(paste0(prefix, sampleIDs), names(row))]
+        count_total <- sum(sample_values > cutoff, na.rm = TRUE)
+        total_samples <- length(sampleIDs)
+        count_total >= 3 & count_total >= min.prop * total_samples
+      }
+      
+      filteredData <- data %>%
+        filter(condition_1 == comparison$condition_1 & condition_2 == comparison$condition_2) %>%
+        rowwise() %>%
+        filter(filter_logic(across()))
+      return(filteredData)
+    }
+    
+    ### Filter within the comparisons to keep the isoforms appear in > min.Count.prop of samples with more than isoCount counts
+    if (!is.null(isoCount)) {
+      if (!is.null(min.Count.prop)){
+        localData <- comparisons %>%
+          rowwise() %>%
+          do(filter_comparison(localData, ., isoCount, min.Count.prop, switchAnalyzeRlist$designMatrix, prefix = "Count_")) %>%
+          ungroup()
+        if (!nrow(localData)) {
+          stop('No genes were left after filtering for gene expression')
+        }
+      }
+    }
+    
+    ### Filter within the comparisons to keep the isoforms appear in > min.IF.prop of samples with more than IFcutoff
+    if (!is.null(IFcutoff)) {
+      if (!is.null(min.IF.prop)){
+        localData <- comparisons %>%
+          rowwise() %>%
+          do(filter_comparison(localData, ., IFcutoff, min.IF.prop, switchAnalyzeRlist$designMatrix, prefix = "IF_")) %>%
+          ungroup()
+        if (!nrow(localData)) {
+          stop('No genes were left after filtering for gene expression')
+        }
+      }
+    }
+    
+    
+    if (!is.null(acceptedGeneBiotype)) {
+      if( 'gene_biotype' %in% colnames(localData) ) {
+        localData <- localData[which(localData$gene_biotype %in% acceptedGeneBiotype), ]
+        
+        if (!nrow(localData)) {
+          stop('No genes were left after filtering for acceptedGeneBiotype.')
+        }
+      } else {
+        warning('Gene biotypes were not annotated so the \'acceptedGeneBiotype\' argument was ignored.')
+      }
+      
+    }
+    
+    if (!is.null(acceptedIsoformClassCode)) {
+      localData <- localData[which(localData$class_code %in% acceptedIsoformClassCode), ]
+      
+      if (!nrow(localData)) {
+        stop('No genes were left after filtering for isoform class codes')
+      }
+    }
+    
+    if (removeSingleIsoformGenes) {
+      transcriptsPrGene <-
+        split(localData$iso_ref, f = localData$gene_ref)
+      transcriptsPrGene <- lapply(transcriptsPrGene, unique)
+      
+      genesToKeep <-
+        names(transcriptsPrGene)[which(sapply(transcriptsPrGene, function(x)
+          length(x) > 1))]
+      
+      if (!length(genesToKeep)) {
+        stop('No genes were left after filtering for mutlipe transcrip genes')
+      }
+      
+      localData <-
+        localData[which(localData$gene_ref %in% genesToKeep),]
+    }
+    
+  }
+  
+  ### Do filtering
+  if (keepIsoformInAllConditions) {
+    switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
+      switchAnalyzeRlist,
+      switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+        localData$isoform_id
+    )
+  } else {
+    switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
+      switchAnalyzeRlist,
+      switchAnalyzeRlist$isoformFeatures$iso_ref %in% localData$iso_ref
+    )
+  }
+  
+  ### Report filtering
+  transcriptsLeft <- length(unique(localData$isoform_id))
+  transcriptsRemoved <- transcriptCount - transcriptsLeft
+  percentRemoved <-
+    round(transcriptsRemoved / transcriptCount, digits = 4) * 100
+  
+  if (!quiet) {
+    message(
+      paste(
+        'The filtering removed ',
+        transcriptsRemoved,
+        ' ( ',
+        percentRemoved,
+        '% of ) transcripts. There is now ',
+        transcriptsLeft,
+        ' isoforms left',
+        sep = ''
+      )
+    )
+  }
+  
+  ### return result
+  return(switchAnalyzeRlist)
+}
 
-    ### return result
-    return(switchAnalyzeRlist)
+importPairedGSEA <- function(
+    # Core arguments (intermidiate and final output of pairedGSEA)
+  splicing_results,
+  diff_results,
+  pathToGTF,
+  condition_labels = c("B", "C"), # Default to "B" (baseline) and "C" (case)
+  
+  # importRdata() function relevant
+  detectUnwantedEffects = TRUE,
+  addAnnotatedORFs = TRUE,
+  onlyConsiderFullORF = FALSE,
+  removeNonConvensionalChr = FALSE,
+  ignoreAfterBar = TRUE,
+  ignoreAfterSpace = TRUE,
+  ignoreAfterPeriod = FALSE,
+  ignoreSurplusIsoforms = TRUE,
+  removeTECgenes = TRUE,
+  PTCDistance = 50,
+  foldChangePseudoCount = 0.01,
+  fixStringTieAnnotationProblem = TRUE,
+  fixStringTieViaOverlapInMultiGenes = TRUE,
+  fixStringTieMinOverlapSize = 50,
+  fixStringTieMinOverlapFrac = 0.2,
+  fixStringTieMinOverlapLog2RatioToContender = 0.65,
+  estimateDifferentialGeneRange = TRUE,
+  
+  # preFilter() function relevant
+  isoCount = 10,
+  min.Count.prop = 0.7,
+  IFcutoff = 0.1,
+  min.IF.prop = 0.5,
+  acceptedGeneBiotype = NULL,
+  acceptedIsoformClassCode = NULL,
+  removeSingleIsoformGenes = TRUE,
+  reduceToSwitchingGenes = FALSE,
+  reduceFurtherToGenesWithConsequencePotential = FALSE,
+  onlySigIsoforms = FALSE,
+  keepIsoformInAllConditions = FALSE,
+  alpha = 0.05,
+  dIFcutoff = 0.1,
+  
+  # Advanced arguments
+  showProgress = TRUE,
+  quiet = FALSE
+  
+) {
+  ### Step 1: Extract Count Matrix and Design Matrix
+  message("Extracting count matrix and design matrix from splicing_results...")
+  
+  # Extract count matrix from splicing_results
+  tryCatch({
+    count_matrix <- as.data.frame(splicing_results@listData$countData)
+    sample_data <- as.data.frame(splicing_results@sampleData)
+  }, error = function(e) {
+    stop(
+      paste0(
+        "The input splicing_results appears to be invalid. ",
+        "Please ensure that it is the transcript-level DGS splicing_reaults, which is the intermediate output of paired_diff() from pairedGSEA.\n"
+      )
+    )
+  })
+  ### count_matrix <- as.data.frame(splicing_results@listData$countData)
+  # colnames(count_matrix) <- gsub("^.*\\.", "", colnames(count_matrix)) # Ensure column names match sample IDs
+  count_matrix$isoform_id <- sapply(rownames(count_matrix), function(x) strsplit(x, ":")[[1]][2])
+  
+  # Extract design matrix from splicing_results
+  ### sample_data <- as.data.frame(splicing_results@sampleData)
+  design_matrix <- sample_data[, c("sample", "condition")]
+  colnames(design_matrix) <- c("sampleID", "condition") # Rename for compatibility
+  
+  # Validate custom condition labels
+  if (length(condition_labels) != 2) {
+    stop("Error: condition_labels must be a vector of length 2, e.g., c('Healthy', 'Lung_cancer').")
+  }
+  
+  # Replace "B" and "C" with user-specified condition labels
+  design_matrix$condition <- ifelse(
+    design_matrix$condition == "B", condition_labels[1],
+    ifelse(design_matrix$condition == "C", condition_labels[2], design_matrix$condition)
+  )
+  
+  ### Step 2: Apply `importRdata()` to Create Initial SwitchAnalyzeRlist
+  message("Creating SwitchAnalyzeRlist...")
+  switch_list <- importRdata(
+    isoformCountMatrix = count_matrix,
+    designMatrix = design_matrix,
+    isoformExonAnnoation = pathToGTF,
+    detectUnwantedEffects = detectUnwantedEffects,
+    addAnnotatedORFs = addAnnotatedORFs,
+    onlyConsiderFullORF = onlyConsiderFullORF,
+    removeNonConvensionalChr = removeNonConvensionalChr,
+    ignoreAfterBar = ignoreAfterBar,
+    ignoreAfterSpace = ignoreAfterSpace,
+    ignoreAfterPeriod = ignoreAfterPeriod,
+    ignoreSurplusIsoforms = ignoreSurplusIsoforms, # default to TRUE
+    removeTECgenes = removeTECgenes,
+    PTCDistance = PTCDistance,
+    foldChangePseudoCount = foldChangePseudoCount,
+    fixStringTieAnnotationProblem = fixStringTieAnnotationProblem,
+    fixStringTieViaOverlapInMultiGenes = fixStringTieViaOverlapInMultiGenes,
+    fixStringTieMinOverlapSize = fixStringTieMinOverlapSize,
+    fixStringTieMinOverlapFrac = fixStringTieMinOverlapFrac,
+    fixStringTieMinOverlapLog2RatioToContender = fixStringTieMinOverlapLog2RatioToContender,
+    estimateDifferentialGeneRange = estimateDifferentialGeneRange,
+    showProgress = showProgress,
+    quiet = quiet
+  )
+  
+  message("Integrating adjusted p-values from splicing_results...")
+  
+  # Extract isoform-level p-values (padj) from splicing_results
+  dexseq_results <- as.data.frame(splicing_results)
+  dexseq_results <- dexseq_results[!is.na(dexseq_results$padj), ] # Filter rows with valid p-values
+  
+  # Map DEXSeq results to `SwitchAnalyzeRlist`
+  switch_list$isoformFeatures$isoform_switch_q_value <- dexseq_results$padj[
+    match(switch_list$isoformFeatures$isoform_id, dexseq_results$featureID)
+  ]
+  
+  # Aggregate isoform-level p-values to gene-level p-values
+  gene_padj <- tapply(
+    dexseq_results$padj, dexseq_results$groupID,
+    function(x) min(x, na.rm = TRUE) # Gene-level p-value is the minimum adjusted p-value of its isoforms
+  )
+  switch_list$isoformFeatures$gene_switch_q_value <- gene_padj[
+    match(switch_list$isoformFeatures$gene_id, names(gene_padj))
+  ]
+  
+  # Add DEXSeq results to `isoformSwitchAnalysis` for further analysis
+  ### switch_list$isoformSwitchAnalysis <- dexseq_results
+  
+  ### Step 4: Integrating Gene-Level Differential Expression Results
+  message("Integrating gene-level differential expression results...")
+  
+  # Ensure that diff_results has the required columns
+  required_cols <- c("gene", "lfc_expression", "pvalue_expression", "padj_expression")
+  tryCatch({
+    missing_cols <- setdiff(required_cols, colnames(diff_results))
+    if (length(missing_cols) > 0) {
+      stop(
+        paste0(
+          "The input diff_results is missing required columns: ",
+          paste(missing_cols, collapse = ", "), ".\n",
+          "Please provide a differential expression result table containing at least ",
+          "'gene', 'lfc_expression', 'pvalue_expression', and 'padj_expression'."
+        )
+      )
+    }
+  }, error = function(e) {
+    stop(
+      paste0(
+        "The input diff_results appears to be invalid. ",
+        "Please ensure it is a valid paired DGE/DGS analysis result, which is the output of paired_diff() from pairedGSEA."
+      )
+    )
+  })
+  
+  # Match and add gene-level results to isoformFeatures
+  switch_list$isoformFeatures$gene_log2_fold_change <- diff_results$lfc_expression[
+    match(switch_list$isoformFeatures$gene_id, diff_results$gene)
+  ]
+  
+  switch_list$isoformFeatures$gene_p_value <- diff_results$pvalue_expression[
+    match(switch_list$isoformFeatures$gene_id, diff_results$gene)
+  ]
+  
+  switch_list$isoformFeatures$gene_q_value <- diff_results$padj_expression[
+    match(switch_list$isoformFeatures$gene_id, diff_results$gene)
+  ]
+  
+  switch_list$isoformFeatures$gene_significant <- ifelse(
+    switch_list$isoformFeatures$gene_q_value < alpha, "yes", "no"
+  )
+  
+  ### Step 5: Apply PreFilter to Filter SwitchAnalyzeRlist
+  message("Applying preFilter...")
+  
+  switch_list <- preFilter(
+    switchAnalyzeRlist = switch_list,
+    isoCount = isoCount,
+    min.Count.prop = min.Count.prop,
+    IFcutoff = IFcutoff,
+    min.IF.prop = min.IF.prop,
+    removeSingleIsoformGenes = removeSingleIsoformGenes,
+    reduceToSwitchingGenes = reduceToSwitchingGenes,
+    reduceFurtherToGenesWithConsequencePotential = reduceFurtherToGenesWithConsequencePotential,
+    alpha = alpha,
+    dIFcutoff = dIFcutoff
+  )
+  
+  return(switch_list)
 }

@@ -5,10 +5,16 @@
 
 ### Actural functions
 analyzeCPAT <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToCPATresultFile,
     codingCutoff,
     removeNoncodinORFs,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Check input
@@ -62,7 +68,7 @@ analyzeCPAT <- function(
             )
 
         if( nrow(myCPATresults) == 0) {
-            stop('No results were found in the result file')
+            stop('No results were found in the CPAT result file')
         }
 
         # check if it is web file
@@ -122,6 +128,16 @@ analyzeCPAT <- function(
             stop(
                 'There seems to be a problem with the CPAT result file. Please check it is the rigth file and try again'
             )
+        }
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          myCPATresults$id <- fixNames(
+            nameVec = myCPATresults$id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
         }
 
         ### Massage
@@ -209,10 +225,16 @@ analyzeCPAT <- function(
 }
 
 analyzeCPC2 <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToCPC2resultFile,
     codingCutoff = 0.5,
     removeNoncodinORFs,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Check input
@@ -264,7 +286,7 @@ analyzeCPC2 <- function(
             )
 
         if( nrow(myCPCresults) == 0) {
-            stop('No results were found in the result file')
+            stop('No results were found in the CPC result file')
         }
 
         # check if it is web file
@@ -314,7 +336,16 @@ analyzeCPC2 <- function(
         }
         # rename to match non-web file
         colnames(myCPCresults)[1] <- 'id'
-
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          myCPCresults$id <- fixNames(
+            nameVec = myCPCresults$id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
 
         ### Massage
         # check ids
@@ -402,8 +433,14 @@ analyzeCPC2 <- function(
 }
 
 analyzePFAM <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToPFAMresultFile,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -463,13 +500,13 @@ analyzePFAM <- function(
             headerIncluded <- grepl('^<seq|^seq', temp[1, 1])
 
             ### Figure out number of lines to skip
-            if(   headerIncluded) {
+            if(!headerIncluded) {
                 tmp2 <-
                     readLines(
                         con = pathToPFAMresultFile[1],
                         n = 50
                     )
-                skipLine <- which(grepl('^<seq|^seq', tmp2))[1]
+                skipLine <- which(grepl('^# <seq|^seq', tmp2))[1]
 
                 temp3 <-
                     read.table(
@@ -481,7 +518,7 @@ analyzePFAM <- function(
                         skip = skipLine,
                     )
             }
-            if( ! headerIncluded) {
+            if(headerIncluded) {
                 skipLine <- 0
             }
         }
@@ -537,7 +574,7 @@ analyzePFAM <- function(
                         testShiftedValues <- function(aDF) {
                             try1 <- unique(c(
                                 which(is.na( aDF[,14]     )),              # via "significant" column (will either be NA or a clan indication)
-                                which(       aDF[,14] != 1 ),              # via "significant" column (will either be NA or a clan indication)
+                                which(       aDF[,14] != 1 & 0),              # via "significant" column (will either be NA or a clan indication)
                                 which( ! stringr::str_detect(aDF[,6], '^PF|^PB') )  # via pfam_hmm id which should start with PF or PB
                             ))
 
@@ -734,6 +771,16 @@ analyzePFAM <- function(
         if( t1 & t2 ) {
             myPfamResult$seq_id <- gsub('^>', '', myPfamResult$seq_id)
             warning('Removed the prefix ">" from all Pfam results since we suspect they are not supposed to be there.')
+        }
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          myPfamResult$seq_id <- fixNames(
+            nameVec = myPfamResult$seq_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
         }
 
         ### test names
@@ -1025,9 +1072,15 @@ analyzePFAM <- function(
 }
 
 analyzeSignalP <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToSignalPresultFile,
+    
+    ### Advanced arguments
     minSignalPeptideProbability = 0.5,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Test input
@@ -1136,6 +1189,15 @@ analyzeSignalP <- function(
 
                 if( any( c(t1,t2,t3,t4,t5))) {
                     stop('The pathToSignalPresultFile does not seam to be the result of a SignalP 6 analysis')
+                }
+                
+                if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+                  singalPresults$transcript_id <- fixNames(
+                    nameVec = singalPresults$transcript_id,
+                    ignoreAfterBar = ignoreAfterBar,
+                    ignoreAfterSpace = ignoreAfterSpace,
+                    ignoreAfterPeriod = ignoreAfterPeriod
+                  )
                 }
 
                 if( ! any( singalPresults$isoform_id %in% switchAnalyzeRlist$isoformFeatures$isoform_id) ) {
@@ -1272,6 +1334,15 @@ analyzeSignalP <- function(
                 if( any( c(t1,t2,t3,t4,t5))) {
                     stop('The pathToSignalPresultFile does not seam to be the result of a SignalP 5 analysis')
                 }
+                
+                if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+                  singalPresults$transcript_id <- fixNames(
+                    nameVec = singalPresults$transcript_id,
+                    ignoreAfterBar = ignoreAfterBar,
+                    ignoreAfterSpace = ignoreAfterSpace,
+                    ignoreAfterPeriod = ignoreAfterPeriod
+                  )
+                }
 
                 if( ! any( singalPresults$isoform_id %in% switchAnalyzeRlist$isoformFeatures$isoform_id) ) {
                     stop('The pathToSignalPresultFile does not contain result of isoforms analyzed in the switchAnalyzeRlist')
@@ -1378,7 +1449,7 @@ analyzeSignalP <- function(
             ### Sanity check that it is a SignalIP result file
             if (TRUE) {
                 if (nrow(singalPresults) == 0) {
-                    stop('No signial peptides were found')
+                    stop('No signial peptides were found in the isoforms analyzed')
                 }
 
                 singalPresults <- unique(singalPresults)
@@ -1414,6 +1485,14 @@ analyzeSignalP <- function(
                         x[2]
                     }
                 )
+            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+              singalPresults$transcript_id <- fixNames(
+                nameVec = singalPresults$transcript_id,
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+              )
+            }
 
             # test names
             if (!any(
@@ -1527,278 +1606,300 @@ analyzeSignalP <- function(
     return(switchAnalyzeRlist)
 }
 
-analyzeNetSurfP2 <- function(
+analyzeNetSurfP3 <- function(
+    ### Advanced arguments
     switchAnalyzeRlist,
-    pathToNetSurfP2resultFile,
+    pathToNetSurfP3resultFile,
+    
+    ### Advanced arguments
     smoothingWindowSize = 5,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
-    ### Test input
-    if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
-            stop(
-                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
-            )
-        }
-        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
-            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
-        }
-
-        # file
-        if (class(pathToNetSurfP2resultFile) != 'character') {
-            stop(
-                'The \'pathToNetSurfP2resultFile\' argument must be a string pointing to the NetSurfP2 result file'
-            )
-        }
-        if (! all( file.exists(pathToNetSurfP2resultFile)) ) {
-            stop('(At least on of) the file(s) \'pathToNetSurfP2resultFile\' points to does not exist')
-        }
-
-        if( smoothingWindowSize %% 2 != 1 | !is(smoothingWindowSize, 'numeric') ) {
-            stop('The \'smoothingWindowSize\' argument must be an odd integer')
-        }
+  ### Test input
+  if(TRUE) {
+    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+      stop(
+        'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+      )
     }
-
-    if (showProgress & !quiet) {
-        progressBar <- 'text'
-    } else {
-        progressBar <- 'none'
+    if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+      stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
     }
-
-    ### Read result file
-    if(TRUE) {
-        if (!quiet) {
-            message('Step 1 of 3: Reading results into R...')
-        }
-
-        ### Read in file
-        suppressWarnings(
-            netSurf <- do.call(rbind, plyr::llply(
-                pathToNetSurfP2resultFile,
-                .fun = function(
-                    aFile
-                ) {
-                    read_csv(
-                        file = aFile,
-                        col_names = TRUE,
-                        col_types = cols_only(
-                            id = col_character(),
-                            n = col_integer(),
-                            disorder = col_double()
-                        ),
-                        progress = showProgress & !quiet
-                    )
-                }
-            ))
-
-        )
-
-        ### Sanity check
-        if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
-            stop('The \'pathToNetSurfP2resultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
-        }
-
-        ### Subset to relecant features
-        netSurf <- netSurf[which(
-            netSurf$id %in%
-                switchAnalyzeRlist$orfAnalysis$isoform_id[which(
-                    !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
-                )]
-        ),]
-
-        netSurf <- unique(netSurf)
+    
+    # file
+    if (class(pathToNetSurfP3resultFile) != 'character') {
+      stop(
+        'The \'pathToNetSurfP3resultFile\' argument must be a string pointing to the NetSurfP3 result file'
+      )
     }
-
-    ### Reduce to those with IDR
-    if(TRUE) {
-        if (!quiet) {
-            message('Step 2 of 3: Analyzing data to extract IDRs...')
-        }
-        netSurf$idDis <- as.integer( netSurf$disorder > probabilityCutoff )
-
-
-        disRle <- RleList(
-            split(round(netSurf$disorder, digits = 3), netSurf$id)
-        )
-
-        ### Apply spliding window
-        disRle <- runmean(disRle, k=smoothingWindowSize, endrule = 'drop')
-        nRemovedByDrop <- (smoothingWindowSize-1) / 2
-
-        ### Convert to binary
-        disRle <- disRle > probabilityCutoff
-
-        ### Loop over and extract result
-        disRes <- plyr::ldply(disRle, .progress = progressBar, function(localRle) {
-            ### Extract start and stop
-            rleDf <- data.frame(
-                classification=localRle@values,
-                length=localRle@lengths,
-                orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
-            )
-            rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
-
-            ### Subset to disordered of length X
-            rleDf <- rleDf[which(
-                rleDf$classification &
-                    rleDf$length >= minIdrSize
-            ),]
-
-            rleDf$classification <- NULL
-
-            return(rleDf)
-        })
-        colnames(disRes)[1] <- 'isoform_id'
-
-        disRes <- disRes[,c('isoform_id','orf_aa_start','orf_aa_end','length')]
-
-        ### Add type
-        disRes$idr_type <- 'IDR'
+    if (! all( file.exists(pathToNetSurfP3resultFile)) ) {
+      stop('(At least one of) the file(s) \'pathToNetSurfP3resultFile\' points to does not exist')
     }
-
-    ### Convert from AA coordinats to transcript and genomic coordinats
-    if (TRUE) {
-        if (!quiet) {
-            message('Step 3 of 3: Converting AA coordinats to transcript and genomic coordinats...')
-        }
-
-        ### convert from codons to transcript position
-        orfStartDF <-
-            unique(
-                switchAnalyzeRlist$orfAnalysis[
-                    which( !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
-                    c('isoform_id', 'orfTransciptStart')
-                    ]
-            )
-        disRes$transcriptStart <-
-            (disRes$orf_aa_start  * 3 - 2) +
-            orfStartDF[
-                match(
-                    x = disRes$isoform_id,
-                    table = orfStartDF$isoform_id
-                ),
-                2] - 1
-        disRes$transcriptEnd <-
-            (disRes$orf_aa_end * 3) +
-            orfStartDF[
-                match(
-                    x = disRes$isoform_id,
-                    table = orfStartDF$isoform_id
-                ),
-                2] - 1
-
-        ### convert from transcript to genomic coordinats
-        # extract exon data
-        myExons <-
-            as.data.frame(switchAnalyzeRlist$exons[which(
-                switchAnalyzeRlist$exons$isoform_id %in% disRes$isoform_id
-            ), ])
-        myExonsSplit <- split(myExons, f = myExons$isoform_id)
-
-        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
-        disResDf <-
-            plyr::ddply(
-                disRes,
-                .progress = progressBar,
-                .variables = 'isoform_id',
-                .fun = function(aDF) {
-                    # aDF <- disRes[which(disRes$isoform_id == 'uc001isa.1'),]
-
-                    transcriptId <- aDF$isoform_id[1]
-                    localExons <-
-                        as.data.frame(myExonsSplit[[transcriptId]])
-
-                    # extract domain allignement
-                    localORFalignment <- aDF
-                    colnames(localORFalignment)[match(
-                        x = c('transcriptStart', 'transcriptEnd'),
-                        table = colnames(localORFalignment)
-                    )] <- c('start', 'end')
-
-                    # loop over domain alignment (migh be several)
-                    orfPosList <- list()
-                    for (j in 1:nrow(localORFalignment)) {
-                        domainInfo <-
-                            convertCoordinatsTranscriptToGenomic(
-                                transcriptCoordinats =  localORFalignment[j, ],
-                                exonStructure = localExons
-                            )
-
-                        orfPosList[[as.character(j)]] <- domainInfo
-
-                    }
-                    orfPosDf <- do.call(rbind, orfPosList)
-
-                    return(cbind(aDF, orfPosDf))
-                }
-            )
-
-        colnames(disResDf) <- gsub(
-            'pfam',
-            'idr',
-            colnames(disResDf)
-        )
-
+    
+    if( smoothingWindowSize %% 2 != 1 | !is(smoothingWindowSize, 'numeric') ) {
+      stop('The \'smoothingWindowSize\' argument must be an odd integer')
     }
-
-    ### Add analysis to switchAnalyzeRlist
-    if (TRUE) {
-        # sort
-        disResDf <-
-            disResDf[order(
-                disResDf$isoform_id,
-                disResDf$transcriptStart
-            ), ]
-
-        #disResDf$idrStarExon <- NULL
-        #disResDf$idrEndExon <- NULL
-
-        # add the results to the switchAnalyzeRlist object
-        switchAnalyzeRlist$idrAnalysis <- disResDf
-
-        # add indication to transcriptDf
-        switchAnalyzeRlist$isoformFeatures$idr_identified <- 'no'
-        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
-            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
-        )] <- NA # sets NA for those not analyzed
-
-        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
-            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
-                disResDf$isoform_id
-        )] <- 'yes'
-    }
-
-    n <- length(unique(disResDf$isoform_id))
-    p <-
-        round(n / length(unique(
-            switchAnalyzeRlist$isoformFeatures$isoform_id
-        )) * 100, digits = 2)
-
+  }
+  
+  if (showProgress & !quiet) {
+    progressBar <- 'text'
+  } else {
+    progressBar <- 'none'
+  }
+  
+  ### Read result file
+  if(TRUE) {
     if (!quiet) {
-        message(paste(
-            'Added IDR information to ',
-            n,
-            ' (',
-            p,
-            '%) transcripts',
-            sep = ''
-        ))
+      message('Step 1 of 3: Reading results into R...')
     }
-    return(switchAnalyzeRlist)
+    
+    ### Read in file
+    suppressWarnings(
+      netSurf <- do.call(rbind, plyr::llply(
+        pathToNetSurfP3resultFile,
+        .fun = function(
+    aFile
+        ) {
+          read_csv(
+            file = aFile,
+            col_names = TRUE,
+            col_types = cols_only(
+              id = col_character(),
+              n = col_integer(),
+              disorder = col_double()
+            ),
+            progress = showProgress & !quiet
+          ) %>%
+            dplyr::mutate(id = sub("^>", "", id))
+        }
+      ))
+    
+    )
+    ### Fix names
+    if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+      netSurf$id <- fixNames(
+        nameVec = netSurf$id,
+        ignoreAfterBar = ignoreAfterBar,
+        ignoreAfterSpace = ignoreAfterSpace,
+        ignoreAfterPeriod = ignoreAfterPeriod
+      )
+    }
+    
+    ### Sanity check
+    if( ! any(netSurf$id %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
+      stop('The \'pathToNetSurfP3resultFile\' does not appear to contain results for the isoforms stored in the switchAnalyzeRlist...')
+    }
+    
+    ### Subset to relevant features
+    netSurf <- netSurf[which(
+      netSurf$id %in%
+        switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+          !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+        )]
+    ),]
+    
+    netSurf <- unique(netSurf)
+  }
+  
+  ### Reduce to those with IDR
+  if(TRUE) {
+    if (!quiet) {
+      message('Step 2 of 3: Analyzing data to extract IDRs...')
+    }
+    netSurf$idDis <- as.integer( netSurf$disorder > probabilityCutoff )
+    
+    
+    disRle <- RleList(
+      split(round(netSurf$disorder, digits = 3), netSurf$id)
+    )
+    
+    ### Apply spliding window
+    disRle <- runmean(disRle, k=smoothingWindowSize, endrule = 'drop')
+    nRemovedByDrop <- (smoothingWindowSize-1) / 2
+    
+    ### Convert to binary
+    disRle <- disRle > probabilityCutoff
+    
+    ### Loop over and extract result
+    disRes <- plyr::ldply(disRle, .progress = progressBar, function(localRle) {
+      ### Extract start and stop
+      rleDf <- data.frame(
+        classification=localRle@values,
+        length=localRle@lengths,
+        orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
+      )
+      rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
+      
+      ### Subset to disordered of length X
+      rleDf <- rleDf[which(
+        rleDf$classification &
+          rleDf$length >= minIdrSize
+      ),]
+      
+      rleDf$classification <- NULL
+      
+      return(rleDf)
+    })
+    colnames(disRes)[1] <- 'isoform_id'
+    
+    disRes <- disRes[,c('isoform_id','orf_aa_start','orf_aa_end','length')]
+    
+    ### Add type
+    disRes$idr_type <- 'IDR'
+  }
+  
+  ### Convert from AA coordinates to transcript and genomic coordinates
+  if (TRUE) {
+    if (!quiet) {
+      message('Step 3 of 3: Converting AA coordinates to transcript and genomic coordinates...')
+    }
+    
+    ### convert from codons to transcript position
+    orfStartDF <-
+      unique(
+        switchAnalyzeRlist$orfAnalysis[
+          which( !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+          c('isoform_id', 'orfTransciptStart')
+        ]
+      )
+    disRes$transcriptStart <-
+      (disRes$orf_aa_start  * 3 - 2) +
+      orfStartDF[
+        match(
+          x = disRes$isoform_id,
+          table = orfStartDF$isoform_id
+        ),
+        2] - 1
+    disRes$transcriptEnd <-
+      (disRes$orf_aa_end * 3) +
+      orfStartDF[
+        match(
+          x = disRes$isoform_id,
+          table = orfStartDF$isoform_id
+        ),
+        2] - 1
+    
+    ### convert from transcript to genomic coordinates
+    # extract exon data
+    myExons <-
+      as.data.frame(switchAnalyzeRlist$exons[which(
+        switchAnalyzeRlist$exons$isoform_id %in% disRes$isoform_id
+      ), ])
+    myExonsSplit <- split(myExons, f = myExons$isoform_id)
+    
+    # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
+    disResDf <-
+      plyr::ddply(
+        disRes,
+        .progress = progressBar,
+        .variables = 'isoform_id',
+        .fun = function(aDF) {
+          # aDF <- disRes[which(disRes$isoform_id == 'uc001isa.1'),]
+          
+          transcriptId <- aDF$isoform_id[1]
+          localExons <-
+            as.data.frame(myExonsSplit[[transcriptId]])
+          
+          # extract domain allignement
+          localORFalignment <- aDF
+          colnames(localORFalignment)[match(
+            x = c('transcriptStart', 'transcriptEnd'),
+            table = colnames(localORFalignment)
+          )] <- c('start', 'end')
+          
+          # loop over domain alignment (migh be several)
+          orfPosList <- list()
+          for (j in 1:nrow(localORFalignment)) {
+            domainInfo <-
+              convertCoordinatsTranscriptToGenomic(
+                transcriptCoordinats =  localORFalignment[j, ],
+                exonStructure = localExons
+              )
+            
+            orfPosList[[as.character(j)]] <- domainInfo
+            
+          }
+          orfPosDf <- do.call(rbind, orfPosList)
+          
+          return(cbind(aDF, orfPosDf))
+        }
+      )
+    
+    colnames(disResDf) <- gsub(
+      'pfam',
+      'idr',
+      colnames(disResDf)
+    )
+    
+  }
+  
+  ### Add analysis to switchAnalyzeRlist
+  if (TRUE) {
+    # sort
+    disResDf <-
+      disResDf[order(
+        disResDf$isoform_id,
+        disResDf$transcriptStart
+      ), ]
+    
+    #disResDf$idrStarExon <- NULL
+    #disResDf$idrEndExon <- NULL
+    
+    # add the results to the switchAnalyzeRlist object
+    switchAnalyzeRlist$idrAnalysis <- disResDf
+    
+    # add indication to transcriptDf
+    switchAnalyzeRlist$isoformFeatures$idr_identified <- 'no'
+    switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+      is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+    )] <- NA # sets NA for those not analyzed
+    
+    switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+      switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+        disResDf$isoform_id
+    )] <- 'yes'
+  }
+  
+  n <- length(unique(disResDf$isoform_id))
+  p <-
+    round(n / length(unique(
+      switchAnalyzeRlist$isoformFeatures$isoform_id
+    )) * 100, digits = 2)
+  
+  if (!quiet) {
+    message(paste(
+      'Added IDR information to ',
+      n,
+      ' (',
+      p,
+      '%) transcripts',
+      sep = ''
+    ))
+  }
+  return(switchAnalyzeRlist)
 }
 
 analyzeIUPred2A <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToIUPred2AresultFile,
+    
+    ### Advanced arguments
     smoothingWindowSize = 11,
     probabilityCutoff = 0.5,
     minIdrSize = 30,
     annotateBindingSites = TRUE,
     minIdrBindingSize = 15,
     minIdrBindingOverlapFrac = 0.8,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -1887,7 +1988,17 @@ analyzeIUPred2A <- function(
                 '^>',
                 '',
                 iupred2a$V1[which(is.na(iupred2a$V3))]
-            )
+            ) 
+            
+            ### Fix names
+            if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+                myNames <- fixNames(
+                nameVec = myNames,
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+              )
+            }
 
             ### Sanity check
             if( ! any( myNames %in% switchAnalyzeRlist$isoformFeatures$isoform_id )) {
@@ -2277,10 +2388,16 @@ analyzeIUPred2A <- function(
 }
 
 analyzeDeepLoc2 <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToDeepLoc2resultFile,
+    
+    ### Advanced arguments
     enforceProbabilityCutoff = TRUE,
     probabilityCutoff = NULL,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 ) {
     ### Test input
@@ -2384,7 +2501,16 @@ analyzeDeepLoc2 <- function(
         colnames(deepLocRes) <- stringr::str_replace_all( colnames(deepLocRes) , ' ','_')
         colnames(deepLocRes) <- stringr::str_replace_all( colnames(deepLocRes) , '/','_')
 
-
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          deepLocRes$isoform_id <- fixNames(
+            nameVec = deepLocRes$isoform_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
+        
         ### Subset to analyzed files
         deepLocRes <- deepLocRes[which(
             deepLocRes$isoform_id %in% switchAnalyzeRlist$orfAnalysis$isoform_id[which(
@@ -2520,8 +2646,14 @@ analyzeDeepLoc2 <- function(
 }
 
 analyzeDeepTMHMM <- function(
+    ### Core arguments
     switchAnalyzeRlist,
     pathToDeepTMHMMresultFile,
+    
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 ) {
@@ -2592,8 +2724,17 @@ analyzeDeepTMHMM <- function(
         )
 
         deepTmRes$length <- deepTmRes$orf_aa_end - deepTmRes$orf_aa_start + 1
-
-
+        
+        ### Fix names
+        if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
+          deepTmRes$isoform_id <- fixNames(
+            nameVec = deepTmRes$isoform_id,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+          )
+        }
+        
         ### Subset to those in switchList
         deepTmRes <- deepTmRes[which(
             deepTmRes$isoform_id %in%

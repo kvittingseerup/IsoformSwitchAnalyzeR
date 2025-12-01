@@ -11,6 +11,9 @@ Allows for easy integration of the result of Pfam (external sequence analysis of
 analyzePFAM(
     switchAnalyzeRlist,
     pathToPFAMresultFile,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress=TRUE,
     quiet=FALSE
 )
@@ -23,6 +26,9 @@ A \code{switchAnalyzeRlist} object
   \item{pathToPFAMresultFile}{
 A string indicating the full path to the Pfam result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the Pfam tool.
 }
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
+\item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
+\item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
 }
@@ -95,7 +101,7 @@ Kristoffer Vitting-Seerup
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

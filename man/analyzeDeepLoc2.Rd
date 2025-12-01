@@ -13,6 +13,9 @@ analyzeDeepLoc2(
     pathToDeepLoc2resultFile,
     enforceProbabilityCutoff = TRUE,
     probabilityCutoff = NULL,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet = FALSE
 )
 }
@@ -28,7 +31,10 @@ A string indicating the full path to the DeepLoc2 result file(s). If multiple re
     \item{enforceProbabilityCutoff}{ A logic indicating whether the location specific probability cutoff developed for DeepLoc2 should be strictly enforced (see details). This filter works independently from \code{probabilityCutoff}. If FALSE the localization called internally by DeepLoc2 are used. Default is NULL.}
 
     \item{probabilityCutoff}{ A numeric between 0 and 1 indicating the minimum probability for calling a sub-cellular localization. This filter works independently from \code{enforceProbabilityCutoff}. If NULL the localization called internally by DeepLoc2 are used. Default is NULL.}
-
+    
+    \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
+    \item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
+    \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
     \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 
@@ -69,7 +75,7 @@ Kristoffer Vitting-Seerup
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeSwitchConsequences}}

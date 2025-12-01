@@ -13,6 +13,9 @@ analyzeCPC2(
     pathToCPC2resultFile,
     codingCutoff = 0.5,
     removeNoncodinORFs,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     quiet=FALSE
 )
 }
@@ -22,6 +25,9 @@ analyzeCPC2(
     \item{pathToCPC2resultFile}{: A string indicating the full path to the CPC2 result file. See \code{details} for suggestion of how to run and obtain the result of the CPAT tool.}
     \item{codingCutoff}{: Numeric indicating the cutoff used by CPC2 for distinguishing between coding and non-coding transcripts. The cutoff appears to be species independent. Default is 0.5.}
     \item{removeNoncodinORFs}{: A logic indicating whether to remove ORF information from the isoforms which the CPC2 analysis classifies as non-coding. This can be particular useful if the isoform (and ORF) was predicted de-novo but is not recommended if ORFs was imported from a GTF file. This will affect all downstream analysis and plots as both analysis of domains and signal peptides requires that ORFs are annotated (e.g. analyzeSwitchConsequences will not consider the domains (potentially) found by Pfam if the ORF have been removed).}
+    \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
+    \item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
+    \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
     \item{quiet}{: A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
 
@@ -50,7 +56,7 @@ Kristoffer Vitting-Seerup
 \code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSwitchConsequences}}

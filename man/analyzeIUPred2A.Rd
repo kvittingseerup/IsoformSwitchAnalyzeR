@@ -17,6 +17,9 @@ analyzeIUPred2A(
     annotateBindingSites = TRUE,
     minIdrBindingSize = 15,
     minIdrBindingOverlapFrac = 0.8,
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
     showProgress = TRUE,
     quiet = FALSE
 )
@@ -53,6 +56,10 @@ An integer indicating how long a stretch of binding site the "region" part of th
 \item{minIdrBindingOverlapFrac}{
 An numeric indicating the min fraction of a predicted IDBR must also be within a IDR before the IDR is considered as a an IDR with a binding region. See details for more info. Default is 0.8 (aka 80\%).
 }
+
+\item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
+\item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
+\item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
@@ -116,7 +123,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzePFAM}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

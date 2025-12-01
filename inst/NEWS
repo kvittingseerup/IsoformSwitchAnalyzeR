@@ -1,3 +1,48 @@
+Changes in version 2.11.1 (2025-11)
+- Update type: Minor.
+- Updated deprecated functions and minor modifications
+- Updated version to sync with Bioconductor
+- Added Elena as contributed to package
+
+Changes in version 2.1.4 (2025-01)
+- Update type: Minor.
+- Added a new argument ignoreSurplusIsoforms into importRdata() function which set defaultly FALSE. Only for internal usage in importPairedGSEA() to deal with the GTF file incompability resulting from the filteration process in pairedGSEA
+- Fixed two bugs in importPairedGSEA()
+    * about manuplatition of sample names in count matrix
+    * GTF file incompability resulting from the filteration process in pairedGSEA
+- Added a new function exportToPairedGSEA() which prepares input data for paired paired DGE/DGS analysis by extracting a count matrix and corresponding metadata (design matrix) from a switchAnalyzeRlist object.
+- Update the vignette.
+
+Changes in version 2.1.4(2024-12)
+- Update type: Minor.
+- Added a new function importPairedGSEA() for importing paired differential expression and splicing results from pairedGSEA, along with a (gziped or unpacked) GTF file into R as a switchAnalyzeRlist.
+- Fixed bugs in the analyzePFAM() function:
+    * Skip irrelevent lines while input with web server results
+    * While testing shifts, the lines with "significant" column as 0 are not regarded as shift which need to be fixed.
+
+
+Changes in version 2.1.3(2024-06)
+- Update type: Minor.
+- Updated the preFilter function to allow filtering on the isoform counts (isoCount) and isoform usage (IF) across a significant proportion of samples within each comparison.
+- Now ISAR supports the application on single-cell data. Updated vignette to include the recommended workflow for single cell data.
+
+Changes in version 2.1.2(2024-01)
+- Update type: Minor.
+- Fix a bug in addORFfromGTF() function while onlyConsiderFullORF = TRUE
+
+Changes in version 2.1.2(2023-12)
+- Update type: Minor.
+- Advanced arguments ignoreAfterBar, ignoreAfterSpace and ignoreAfterPeriod are introduced to the import of external analysis to fix the ID names of external analysis results
+
+Changes in version 2.1.2(2023-11)
+- Update type: Minor.
+- analyzeNetSurfP3() was introducted to replace analyzeNetSurfP2() to support import of results predicted with NetSurfP-3
+
+Changes in version 2.1.2 (2023-10)
+- Update type: Minor.
+- Fixed problem with plotting non-refrence isotypes via switchPlotTranscript
+- Chunxu Han was added as a contributer and maintainer
+
 Changes in version 2.1.2 (2023-05)
 - Update type: Minor.
 - Documentation update for Bioconductor

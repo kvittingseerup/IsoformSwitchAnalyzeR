@@ -79,7 +79,7 @@ Path to the CPC2 result file. If the webserver is used please download the tab-d
 }
 
   \item{pathToNetSurfP2resultFile}{
-  A string indicating the full path to the NetSurfP-2 result csv file. See \link{analyzeNetSurfP2} for details.
+  A string indicating the full path to the NetSurfP-2 result csv file. See \link{analyzeNetSurfP3} for details.
 }
 
   \item{pathToSignalPresultFile}{
@@ -146,7 +146,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeCPC2}}\cr
 \code{\link{analyzeIUPred2A}}\cr
-\code{\link{analyzeNetSurfP2}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeAlternativeSplicing}}\cr
