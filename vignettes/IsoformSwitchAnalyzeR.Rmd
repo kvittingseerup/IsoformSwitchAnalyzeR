@@ -1,7 +1,3 @@
----
----
----
-
 <!-- devtools::build_vignettes(quiet = FALSE) # call for building vignette -->
 
 <!-- remember to delete files in /inst/doc/ and/or vignettes before upload to BioC  -->
@@ -57,7 +53,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 Recent breakthroughs in bioinformatics now allow us to accurately reconstruct and quantify full-length gene isoforms from RNA-sequencing data via tools such as StringTie, Kallisto and Salmon. Alternatively long-read RNA-seq (third generation sequencing) now routinely provide us with full length transcripts, and moreover, single-cell sequencing has emerged to measure the expression of individual cells which unveils the hidden cellular heterogeneity. These full-length as well as single cell level transcripts makes it possible to analyze changes in isoform usage, but unfortunately this is rarely done meaning RNA-seq data is typically not used to its full potential.
 
-To solve this problem, we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switches from RNA-seq derived quantification of novel and/or known full-length isoforms. IsoformSwitchAnalyzeR facilitates integration of many sources of annotation such as protein domains, signal peptides, Intrinsically Disordered Regions (IDR), subcellular localization, sensitivity to Non-sense Mediated Decay (NMD) and more. The combination of identified isoform switches and their annotation enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches --- such as loss of protein domains --- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization of isoform switches of individual genes, the genome-wide consequences of isoform switches, and the associated changes in alternative splicing.
+To solve this problem, we developed IsoformSwitchAnalyzeR. IsoformSwitchAnalyzeR is an easy-to use-R package that enables statistical identification of isoform switches from RNA-seq derived quantification of novel and/or known full-length isoforms. IsoformSwitchAnalyzeR facilitates integration of many sources of annotation such as protein domains, signal peptides, Intrinsically Disordered Regions (IDR), subcellular localization, sensitivity to Non-sense Mediated Decay (NMD) and more. The combination of identified isoform switches and their annotation enables IsoformSwitchAnalyzeR to predict potential functional consequences of the identified isoform switches -- such as loss of protein domains -- thereby identifying isoform switches of particular interest. Lastly, IsoformSwitchAnalyzeR provides article-ready visualization of isoform switches of individual genes, the genome-wide consequences of isoform switches, and the associated changes in alternative splicing.
 
 In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform resolution with a focus on isoform switching (with predicted consequences) and its associated alternative splicing, thereby expanding the usability of RNA-seq data.
 
@@ -152,7 +148,7 @@ The importance of analyzing isoforms instead of genes has been highlighted by ma
 
 On a more systematic level several recent studies suggest that isoform switches are quite common since they often identify hundreds of switch events in both cancer and non-cancer studies.
 
-Tools such as StringTie, Salmon and Kallisto allows for (reconstruction and) quantification of full-length transcripts from RNA-seq data. Such data has the potential to facilitate genome-wide analysis of alternative isoform usage and identification of isoform switching --- but unfortunately these types of analyses are still only rarely done; most analyses are on gene level only.
+Tools such as StringTie, Salmon and Kallisto allows for (reconstruction and) quantification of full-length transcripts from RNA-seq data. Such data has the potential to facilitate genome-wide analysis of alternative isoform usage and identification of isoform switching -- but unfortunately these types of analyses are still only rarely done; most analyses are on gene level only.
 
 We hypothesize that there are multiple reasons why RNA-seq data is not used to its full potential:
 
@@ -162,11 +158,11 @@ We hypothesize that there are multiple reasons why RNA-seq data is not used to i
 
 To solve all these problems, we developed IsoformSwitchAnalyzeR.
 
-IsoformSwitchAnalyzeR is an easy-to-use R package that enables the user to import the result of the (reconstructed) full-length isoforms quantification an RNA-seq experiment into R. If annotated transcripts are analyzed, IsoformSwitchAnalyzeR offers integration with the multi-layer information stored in a GTF/GFF file including the annotated coding sequences (CDS). If transcript structures are predicted (either de-novo or guided) IsoformSwitchAnalyzeR offers an accurate tool for identifying the dominant ORF of the isoforms. The knowledge of isoform positions for the CDS/ORF allows for prediction of sensitivity to Nonsense Mediated Decay (NMD) --- the mRNA quality control machinery that degrades isoforms with pre-mature termination codons (PTC).
+IsoformSwitchAnalyzeR is an easy-to-use R package that enables the user to import the result of the (reconstructed) full-length isoforms quantification an RNA-seq experiment into R. If annotated transcripts are analyzed, IsoformSwitchAnalyzeR offers integration with the multi-layer information stored in a GTF/GFF file including the annotated coding sequences (CDS). If transcript structures are predicted (either de-novo or guided) IsoformSwitchAnalyzeR offers an accurate tool for identifying the dominant ORF of the isoforms. The knowledge of isoform positions for the CDS/ORF allows for prediction of sensitivity to Nonsense Mediated Decay (NMD) -- the mRNA quality control machinery that degrades isoforms with pre-mature termination codons (PTC).
 
 IsoformSwitchAnalyzeR facilitates identification of isoform switches via newly developed statistical methods that tests each individual isoform for differential usage and thereby identifies the exact isoforms involved in an isoform switch.
 
-Since we know the exon structure of the full-length isoform, IsoformSwitchAnalyzeR can extract the underlying nucleotide sequence from a reference genome. This enables integration with the tools for assessing coding potential of an isoform (both the CPAT and CPC2 tools are supported) which can be used to increase accuracy of ORF predictions. By combining the CDS/ORF isoform positions with the nucleotide sequence, we can extract the most likely amine acid sequence of the CDS/ORF. The amine acid sequence enables integration of analysis of protein domains (via Pfam) and signal peptides (via SignalP) --- both supported by IsoformSwitchAnalyzeR. Additionally, since the structures of all expressed isoforms from a given gene are known, one can also annotate alternative splicing - including aTSS and aTTS sites - a functionality also implemented in IsoformSwitchAnalyzeR.
+Since we know the exon structure of the full-length isoform, IsoformSwitchAnalyzeR can extract the underlying nucleotide sequence from a reference genome. This enables integration with the tools for assessing coding potential of an isoform (both the CPAT and CPC2 tools are supported) which can be used to increase accuracy of ORF predictions. By combining the CDS/ORF isoform positions with the nucleotide sequence, we can extract the most likely amine acid sequence of the CDS/ORF. The amine acid sequence enables integration of analysis of protein domains (via Pfam) and signal peptides (via SignalP) -- both supported by IsoformSwitchAnalyzeR. Additionally, since the structures of all expressed isoforms from a given gene are known, one can also annotate alternative splicing - including aTSS and aTTS sites - a functionality also implemented in IsoformSwitchAnalyzeR.
 
 In summary, IsoformSwitchAnalyzeR enables annotation of isoforms with intron retention, ORF, NMD sensitivity, coding potential, protein domains and signal peptides (and many more), resulting in the ability to predict important functional consequences of isoform switches in both individual genes and on a genome wide level.
 
@@ -238,7 +234,7 @@ Back to [Table of Content].
 
 ## What To Cite
 
-The analysis performed by IsoformSwitchAnalyzeR is only possible due to a string of other tools and scientific discoveries --- please read this section thoroughly and cite the appropriate articles to give credit where credit is due (also citations are what allow people to continue both maintaining and developing bioinformatic tools).
+The analysis performed by IsoformSwitchAnalyzeR is only possible due to a string of other tools and scientific discoveries -- please read this section thoroughly and cite the appropriate articles to give credit where credit is due (also citations are what allow people to continue both maintaining and developing bioinformatic tools).
 
 If you are using the:
 
@@ -281,7 +277,7 @@ If you are using the:
 12. *Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)* [link](https://academic.oup.com/nar/article/43/7/e47/2414268).
 13. *Anders et al. **Detecting differential usage of exons from RNA-seq data**. Genome Research (2012)* [link](https://genome.cshlp.org/content/22/10/2008.long).
 14. *Kang et al. **CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features**. Nucleic Acids Res (2017)* [link](https://academic.oup.com/nar/article/45/W1/W12/3831091).
-15. *Høie et al. **NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning**. Nucleic Acids Research (2022)* [link](https://doi.org/10.1093/nar/gkac439)
+15. *H??ie et al. **NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning**. Nucleic Acids Research (2022)* [link](https://doi.org/10.1093/nar/gkac439)
 16. *Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018)* [link](https://doi.org/10.1093/nar/gky384)
 17. *Love et al. Tximeta: Reference sequence checksums for provenance identification in RNA-seq. PLoS Comput. Biol (2020)* [link](http://dx.doi.org/10.1371/journal.pcbi.1007664)
 18. *Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022)* [link](http://dx.doi.org/10.1093/nar/gkac278)
@@ -641,7 +637,7 @@ subset(
 
 Let us take a look at the isoform switch in the ZAK gene (7th most significant gene) using the switchPlot functionality. Note that since the switchAnalyzeRlist contains two different comparison (LUAD and COAD) we need to specify the conditions to plot (this is not necessary if there is only one condition in your data).
 
-```{r, fig.width=12, fig.height=7, warning=FALSE}
+```{r, fig.width=12.5, fig.height=7, warning=FALSE}
 switchPlot(
     exampleSwitchListAnalyzed,
     gene='ZAK',
@@ -1075,7 +1071,7 @@ For a (non-exhaustive) recommendations of bioinformatic tools which can perform 
 
 While RSEM and StringTie are well-established and robust isoform quantification tool, a new generation of tools often referred to as pseudo/quasi-aligners, such as Salmon and Kallisto, are on the rise due to their speed and increased accuracy. All four tools are directly supported by allowing for easy import of the isoform replicate abundance via the *importIsoformExpression()* function.
 
-This function is an easy-to-use wrapper for the tximport R package with extra functionalists. Using tximport (with countsFromAbundance='scaledTPM'), importIsoformExpression() allows the isoform counts to be estimated from the abundance estimates --- which is recommended as it will incorporate the bias correction performed by the tools into the switch identification. The *importIsoformExpression* function can furthermore perform an inter-library normalization of the abundance estimates which is necessary for a fair comparison of libraries (for in-depth discussion of normalization and why it is needed, see section 2.7 of the [edgeR user guide](http://bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf)).
+This function is an easy-to-use wrapper for the tximport R package with extra functionalists. Using tximport (with countsFromAbundance='scaledTPM'), importIsoformExpression() allows the isoform counts to be estimated from the abundance estimates -- which is recommended as it will incorporate the bias correction performed by the tools into the switch identification. The *importIsoformExpression* function can furthermore perform an inter-library normalization of the abundance estimates which is necessary for a fair comparison of libraries (for in-depth discussion of normalization and why it is needed, see section 2.7 of the [edgeR user guide](http://bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf)).
 
 importCufflinksFiles() can both be used by pointing to the parent directory (where each quantified file is in sub-directories) or by pointing directly to the quantified files (see function documentation ?importCufflinksFiles). The importIsoformExpression() function is used as follows:
 
@@ -1157,8 +1153,8 @@ aSwitchList <- importRdata(
 Note that:
 
 1)  By supplying the GTF/GFF file to the "isoformExonAnnoation" argument IsoformSwitchAnalyzeR will automatically also import and integrate CDS regions annotated in the GTF/GFF file as the ORF regions used by IsoformSwitchAnalyzeR (if addAnnotatedORFs=TRUE (default)).
-2)  IsoformSwitchAnalyzeR also supports the analysis of isoform switches found via other tools/test --- see [Testing for Isoform Switches with other Tools].
-3)  The overall unit of isoforms analyzed together is defined by the gene annotation provided. In principle, this overall unit does not have to be genes but could be for example a TSS shared by multiple isoforms --- to utilize this simply provide TSS_ids instead of gene_ids in the isoform annotation.
+2)  IsoformSwitchAnalyzeR also supports the analysis of isoform switches found via other tools/test -- see [Testing for Isoform Switches with other Tools].
+3)  The overall unit of isoforms analyzed together is defined by the gene annotation provided. In principle, this overall unit does not have to be genes but could be for example a TSS shared by multiple isoforms -- to utilize this simply provide TSS_ids instead of gene_ids in the isoform annotation.
 
 The switchAnalyzeRlist now contains all the information imported in separate entries of the switchAnalyzeRlist object:
 
@@ -1283,7 +1279,7 @@ testSwitchList
 
 Note that the cufflinks import functions, per default:
 
-1.  Correct the annotation problem caused by cufflinks having to consider islands of overlapping transcripts --- this means that sometimes multiple genes (defined by gene name) are combined into one cufflinks gene (XLOC_XXXXXX) and this gene is quantified and tested for differential expression. Setting *fixCufflinksAnnotationProblem=TRUE* will make the import function modify the data so that false conclusions are not made in downstream analysis. More specifically, this causes the function to re-calculate expression values, set gene standard error (of mean (measurement), s.e.m) to NA and the p-value and q-value of the differential expression analysis to 1, whereby false conclusions can be prevented.
+1.  Correct the annotation problem caused by cufflinks having to consider islands of overlapping transcripts -- this means that sometimes multiple genes (defined by gene name) are combined into one cufflinks gene (XLOC_XXXXXX) and this gene is quantified and tested for differential expression. Setting *fixCufflinksAnnotationProblem=TRUE* will make the import function modify the data so that false conclusions are not made in downstream analysis. More specifically, this causes the function to re-calculate expression values, set gene standard error (of mean (measurement), s.e.m) to NA and the p-value and q-value of the differential expression analysis to 1, whereby false conclusions can be prevented.
 2.  Import the result of Cuffdiff's splicing test and add it to the switchAnalyzeRlist This can be disabled by setting *addCufflinksSwichTest=FALSE*.
 
 The resulting switchAnalyzeRlist can then be used with the rest of the isoform switch analysis pipeline. The next step is typically [Filtering].
@@ -1306,7 +1302,7 @@ If you have quantified known annotated isoforms (i.e. you did not perform a (gui
 
 Once you have imported the isoform expression estimates into R a switchAnalyzeRlist can be constructed using the general-purpose wrapper *importRdata()* function (as described in the previous section [Importing Data from Kallisto, Salmon, RSEM or StringTie]) which itself can import both the GTF and fasta file.
 
-Please note that CPM/TPM (Tags Per Million) values should NOT under any circumstances be supplied to *importRdata()* since they do not take the isoform length into account, meaning that isoform switches where there is a difference in the length of the involved isoforms, will be biased by TPM/CPM values (please note that Transcripts Per Million (here called TxPM but sometimes denoted TPM, from tools such as Kallisto, Salmon and RSEM) are not problematic). To illustrate the problem with TPM/CPM, a simple thought example can be made: Consider two isoforms where isoform 1 exist in 5 copies and isoform 2 exist in 10 copies (a 1:2 relation). If isoform 1 is twice as long as isoform 2, an RNA-seq experiment will generate (approximately) twice as many reads from it --- meaning if CPM/TPM values are used, a false 1:1 relation will be estimated. This is not the case for TxPM/RPKM/FPKM, since the isoform lengths are taken into account.
+Please note that CPM/TPM (Tags Per Million) values should NOT under any circumstances be supplied to *importRdata()* since they do not take the isoform length into account, meaning that isoform switches where there is a difference in the length of the involved isoforms, will be biased by TPM/CPM values (please note that Transcripts Per Million (here called TxPM but sometimes denoted TPM, from tools such as Kallisto, Salmon and RSEM) are not problematic). To illustrate the problem with TPM/CPM, a simple thought example can be made: Consider two isoforms where isoform 1 exist in 5 copies and isoform 2 exist in 10 copies (a 1:2 relation). If isoform 1 is twice as long as isoform 2, an RNA-seq experiment will generate (approximately) twice as many reads from it -- meaning if CPM/TPM values are used, a false 1:1 relation will be estimated. This is not the case for TxPM/RPKM/FPKM, since the isoform lengths are taken into account.
 
 <br />
 
@@ -1389,15 +1385,15 @@ No matter which method is used, all the downstream functionality in IsoformSwitc
 
 This combination is used since a Q-value is only a measure of the statistical certainty of the difference between two groups and thereby does not reflect the effect size which is measured by the dIF values.
 
-IsoformSwitchAnalyzeR supports tests for differential isoform usage performed both at isoform and gene resolution. Note, however, that for gene-level analysis you rely on cutoffs on dIF values for identifying the isoforms involved in a switch --- something that, when compared to the isoform-level analysis, could give false positives. We therefore recommend the use of isoform-level analysis whenever possible.
+IsoformSwitchAnalyzeR supports tests for differential isoform usage performed both at isoform and gene resolution. Note, however, that for gene-level analysis you rely on cutoffs on dIF values for identifying the isoforms involved in a switch -- something that, when compared to the isoform-level analysis, could give false positives. We therefore recommend the use of isoform-level analysis whenever possible.
 
 <br />
 
 #### Testing for Isoform Switches via DEXSeq
 
-Two major challenges in testing differential isoform usage have been controlling false discovery rates (FDR) and applying effect size cutoffs in experimental setups with confounding effects. Recent studies such as [Love at al](https://f1000research.com/articles/7-952/v1) highlights DEXSeq (developed by Anders et al., see [What To Cite] --- please remember to cite it) as being a good solution as it controls FDR quite well. We have therefore implemented a DEXSeq based test as the default in IsoformSwitchAnalyzeR. This test furthermore utilizes limma to produce effect sizes corrected for confounding effects.
+Two major challenges in testing differential isoform usage have been controlling false discovery rates (FDR) and applying effect size cutoffs in experimental setups with confounding effects. Recent studies such as [Love at al](https://f1000research.com/articles/7-952/v1) highlights DEXSeq (developed by Anders et al., see [What To Cite] -- please remember to cite it) as being a good solution as it controls FDR quite well. We have therefore implemented a DEXSeq based test as the default in IsoformSwitchAnalyzeR. This test furthermore utilizes limma to produce effect sizes corrected for confounding effects.
 
-The result is *isoformSwitchTestDEXSeq* which is highly accurate and although it scales badly with the number of samples analyzed it is still faster and more reliable than DEXSeq --- which is why it is currently the default (and recommended) test in IsoformSwitchAnalyzeR.
+The result is *isoformSwitchTestDEXSeq* which is highly accurate and although it scales badly with the number of samples analyzed it is still faster and more reliable than DEXSeq -- which is why it is currently the default (and recommended) test in IsoformSwitchAnalyzeR.
 
 The *isoformSwitchTestDEXSeq* function is used as follows:
 
@@ -1430,7 +1426,7 @@ Back to [Table of Content]
 
 #### Testing for Isoform Switches via satuRn
 
-We recently released our satuRn package (By Gilis et al, see [What To Cite] --- please remember to cite it) offing scalable and effecient analysis of differential isoform usage.
+We recently released our satuRn package (By Gilis et al, see [What To Cite] -- please remember to cite it) offing scalable and effecient analysis of differential isoform usage.
 
 IsoformSwitchAnalyzeR supports identification of isoform switches with satuRn via the wrapper *isoformSwitchTestSatuRn()* which performs the full analysis of all isoforms and comparisons in switchAnalyzeRlist. Afterwards, the results are integrated back into the switchAnalyzeRlist which is returned to the user as usual.
 
@@ -1467,7 +1463,7 @@ IsoformSwitchAnalyzeR also supports the analysis of isoform switches found via o
 
 If the external tool used has isoform resolution (one test per isoform), the q-values should be added to the *isoform_switch_q_value* column and the smallest q-value of a given gene (in a specific comparison) should be added to all the isoforms for that gene in the *gene_switch_q_value* column. If the external tool has lower resolution (e.g. pre-mRNA or gene level resolution) the q-values should only be added to the *gene_switch_q_value* column (and the *isoform_switch_q_value* should be set to NA).
 
-In this way, IsoformSwitchAnalyzeR can also support non-isoform resolution testing --- note however that:
+In this way, IsoformSwitchAnalyzeR can also support non-isoform resolution testing -- note however that:
 
 1)  Via the isoform resolution level tests, we often find cases where the significant isoform is not the same isoform as the ones with the largest changes (i.e. large dIF values) and vice versa indicating that a non-isoform resolution might be inadequate.
 2)  If you supply the result of a non-isoform resolution isoform switch test (to the *gene_switch_q_value* column) the number of isoforms reported by summary tools such as *extractSwitchSummary* or *extractConsequenceSummary* will not be correct and should therefore be ignored.
@@ -1585,10 +1581,10 @@ The two fasta files that are the output by *extractSequence()* (if writeToFile=T
 -   CPAT : The Coding-Potential Assessment Tool which is a tool for predicting whether an isoform is coding or not. CPAT can be run either locally or via their [webserver](http://lilab.research.bcm.edu/cpat/). This is an alternative to CPC2.
 -   CPC2 : The Coding Potential Calculator 2 which is a tool for predicting whether an isoform is coding or not. CPC2 can be run either locally or via their [webserver](http://cpc2.cbi.pku.edu.cn/batch.php). This is an alternative to CPAT.
 -   Pfam : Prediction of protein domains, which can be run either locally (using the pfam_scan.pl script as described in the readme found [here](ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/) or via their [webserver](https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan).
--   SignalP : Prediction of Signal Peptides --- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (v5 and v6 is supported).
--   IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) --- the parts of a protein protein which does not have a fixed three-dimensional structure (as opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu). IUPred3 is also supported by IsoformSwitchAnalyzeR (as it produces identical result files).
--   NetSurfP-3 : Prediction of Intrinsically Disordered Regions (IDR) --- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-3 can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
--   analyzeDeepTMHMM : Prediction of protein topology --- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
+-   SignalP : Prediction of Signal Peptides -- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](http://www.cbs.dtu.dk/services/SignalP/) (v5 and v6 is supported).
+-   IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) -- the parts of a protein protein which does not have a fixed three-dimensional structure (as opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu). IUPred3 is also supported by IsoformSwitchAnalyzeR (as it produces identical result files).
+-   NetSurfP-3 : Prediction of Intrinsically Disordered Regions (IDR) -- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-3 can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
+-   analyzeDeepTMHMM : Prediction of protein topology -- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
 -   analyzeDeepLoc2 : Prediction of sub-cellular localization(s) of protein.
 
 Please note that:
@@ -1768,7 +1764,7 @@ extractSwitchSummary(exampleSwitchListAnalyzed, dIFcutoff = 0.4, filterForConseq
 
 Meaning that \~5/7 genes with switches (with dIF \> 0.4) have isoform switches with functional consequences. For larger dataset with default parameters this is typical 1/3.
 
-Please note that the *analyzeSwitchConsequences()* function contains many parameters and cutoffs for deciding when a difference in the annotation is sufficiently different (e.g. supplying 'ntCutoff=50' ensures that differences in nucleotide lengths of two ORF are larger than 50 nucleotides --- not just 3 nucleotides (one codon)).
+Please note that the *analyzeSwitchConsequences()* function contains many parameters and cutoffs for deciding when a difference in the annotation is sufficiently different (e.g. supplying 'ntCutoff=50' ensures that differences in nucleotide lengths of two ORF are larger than 50 nucleotides -- not just 3 nucleotides (one codon)).
 
 Back to [Table of Content]
 
@@ -1950,7 +1946,7 @@ extractSplicingEnrichmentComparison( mySwitchList )
 extractSplicingGenomeWide( mySwitchList )
 ```
 
-Step 1-4 are shared with the standard switch analysis workflow which is describe above in the [Detailed Workflow] (specifically each step is described in [Importing Data Into R], [Filtering], [Identifying Isoform Switches] and [Predicting Alternative Splicing]) and will therefore not be repeated here. The only difference is that in some cases one might *not* want reduce the switchAnalyzeRList to only contain the genes which contain differentially used isoforms --- as discussed below. This is done by setting *reduceToSwitchingGenes=FALSE* in the switch test.
+Step 1-4 are shared with the standard switch analysis workflow which is describe above in the [Detailed Workflow] (specifically each step is described in [Importing Data Into R], [Filtering], [Identifying Isoform Switches] and [Predicting Alternative Splicing]) and will therefore not be repeated here. The only difference is that in some cases one might *not* want reduce the switchAnalyzeRList to only contain the genes which contain differentially used isoforms -- as discussed below. This is done by setting *reduceToSwitchingGenes=FALSE* in the switch test.
 
 ### Genome-Wide Analysis of Alternative Splicing
 
@@ -2198,10 +2194,10 @@ data("exampleSwitchListAnalyzed")
 hist(exampleSwitchListAnalyzed$isoformFeatures$codingPotentialValue)
 ```
 
-These coding potential values are summarized by the cutoff supplied in the 'codingPotential' column --- which is what IsoformSwitchAnalyzeR uses in the downstream analysis.
+These coding potential values are summarized by the cutoff supplied in the 'codingPotential' column -- which is what IsoformSwitchAnalyzeR uses in the downstream analysis.
 
 ```         
-### These are summarized by the cutoff supplied in the 'codingPotential' column --- which is what is used by IsoformSwitchAnalyzeR in the downstream analysis.
+### These are summarized by the cutoff supplied in the 'codingPotential' column -- which is what is used by IsoformSwitchAnalyzeR in the downstream analysis.
 table(exampleSwitchListAnalyzed$isoformFeatures$codingPotential, exclude = NULL)
 ```
 
@@ -2240,9 +2236,9 @@ Since we how the structure of the isoforms involved in an isoform switch we can 
 
 This is simply done by, in addition to running *analyzeSwitchConsequences* with the consequences you find interesting, making a separate consequence analysis of consequences (also with *analyzeSwitchConsequences*) where the consequences you analyze (supplied to the *consequencesToAnalyze* argument) are:
 
-1)  'tss' --- which will analyze the isoforms for aTSS
-2)  'intron_structure' --- which will analyze the isoforms for AS
-3)  'tts' --- which will analyze the isoforms for aTSS
+1)  'tss' -- which will analyze the isoforms for aTSS
+2)  'intron_structure' -- which will analyze the isoforms for AS
+3)  'tts' -- which will analyze the isoforms for aTSS
 
 Then we can simply compare the result of this analysis to the isoform switches with consequences we already have identified to be of interest, and thereby identify which biological mechanisms give rise to the isoform switches with consequence you are interested in. One suggestion for such an analysis is illustrated here:
 

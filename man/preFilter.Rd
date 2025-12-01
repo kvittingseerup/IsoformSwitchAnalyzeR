@@ -9,7 +9,7 @@ This function removes genes/isoforms from a switchAnalyzeRlist with the aim of a
 }
 
 \usage{
-preFilter <- function(
+preFilter(
     switchAnalyzeRlist,
     isoCount = 10,
     min.Count.prop = 0.7,
@@ -112,12 +112,13 @@ Kristoffer Vitting-Seerup
 
 \examples{
 data("exampleSwitchList")
-exampleSwitchListFiltered <- preFilter(
+preFilter(
     exampleSwitchList,
     isoCount = 10,
     min.Count.prop = 0.7,
     IFcutoff = 0.1,
     min.IF.prop = 0.5,
-    removeSingleIsoformGenes = TRUE
+    removeSingleIsoformGenes = TRUE,
+    quiet = FALSE
 )
 }

@@ -47,6 +47,9 @@ importFrom("sva", "num.sv", 'sva')
 importFrom("SummarizedExperiment", "SummarizedExperiment")
 importFrom("BiocParallel", "bpparam")
 importFrom("S4Vectors", "do.call")
+importFrom("pwalign", "pairwiseAlignment", "alignedSubject", "alignedPattern")
+
+
 
 # plyr
 importFrom('plyr', 'ddply','ldply','llply','dlply')

@@ -1390,10 +1390,10 @@ compareAnnotationOfTwoIsoforms <- function(
 
             overlapSize <- min(c(
                 nchar(gsub(
-                    '-', '', as.character(Biostrings::alignedSubject(localAlignment))
+                    '-', '', as.character(pwalign::alignedSubject(localAlignment))
                 )),
                 nchar(gsub(
-                    '-', '', as.character(Biostrings::alignedPattern(localAlignment))
+                    '-', '', as.character(pwalign::alignedPattern(localAlignment))
                 ))
             ))
             totalWidth <- width(localAlignment@subject@unaligned) +
@@ -1609,14 +1609,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedSubject(localAlignment))
+                            as.character(pwalign::alignedSubject(localAlignment))
                         )
                     ),
                         nchar(
                             gsub(
                                 '-',
                                 '',
-                                as.character(Biostrings::alignedPattern(localAlignment))
+                                as.character(pwalign::alignedPattern(localAlignment))
                             )
                         ))
                     )
@@ -1746,14 +1746,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedSubject(localAlignment))
+                            as.character(pwalign::alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedPattern(localAlignment))
+                            as.character(pwalign::alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-
@@ -1883,14 +1883,14 @@ compareAnnotationOfTwoIsoforms <- function(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedSubject(localAlignment))
+                            as.character(pwalign::alignedSubject(localAlignment))
                         )
                     ),
                     nchar(
                         gsub(
                             '-',
                             '',
-                            as.character(Biostrings::alignedPattern(localAlignment))
+                            as.character(pwalign::alignedPattern(localAlignment))
                         )
                     )))
                     totalWidth <-
