@@ -124,6 +124,36 @@ analyzeCPAT <- function(
             }
 
 
+        } else if (ncol(myCPATresults) == 11) { # Handling CPAT3
+            temp <- myCPATresults$seq_ID
+            myCPATresults <- myCPATresults[, c(3, 8, 9, 10, 11)]  # Extract 'mRNA', 'ORF', 'Fickett', 'Hexamer', 'Coding_prob'
+            myCPATresults$id <- temp
+            if (!all(
+                colnames(myCPATresults) %in% c(
+                    "mRNA",
+                    "ORF",
+                    "Fickett",
+                    "Hexamer",
+                    "Coding_prob",
+                    "id"
+                )
+            )) {
+                stop(
+                    'There seems to be a problem with the CPAT3 result file. Please check it is the right file and try again'
+                )
+            }
+            # rename to match the expected format
+            colnames(myCPATresults) <-
+                c(
+                    'mRNA_size',
+                    'ORF_size',
+                    'Fickett_score',
+                    'Hexamer_score',
+                    'coding_prob',
+                    'id'
+                )
+
+            
         } else {
             stop(
                 'There seems to be a problem with the CPAT result file. Please check it is the rigth file and try again'
