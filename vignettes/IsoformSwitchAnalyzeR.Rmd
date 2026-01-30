@@ -2532,7 +2532,7 @@ myDesign$batch <- factor(c('a','a','b','a','b','b'))
 myDesign
 ```
 
-Please note that confounding effects can both be categorical (e.g. sex) (indicated by type character or factor) and continuous variables (e.g. age) (indicated by numeric or integers) - both will be taken into account. Due to the different interpretation it is recommended to use strings/factors for categorical variables (aka do not use 1 and 2 to indicate batch in the example above (instead use "a" and "b")). The conditions analyzed (as indicated by the "condition" column in the design matrix) must however always be categorical (character or factor).
+Please note that confounding effects can both be categorical (e.g. sex) (indicated by type character or factor) and continuous variables (e.g. age) (indicated by numeric or integers) - both will be taken into account. Due to the different interpretation it is recommended to use strings/factors for categorical variables (aka do not use 1 and 2 to indicate batch in the example above (instead use "a" and "b")). Numeric variables with few unique values may be ambiguous between categorical and continuous and may therefore be automatically cast to factors; this behavior can be controlled via the autoCastDesignCol argument to importRdata(). The conditions analyzed (as indicated by the "condition" column in the design matrix) must however always be categorical (character or factor).
 
 Back to [Table of Content]
 

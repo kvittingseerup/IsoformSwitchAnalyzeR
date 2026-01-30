@@ -1891,7 +1891,7 @@ importGTF <- function(
                 overlappingAnnotStart$finalJunctionPos <-
                     myExons2$finalJunctionPos[matchIndex]
 
-                ### Annoate with transcript coordinats
+                ### Annotate with transcript coordinates
                 overlappingAnnotStartPlus <-
                     overlappingAnnotStart[which(
                         overlappingAnnotStart$strand == '+'), ]
@@ -4800,20 +4800,22 @@ importRdata <- function(
               n_unique <- uniqueLength( localDesign[,i] )
               n_samples <- length(localDesign[,i])
               
-              is_ambiguous <- (n_unique < 15) && n_unique * 2 <= n_samples
+              is_ambiguous <- n_unique * 2 <= n_samples
               
               if (is_ambiguous) {
                 warning(
                   sprintf("Design matrix column '%s' is numeric with %d unique values and may be ambiguous ", colnames(localDesign)[i], n_unique),
-                  "(categorical vs continuous)."
+                  "(categorical vs continuous).\n",
+                  "We recommend using integers only for numeric variables, and strings/factors for groups."
                   )
-              }
-              if( is_ambiguous && autoCastDesignCol) {
-                localDesign[,i] <- factor(localDesign[,i])
-                warning(
-                  sprintf("Design matrix column '%s' has been automatically cast as a categorical variable.\n ", colnames(localDesign)[i]),
-                  "Set autoCastDesignCol to FALSE in order to leave it as a continuous variable."
-                )
+              
+                if( (n_unique < 5) && autoCastDesignCol) {
+                  localDesign[,i] <- factor(localDesign[,i])
+                  warning(
+                    sprintf("Design matrix column '%s' has been automatically cast as a categorical variable.\n ", colnames(localDesign)[i]),
+                    "Set autoCastDesignCol to FALSE in order to disable this function and treat is as a continuous variable."
+                  )
+                }
               }
             } else {
               localDesign[,i] <- factor(localDesign[,i])
@@ -5024,20 +5026,22 @@ importRdata <- function(
               n_unique <- uniqueLength( localDesign[,i] )
               n_samples <- length(localDesign[,i])
               
-              is_ambiguous <- (n_unique < 15) && n_unique * 2 <= n_samples
+              is_ambiguous <- n_unique * 2 <= n_samples
               
               if (is_ambiguous) {
                 warning(
                   sprintf("Design matrix column '%s' is numeric with %d unique values and may be ambiguous ", colnames(localDesign)[i], n_unique),
-                  "(categorical vs continuous)."
+                  "(categorical vs continuous).\n",
+                  "We recommend using integers only for numeric variables, and strings/factors for groups."
                 )
-              }
-              if( is_ambiguous && autoCastDesignCol) {
-                localDesign[,i] <- factor(localDesign[,i])
-                warning(
-                  sprintf("Design matrix column '%s' has been automatically cast as a categorical variable.\n ", colnames(localDesign)[i]),
-                  "Set autoCastDesignCol to FALSE in order to leave it as a continuous variable."
-                )
+                
+                if( (n_unique < 5) && autoCastDesignCol) {
+                  localDesign[,i] <- factor(localDesign[,i])
+                  warning(
+                    sprintf("Design matrix column '%s' has been automatically cast as a categorical variable.\n ", colnames(localDesign)[i]),
+                    "Set autoCastDesignCol to FALSE in order to disable this function and treat is as a continuous variable."
+                  )
+                }
               }
             } else {
               localDesign[,i] <- factor(localDesign[,i])
