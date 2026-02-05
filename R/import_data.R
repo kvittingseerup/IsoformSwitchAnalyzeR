@@ -1891,7 +1891,7 @@ importGTF <- function(
                 overlappingAnnotStart$finalJunctionPos <-
                     myExons2$finalJunctionPos[matchIndex]
 
-                ### Annoate with transcript coordinats
+                ### Annotate with transcript coordinates
                 overlappingAnnotStartPlus <-
                     overlappingAnnotStart[which(
                         overlappingAnnotStart$strand == '+'), ]
@@ -2940,6 +2940,7 @@ importRdata <- function(
   fixStringTieMinOverlapFrac = 0.2,
   fixStringTieMinOverlapLog2RatioToContender = 0.65,
   estimateDifferentialGeneRange = TRUE,
+  autoCastDesignCol = TRUE,  
   showProgress = TRUE,
   quiet = FALSE
 ) {
@@ -4792,12 +4793,29 @@ importRdata <- function(
         localFormula <- '~ 0 + condition'
         
         
-        ### Check co-founders for group vs continous variables and add to fomula
+        ### Check co-founders for group vs continuous variables and add to formula
         if( ncol(localDesign) > 2 ) {
           for(i in 3:ncol(localDesign) ) { # i <- 4
-            if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-              if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
-                localDesign[,i] <- factor(localDesign[,i])
+            if( is.numeric(localDesign[,i]) ) { #class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+              n_unique <- uniqueLength( localDesign[,i] )
+              n_samples <- length(localDesign[,i])
+              
+              is_ambiguous <- n_unique * 2 <= n_samples
+              
+              if (is_ambiguous) {
+                warning(
+                  sprintf("Design matrix column '%s' is numeric with %d unique values and may be ambiguous ", colnames(localDesign)[i], n_unique),
+                  "(categorical vs continuous).\n",
+                  "We recommend using integers only for numeric variables, and strings/factors for groups."
+                  )
+              
+                if( (n_unique < 5) && autoCastDesignCol) {
+                  localDesign[,i] <- factor(localDesign[,i])
+                  warning(
+                    sprintf("Design matrix column '%s' has been automatically cast as a categorical variable.\n ", colnames(localDesign)[i]),
+                    "Set autoCastDesignCol to FALSE in order to disable this function and treat is as a continuous variable."
+                  )
+                }
               }
             } else {
               localDesign[,i] <- factor(localDesign[,i])
@@ -5004,9 +5022,26 @@ importRdata <- function(
         ### Check co-founders for group vs continous variables
         if( ncol(localDesign) > 2 ) {
           for(i in 3:ncol(localDesign) ) { # i <- 4
-            if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-              if( uniqueLength( localDesign[,i] ) * 2 <= length(localDesign[,i]) ) {
-                localDesign[,i] <- factor(localDesign[,i])
+            if( is.numeric(localDesign[,i]) ) { #class(localDesign[,i]) %in% c('numeric', 'integer') ) {
+              n_unique <- uniqueLength( localDesign[,i] )
+              n_samples <- length(localDesign[,i])
+              
+              is_ambiguous <- n_unique * 2 <= n_samples
+              
+              if (is_ambiguous) {
+                warning(
+                  sprintf("Design matrix column '%s' is numeric with %d unique values and may be ambiguous ", colnames(localDesign)[i], n_unique),
+                  "(categorical vs continuous).\n",
+                  "We recommend using integers only for numeric variables, and strings/factors for groups."
+                )
+                
+                if( (n_unique < 5) && autoCastDesignCol) {
+                  localDesign[,i] <- factor(localDesign[,i])
+                  warning(
+                    sprintf("Design matrix column '%s' has been automatically cast as a categorical variable.\n ", colnames(localDesign)[i]),
+                    "Set autoCastDesignCol to FALSE in order to disable this function and treat is as a continuous variable."
+                  )
+                }
               }
             } else {
               localDesign[,i] <- factor(localDesign[,i])

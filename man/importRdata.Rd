@@ -56,6 +56,7 @@ importRdata(
     fixStringTieMinOverlapFrac = 0.2,
     fixStringTieMinOverlapLog2RatioToContender = 0.65,
     estimateDifferentialGeneRange = TRUE,
+    autoCastDesignCol = TRUE,
     showProgress = TRUE,
     quiet = FALSE
 )
@@ -147,6 +148,10 @@ A log2 ratio which describes how much larger the overlap between a novel isoform
 
 \item{estimateDifferentialGeneRange}{
 A logic indicating whether to make a very quick estimate of the number of genes with differential isoform usage. Please note this number should be taken as a pilot and cannot be trusted. It merely servers to indcate what could be expected if the data is analyzed with the rest of the IsoformSwitchAnalyzeR. See details for more information. Default is TRUE.
+}
+
+\item{autoCastDesignCol}{
+A logic indicating whether numeric design matrix columns that may represent categorical variables (e.g. few unique values relative to sample size) should be automatically cast to factors. Default is TRUE.
 }
 
 \item{showProgress}{
