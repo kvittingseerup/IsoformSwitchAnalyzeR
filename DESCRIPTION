@@ -12,7 +12,7 @@ License: GPL (>= 2)
 Depends: R (>= 4.2), limma, DEXSeq, satuRn (>= 1.7.0), sva, ggplot2 (>= 3.3.5), pfamAnalyzeR
 Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings (>= 2.50.0), IRanges,
     GenomicRanges, RColorBrewer, rtracklayer, VennDiagram, DBI, grDevices,
-    graphics, stats, utils, GenomeInfoDb, grid, tximport (>= 1.7.1),
+    graphics, stats, utils, Seqinfo, grid, tximport (>= 1.7.1),
     tximeta (>= 1.7.12), edgeR, futile.logger, stringr, dplyr,
     magrittr, readr, tibble, XVector, BiocGenerics, RCurl, Biobase,
     SummarizedExperiment, tidyr, S4Vectors, BiocParallel, pwalign
