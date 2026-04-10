@@ -247,14 +247,14 @@ analyzeSwitchConsequences <- function(
         )) {
             if (!any(names(switchAnalyzeRlist) == 'ntSequence')) {
                 stop(
-                    'The transcrip nucleotide sequences must be added to the switchAnalyzeRlist before overlap analysis can be performed. These can be added by using the \'extractSequence()\' function.'
+                    'The transcript nucleotide sequences must be added to the switchAnalyzeRlist before overlap analysis can be performed. These can be added by using the \'extractSequence()\' function.'
                 )
             }
         }
         if (any(consequencesToAnalyze %in% c('ORF_seq_similarity'))) {
             if (!any(names(switchAnalyzeRlist) == 'aaSequence')) {
                 stop(
-                    'The transcrip ORF amino acid sequences must be added to the switchAnalyzeRlist before ORF overlap analysis can be performed. These can be added by using the \'extractSequence()\' function.'
+                    'The transcript ORF amino acid sequences must be added to the switchAnalyzeRlist before ORF overlap analysis can be performed. These can be added by using the \'extractSequence()\' function.'
                 )
             }
         }
@@ -1417,9 +1417,9 @@ compareAnnotationOfTwoIsoforms <- function(
                     names(isoform_length)[which.max(isoform_length)] == upIso
 
                 if (lengthGain) {
-                    isoComparison$switchConsequence[localIndex] <- 'Length gain'
+                    isoComparison$switchConsequence[localIndex] <- 'Isoform is longer and dissimilar'
                 } else {
-                    isoComparison$switchConsequence[localIndex] <- 'Length loss'
+                    isoComparison$switchConsequence[localIndex] <- 'Isoform is shorter and dissimilar'
                 }
 
             }
@@ -1644,10 +1644,10 @@ compareAnnotationOfTwoIsoforms <- function(
 
                         if (lengthGain) {
                             isoComparison$switchConsequence[localIndex] <-
-                                'ORF is longer'
+                                'ORF is longer and dissimilar'
                         } else {
                             isoComparison$switchConsequence[localIndex] <-
-                                'ORF is shorter'
+                                'ORF is shorter and dissimilar'
                         }
 
                     }
@@ -1789,10 +1789,10 @@ compareAnnotationOfTwoIsoforms <- function(
 
                     if (utr5Gain) {
                         isoComparison$switchConsequence[localIndex] <-
-                            '5UTR is longer'
+                            '5UTR is longer and dissimilar'
                     } else {
                         isoComparison$switchConsequence[localIndex] <-
-                            '5UTR is shorter'
+                            '5UTR is shorter and dissimilar'
                     }
 
                 }
@@ -1927,10 +1927,10 @@ compareAnnotationOfTwoIsoforms <- function(
 
                     if (utr3Gain) {
                         isoComparison$switchConsequence[localIndex] <-
-                            '3UTR is longer'
+                            '3UTR is longer and dissimilar'
                     } else {
                         isoComparison$switchConsequence[localIndex] <-
-                            '3UTR is shorter'
+                            '3UTR is shorter and dissimilar'
                     }
 
                 }
@@ -3520,7 +3520,10 @@ extractConsequenceEnrichment <- function(
             tts=c('Tts more downstream','Tts more upstream'),
             last_exon=c('Last exon more downstream','Last exon more upstream'),
             isoform_length=c('Length gain','Length loss'),
-            isoform_seq_similarity=c('Length gain','Length loss'),
+            isoform_seq_similarity=c('Isoform is longer and dissimilar', 'Isoform is shorter and dissimilar'),
+            ORF_seq_similarity=c('ORF is longer and dissimilar', 'ORF is shorter and dissimilar'),
+            x5_utr_seq_similarity=c('5UTR is longer and dissimilar', '5UTR is shorter and dissimilar'),
+            x3_utr_seq_similarity=c('3UTR is longer and dissimilar', '3UTR is shorter and dissimilar'),
             exon_number=c('Exon gain','Exon loss'),
             intron_retention=c('Intron retention gain','Intron retention loss'),
             ORF_length=c('ORF is longer','ORF is shorter'),
