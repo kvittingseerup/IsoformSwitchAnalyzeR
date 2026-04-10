@@ -15,7 +15,7 @@ Imports: methods, BSgenome, plyr, reshape2, gridExtra, Biostrings (>= 2.50.0), I
     graphics, stats, utils, Seqinfo, grid, tximport (>= 1.7.1),
     tximeta (>= 1.7.12), edgeR, futile.logger, stringr, dplyr,
     magrittr, readr, tibble, XVector, BiocGenerics, RCurl, Biobase,
-    SummarizedExperiment, tidyr, S4Vectors, BiocParallel, pwalign
+    SummarizedExperiment, tidyr, S4Vectors, BiocParallel, pwalign, MASS
 Suggests: knitr, BSgenome.Hsapiens.UCSC.hg19, rmarkdown
 VignetteBuilder: knitr
 Collate: classes.R methods.R import_data.R test_isoform_switches.R analyze_ORF.R
