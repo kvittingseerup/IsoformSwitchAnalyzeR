@@ -1532,7 +1532,7 @@ analyzeNovelIsoformORF <- function(
             stop('No ORF annotation pressent. Run addORFfromGTF() first and try again.')
         }
         nWithout <- sum(switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet')
-        nWithout <- nWithout + (sum(!is.na(switchAnalyzeRlist$orfAnalysis$PTC)) * as.integer(analysisAllIsoformsWithoutORF))
+        nWithout <- nWithout + (sum(switchAnalyzeRlist$orfAnalysis$orf_origin == 'Annotation' & is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)) * as.integer(analysisAllIsoformsWithoutORF))
 
         if( nWithout == 0) {
             stop('There appear not to be any isoforms not already annotated with ORFs - meaning there is no need to run this function')
