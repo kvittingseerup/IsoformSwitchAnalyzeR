@@ -5844,362 +5844,258 @@ importSalmonData <- function(
 }
 
 ### Prefilter
-preFilter <- function(
-    switchAnalyzeRlist,
-    isoCount = 10,
-    min.Count.prop = 0.7,
-    IFcutoff = 0.1,
-    min.IF.prop = 0.5,
-    acceptedGeneBiotype = NULL,
-    acceptedIsoformClassCode = NULL,
-    removeSingleIsoformGenes = TRUE,
-    reduceToSwitchingGenes = FALSE,
-    reduceFurtherToGenesWithConsequencePotential = FALSE,
-    onlySigIsoforms = FALSE,
-    keepIsoformInAllConditions = FALSE,
-    alpha = 0.05,
-    dIFcutoff = 0.1,
-    quiet = FALSE
-) {
-  ### Test input
-  if (TRUE) {
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
-      stop(paste(
-        'The object supplied to \'switchAnalyzeRlist\'',
-        'must be a \'switchAnalyzeRlist\''
-      ))
-    }
-    
-    if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches' ) {
-      stop(
-        paste(
-          'The switchAnalyzeRlist is made from pre-defined isoform switches.',
-          'All filtering should be done before you used the approach',
-          'that gave rise to the isoform pairs you have pre-defined',
-          sep = ' '
-        )
-      )
-    }
-    
-    if( switchAnalyzeRlist$sourceId == 'gtf') {
-      warning(
-        paste(
-          'The switchAnalyzeRlist seems to be created from a gtf file',
-          'wereby expression is probably not annotated.',
-          'Running preFilter() might not be what you want.',
-          '\nIf expression info was manually added afterwards',
-          'please ignore this warning.',
-          sep=' '
-        )
-      )
-    }
-    
-    if( switchAnalyzeRlist$sourceId == 'preDefinedSwitches') {
-      if( all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall)) ) {
-        stop('The switchAnalyzeRlist was created without expression data whereby it cannot be filtered')
-      }
-    }
-    
-    
-    if (!is.null(isoCount)) {
-      if (!is.numeric(isoCount)) {
-        stop('The isoCount argument must be a numeric')
-      }
-    }
-    if (!is.null(min.Count.prop)) {
-      if (!is.numeric(min.Count.prop)) {
-        stop('The min.Count.prop argument must be a numeric')
-      }
-    }
-    if (!is.null(IFcutoff)) {
-      if (!is.numeric(IFcutoff)) {
-        stop('The IFcutoff argument must be a numeric')
-      }
-    }
-    
-    if (!is.null(min.IF.prop)) {
-      if (!is.numeric(min.IF.prop)) {
-        stop('The min.IF.prop argument must be a numeric')
-      }
-    }
-    
-    if (!is.null(acceptedIsoformClassCode)) {
-      if (!'class_code' %in%
-          colnames(switchAnalyzeRlist$isoformFeatures)) {
-        stop(paste(
-          'The filter on class codes can only be used if',
-          'the switchAnalyzeRlist was generated from cufflinks data'
-        ))
-      }
-    }
-    
-    if( !is.null(acceptedGeneBiotype) & 'gene_biotype' %in% colnames(switchAnalyzeRlist$isoformFeatures) ) {
-      okBiotypes <- unique(switchAnalyzeRlist$isoformFeatures$gene_biotype)
-      
-      if( !all(acceptedGeneBiotype %in% okBiotypes) ) {
-        notAnnot <- setdiff(acceptedGeneBiotype, okBiotypes)
-        
-        warning(
-          paste(
-            'Some of the supplied biotypes are not found in the isoforms supplied and will be ignored\n',
-            'These are:', paste(notAnnot, collapse = ', ')
-          )
-        )
-      }
-    }
-    
-    if (!is.logical(removeSingleIsoformGenes)) {
-      stop('The removeSingleIsoformGenes must be either TRUE or FALSE')
-    }
-    
-    if (reduceToSwitchingGenes) {
-      hasTest <- any(!is.na(
-        c(
-          switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value,
-          switchAnalyzeRlist$isoformFeatures$gene_switch_q_value
-        )
-      ))
-      if( ! hasTest) {
-        stop(
-          paste(
-            'The switchAnalyzeRlist does not contain the result',
-            'of a switch analysis.\nPlease turn off','
-                        the "reduceToSwitchingGenes" argument try again.',
-            sep=' '
-          )
-        )
-      }
-      
-      
-      if (alpha < 0 |
-          alpha > 1) {
-        stop('The alpha parameter must be between 0 and 1 ([0,1]).')
-      }
-      if (alpha > 0.05) {
-        warning(paste(
-          'Most journals and scientists consider an alpha larger',
-          'than 0.05 untrustworthy. We therefore recommend using',
-          'alpha values smaller than or queal to 0.05'
-        ))
-      }
-    }
-  }
-  
-  ### Find which isoforms to keep
-  if (TRUE) {
-    ### Extract data to filter on
-    if(TRUE) {
-      columnsToExtraxt <-
-        c(
-          'iso_ref',
-          'gene_ref',
-          'isoform_id',
-          'gene_id',
-          'gene_biotype',
-          'condition_1',
-          'condition_2',
-          'class_code',
-          'gene_value_1',
-          'gene_value_2',
-          'iso_overall_mean',
-          'iso_value_1',
-          'iso_value_2',
-          'IF_overall',
-          'IF1',
-          'IF2',
-          'dIF',
-          'gene_switch_q_value',
-          'isoform_switch_q_value'
-        )
-      columnsToExtraxt <-
-        na.omit(match(
-          columnsToExtraxt,
-          colnames(switchAnalyzeRlist$isoformFeature)
-        ))
-      #localData <- unique( switchAnalyzeRlist$isoformFeature[, columnsToExtraxt ] ) # no need
-      isoformCountData <- switchAnalyzeRlist$isoformCountMatrix %>%
-        rename_with(~ paste0("Count_", .), -isoform_id)
-      IFData <- switchAnalyzeRlist$isoformRepIF %>%
-        #rownames_to_column(var = "isoform_id") %>%
-        rename_with(~ paste0("IF_", .), -isoform_id)
-      localData <-
-        switchAnalyzeRlist$isoformFeature[, columnsToExtraxt]
-      localData <- localData %>%
-        inner_join(isoformCountData, by = "isoform_id") %>%
-        inner_join(IFData, by = "isoform_id")
-      
-      # Count features
-      transcriptCount <- length(unique(localData$isoform_id))
-    }
-    
-    ### Reduce to genes with switches
-    if (reduceToSwitchingGenes ) {
-      if( reduceFurtherToGenesWithConsequencePotential ) {
-        tmp <- extractSwitchPairs(
-          switchAnalyzeRlist,
-          alpha = alpha,
-          dIFcutoff = dIFcutoff,
-          onlySigIsoforms = onlySigIsoforms
-        )
-        deGenes <- unique(tmp$gene_ref)
-        
-      } else {
-        isoResTest <-
-          any(!is.na(
-            localData$isoform_switch_q_value
-          ))
-        if (isoResTest) {
-          deGenes <- localData$gene_ref[which(
-            localData$isoform_switch_q_value < alpha &
-              abs(localData$dIF) > dIFcutoff
-          )]
-        } else {
-          deGenes <- localData$gene_ref[which(
-            localData$gene_switch_q_value < alpha &
-              abs(localData$dIF) > dIFcutoff
-          )]
+preFilter <- function(switchAnalyzeRlist, isoCount = 10, min.Count.prop = 0.7, 
+    IFcutoff = 0.1, min.IF.prop = 0.5, acceptedGeneBiotype = NULL, 
+    acceptedIsoformClassCode = NULL, removeSingleIsoformGenes = TRUE, 
+    reduceToSwitchingGenes = FALSE, reduceFurtherToGenesWithConsequencePotential = FALSE, 
+    onlySigIsoforms = FALSE, keepIsoformInAllConditions = FALSE, 
+    alpha = 0.05, dIFcutoff = 0.1, quiet = FALSE,
+    trace = FALSE) 
+{
+    # If tracing is requested, tictoc must be available
+    if (trace) {
+        if (!requireNamespace("tictoc", quietly = TRUE)) {
+            stop("Package 'tictoc' is needed when trace = TRUE. Please install it.")
         }
-      }
-      
-      localData <- localData[which(
-        localData$gene_ref %in% deGenes
-      ),]
-      
-      if (!nrow(localData)) {
-        stop('No genes were left after filtering for switching genes')
-      }
-      
-      
+        tictoc::tic.clearlog()
+        tictoc::tic("Total filtering")
     }
-    
-    ### Select distinct pairs of conditions as comparisons
-    comparisons <- localData %>% dplyr::select(condition_1, condition_2) %>% distinct()
-    
-    ### Function to filter based on the cutoff and min proportion 
-    filter_comparison <- function(data, comparison, cutoff, min.prop, designMatrix,prefix = "") {
-      
-      sampleIDs <- designMatrix %>%
-        filter(condition %in% c(comparison$condition_1, comparison$condition_2)) %>%
-        pull(sampleID)
-      
-      filter_logic <- function(row) {
-        sample_values <- row[match(paste0(prefix, sampleIDs), names(row))]
-        count_total <- sum(sample_values > cutoff, na.rm = TRUE)
-        total_samples <- length(sampleIDs)
-        count_total >= 3 & count_total >= min.prop * total_samples
-      }
-      
-      filteredData <- data %>%
-        filter(condition_1 == comparison$condition_1 & condition_2 == comparison$condition_2) %>%
-        rowwise() %>%
-        filter(filter_logic(across()))
-      return(filteredData)
-    }
-    
-    ### Filter within the comparisons to keep the isoforms appear in > min.Count.prop of samples with more than isoCount counts
-    if (!is.null(isoCount)) {
-      if (!is.null(min.Count.prop)){
-        localData <- comparisons %>%
-          rowwise() %>%
-          do(filter_comparison(localData, ., isoCount, min.Count.prop, switchAnalyzeRlist$designMatrix, prefix = "Count_")) %>%
-          ungroup()
-        if (!nrow(localData)) {
-          stop('No genes were left after filtering for gene expression')
+
+    # ---- Original checks (unchanged) ----
+    if (TRUE) {
+        if (class(switchAnalyzeRlist) != "switchAnalyzeRlist") {
+            stop(paste("The object supplied to 'switchAnalyzeRlist'", 
+                "must be a 'switchAnalyzeRlist'"))
         }
-      }
-    }
-    
-    ### Filter within the comparisons to keep the isoforms appear in > min.IF.prop of samples with more than IFcutoff
-    if (!is.null(IFcutoff)) {
-      if (!is.null(min.IF.prop)){
-        localData <- comparisons %>%
-          rowwise() %>%
-          do(filter_comparison(localData, ., IFcutoff, min.IF.prop, switchAnalyzeRlist$designMatrix, prefix = "IF_")) %>%
-          ungroup()
-        if (!nrow(localData)) {
-          stop('No genes were left after filtering for gene expression')
+        if (switchAnalyzeRlist$sourceId == "preDefinedSwitches") {
+            stop(paste("The switchAnalyzeRlist is made from pre-defined isoform switches.", 
+                "All filtering should be done before you used the approach", 
+                "that gave rise to the isoform pairs you have pre-defined", 
+                sep = " "))
         }
-      }
-    }
-    
-    
-    if (!is.null(acceptedGeneBiotype)) {
-      if( 'gene_biotype' %in% colnames(localData) ) {
-        localData <- localData[which(localData$gene_biotype %in% acceptedGeneBiotype), ]
-        
-        if (!nrow(localData)) {
-          stop('No genes were left after filtering for acceptedGeneBiotype.')
+        if (switchAnalyzeRlist$sourceId == "gtf") {
+            warning(paste("The switchAnalyzeRlist seems to be created from a gtf file", 
+                "wereby expression is probably not annotated.", 
+                "Running preFilter() might not be what you want.", 
+                "\nIf expression info was manually added afterwards", 
+                "please ignore this warning.", sep = " "))
         }
-      } else {
-        warning('Gene biotypes were not annotated so the \'acceptedGeneBiotype\' argument was ignored.')
-      }
-      
+        if (switchAnalyzeRlist$sourceId == "preDefinedSwitches") {
+            if (all(is.na(switchAnalyzeRlist$isoformFeatures$IF_overall))) {
+                stop("The switchAnalyzeRlist was created without expression data whereby it cannot be filtered")
+            }
+        }
+        if (!is.null(isoCount)) {
+            if (!is.numeric(isoCount)) {
+                stop("The isoCount argument must be a numeric")
+            }
+        }
+        if (!is.null(min.Count.prop)) {
+            if (!is.numeric(min.Count.prop)) {
+                stop("The min.Count.prop argument must be a numeric")
+            }
+        }
+        if (!is.null(IFcutoff)) {
+            if (!is.numeric(IFcutoff)) {
+                stop("The IFcutoff argument must be a numeric")
+            }
+        }
+        if (!is.null(min.IF.prop)) {
+            if (!is.numeric(min.IF.prop)) {
+                stop("The min.IF.prop argument must be a numeric")
+            }
+        }
+        if (!is.null(acceptedIsoformClassCode)) {
+            if (!"class_code" %in% colnames(switchAnalyzeRlist$isoformFeatures)) {
+                stop(paste("The filter on class codes can only be used if", 
+                  "the switchAnalyzeRlist was generated from cufflinks data"))
+            }
+        }
+        if (!is.null(acceptedGeneBiotype) & "gene_biotype" %in% 
+            colnames(switchAnalyzeRlist$isoformFeatures)) {
+            okBiotypes <- unique(switchAnalyzeRlist$isoformFeatures$gene_biotype)
+            if (!all(acceptedGeneBiotype %in% okBiotypes)) {
+                notAnnot <- setdiff(acceptedGeneBiotype, okBiotypes)
+                warning(paste("Some of the supplied biotypes are not found in the isoforms supplied and will be ignored\n", 
+                  "These are:", paste(notAnnot, collapse = ", ")))
+            }
+        }
+        if (!is.logical(removeSingleIsoformGenes)) {
+            stop("The removeSingleIsoformGenes must be either TRUE or FALSE")
+        }
+        if (reduceToSwitchingGenes) {
+            hasTest <- any(!is.na(c(switchAnalyzeRlist$isoformFeatures$isoform_switch_q_value, 
+                switchAnalyzeRlist$isoformFeatures$gene_switch_q_value)))
+            if (!hasTest) {
+                stop(paste("The switchAnalyzeRlist does not contain the result", 
+                  "of a switch analysis.\nPlease turn off\n                        the \"reduceToSwitchingGenes\" argument try again.", 
+                  sep = " "))
+            }
+            if (alpha < 0 | alpha > 1) {
+                stop("The alpha parameter must be between 0 and 1 ([0,1]).")
+            }
+            if (alpha > 0.05) {
+                warning(paste("Most journals and scientists consider an alpha larger", 
+                  "than 0.05 untrustworthy. We therefore recommend using", 
+                  "alpha values smaller than or queal to 0.05"))
+            }
+        }
     }
-    
-    if (!is.null(acceptedIsoformClassCode)) {
-      localData <- localData[which(localData$class_code %in% acceptedIsoformClassCode), ]
-      
-      if (!nrow(localData)) {
-        stop('No genes were left after filtering for isoform class codes')
-      }
+
+    # ---- Main filtering block ----
+    if (TRUE) {
+        # --- Data assembly ---
+        if (trace) tictoc::tic("Data join")
+        columnsToExtraxt <- c("iso_ref", "gene_ref", "isoform_id", 
+            "gene_id", "gene_biotype", "condition_1", "condition_2", 
+            "class_code", "gene_value_1", "gene_value_2", 
+            "iso_overall_mean", "iso_value_1", "iso_value_2", 
+            "IF_overall", "IF1", "IF2", "dIF", "gene_switch_q_value", 
+            "isoform_switch_q_value")
+        columnsToExtraxt <- na.omit(match(columnsToExtraxt, 
+            colnames(switchAnalyzeRlist$isoformFeature)))
+        isoformCountData <- switchAnalyzeRlist$isoformCountMatrix %>% 
+            dplyr::rename_with(~paste0("Count_", .), -isoform_id)
+        IFData <- switchAnalyzeRlist$isoformRepIF %>% 
+            dplyr::rename_with(~paste0("IF_", .), -isoform_id)
+        localData <- switchAnalyzeRlist$isoformFeature[, columnsToExtraxt]
+        localData <- localData %>% 
+            dplyr::inner_join(isoformCountData, by = "isoform_id") %>% 
+            dplyr::inner_join(IFData, by = "isoform_id")
+        transcriptCount <- length(unique(localData$isoform_id))
+        if (trace) tictoc::toc()
+
+        # --- Reduce to switching genes ---
+        if (trace) tictoc::tic("Switch gene reduction")
+        if (reduceToSwitchingGenes) {
+            if (reduceFurtherToGenesWithConsequencePotential) {
+                tmp <- extractSwitchPairs(switchAnalyzeRlist, 
+                    alpha = alpha, dIFcutoff = dIFcutoff, onlySigIsoforms = onlySigIsoforms)
+                deGenes <- unique(tmp$gene_ref)
+            } else {
+                isoResTest <- any(!is.na(localData$isoform_switch_q_value))
+                if (isoResTest) {
+                    deGenes <- localData$gene_ref[which(localData$isoform_switch_q_value < 
+                        alpha & abs(localData$dIF) > dIFcutoff)]
+                } else {
+                    deGenes <- localData$gene_ref[which(localData$gene_switch_q_value < 
+                        alpha & abs(localData$dIF) > dIFcutoff)]
+                }
+            }
+            localData <- localData[which(localData$gene_ref %in% deGenes), ]
+            if (!nrow(localData)) {
+                stop("No genes were left after filtering for switching genes")
+            }
+        }
+        if (trace) tictoc::toc()
+
+        # Define comparisons
+        comparisons <- localData %>% 
+            dplyr::select(condition_1, condition_2) %>% 
+            dplyr::distinct()
+
+        # --- Count filter (vectorised) ---
+        if (trace) tictoc::tic("Count filter")
+        if (!is.null(isoCount) && !is.null(min.Count.prop)) {
+            localDataList <- lapply(seq_len(nrow(comparisons)), function(i) {
+                comp <- comparisons[i, ]
+                sampleIDs <- switchAnalyzeRlist$designMatrix %>%
+                    dplyr::filter(condition %in% c(comp$condition_1, comp$condition_2)) %>%
+                    dplyr::pull(sampleID)
+                cols <- paste0("Count_", sampleIDs)
+                cols <- intersect(cols, colnames(localData))
+                sub <- localData[localData$condition_1 == comp$condition_1 &
+                                 localData$condition_2 == comp$condition_2, ]
+                if (nrow(sub) == 0) return(sub[0, ])
+                mat <- as.matrix(sub[, cols] > isoCount)
+                n_samples <- length(cols)
+                keep <- rowSums(mat, na.rm = TRUE) >= max(3, min.Count.prop * n_samples)
+                sub[keep, ]
+            })
+            localData <- dplyr::bind_rows(localDataList)
+            if (!nrow(localData)) stop("No genes were left after filtering for gene expression")
+        }
+        if (trace) tictoc::toc()
+
+        # --- IF filter (vectorised) ---
+        if (trace) tictoc::tic("IF filter")
+        if (!is.null(IFcutoff) && !is.null(min.IF.prop)) {
+            localDataList <- lapply(seq_len(nrow(comparisons)), function(i) {
+                comp <- comparisons[i, ]
+                sampleIDs <- switchAnalyzeRlist$designMatrix %>%
+                    dplyr::filter(condition %in% c(comp$condition_1, comp$condition_2)) %>%
+                    dplyr::pull(sampleID)
+                cols <- paste0("IF_", sampleIDs)
+                cols <- intersect(cols, colnames(localData))
+                sub <- localData[localData$condition_1 == comp$condition_1 &
+                                 localData$condition_2 == comp$condition_2, ]
+                if (nrow(sub) == 0) return(sub[0, ])
+                mat <- as.matrix(sub[, cols] > IFcutoff)
+                n_samples <- length(cols)
+                keep <- rowSums(mat, na.rm = TRUE) >= max(3, min.IF.prop * n_samples)
+                sub[keep, ]
+            })
+            localData <- dplyr::bind_rows(localDataList)
+            if (!nrow(localData)) stop("No genes were left after filtering for gene expression")
+        }
+        if (trace) tictoc::toc()
+
+        # --- Other filters ---
+        if (trace) tictoc::tic("Other filters")
+        if (!is.null(acceptedGeneBiotype)) {
+            if ("gene_biotype" %in% colnames(localData)) {
+                localData <- localData[which(localData$gene_biotype %in% 
+                    acceptedGeneBiotype), ]
+                if (!nrow(localData)) {
+                    stop("No genes were left after filtering for acceptedGeneBiotype.")
+                }
+            } else {
+                warning("Gene biotypes were not annotated so the 'acceptedGeneBiotype' argument was ignored.")
+            }
+        }
+        if (!is.null(acceptedIsoformClassCode)) {
+            localData <- localData[which(localData$class_code %in% 
+                acceptedIsoformClassCode), ]
+            if (!nrow(localData)) {
+                stop("No genes were left after filtering for isoform class codes")
+            }
+        }
+        if (removeSingleIsoformGenes) {
+            transcriptsPrGene <- split(localData$iso_ref, f = localData$gene_ref)
+            transcriptsPrGene <- lapply(transcriptsPrGene, unique)
+            genesToKeep <- names(transcriptsPrGene)[which(sapply(transcriptsPrGene, 
+                function(x) length(x) > 1))]
+            if (!length(genesToKeep)) {
+                stop("No genes were left after filtering for mutlipe transcrip genes")
+            }
+            localData <- localData[which(localData$gene_ref %in% genesToKeep), ]
+        }
+        if (trace) tictoc::toc()
     }
-    
-    if (removeSingleIsoformGenes) {
-      transcriptsPrGene <-
-        split(localData$iso_ref, f = localData$gene_ref)
-      transcriptsPrGene <- lapply(transcriptsPrGene, unique)
-      
-      genesToKeep <-
-        names(transcriptsPrGene)[which(sapply(transcriptsPrGene, function(x)
-          length(x) > 1))]
-      
-      if (!length(genesToKeep)) {
-        stop('No genes were left after filtering for mutlipe transcrip genes')
-      }
-      
-      localData <-
-        localData[which(localData$gene_ref %in% genesToKeep),]
+
+    # ---- Final subsetting ----
+    if (trace) tictoc::tic("Subsetting switchAnalyzeRlist")
+    if (keepIsoformInAllConditions) {
+        switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(switchAnalyzeRlist, 
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in% localData$isoform_id)
+    } else {
+        switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(switchAnalyzeRlist, 
+            switchAnalyzeRlist$isoformFeatures$iso_ref %in% localData$iso_ref)
     }
-    
-  }
-  
-  ### Do filtering
-  if (keepIsoformInAllConditions) {
-    switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
-      switchAnalyzeRlist,
-      switchAnalyzeRlist$isoformFeatures$isoform_id %in%
-        localData$isoform_id
-    )
-  } else {
-    switchAnalyzeRlist <- subsetSwitchAnalyzeRlist(
-      switchAnalyzeRlist,
-      switchAnalyzeRlist$isoformFeatures$iso_ref %in% localData$iso_ref
-    )
-  }
-  
-  ### Report filtering
-  transcriptsLeft <- length(unique(localData$isoform_id))
-  transcriptsRemoved <- transcriptCount - transcriptsLeft
-  percentRemoved <-
-    round(transcriptsRemoved / transcriptCount, digits = 4) * 100
-  
-  if (!quiet) {
-    message(
-      paste(
-        'The filtering removed ',
-        transcriptsRemoved,
-        ' ( ',
-        percentRemoved,
-        '% of ) transcripts. There is now ',
-        transcriptsLeft,
-        ' isoforms left',
-        sep = ''
-      )
-    )
-  }
-  
-  ### return result
-  return(switchAnalyzeRlist)
+    if (trace) tictoc::toc()
+
+    transcriptsLeft <- length(unique(localData$isoform_id))
+    transcriptsRemoved <- transcriptCount - transcriptsLeft
+    percentRemoved <- round(transcriptsRemoved/transcriptCount, 
+        digits = 4) * 100
+    if (!quiet) {
+        message(paste("The filtering removed ", transcriptsRemoved, 
+            " ( ", percentRemoved, "% of ) transcripts. There is now ", 
+            transcriptsLeft, " isoforms left", sep = ""))
+    }
+
+    if (trace) tictoc::toc()   # Total filtering
+    return(switchAnalyzeRlist)
 }
 
 importPairedGSEA <- function(
