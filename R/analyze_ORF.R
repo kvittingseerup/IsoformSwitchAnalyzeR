@@ -1209,15 +1209,11 @@ extractSequence <- function(
                 nFiles <- ceiling(l / maxfileSizes)
                 seqWithinEachFile <-  ceiling(l / nFiles)
 
-                indexVec <- unique( c( seq(
-                    from = 1,
-                    to = l,
-                    by = seqWithinEachFile # Max in PFAM Jan 2019
-                ), l))
+                starts <- seq(from = 1, to = l, by = seqWithinEachFile)
 
                 indexDf <- data.frame(
-                    start = indexVec[-length(indexVec)],
-                    end = indexVec[-1]
+                    start = starts,
+                    end = c(starts[-1] - 1, l)
                 )
                 n <- nrow(indexDf)
                 indexDf$file <- paste0('_subset_', 1:n,'_of_',n)
