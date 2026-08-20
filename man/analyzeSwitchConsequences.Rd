@@ -54,7 +54,7 @@ analyzeSwitchConsequences(
 
     \item{AaCutoff}{ An integer indicating the length difference (in AA) a comparison must be larger than for reporting differences when evaluating 'ORF_seq_similarity', primarily implemented to avoid differences in very short AA sequences being classified as different. Default is 10 (AA).}
 
-    \item{AaFracCutoff}{An numeric indicating the cutoff of length difference of the protein domain or IDR. The difference is measured as a fraction of the longest region, a comparison must be larger than before reporting it. Only used when analyzing 'domain_length' or 'IDR_length'. For example setting AaFracCutoff = 0.8 means the short protein domain (or IDR) must be less than 80\% of the length of the long region, before it is reported. NULL disables the filter. Default is 0.8.}
+    \item{AaFracCutoff}{An numeric indicating the cutoff of length difference of the protein domain, IDR or topology region. The difference is measured as a fraction of the longest region, a comparison must be larger than before reporting it. Only used when analyzing 'domain_length', 'IDR_length', 'extracellular_region_length' or 'intracellular_region_length'. For example setting AaFracCutoff = 0.8 means the short protein domain (or IDR/region) must be less than 80\% of the length of the long region, before it is reported. NULL disables the filter. Default is 0.8.}
 
     \item{AaJCsimCutoff}{An numeric (between 0 and 1) indicating the cutoff on Jaccard Similarity (JCsim) (see details) between the overlap of two amino acid (AA) sequences. If the measured JCsim is smaller than this cutoff the sequences are considered different and reported as such. This cutoff affect the result of the 'ORF_seq_similarity' analysis. Default is 0.9}
 

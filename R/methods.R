@@ -388,12 +388,12 @@ createSwitchAnalyzeRlist <- function(
                 ))
             }
 
-            ### gene_id duplications
+            ### isoform_id duplications
             idSplit2 <- split( as.character(exons@seqnames), f=exons$isoform_id)
             idSplit2 <- lapply(idSplit2, unique)
-            idSplit2 <- sapply(idSplit2, length)
-            if(any( idLength == 1)) {
-                isoformsToRemove <- names(idLength)[which(idLength > 1)]
+            idLength2 <- sapply(idSplit2, length)
+            if(any( idLength2 == 1)) {
+                isoformsToRemove <- names(idLength2)[which(idLength2 > 1)]
             } else {
                 stop(paste(
                     'The isoform_ids must be uniqe - we identified multiple',
@@ -478,7 +478,7 @@ createSwitchAnalyzeRlist <- function(
                     stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
                 }
 
-                if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
+                if( !  identical( isoformCountMatrix$isoform_id , isoformRepExpression$isoform_id ) ) {
                     stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
                 }
             }

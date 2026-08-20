@@ -140,7 +140,7 @@ myListToDf <- function(
     addOrgRownames = FALSE # A logical indicating whther the original rownames should be used in the final data.frame
 ) {
     ### Test whether input match standards for being bound together
-    if (class(aList) != 'list') {
+    if (!is.list(aList)) {
         stop("Input is not a list")
     }
 
@@ -148,7 +148,7 @@ myListToDf <- function(
     aList <- aList[which(!sapply(aList, is.null))]
 
     # Make sure the list entries are data.frames
-    if (class(aList[[1]]) != "data.frame") {
+    if (!is.data.frame(aList[[1]])) {
         aList <- lapply(aList, function(x)
             as.data.frame(t(x)))
     }

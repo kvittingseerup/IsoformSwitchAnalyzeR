@@ -1271,7 +1271,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 ttsDifferent <-
                     abs(ttsCoordinats[1] - ttsCoordinats[2]) > ntCutoff
                 mostDownstream <-
-                    names(localExonData)[which.max(ttsDifferent)]
+                    names(localExonData)[which.max(ttsCoordinats)]
             } else {
                 ttsCoordinats <- start(localExonData)
 
@@ -1279,7 +1279,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 ttsDifferent <-
                     abs(ttsCoordinats[1] - ttsCoordinats[2]) > ntCutoff
                 mostDownstream <-
-                    names(localExonData)[which.min(ttsDifferent)]
+                    names(localExonData)[which.min(ttsCoordinats)]
             }
 
             # make repport
@@ -1455,8 +1455,8 @@ compareAnnotationOfTwoIsoforms <- function(
                     gaps(ranges(aGR))
                 })
 
-            differentintron_structure <- !any(
-                all(localIntrons[[1]] %in% localIntrons[[2]]),
+            differentintron_structure <- !(
+                all(localIntrons[[1]] %in% localIntrons[[2]]) &
                 all(localIntrons[[2]] %in% localIntrons[[1]])
             )
 
@@ -2944,7 +2944,10 @@ compareAnnotationOfTwoIsoforms <- function(
                 minLength <- min(c(upLength, dnLength))
                 maxLength <- max(c(upLength, dnLength))
 
-                differentLength <- abs(lengthGain) > AaCutoff & (minLength / maxLength) < AaFracCutoff
+                differentLength <- abs(lengthGain) > AaCutoff
+                if (!is.null(AaFracCutoff)) {
+                    differentLength <- differentLength & (minLength / maxLength) < AaFracCutoff
+                }
 
                 # make repport
                 localIndex <-
@@ -2978,7 +2981,10 @@ compareAnnotationOfTwoIsoforms <- function(
                 minLength <- min(c(upLength, dnLength))
                 maxLength <- max(c(upLength, dnLength))
 
-                differentLength <- abs(lengthGain) > AaCutoff & (minLength / maxLength) < AaFracCutoff
+                differentLength <- abs(lengthGain) > AaCutoff
+                if (!is.null(AaFracCutoff)) {
+                    differentLength <- differentLength & (minLength / maxLength) < AaFracCutoff
+                }
 
                 # make repport
                 localIndex <-

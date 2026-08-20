@@ -2539,7 +2539,7 @@ expressionAnalysisPlot <- function(
 
             if (logYaxis) {
                 g1 <- g1 + scale_y_log10() +
-                    coord_cartesian(ylim = c(ymin+1, yMax))
+                    coord_cartesian(ylim = c(ymin, yMax))
             } else {
                 g1 <- g1 + coord_cartesian(ylim = c(ymin, yMax))
             }
@@ -2786,7 +2786,7 @@ expressionAnalysisPlot <- function(
 
             if (logYaxis) {
                 g2 <- g2 + scale_y_log10() +
-                    coord_cartesian(ylim = c(ymin+1, yMax))
+                    coord_cartesian(ylim = c(ymin, yMax))
             } else {
                 g2 <- g2 + coord_cartesian(ylim = c(ymin, yMax))
             }
