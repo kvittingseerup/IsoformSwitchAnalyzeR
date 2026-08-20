@@ -616,7 +616,7 @@ importCufflinksFiles <- function(
             isoformDiffanalysis <- suppressWarnings( dplyr::inner_join(
                 isoformDiffanalysis,
                 isoformFPKMcombined,
-                by=c("sample_2" = "sample_name", "isoform_id" = "isoform_id")
+                by=c("sample_1" = "sample_name", "isoform_id" = "isoform_id")
             ) )
             colnames(isoformDiffanalysis)[which(grepl(
                 'iso_stderr$',
@@ -3202,7 +3202,7 @@ importRdata <- function(
           stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
         }
         
-        if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
+        if( !  identical( isoformCountMatrix$isoform_id , isoformRepExpression$isoform_id ) ) {
           stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
         }
       }
@@ -3663,13 +3663,13 @@ importRdata <- function(
             genesToKeep <- isoformExonAnnoation$gene_id[which(
               isoformExonAnnoation$isoform_id %in% isoformRepExpression$isoform_id
             )]
-            
+
             ### Ensure all isoforms quantified are kept
             isoToKeep <- union(
               isoformExonAnnoation$isoform_id[which(
                 isoformExonAnnoation$gene_id %in% genesToKeep
               )],
-              isoformCountMatrix$isoform_id
+              isoformRepExpression$isoform_id
             )
           }
         }

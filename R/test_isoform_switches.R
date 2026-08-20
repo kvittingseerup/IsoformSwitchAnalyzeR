@@ -527,8 +527,8 @@ isoformSwitchTestDEXSeq <- function(
                     designSubset$condition <- factor(
                         designSubset$condition,
                         levels = unique(c(
-                            comaprisonsToMake$condition_1,
-                            comaprisonsToMake$condition_2
+                            aComp$condition_1,
+                            aComp$condition_2
                         )
                     ))
 
@@ -574,8 +574,8 @@ isoformSwitchTestDEXSeq <- function(
                     designSubset$condition <- factor(
                         designSubset$condition,
                         levels = unique(c(
-                            comaprisonsToMake$condition_1,
-                            comaprisonsToMake$condition_2
+                            aComp$condition_1,
+                            aComp$condition_2
                         ))
                     )
                     colnames(designSubset)[1] <- 'sample'
@@ -868,7 +868,7 @@ extractSwitchSummary <- function(
     dIFcutoff = 0.1,
     onlySigIsoforms = FALSE,
     includeCombined = nrow(unique(
-        switchAnalyzeRlist$isoformFeatures[, c('condition_1', 'condition_1')]
+        switchAnalyzeRlist$isoformFeatures[, c('condition_1', 'condition_2')]
     )) > 1
 ) {
     ### Test input

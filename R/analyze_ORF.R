@@ -1497,8 +1497,8 @@ addORFfromGTF <- function(
     ### Return
     if (!quiet) {
         message('Done.')
-        return(switchAnalyzeRlist)
     }
+    return(switchAnalyzeRlist)
 }
 
 analyzeNovelIsoformORF <- function(

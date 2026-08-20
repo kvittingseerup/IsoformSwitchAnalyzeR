@@ -43,8 +43,8 @@ analyzeCPAT <- function(
             class(codingCutoff) != 'numeric') {
             stop('The \'codingCutoff\' argument must be a numeric of length 1 ')
         }
-        if (!codingCutoff >= 0 &
-            codingCutoff <= 1) {
+        if (!(codingCutoff >= 0 &
+              codingCutoff <= 1)) {
             stop('The \'codingCutoff\' argument must be a numeric in the inverval [0,1]')
         }
 
@@ -260,8 +260,8 @@ analyzeCPC2 <- function(
             class(codingCutoff) != 'numeric') {
             stop('The \'codingCutoff\' argument must be a numeric of length 1 ')
         }
-        if (!codingCutoff >= 0 &
-            codingCutoff <= 1) {
+        if (!(codingCutoff >= 0 &
+              codingCutoff <= 1)) {
             stop('The \'codingCutoff\' argument must be a numeric in the inverval [0,1]')
         }
 
@@ -1192,8 +1192,8 @@ analyzeSignalP <- function(
                 }
                 
                 if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
-                  singalPresults$transcript_id <- fixNames(
-                    nameVec = singalPresults$transcript_id,
+                  singalPresults$isoform_id <- fixNames(
+                    nameVec = singalPresults$isoform_id,
                     ignoreAfterBar = ignoreAfterBar,
                     ignoreAfterSpace = ignoreAfterSpace,
                     ignoreAfterPeriod = ignoreAfterPeriod
@@ -1336,8 +1336,8 @@ analyzeSignalP <- function(
                 }
                 
                 if( ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod){
-                  singalPresults$transcript_id <- fixNames(
-                    nameVec = singalPresults$transcript_id,
+                  singalPresults$isoform_id <- fixNames(
+                    nameVec = singalPresults$isoform_id,
                     ignoreAfterBar = ignoreAfterBar,
                     ignoreAfterSpace = ignoreAfterSpace,
                     ignoreAfterPeriod = ignoreAfterPeriod

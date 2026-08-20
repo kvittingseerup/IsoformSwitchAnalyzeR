@@ -265,13 +265,13 @@ if(TRUE) {
                     index22 <- index22[-removeIndex] # remve those to be ignored
 
                     if(length(index22) > 0) { # if there is any exons left
-                        t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'], startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[1])), transcript = 1, stringsAsFactors=FALSE)
+                        t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'], startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[2])), transcript = 2, stringsAsFactors=FALSE)
                     } else {
                         t2 <- data.frame()
                     }
 
                 } else { # if the exons are not in the ignore exons list
-                    t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'] ,startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[1])), transcript = 1, stringsAsFactors=FALSE)
+                    t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'] ,startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[2])), transcript = 2, stringsAsFactors=FALSE)
                 }
             } else { # if there is no skipping in this transcript
                 t2 <- data.frame()
