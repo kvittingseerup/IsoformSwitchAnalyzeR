@@ -1554,7 +1554,7 @@ extractTopSwitches <- function(
                     .data = dataDF2,
                     .variables = 'comparison',
                     .fun = function(aDF) {
-                        if ( n > nrow(dataDF2) ) {
+                        if ( n > nrow(aDF) ) {
                             if (filterForConsequences) {
                                 warning(paste(
                                     'Less than',n ,'genes with significant',
@@ -1567,7 +1567,7 @@ extractTopSwitches <- function(
                                     'switches were found. Returning those.'
                                 ))
                             }
-                            n2 <- nrow(dataDF2)
+                            n2 <- nrow(aDF)
                         } else {
                             n2 <- n
                         }
@@ -1680,7 +1680,7 @@ extractTopSwitches <- function(
                     .variables = 'comparison',
                     .inform = TRUE,
                     .fun = function(aDF) {
-                        if ( n > nrow(dataDF2) ) {
+                        if ( n > nrow(aDF) ) {
                             if (filterForConsequences) {
                                 warning(paste(
                                     'Less than',n ,'genes with significant',
@@ -1693,7 +1693,7 @@ extractTopSwitches <- function(
                                     'switches were found. Returning those.'
                                 ))
                             }
-                            n2 <- nrow(dataDF)
+                            n2 <- nrow(aDF)
                         } else {
                             n2 <- n
                         }

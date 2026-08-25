@@ -668,7 +668,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 'extracellular_region_count',
                 'intracellular_region_count'
             )  %in% consequencesToAnalyze
-        ) %in% consequencesToAnalyze) {
+        ) ) {
             if ( ! 'topologyAnalysis' %in% names(switchAnalyzeRlist) ) {
                 stop(
                     'Cannot test for differences in topology as such results are not annotated. Run analyzeDeepTMHMM() and try again.'
@@ -2138,11 +2138,6 @@ compareAnnotationOfTwoIsoforms <- function(
 
                         differentDomainLength <- nrow(localOverlapDfDiff) > 0
 
-                        localIndex <-
-                            which(isoComparison$featureCompared == 'domain_length')
-                        isoComparison$isoformsDifferent[localIndex] <-
-                            differentDomainLength
-
                     } else {
                         differentDomainLength <- FALSE
                     }
@@ -2150,6 +2145,11 @@ compareAnnotationOfTwoIsoforms <- function(
                 } else {
                     differentDomainLength <- FALSE
                 }
+
+                localIndex <-
+                    which(isoComparison$featureCompared == 'domain_length')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentDomainLength
 
                 ### Repport if any difference
                 if (differentDomainLength & addDescription) {
@@ -2417,17 +2417,17 @@ compareAnnotationOfTwoIsoforms <- function(
                         differentIdrType <- any( na.omit(
                             localOverlapDf$upType != localOverlapDf$dnType
                         ))
-
-                        localIndex <-
-                            which(isoComparison$featureCompared == 'IDR_type')
-                        isoComparison$isoformsDifferent[localIndex] <-
-                            differentIdrType
                     } else {
                         differentIdrType <- FALSE
                     }
                 } else {
                     differentIdrType <- FALSE
                 }
+
+                localIndex <-
+                    which(isoComparison$featureCompared == 'IDR_type')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentIdrType
 
                 if (differentIdrType & addDescription) {
 
@@ -2542,21 +2542,21 @@ compareAnnotationOfTwoIsoforms <- function(
 
                         differentIdrLength <- nrow(localOverlapDfDiff) > 0
 
-                        localIndex <-
-                            which(isoComparison$featureCompared == 'IDR_length')
-                        isoComparison$isoformsDifferent[localIndex] <-
-                            differentIdrLength
-
                     } else {
-                        differentIdrType <- FALSE
+                        differentIdrLength <- FALSE
                     }
 
                 } else {
-                    differentIdrType <- FALSE
+                    differentIdrLength <- FALSE
                 }
 
+                localIndex <-
+                    which(isoComparison$featureCompared == 'IDR_length')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentIdrLength
+
                 ### Repport if any difference
-                if (differentIdrType & addDescription) {
+                if (differentIdrLength & addDescription) {
 
                     localOverlapDfDiff$maxIsUp <- localOverlapDfDiff$maxLength == localOverlapDfDiff$upLength
 

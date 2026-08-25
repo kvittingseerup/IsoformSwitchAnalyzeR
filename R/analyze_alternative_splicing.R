@@ -93,16 +93,10 @@ if(TRUE) {
                 }
             }
 
-            # If there are several (different) isoforms with same expression level (that is not as rare as I thought it was) - chose the one with the most exons - if still eqiual chose random.
+            # If there are several (different) isoforms with same expression level (that is not as rare as I thought it was) - chose the one with the most exons (which.max deterministically keeps the first candidate if there is still a tie in length).
             if(length(unique(isoformSubset$isoform_id[maxIsoformIndex])) > 1) {
-                # chose the longest one
+                # chose the longest one (ties are resolved deterministically by which.max, which keeps the first)
                 maxIsoformIndex <- maxIsoformIndex[which.max(isoformSubset$width[maxIsoformIndex])]
-
-                # If there are several (different) isoforms with same length
-                if(length(unique(isoformSubset$isoform_id[maxIsoformIndex])) > 1) {
-                    # chose one at random
-                    maxIsoformIndex <- sample(maxIsoformIndex,size=1)
-                }
             }
             return(maxIsoformIndex)
         }
