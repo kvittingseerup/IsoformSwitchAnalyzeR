@@ -738,13 +738,8 @@ importCufflinksFiles <- function(
         addIsoformNt <- FALSE
 
         if( !is.null(isoformNtFasta) ) {
-            isoformNtSeq <- do.call(
-                c,
-                lapply(isoformNtFasta, function(aFile) {
-                    Biostrings::readDNAStringSet(
-                        filepath = isoformNtFasta, format = 'fasta'
-                    )
-                })
+            isoformNtSeq <- Biostrings::readDNAStringSet(
+                filepath = isoformNtFasta, format = 'fasta'
             )
 
             if(!is(isoformNtSeq, "DNAStringSet")) {
@@ -2033,13 +2028,8 @@ importGTF <- function(
         addIsoformNt <- FALSE
 
         if( !is.null(isoformNtFasta) ) {
-            isoformNtSeq <- do.call(
-                c,
-                lapply(isoformNtFasta, function(aFile) {
-                    Biostrings::readDNAStringSet(
-                        filepath = isoformNtFasta, format = 'fasta'
-                    )
-                })
+            isoformNtSeq <- Biostrings::readDNAStringSet(
+                filepath = isoformNtFasta, format = 'fasta'
             )
 
             if(!is(isoformNtSeq, "DNAStringSet")) {
@@ -4108,13 +4098,8 @@ importRdata <- function(
     addIsoformNt <- FALSE
     
     if(!is.null(isoformNtFasta)) {
-      isoformNtSeq <- do.call(
-        c,
-        lapply(isoformNtFasta, function(aFile) {
-          Biostrings::readDNAStringSet(
-            filepath = isoformNtFasta, format = 'fasta'
-          )
-        })
+      isoformNtSeq <- Biostrings::readDNAStringSet(
+        filepath = isoformNtFasta, format = 'fasta'
       )
       
       if(!is(isoformNtSeq, "DNAStringSet")) {
@@ -6086,7 +6071,7 @@ preFilter <- function(
         sample_values <- row[match(paste0(prefix, sampleIDs), names(row))]
         count_total <- sum(sample_values > cutoff, na.rm = TRUE)
         total_samples <- length(sampleIDs)
-        count_total >= 3 & count_total >= min.prop * total_samples
+        count_total >= min.prop * total_samples
       }
       
       filteredData <- data %>%
@@ -6338,26 +6323,17 @@ importPairedGSEA <- function(
   
   # Ensure that diff_results has the required columns
   required_cols <- c("gene", "lfc_expression", "pvalue_expression", "padj_expression")
-  tryCatch({
-    missing_cols <- setdiff(required_cols, colnames(diff_results))
-    if (length(missing_cols) > 0) {
-      stop(
-        paste0(
-          "The input diff_results is missing required columns: ",
-          paste(missing_cols, collapse = ", "), ".\n",
-          "Please provide a differential expression result table containing at least ",
-          "'gene', 'lfc_expression', 'pvalue_expression', and 'padj_expression'."
-        )
-      )
-    }
-  }, error = function(e) {
+  missing_cols <- setdiff(required_cols, colnames(diff_results))
+  if (length(missing_cols) > 0) {
     stop(
       paste0(
-        "The input diff_results appears to be invalid. ",
-        "Please ensure it is a valid paired DGE/DGS analysis result, which is the output of paired_diff() from pairedGSEA."
+        "The input diff_results is missing required columns: ",
+        paste(missing_cols, collapse = ", "), ".\n",
+        "Please provide a differential expression result table containing at least ",
+        "'gene', 'lfc_expression', 'pvalue_expression', and 'padj_expression'."
       )
     )
-  })
+  }
   
   # Match and add gene-level results to isoformFeatures
   switch_list$isoformFeatures$gene_log2_fold_change <- diff_results$lfc_expression[

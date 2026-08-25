@@ -574,7 +574,7 @@ analyzePFAM <- function(
                         testShiftedValues <- function(aDF) {
                             try1 <- unique(c(
                                 which(is.na( aDF[,14]     )),              # via "significant" column (will either be NA or a clan indication)
-                                which(       aDF[,14] != 1 & 0),              # via "significant" column (will either be NA or a clan indication)
+                                which( aDF[,14] != 1 & aDF[,14] != 0 ),       # via "significant" column (will either be NA or a clan indication)
                                 which( ! stringr::str_detect(aDF[,6], '^PF|^PB') )  # via pfam_hmm id which should start with PF or PB
                             ))
 
