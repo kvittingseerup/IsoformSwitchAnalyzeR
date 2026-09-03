@@ -84,7 +84,7 @@ A \code{switchAnalyzeRlist} where:
     \item{\code{2}: The transcript nucleotide sequence for all analyzed isoforms (in the form of a \code{DNAStringSet} object) have been added to the switchAnalyzeRlist in the \code{ntSequence} entry.}
     \item{\code{3}: A \code{data.frame} containing the details of the ORF analysis have been added to the switchAnalyzeRlist under the name 'orfAnalysis'.}
 }
-The data.frame added have one row pr isoform and contains 11 columns:
+The data.frame added have one row pr isoform and contains 12 columns:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{orfTransciptStart}: The start position of the ORF in transcript coordinators, here defined as the position of the 'A' in the 'AUG' start motif.}

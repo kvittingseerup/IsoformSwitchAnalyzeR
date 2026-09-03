@@ -6361,9 +6361,13 @@ importPairedGSEA <- function(
     min.Count.prop = min.Count.prop,
     IFcutoff = IFcutoff,
     min.IF.prop = min.IF.prop,
+    acceptedGeneBiotype = acceptedGeneBiotype,
+    acceptedIsoformClassCode = acceptedIsoformClassCode,
     removeSingleIsoformGenes = removeSingleIsoformGenes,
     reduceToSwitchingGenes = reduceToSwitchingGenes,
     reduceFurtherToGenesWithConsequencePotential = reduceFurtherToGenesWithConsequencePotential,
+    onlySigIsoforms = onlySigIsoforms,
+    keepIsoformInAllConditions = keepIsoformInAllConditions,
     alpha = alpha,
     dIFcutoff = dIFcutoff
   )

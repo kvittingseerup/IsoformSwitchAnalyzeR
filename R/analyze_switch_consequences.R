@@ -3480,7 +3480,11 @@ extractConsequenceEnrichment <- function(
             'sub_cell_shift_to_Extracellular',
 
             # topology
-            'isoform_topology'
+            'isoform_topology',
+            'extracellular_region_count',
+            'intracellular_region_count',
+            'extracellular_region_length',
+            'intracellular_region_length'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {

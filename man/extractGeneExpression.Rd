@@ -39,7 +39,7 @@ The count matrix obtained if \code{extractCounts=TRUE} is the same as would be o
 }
 
 \value{
-A data.frame with the replicate count/abundance estimates as well as gene_id (and gene_name if \code{extractCounts=TRUE})
+A data.frame with the replicate count/abundance estimates as well as gene_id (and gene_name if \code{addGeneNames=TRUE})
 }
 
 \references{

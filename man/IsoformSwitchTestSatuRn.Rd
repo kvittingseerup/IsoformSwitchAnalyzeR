@@ -36,7 +36,7 @@ isoformSwitchTestSatuRn(
 The cutoff which the changes in (absolute) isoform usage must be larger than before an isoform is considered switching. This cutoff can remove cases where isoforms with (very) low dIF values are deemed significant and thereby included in the downstream analysis. This cutoff is analogous to having a cutoff on log2 fold change in a normal differential expression analysis of genes to ensure the genes have a certain effect size. Default is 0.1 (10\%).}
 
     \item{reduceToSwitchingGenes}{
-A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains at least one isoform significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) - works on dIF values corrected for confounding effects if overwriteIFvalues=TRUE. Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains at least one isoform significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
 }
 
     \item{reduceFurtherToGenesWithConsequencePotential}{
@@ -55,7 +55,7 @@ A logic indicating whether the an isoform should be kept in all comparisons even
     \item{diagplots}{ A logic indicating whether diagnostic plots should be displayed when performing the empirical correction of p-values in satuRn's hypothesis testing procedure. The first diagnostic displays a histogram of the z-scores (computed from p-values) using the locfdr function of the 'locfdr' package. For more details, we refer to the satuRn package manual (`?satuRn::testDTU`). The second diagnostic plot displays a histogram of the "empirically adjusted" test statistics and the standard normal distribution. Ideally, the majority (mid portion) of the adjusted test statistics should follow the standard normal. Default is TRUE.
 }
 
-    \item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.}
+    \item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.}
 
     \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }

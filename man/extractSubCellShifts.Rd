@@ -48,7 +48,7 @@ If \code{returnResult=TRUE} a data.frame with the summary for each comparison. T
     \item{condition_1: Condition 1.}
     \item{condition_2: Condition 2.}
 
-    \item{location_gain: The location gained. Is "None if no location was lost"}
+    \item{location_gain: The location gained. Is "None if no location was gained"}
     \item{location_loss: The location Lost. Is "None if no location was lost"}
 
     \item{n_switch: The number of isoform switches with the location change.}

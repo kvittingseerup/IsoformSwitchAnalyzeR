@@ -60,7 +60,7 @@ This argument, given as a string, defines the set isoforms which should be analy
     }
 }
 
-\item{annotationToAnalyze}{ A vector of strings indicating what categories of annotation to analyze. Annotation types given here but not (yet) analyzed in the \code{switchAnalyzeRlist} will not be plotted. See details for full list of usable strings, their meaning and dependencies. Default is 'All'.
+\item{annotationToAnalyze}{ A vector of strings indicating what categories of annotation to analyze. Annotation types given here but not (yet) analyzed in the \code{switchAnalyzeRlist} will not be plotted. See details for full list of usable strings, their meaning and dependencies. Default is 'all'.
 }
 
 \item{alpha}{The cutoff which the FDR correct p-values (q-values) must be smaller than for calling significant switches. Default is 0.05.}
@@ -89,7 +89,7 @@ A logical indicating whether to return a data.frame with summary statistics of t
 }
 
 \details{
-\code{extractGenomeWideAnalysis} is just a wrapper for \code{extractGenomeWideConsequenceAnalysis} included for backward comparability.
+\code{extractGenomeWideAnalysis} is just a wrapper for \code{extractConsequenceGenomeWide} included for backward comparability.
 
 
 Changes in isoform usage are measure as the difference in isoform fraction (dIF) values, where isoform fraction (IF) values are calculated as <isoform_exp> / <gene_exp>.\cr
@@ -113,6 +113,8 @@ The arguments passed to \code{annotationToAnalyze} must be a combination of:
     \item \code{signal_peptide_identified} : Divide transcripts based on differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF either via \code{analyzeORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist (and are thereby also affected by \code{removeNoncodinORFs=TRUE} in \code{analyzeCPAT}).
 
     \item \code{switch_consequences} : Whether the gene is involved in isoform switches with predicted consequences. Requires that \code{analyzeSwitchConsequences} have been used).
+
+    \item \code{domain_isotype} : Divide transcripts based on whether they contain a non-reference protein domain isotype. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}.
 }
 }
 

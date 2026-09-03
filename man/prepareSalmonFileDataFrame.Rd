@@ -23,7 +23,7 @@ prepareSalmonFileDataFrame(
 }
 
 \arguments{
-\item{parentDir}{ Parent directory where each quantified sample is in a sub-directory. The function will then look for files containing the (suffix) of the default files names for the quantification tools. The suffixes identified are 'abundance.tsv' for Kallisto, 'quant.sf' for Salmon, 'isoforms.results' for RSEM and 't_data.ctab' for StringTie. This is an alternative to \code{sampleVector} (aka only one of them should be used).}
+\item{parentDir}{ Parent directory where each quantified sample is in a sub-directory. The function will look for a Salmon quantification file (named 'quant.sf', optionally gzipped as 'quant.sf.gz') within each sub-directory.}
 
 \item{pattern}{ A character string containing a regular expression for which files to import (applied to full path). Default is "" corresponding to all. See base::grepl for more details.}
 

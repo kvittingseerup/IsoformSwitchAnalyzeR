@@ -95,11 +95,11 @@ A string indicating the full path to the DeepTMHMM result file. Can be gziped. I
 }
 
 \item{n}{
-The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use Inf to create all. Default is Inf (all).
+The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved (each comparison is saved to its own sub-folder). Use Inf to create all. Default is Inf (all).
 }
 
   \item{consequencesToAnalyze}{
-    A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated and signal peptides annotated by Pfam).
+    A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','domain_isotype','IDR_identified','IDR_type','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated, PFAM domain isotypes, IDRs identified, IDR type and signal peptides annotated by Pfam).
 }
 
   \item{pathToOutput}{
