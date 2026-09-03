@@ -48,7 +48,7 @@ A data.frame with two columns indicating which pairwise comparisons the switchAn
 \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
 \item{showProgress}{
-A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.
+A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
 }
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}

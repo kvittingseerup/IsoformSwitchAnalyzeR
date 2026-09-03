@@ -1362,7 +1362,7 @@ addORFfromGTF <- function(
                 pathToGTF = pathToGTF,
                 addAnnotatedORFs = TRUE,
                 onlyConsiderFullORF = onlyConsiderFullORF,
-                removeNonConvensionalChr = FALSE,
+                removeNonConvensionalChr = removeNonConvensionalChr,
                 ignoreAfterBar = ignoreAfterBar,
                 ignoreAfterSpace = ignoreAfterSpace,
                 ignoreAfterPeriod = ignoreAfterPeriod,

@@ -38,7 +38,7 @@ analyzeSwitchConsequences(
 \arguments{
     \item{switchAnalyzeRlist}{A \code{switchAnalyzeRlist} object containing the result of an isoform switch analysis (such as the one provided by \code{isoformSwitchTestDEXSeq}) as well as additional annotation data for the isoforms.}
 
-    \item{consequencesToAnalyze}{A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between isoforms (else they would be identical and not annotated as separate isoforms). See details for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, protein domains annotated and signal peptides annotated by Pfam).}
+    \item{consequencesToAnalyze}{A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between isoforms (else they would be identical and not annotated as separate isoforms). See details for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','domain_isotype','IDR_identified','IDR_type','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, protein domains annotated, protein domain isotypes, IDRs identified, IDR type and signal peptides annotated by Pfam).}
 
     \item{alpha}{The cutoff which the FDR correct p-values (q-values) must be smaller than for calling significant switches. Default is 0.05.}
 
@@ -78,7 +78,7 @@ If AA sequences were trimmed in the process of exporting the fasta files when us
 
 The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 \itemize{
-    \item \code{all} : Test transcripts for any of the differences described below. Please note that jointly the analysis below covers all transcript feature meaning that they should be different. Furthermore note that 'class_code' will only be included if the switchAnalyzeRlist was made from Cufflinks/Cuffdiff output.
+    \item \code{all} : Test transcripts for any of the differences described below. Please note that jointly the analysis below covers all transcript feature meaning that they should be different. Furthermore note that 'isoform_class_code' will only be included if the switchAnalyzeRlist was made from Cufflinks/Cuffdiff output.
 
     \item \code{tss} : Test transcripts for whether they use different Transcription Start Site (TSS) (more than \code{ntCutoff} from each other).
 
@@ -162,7 +162,7 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 \value{
 The supplied \code{switchAnalyzeRlist} is returned, but now annotated with the predicted functional consequences as follows. First a column called 'switchConsequencesGene' is added to \code{isoformFeatures} entry of \code{switchAnalyzeRlist}. This column containing a binary indication (TRUE/FALSE (and NA)) of whether the switching gene have predicted functional consequences or not.
 
-Secondly the data.frame 'switchConsequence' is added to the \code{switchAnalyzeRlist} containing one row feature analyzed per comparison of isoforms pr comparison of condition. It contains 8 columns:
+Secondly the data.frame 'switchConsequence' is added to the \code{switchAnalyzeRlist} containing one row feature analyzed per comparison of isoforms pr comparison of condition. It contains 12 columns:
 \itemize{
     \item{\code{gene_ref} : A unique reference to a specific gene in a specific comparison of conditions. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
     \item{\code{gene_id}: The id of the gene which the isoforms compared belongs to. Matches the 'gene_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
@@ -215,8 +215,7 @@ consequencesOfInterest <- c(
 
 exampleSwitchListAnalyzed <- analyzeSwitchConsequences(
     exampleSwitchListAnalyzed,
-    consequencesToAnalyze = consequencesOfInterest,
-
+    consequencesToAnalyze = consequencesOfInterest
 )
 
 ### simple overview

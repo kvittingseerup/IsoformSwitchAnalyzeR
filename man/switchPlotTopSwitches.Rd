@@ -66,7 +66,7 @@ A logic indicating whether to create a sub-folder for those switches with predic
 }
 
 \item{IFcutoff}{
-The cutoff used for the minimum contribution to gene expression (in at least one condition) an isoforms must have to be plotted (measured as Isoform Fraction (IF) values). Default is 0 (which removes isoforms not contributing in any of the conditions).
+The cutoff used for the minimum contribution to gene expression (in at least one condition) an isoforms must have to be plotted (measured as Isoform Fraction (IF) values). Default is 0.05 (which removes isoforms with minor contribution).
 }
 
   \item{fileType}{

@@ -35,7 +35,7 @@ An integer indicating how large a sliding window should be used to calculate a s
 }
 
 \item{probabilityCutoff}{
-A double indicating the cutoff applied to the (smoothed) disordered probability score (see "smoothingWindowSize" argument above) for calling a residue as "disordered". The default, 30 amino acids, is an accepted standard for long IDRs.
+A double indicating the cutoff applied to the (smoothed) disordered probability score (see "smoothingWindowSize" argument above) for calling a residue as "disordered". Default is 0.5.
 }
 
 \item{minIdrSize}{
@@ -84,6 +84,7 @@ The data.frame added have one row per isoform and contains the columns:
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{orf_aa_start}: The start coordinate given as amino acid position (of the ORF).}
     \item{\code{orf_aa_end}: The end coordinate given as amino acid position (of the ORF).}
+    \item{\code{length}: The length of the IDR, in amino acids.}
     \item{\code{idr_type}: A text string indicating the IDR type (one of 'IDR' or 'IDR_w_binding_region'.}
     \item{\code{transcriptStart}: The transcript coordinate of the start of the IDR.}
     \item{\code{transcriptEnd}: The transcript coordinate of the end of the IDR.}

@@ -155,7 +155,7 @@ A logic indicating whether numeric design matrix columns that may represent cate
 }
 
 \item{showProgress}{
-A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.
+A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
 }
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}

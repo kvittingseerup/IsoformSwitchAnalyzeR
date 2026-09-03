@@ -58,7 +58,7 @@ The minimum number of events (total gain/loss) must be present before the result
 A logic indicating whether the analysis should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
 }
  \item{returnSummary}{
-A logic indicating whether to return the statistical summary (if TRUE) or the underlying data (if FALSE). If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
+A logic indicating whether to return the statistical summary (if TRUE) or the underlying per-switch data (if FALSE). Only relevant when \code{returnResult=TRUE} — the ggplot2 object is returned only when \code{returnResult=FALSE} (see \code{returnResult} above), regardless of this argument. Default is TRUE.
 }
 }
 
@@ -89,7 +89,7 @@ The alternative splicing types, which can be passed to \code{splicingToAnalyze} 
 For details of how to interpret the splice events see the \code{details} section of \code{\link{analyzeAlternativeSplicing}}. \cr
 
 
-The significance test is performed with R's build in \code{prop.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
+The significance test is performed with R's build in \code{binom.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
 }
 
 \value{
@@ -105,9 +105,11 @@ If \code{returnResult=TRUE} a data.frame with the statistical summary for each o
     \item{nDown: The number of genes with a loss of the splicing type described in the AStype column.}
     \item{propUp: Proportion of total number of genes (of genes with either loss or gain of the splice type described in the AStype column) being having a gain.}
     \item{propUpCiLo: The lower boundary of the confidence interval of the propUp.}
-    \item{propUpCiLo: The high boundary of the confidence interval of the propUp.}
+    \item{propUpCiHi: The high boundary of the confidence interval of the propUp.}
     \item{propUpPval: The p-value associated with the null hypothesis that propUp is 0.5.}
     \item{propUpQval: The q-values resulting when p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).}
+    \item{Significant: A logic (TRUE/FALSE) indicating whether propUpQval is below the significance cutoff given by \code{alpha}.}
+    \item{Comparison: A string combining condition_1 and condition_2, used for faceting in the accompanying plot.}
 }
 }
 

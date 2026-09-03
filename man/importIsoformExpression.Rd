@@ -59,7 +59,7 @@ importIsoformExpression(
 
 \item{readLength}{ Only necessary when importing from StringTie. Must be the number of base pairs sequenced. e.g. if the data quantified is single end 75bp use \code{readLength=75} and if 75bp paired end use \code{readLength=150}.}
 
-\item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.}
+\item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.}
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }

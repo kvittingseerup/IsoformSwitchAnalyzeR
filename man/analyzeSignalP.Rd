@@ -50,14 +50,17 @@ Also note that analyzeSignalP automatically subset SignalP results to only conta
 \value{
 A column called 'signal_peptide_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains a signal peptide or not. Furthermore the data.frame 'signalPeptideAnalysis' is added to the \code{switchAnalyzeRlist} containing the details of the signal peptide analysis.
 
-The data.frame added have one row pr isoform and contains 6 columns:
+The data.frame added have one row pr isoform. The columns \code{isoform_id}, \code{has_signal_peptide}, \code{aa_removed}, \code{transcriptClevageAfter} and \code{genomicClevageAfter} are always present, but the remaining columns depend on which SignalP version's results were supplied:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{has_signal_peptide}: A text string indicating whether there is a signal peptide or not. Can be yes or no}
-    \item{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Reference: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php}}
     \item{\code{aa_removed}: A integer giving the number of amino acids removed when the signal peptide is cleaved off.}
     \item{\code{transcriptClevageAfter}: The transcript position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
     \item{\code{genomicClevageAfter}: The genomic position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
+    \item{\code{network_used}: (Only present for SignalP 4 results). A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Reference: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php}}
+    \item{\code{SP_Sec_SPI}: (Only present for SignalP 5/6 results). The predicted probability that the isoform has a Sec/SPI-type (the standard) signal peptide.}
+    \item{\code{OTHER}: (Only present for SignalP 5/6 results). The predicted probability that the isoform does not have a signal peptide.}
+    \item{\code{CS_Position}: (Only present for SignalP 5/6 results). The raw cleavage-site description reported by SignalP, from which \code{aa_removed} is derived.}
 }
 }
 
