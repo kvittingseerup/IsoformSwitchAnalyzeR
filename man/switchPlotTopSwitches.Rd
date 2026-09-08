@@ -91,7 +91,7 @@ For a list of the top switching genes see ?extractTopSwitches.
 An Isoform Switch Analysis Plot (as produce by \code{switchPlot}) for each of the top n switches in each comparison where a gene have a significant isoform switch is generated in the folder supplied by \code{pathToOutput}
 }
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 \author{
 Kristoffer Vitting-Seerup

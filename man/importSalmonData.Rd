@@ -67,7 +67,7 @@ A SwitchAnalyzeRlist containing the data supplied stored into the SwitchAnalyzeR
 
 \references{
 \itemize{
-    \item{\code{IsoformSwitchAnalyzeR}: Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017)..}
+    \item{\code{IsoformSwitchAnalyzeR}: Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
     \item{\code{Tximeta}: Love et al. Tximeta: Reference sequence checksums for provenance identification in RNA-seq. PLoS Comput. Biol. (2020).}
 }
 }

@@ -87,7 +87,7 @@ Furthermore depending on the exact tool used (local vs web-server) additional co
 
 \references{
 \itemize{
-    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+    \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
     \item{\code{pfamAnalyzeR} :Vitting-Seerup. Most protein domains exist as multiple variants with distinct structure and function. BioRxiv 2022}
 }
