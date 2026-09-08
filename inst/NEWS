@@ -1,3 +1,9 @@
+Changes in version 2.11.2 (2026-09)
+- Update type: Minor.
+- Updated the package citation throughout the documentation and vignette to
+  reference IsoformSwitchAnalyzeR v2 (Han et al., NAR Genom Bioinform 2026,
+  doi:10.1093/nargab/lqag098).
+
 Changes in version 2.11.1 (2025-11)
 - Update type: Minor.
 - Updated deprecated functions and minor modifications

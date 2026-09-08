@@ -144,7 +144,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 
 The usage of Alternative Transcription Start sites (aTSS), Alternative Splicing (AS) and alternative Transcription Termination Sites (aTTS) are collectively collectively results in the production of different isoforms. Alternative isoforms are widely used as recently demonstrated by The ENCODE Consortium, which found that on average, 6.3 different transcripts are generated per gene; a number which may vary considerably per gene.
 
-The importance of analyzing isoforms instead of genes has been highlighted by many examples showing functionally important changes. One of these examples is the pyruvate kinase. In normal adult homeostasis, cells use the adult isoform (M1), which supports oxidative phosphorylation. However, almost all cancer cells use the embryonic isoform (M2), which promotes aerobic glycolysis, one of the hallmarks of cancer. Such shifts in isoform usage are termed 'isoform switching' and cannot be detected at when only analyzing data on gene level. For an introduction to isoform switches please refere to [Vitting-Seerup et al 2017](http://mcr.aacrjournals.org/content/15/9/1206.long).
+The importance of analyzing isoforms instead of genes has been highlighted by many examples showing functionally important changes. One of these examples is the pyruvate kinase. In normal adult homeostasis, cells use the adult isoform (M1), which supports oxidative phosphorylation. However, almost all cancer cells use the embryonic isoform (M2), which promotes aerobic glycolysis, one of the hallmarks of cancer. Such shifts in isoform usage are termed 'isoform switching' and cannot be detected at when only analyzing data on gene level. For an introduction to isoform switches please refer to [Han et al 2026](https://doi.org/10.1093/nargab/lqag098).
 
 On a more systematic level several recent studies suggest that isoform switches are quite common since they often identify hundreds of switch events in both cancer and non-cancer studies.
 
@@ -238,51 +238,50 @@ The analysis performed by IsoformSwitchAnalyzeR is only possible due to a string
 
 If you are using the:
 
--   **Import of data from Salmon/Kallisto/RSEM/StringTie (importRdata() function)**: Please cite reference *10*.
--   **Import of data from Salmon via Tximeta (importSalmonData() function)**: Please cite reference *10* and *17*.
--   **Inter-library normalization of abundance values**: Please cite reference *10* and *11*.
--   **Isoform switch test implemented utilizing DEXSeq via IsoformSwitchAnalyzeR (Default)** : Please cite reference *1*, *12* and *13*.
--   **Isoform switch test implemented in the satuRn package**: Please cite reference *3*.
--   **Prediction of open reading frames (ORF) analysis**: Please cite reference *1* and *4*.
--   **Prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity**: Please cite reference *1*, *4*, *5* and *6*.
--   **CPAT**: Please cite reference *7*.
--   **CPC2**: Please cite reference *14*.
--   **Pfam**: Please cite reference *8*.
--   **Pfam isotypes**: Please cite reference *20*.
--   **SignalP**: Please cite reference *9*.
--   **NetSurf3-P**: Please cite reference *15*.
--   **IUPred2A**: Please cite reference *16*.
--   **Deeploc2**: Please cite reference *18*.
--   **DeepTMHMM**: Please cite reference *19*.
+-   **Import of data from Salmon/Kallisto/RSEM/StringTie (importRdata() function)**: Please cite reference *9*.
+-   **Import of data from Salmon via Tximeta (importSalmonData() function)**: Please cite reference *9* and *16*.
+-   **Inter-library normalization of abundance values**: Please cite reference *9* and *10*.
+-   **Isoform switch test implemented utilizing DEXSeq via IsoformSwitchAnalyzeR (Default)** : Please cite reference *1*, *11* and *12*.
+-   **Isoform switch test implemented in the satuRn package**: Please cite reference *1* and *2*.
+-   **Prediction of open reading frames (ORF) analysis**: Please cite reference *1* and *3*.
+-   **Prediction of pre-mature termination codons (PTC) and thereby NMD-sensitivity**: Please cite reference *1*, *3*, *4* and *5*.
+-   **CPAT**: Please cite reference *6*.
+-   **CPC2**: Please cite reference *13*.
+-   **Pfam**: Please cite reference *7*.
+-   **Pfam isotypes**: Please cite reference *19*.
+-   **SignalP**: Please cite reference *8*.
+-   **NetSurf3-P**: Please cite reference *14*.
+-   **IUPred2A**: Please cite reference *15*.
+-   **Deeploc2**: Please cite reference *17*.
+-   **DeepTMHMM**: Please cite reference *18*.
 -   **Prediction of consequences**: Please cite reference *1*.
 -   **Visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package: Please cite reference *1*.
--   **Alternative splicing analysis**: Please cite both reference *1* and *4*.
--   **Genome-wide enrichment analysis**: Please cite both reference *1* and *2*.
+-   **Alternative splicing analysis**: Please cite both reference *1* and *3*.
+-   **Genome-wide enrichment analysis**: Please cite reference *1*.
 
 <br />
 
 **Refrences**:
 
-1.  *Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)* [link](http://mcr.aacrjournals.org/content/15/9/1206.long).
-2.  *Vitting-Seerup et al. **IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences.** Bioinformatics (2019)* [link](http://dx.doi.org/10.1093/bioinformatics/btz247).
-3.  *Gilis et al. **satuRn: Scalable analysis of differential transcript usage for bulk and single-cell RNA-sequencing applications (version 2)**.* F1000Research, 10:374. [link](https://doi.org/10.12688/f1000research.51749.2)
-4.  *Vitting-Seerup et al. **spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data**. BMC Bioinformatics 2014, 15:81.* [link](http://www.biomedcentral.com/1471-2105/15/81).
-5.  *Weischenfeldt et al. **Mammalian tissues defective in nonsense-mediated mRNA decay display highly aberrant splicing patterns**. Genome Biol 2012, 13:R35* [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2012-13-5-r35).
-6.  *Huber et al. **Orchestrating high-throughput genomic analysis with Bioconductor**. Nat. Methods, 2015, 12:115-121.* [link](https://www.nature.com/articles/nmeth.3252).
-7.  *Wang et al. **CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model**. Nucleic Acids Res. 2013, 41:e74.* [link](https://academic.oup.com/nar/article/41/6/e74/2902455).
-8.  *Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2012)* [link](https://academic.oup.com/nar/article/40/D1/D290/2903007).
-9.  \_Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models.\*\*. Nat. Biotechnol (2022)\_ [link](https://www.nature.com/articles/s41587-021-01156-3)
-10. *Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015).* [link](https://f1000research.com/articles/4-1521/v2).
-11. *Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)* [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25).
-12. *Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)* [link](https://academic.oup.com/nar/article/43/7/e47/2414268).
-13. *Anders et al. **Detecting differential usage of exons from RNA-seq data**. Genome Research (2012)* [link](https://genome.cshlp.org/content/22/10/2008.long).
-14. *Kang et al. **CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features**. Nucleic Acids Res (2017)* [link](https://academic.oup.com/nar/article/45/W1/W12/3831091).
-15. *H??ie et al. **NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning**. Nucleic Acids Research (2022)* [link](https://doi.org/10.1093/nar/gkac439)
-16. *Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018)* [link](https://doi.org/10.1093/nar/gky384)
-17. *Love et al. Tximeta: Reference sequence checksums for provenance identification in RNA-seq. PLoS Comput. Biol (2020)* [link](http://dx.doi.org/10.1371/journal.pcbi.1007664)
-18. *Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022)* [link](http://dx.doi.org/10.1093/nar/gkac278)
-19. *Hallgren et al. DeepTMHMM predicts alpha and beta transmembrane proteins using deep neural networks. bioRxiv (2022)* [link](https://doi.org/10.1101/2022.04.08.487609)
-20. *Vitting-Seerup. Most protein domains exist as multiple variants with distinct structure and function. bioRxiv (2022)* [link](https://www.biorxiv.org/content/10.1101/2022.08.12.503740v1)
+1.  *Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. **IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data.** NAR Genom Bioinform (2026)* [link](https://doi.org/10.1093/nargab/lqag098).
+2.  *Gilis et al. **satuRn: Scalable analysis of differential transcript usage for bulk and single-cell RNA-sequencing applications (version 2)**.* F1000Research, 10:374. [link](https://doi.org/10.12688/f1000research.51749.2)
+3.  *Vitting-Seerup et al. **spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data**. BMC Bioinformatics 2014, 15:81.* [link](http://www.biomedcentral.com/1471-2105/15/81).
+4.  *Weischenfeldt et al. **Mammalian tissues defective in nonsense-mediated mRNA decay display highly aberrant splicing patterns**. Genome Biol 2012, 13:R35* [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2012-13-5-r35).
+5.  *Huber et al. **Orchestrating high-throughput genomic analysis with Bioconductor**. Nat. Methods, 2015, 12:115-121.* [link](https://www.nature.com/articles/nmeth.3252).
+6.  *Wang et al. **CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model**. Nucleic Acids Res. 2013, 41:e74.* [link](https://academic.oup.com/nar/article/41/6/e74/2902455).
+7.  *Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2012)* [link](https://academic.oup.com/nar/article/40/D1/D290/2903007).
+8.  \_Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models.\*\*. Nat. Biotechnol (2022)\_ [link](https://www.nature.com/articles/s41587-021-01156-3)
+9.  *Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015).* [link](https://f1000research.com/articles/4-1521/v2).
+10. *Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)* [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25).
+11. *Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)* [link](https://academic.oup.com/nar/article/43/7/e47/2414268).
+12. *Anders et al. **Detecting differential usage of exons from RNA-seq data**. Genome Research (2012)* [link](https://genome.cshlp.org/content/22/10/2008.long).
+13. *Kang et al. **CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features**. Nucleic Acids Res (2017)* [link](https://academic.oup.com/nar/article/45/W1/W12/3831091).
+14. *H??ie et al. **NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning**. Nucleic Acids Research (2022)* [link](https://doi.org/10.1093/nar/gkac439)
+15. *Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018)* [link](https://doi.org/10.1093/nar/gky384)
+16. *Love et al. Tximeta: Reference sequence checksums for provenance identification in RNA-seq. PLoS Comput. Biol (2020)* [link](http://dx.doi.org/10.1371/journal.pcbi.1007664)
+17. *Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022)* [link](http://dx.doi.org/10.1093/nar/gkac278)
+18. *Hallgren et al. DeepTMHMM predicts alpha and beta transmembrane proteins using deep neural networks. bioRxiv (2022)* [link](https://doi.org/10.1101/2022.04.08.487609)
+19. *Vitting-Seerup. Most protein domains exist as multiple variants with distinct structure and function. bioRxiv (2022)* [link](https://www.biorxiv.org/content/10.1101/2022.08.12.503740v1)
 
 <br />
 
@@ -2498,7 +2497,7 @@ Importantly there are also extensions of this analysis approach which jointly an
 
 The idea with this type of analysis it to utilize the transcript level quantification of the RNASeq data to detect changes in which transcripts are used in the two conditions (isoform switches). Although this is from a computational point a harder task (less events are found) the biological interpretation is a lot easier because you know the entire transcript. According to [Love et al 2018](https://f1000research.com/articles/7-952/v3) again DEXSeq (testing transcripts instead of exons) seems to be the best tool to find such changes.
 
-For the biological interpertration of such isoform switches IsoformSwitchAnalyzeR was created. IsoformSwitchAnalyzeR enables identification and analysis of alternative splicing as well as isoform switches with predicted functional consequences (such as gain/loss of protein domains etc) from quantification by Kallisto, Salmon, Cufflinks/CuffFiff, RSEM etc. IsoformSwitchAnalyzeR allows for analysis and visualizations of both individual genes as well as genome wide analysis of changes in both splicing and isoform switch consequences. For high level introduction you can jump to the [Abstract] or the [Quick Start]. Alternatively you can jump directly to the [Examples Visualizations] IsoformSwitchAnalyzeR can perform. For more info you can see how the analysis of switch consequences can be used in [Vitting-Seerup *et al* 2017](http://mcr.aacrjournals.org/content/15/9/1206.long) and for more info on the genome wide analysis take a look at [Vitting-Seerup *et al* 2019](http://dx.doi.org/10.1093/bioinformatics/btz247).
+For the biological interpertration of such isoform switches IsoformSwitchAnalyzeR was created. IsoformSwitchAnalyzeR enables identification and analysis of alternative splicing as well as isoform switches with predicted functional consequences (such as gain/loss of protein domains etc) from quantification by Kallisto, Salmon, Cufflinks/CuffFiff, RSEM etc. IsoformSwitchAnalyzeR allows for analysis and visualizations of both individual genes as well as genome wide analysis of changes in both splicing and isoform switch consequences. For high level introduction you can jump to the [Abstract] or the [Quick Start]. Alternatively you can jump directly to the [Examples Visualizations] IsoformSwitchAnalyzeR can perform. For more info on both the analysis of switch consequences and the genome wide analysis take a look at [Han *et al* 2026](https://doi.org/10.1093/nargab/lqag098).
 
 Lastly there are also analysis extentions to the transcript based analysis which performs the statistical association on groups of transcripts (often via transcript compatability counts) or on gene level - but just like the tools analyzing groups of splice events the biological interpretability is next to impossibe.
 
