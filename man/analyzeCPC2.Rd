@@ -33,7 +33,7 @@ analyzeCPC2(
 
 \details{
 Notes for how to run the external tools:
-Use default parameters and if required select the most similar species. If the [webserver](\url{http://cpc2.cbi.pku.edu.cn/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" button). If a stand-alone version was just just supply the path to the result file.
+Use default parameters and if required select the most similar species. If the [webserver](\url{https://cpc2.gao-lab.org/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" button). If a stand-alone version was just just supply the path to the result file.
 
 Please note that the \code{analyzeCPC2()} function will automatically only import the CPC2 results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 }

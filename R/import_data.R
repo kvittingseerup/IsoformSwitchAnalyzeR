@@ -1300,7 +1300,7 @@ importGTF <- function(
             if(   geneIdPressent ) {
                 stop(
                     paste0(
-                        'This is not a RefSeq GFF file (from ftp://ftp.ncbi.nlm.nih.gov/genomes/).',
+                        'This is not a RefSeq GFF file (from https://ftp.ncbi.nlm.nih.gov/genomes/).',
                         '\nIsoformSwitchAnalyzeR only handles RefSeq GFF files so please supply GTF file instead.',
                         '\n(for more info see FAQ about annotate databases in vignette).'
                     )

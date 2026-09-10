@@ -73,7 +73,7 @@ A \code{data.frame} containing the paired differential expression results from p
 Can either be:
 \itemize{
     \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GTF file. An example could be "myAnnotation/myGenome/isoformsQuantified.gtf")}
-    \item{\code{2}: A string indicating the full path to the (gziped or unpacked) RefSeq GFF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GFF file. Please note only GFF files from RefSeq downloaded from \url{ftp://ftp.ncbi.nlm.nih.gov/genomes/} are supported (see database FAQ in vignette for more info). An example could be "RefSeq/isoformsQuantified.gff")}
+    \item{\code{2}: A string indicating the full path to the (gziped or unpacked) RefSeq GFF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GFF file. Please note only GFF files from RefSeq downloaded from \url{https://ftp.ncbi.nlm.nih.gov/genomes/} are supported (see database FAQ in vignette for more info). An example could be "RefSeq/isoformsQuantified.gff")}
 }
 }
 
