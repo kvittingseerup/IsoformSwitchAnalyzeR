@@ -89,8 +89,8 @@ The BSGenome object are loaded as separate packages. Use for example \code{libra
 The two fasta files outputted by this function (if \code{writeToFile=TRUE}) can be used as input to among others:
 \itemize{
     \item{\code{CPAT} : The Coding-Potential Assessment Tool, which can be run either locally or via their webserver \url{http://lilab.research.bcm.edu/cpat/} }
-    \item{\code{Pfam} : Prediction of protein domains, which can be run either locally or via their webserver \url{http://pfam.xfam.org/search#tabview=tab1} }
-    \item{\code{SignalP} : Prediction of Signal Peptide, which can be run either locally or via their webserver \url{http://www.cbs.dtu.dk/services/SignalP/} }
+    \item{\code{Pfam} : Prediction of protein domains, which can be run either locally or via their webserver \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan} }
+    \item{\code{SignalP} : Prediction of Signal Peptide, which can be run either locally or via their webserver \url{https://services.healthtech.dtu.dk/services/SignalP-6.0/} }
 }
 See \code{?analyzeCPAT}, \code{?analyzePFAM} or \code{?analyzeSignalP} (under details) for suggested ways of running these tools.
 
