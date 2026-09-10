@@ -1185,7 +1185,7 @@ analyzeSignalP <- function(
                 t2 <- ! is.character(singalPresults$Prediction)
                 t3 <- ! is.numeric(singalPresults$SP_Sec_SPI)
                 t4 <- ! is.numeric(singalPresults$OTHER)
-                t5 <- ! any(c('OTHER','NO_SP','SP') %in% singalPresults$Prediction) # add "Other"
+                t5 <- ! all(singalPresults$Prediction %in% c('OTHER','NO_SP','SP'))
 
                 if( any( c(t1,t2,t3,t4,t5))) {
                     stop('The pathToSignalPresultFile does not seam to be the result of a SignalP 6 analysis')
@@ -1734,7 +1734,7 @@ analyzeNetSurfP3 <- function(
         length=localRle@lengths,
         orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
       )
-      rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
+      rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1
       
       ### Subset to disordered of length X
       rleDf <- rleDf[which(
@@ -2110,7 +2110,7 @@ analyzeIUPred2A <- function(
                         length=localRle@lengths,
                         orf_aa_end=cumsum(localRle@lengths) + nRemovedByDrop
                     )
-                    rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1 + nRemovedByDrop
+                    rleDf$orf_aa_start <- rleDf$orf_aa_end - rleDf$length + 1
 
                     ### Subset to disordered of length X
                     rleDf <- rleDf[which(

@@ -2113,7 +2113,7 @@ expressionAnalysisPlot <- function(
 
         maxNrCharacters <- max(
             c(
-                analyzeStrandCompositionInWhiteSpaces(isoform_id),
+                sapply(isoform_id, analyzeStrandCompositionInWhiteSpaces),
                 analyzeStrandCompositionInWhiteSpaces(condition1),
                 analyzeStrandCompositionInWhiteSpaces(condition2)
             )
@@ -2433,7 +2433,7 @@ expressionAnalysisPlot <- function(
             } else {
                 sigLevelDF <- data.frame(
                     sigLevel = evalSig(geneExpression$gene_q_value, alphas),
-                    sigLevelPos = max(geneExpressionCombined$gene_expression) *
+                    sigLevelPos = max(geneExpressionCombined$gene_expression, na.rm = TRUE) *
                         (extendFactor),
                     stringsAsFactors = FALSE
                 )
@@ -2690,7 +2690,7 @@ expressionAnalysisPlot <- function(
                                     na.rm = TRUE
                                 )
                         } else {
-                            aDF$ymax <- max(correspondingExpData$expression)
+                            aDF$ymax <- max(correspondingExpData$expression, na.rm = TRUE)
                         }
 
                         return(aDF)

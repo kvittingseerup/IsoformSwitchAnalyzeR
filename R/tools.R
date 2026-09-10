@@ -36,7 +36,7 @@ testFullRank <- function(localDesign) {
     if( ncol(localDesign) > 2 ) {
         for(i in 3:ncol(localDesign) ) { # i <- 4
             if( class(localDesign[,i]) %in% c('numeric', 'integer') ) {
-                if( uniqueLength( localDesign[,i] ) *2 < length(localDesign) ) {
+                if( uniqueLength( localDesign[,i] ) *2 < length(localDesign[,i]) ) {
                     localDesign[,i] <- factor(localDesign[,i])
                 }
             }
@@ -2228,7 +2228,19 @@ exportToPairedGSEA <- function(
   # Extract the design matrix
   designMatrix <- switchAnalyzeRlist$designMatrix
   designMatrix$condition <- as.factor(designMatrix$condition)
-  
+
+  # Warn if metadata and count_matrix don't reference the same samples --
+  # pairedGSEA aligns by sample name internally, but silently drops any
+  # samples present in only one of the two.
+  if (!setequal(designMatrix$sampleID, colnames(countMatrix))) {
+    warning(paste(
+      "The samples in 'designMatrix' do not match the samples in",
+      "'isoformCountMatrix'. Samples present in only one of the two will be",
+      "silently dropped by pairedGSEA. Please ensure both refer to the same",
+      "set of samples."
+    ))
+  }
+
   # Create the result list
   pairedGSEAList <- list(
     count_matrix = countMatrix,

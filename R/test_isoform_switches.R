@@ -1221,6 +1221,20 @@ extractSwitchOverlap <- function(
             ))]
         }
         if (nrow(dataDF) == 0) {
+            backUpDf <-
+                unique(switchAnalyzeRlist$isoformFeatures[, c(
+                    'condition_1', 'condition_2'
+                )])
+            backUpDf <-
+                data.frame(
+                    Comparison = paste(
+                        backUpDf$condition_1,
+                        backUpDf$condition_2, sep = ' vs '),
+                    nrIsoforms = 0,
+                    nrSwitches = 0,
+                    nrGenes = 0,
+                    stringsAsFactors = FALSE
+                )
             return(backUpDf)
         }
 
@@ -1663,7 +1677,7 @@ extractTopSwitches <- function(
         }
 
         ### Reduce to the number wanted
-        if (!is.na(n)) {
+        if (! is.infinite(n)) {
             if (inEachComparison) {
                 dataDF2$comparison <-
                     paste(dataDF2$condition_1,

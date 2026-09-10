@@ -339,9 +339,9 @@ isoformSwitchAnalysisPart2 <- function(
     }
     if (!is.null(pathToNetSurfP2resultFile)) {
         switchAnalyzeRlist <-
-            analyzeNetSurfP2(
+            analyzeNetSurfP3(
                 switchAnalyzeRlist = switchAnalyzeRlist,
-                pathToNetSurfP2resultFile = pathToNetSurfP2resultFile,
+                pathToNetSurfP3resultFile = pathToNetSurfP2resultFile,
                 quiet = TRUE
             )
     }
