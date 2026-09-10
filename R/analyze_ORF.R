@@ -60,11 +60,12 @@ analyzeORF <- function(
             ))
         }
 
-        if (orfMethod %in% c('mostUpstreamAnnoated', 'longestAnnotated')) {
+        if (orfMethod %in% c('mostUpstreamAnnoated', 'longestAnnotated', 'longest.AnnotatedWhenPossible')) {
             if (is.null(cds)) {
                 stop(paste(
-                    'When using orfMethod is \'mostUpstreamAnnoated\' or',
-                    '\'longestAnnotated\', a CDSSet must be supplied to',
+                    'When using orfMethod is \'mostUpstreamAnnoated\',',
+                    '\'longestAnnotated\' or \'longest.AnnotatedWhenPossible\',',
+                    'a CDSSet must be supplied to',
                     'the \'cds\' argument '
                 ))
             }
@@ -295,9 +296,9 @@ analyzeORF <- function(
 
             ### Subset to those analyzed (if annoation is used)
             if (useAnnoated) {
-                tmpSwitchAnalyzeRlist$isoform_feature <-
-                    tmpSwitchAnalyzeRlist$isoform_feature[which(
-                        tmpSwitchAnalyzeRlist$isoform_feature$isoform_id %in%
+                tmpSwitchAnalyzeRlist$isoformFeatures <-
+                    tmpSwitchAnalyzeRlist$isoformFeatures[which(
+                        tmpSwitchAnalyzeRlist$isoformFeatures$isoform_id %in%
                             overlappingAnnotStart2$isoform_id
                     ),]
                 tmpSwitchAnalyzeRlist$exons <-
@@ -1532,7 +1533,12 @@ analyzeNovelIsoformORF <- function(
             stop('No ORF annotation pressent. Run addORFfromGTF() first and try again.')
         }
         nWithout <- sum(switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet')
-        nWithout <- nWithout + (sum(!is.na(switchAnalyzeRlist$orfAnalysis$PTC)) * as.integer(analysisAllIsoformsWithoutORF))
+        if (analysisAllIsoformsWithoutORF) {
+            nWithout <- nWithout + sum(
+                switchAnalyzeRlist$orfAnalysis$orf_origin == 'Annotation' &
+                    is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+            )
+        }
 
         if( nWithout == 0) {
             stop('There appear not to be any isoforms not already annotated with ORFs - meaning there is no need to run this function')

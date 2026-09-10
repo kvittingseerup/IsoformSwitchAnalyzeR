@@ -2161,7 +2161,7 @@ compareAnnotationOfTwoIsoforms <- function(
                         all( c(TRUE, FALSE) %in% localOverlapDfDiff$maxIsUp )
                     ) {
                         isoComparison$switchConsequence[localIndex] <-
-                            #'IDR length gain and loss'
+                            # 'IDR length gain and loss'
                             'Mixed Domain length differences'
                     } else if(
                         all(localOverlapDfDiff$maxIsUp)
@@ -2565,7 +2565,7 @@ compareAnnotationOfTwoIsoforms <- function(
                         all( c(TRUE, FALSE) %in% localOverlapDfDiff$maxIsUp )
                     ) {
                         isoComparison$switchConsequence[localIndex] <-
-                            #'IDR length gain and loss'
+                            # 'IDR length gain and loss'
                             'Mixed IDR length differences'
                     } else if(
                         all(localOverlapDfDiff$maxIsUp)
@@ -3715,7 +3715,7 @@ extractConsequenceEnrichment <- function(
 
         g1 <- ggplot(data=consequenceBalance2, aes(y=feature2, x=propOfRelevantEvents, color=Significant)) +
             #geom_point(size=4) +
-            geom_errorbarh(aes(xmax = propCiLo, xmin=propCiHi), height = .3) +
+            geom_errorbarh(aes(xmax = propCiHi, xmin=propCiLo), height = .3) +
             geom_point(aes(size=nTot)) +
             facet_wrap(~Comparison) +
             geom_vline(xintercept=0.5, linetype='dashed') +

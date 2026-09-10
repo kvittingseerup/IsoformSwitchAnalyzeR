@@ -195,26 +195,13 @@ if(TRUE) {
                 }
 
             } else { # multiple skipping
-                if(asTypes$MESI > 0) { # if a MESI have already been annotated, add a ',' to destinguish them from each other
-                    for(i in 1:nrow(coordinats)) {
-                        if(i == 1) { # if a MESI have already been anotated
-                            asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=',') # start with a ','
-                            asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=',') # start with a ','
-                        } else {
-                            asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=';')
-                            asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=';')
-                        }
-                    }
-
-                } else { # if NO MESI have been anotated before
-                    for(i in 1:nrow(coordinats)) {
-                        if(is.na(asTypes$MESI.start)) {
-                            asTypes$MESI.start <- paste( coordinats$start[i] )
-                            asTypes$MESI.end   <- paste( coordinats$end[i] )
-                        } else {
-                            asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=';')
-                            asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=';')
-                        }
+                for(i in 1:nrow(coordinats)) {
+                    if(is.na(asTypes$MESI.start)) {
+                        asTypes$MESI.start <- paste( coordinats$start[i] )
+                        asTypes$MESI.end   <- paste( coordinats$end[i] )
+                    } else {
+                        asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=';')
+                        asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=';')
                     }
                 }
 
