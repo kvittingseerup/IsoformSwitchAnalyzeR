@@ -97,7 +97,6 @@ Kristoffer Vitting-Seerup
 
 \seealso{
 \code{\link{importRdata}}\cr
-\code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{preFilter}}
 }
 

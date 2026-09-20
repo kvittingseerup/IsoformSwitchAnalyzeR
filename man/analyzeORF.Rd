@@ -114,7 +114,7 @@ NA means no information was available aka no ORF (passing the \code{minORFlength
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{preFilter}}\cr
 \code{\link{isoformSwitchTestDEXSeq}}\cr
 \code{\link{isoformSwitchTestSatuRn}}\cr

@@ -105,7 +105,6 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{importCufflinksFiles}}\cr
 \code{\link{importRdata}}
 }

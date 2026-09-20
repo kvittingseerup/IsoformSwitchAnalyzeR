@@ -97,7 +97,7 @@ Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. C
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{preFilter}}
 }
 \note{

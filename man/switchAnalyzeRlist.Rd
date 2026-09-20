@@ -3,10 +3,12 @@
 \alias{switchAnalyzeRlist-class}
 \alias{switchAnalyzeRlist}
 \docType{class}
-\title{Create a switchAnalyzeRlist Object}
+\title{The switchAnalyzeRlist Object}
 
 \description{
-Create a \code{switchAnalyzeRlist} containing all the information needed to do the full analysis with IsoformSwitchAnalyzeR.
+The \code{switchAnalyzeRlist} object contains all the information needed to do the full analysis with IsoformSwitchAnalyzeR. This page documents its structure and (for reference) the internal \code{createSwitchAnalyzeRlist()} constructor used to build it.
+
+Note: \code{createSwitchAnalyzeRlist()} is \strong{not exported} and should not be called directly. It is used internally by \code{\link{importRdata}}, \code{\link{importGTF}}, and \code{\link{importCufflinksFiles}}. End users should use one of those functions instead.
 }
 
 \usage{
