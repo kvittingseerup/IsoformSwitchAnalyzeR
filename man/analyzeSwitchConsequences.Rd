@@ -116,21 +116,21 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 
     \item \code{NMD_status} : Test transcripts for differences in sensitivity to Nonsense Mediated Decay (NMD). Requires that both the isoforms have been annotated with PTC either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-  \item \code{domain_isotype} : Test transcripts for differences in the isotype of overlapping protein domain. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+  \item \code{domain_isotype} : Test transcripts for differences in the isotype of overlapping protein domain. Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{domain_length} : Test transcripts for differences in the length of overlapping domains of the same type (same hmm_name) thereby enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not truncate the protein domain. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{domain_length} : Test transcripts for differences in the length of overlapping domains of the same type (same hmm_name) thereby enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not truncate the protein domain. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis (Will be different unless the two isoforms have the same domains at the same genomic location). Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis (Will be different unless the two isoforms have the same domains at the same genomic location). Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{IDR_identified} : Test for differences in isoform IDRs. Specifically the two isoforms are analyzed for whether they contain IDRs which do not overlap in genomic coordinates. Requires that \code{analyzeNetSurfP2} or \code{analyzeIUPred2A} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
+    \item \code{IDR_identified} : Test for differences in isoform IDRs. Specifically the two isoforms are analyzed for whether they contain IDRs which do not overlap in genomic coordinates. Requires that \code{analyzeNetSurfP3}, \code{analyzeIUPred2A} or \code{analyzeInterProScan} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
-    \item \code{IDR_length} : Test for differences in the length of overlapping (in genomic coordinates) IDRs. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzeNetSurfP2} or \code{analyzeIUPred2A} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
+    \item \code{IDR_length} : Test for differences in the length of overlapping (in genomic coordinates) IDRs. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzeNetSurfP3}, \code{analyzeIUPred2A} or \code{analyzeInterProScan} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
     \item \code{IDR_type} : Test for differences in IDR type. Specifically the two isoforms are tested for overlapping IDRs (genomic coordinates) and overlapping IDRs are compared with regards to their IDR type (IDR vs IDR w binding site). Only available if \code{analyzeIUPred2A} was used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
-    \item \code{signal_peptide_identified} : Test transcripts for differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{signal_peptide_identified} : Test transcripts for differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} (or \code{analyzeInterProScan}) have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
 
     \item \code{sub_cell_location} : Test for any differences in predicted sub-cellular localization. Requires that \code{analyzeDeepLoc2} have been used to add external location analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
@@ -190,6 +190,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{extractConsequenceSummary}}\cr
 \code{\link{extractConsequenceEnrichment}}\cr
 \code{\link{extractConsequenceEnrichmentComparison}} \cr

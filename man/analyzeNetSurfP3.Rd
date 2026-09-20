@@ -112,5 +112,6 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeIUPred2A}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }

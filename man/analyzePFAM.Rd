@@ -38,22 +38,9 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 \details{
 A protein domain is a part of a protein which by itself can maintain a fixed three-dimensional structure. Protein domains are found in most proteins and usually have a specific function.
 
-The PFAM webserver is quite strict with regards to the number of sequences in the files uploaded so we suggest multiple runs each with one of the the files containing subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
+Note: the classic Pfam webserver (\url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan}) no longer supports batch submissions. To run Pfam on many isoforms at once we recommend either running pfam_scan.pl locally (see below) or using \code{\link{analyzeInterProScan}} instead, which can run Pfam (along with SignalP and MobiDB-lite) via the InterProScan webserver or command-line tool in a single batch-friendly job.
 
-Notes for how to run the external tools: \cr
-Use default parameters. If you want to use the webserver it is easily done as follows:.
-\itemize{
-\item{Go to \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan}}
-\item{Switch to the the "Upload a File" tab.}
-\item{3) Upload the amino acid file (_AA) created with \code{extractSequence} file AND add your mail address - this is important because there is currently no way of downloading the web output so you need them to send the result to your email.}
-\item{4) Check Pfam is selected in the "HMM database" window.}
-\item{5) Submit your job.}
-\item{6) Wait till you receive the email with the result (usually quite fast).}
-\item{7) Copy/paste the result part of the (ONLY what is below the line starting with "seq id") into an empty plain text document (notepad, sublimetext TextEdit or similar (not word)).}
-\item{8) Save the document and supply the path to that document to analyzePFAM()}
-}
-
-To run PFAM locally you should use the pfam_scan.pl script as described in the readme at \url{https://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/} and supply the path to the result file to analyzePFAM().
+To run Pfam locally you should use the pfam_scan.pl script as described in the readme at \url{https://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/} and supply the path to the result file to analyzePFAM().
 
 Protein domains are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times you can just run pfam once on all isoforms and then supply the entire file to \code{analyzePFAM()}.
 
@@ -102,6 +89,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

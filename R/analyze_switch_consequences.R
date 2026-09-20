@@ -973,14 +973,12 @@ compareAnnotationOfTwoIsoforms <- function(
                 ), ]
             idrData$isoform_id <-
                 factor(idrData$isoform_id, levels = isoformsToAnalyze)
+            idrCols <- c('idrStartGenomic', 'idrEndGenomic', 'orf_aa_start', 'orf_aa_end')
+            if ('idr_type' %in% colnames(idrData)) {
+                idrCols <- c(idrCols, 'idr_type')
+            }
             idrDataSplit <-
-                split(idrData[, c(
-                    'idrStartGenomic',
-                    'idrEndGenomic',
-                    'orf_aa_start',
-                    'orf_aa_end',
-                    'idr_type'
-                )], f = idrData$isoform_id)
+                split(idrData[, idrCols], f = idrData$isoform_id)
 
             ### Remove those overlapping trimmed regions
             if( exists('regionToOmmit') ) {

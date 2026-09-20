@@ -432,6 +432,248 @@ analyzeCPC2 <- function(
     return(switchAnalyzeRlist)
 }
 
+### Internal helper: takes a pfam_scan.pl-shaped result data.frame (columns:
+### seq_id, alignment_start, alignment_end, envelope_start, envelope_end,
+### hmm_acc, hmm_name, type, hmm_start, hmm_end, hmm_length, bit_score,
+### E_value, significant, clan, and - if withActiveRes=TRUE - predicted_active_site)
+### and finishes the shared work of adding domain isotypes, converting AA
+### coordinates to transcript/genomic coordinates, and storing the result in
+### the switchAnalyzeRlist.
+.finalizePfamAnalysis <- function(
+    myPfamResult,
+    switchAnalyzeRlist,
+    withActiveRes,
+    progressBar,
+    quiet
+) {
+    ### Add Domain isotypes
+    if(TRUE) {
+        tmp <-
+            myPfamResult %>%
+            pfamAnalyzeR::augment_pfam() %>%
+            pfamAnalyzeR::analyse_pfam_isotypes()
+
+        myPfamResult$domain_isotype        <- tmp$domain_isotype
+        myPfamResult$domain_isotype_simple <- tmp$domain_isotype_simple
+
+    }
+
+    ### Convert from AA coordinates to transcript and gnomic coordinats
+    if (TRUE) {
+        if (!quiet) {
+            message('Converting AA coordinats to transcript and genomic coordinats...')
+        }
+        ### Remove unwanted columns
+        myPfamResult$alignment_start <- NULL # KVS update 01/2023
+        myPfamResult$alignment_end   <- NULL # KVS update 01/2023
+        myPfamResult$hmm_start <- NULL
+        myPfamResult$hmm_end <- NULL
+        myPfamResult$hmm_length <- NULL
+
+        colnames(myPfamResult)[which(
+            grepl('envelope_', colnames(myPfamResult)) # KVS update 01/2023
+        )] <- c('orf_aa_start', 'orf_aa_end')
+
+        ### convert from codons to transcript position
+        orfStartDF <-
+            unique(as.data.frame(
+                switchAnalyzeRlist$orfAnalysis[,
+                    c('isoform_id', 'orfTransciptStart')
+                ]
+            ))
+        myPfamResult$transcriptStart <-
+            (myPfamResult$orf_aa_start  * 3 - 2) +
+            orfStartDF[
+                match(
+                    x = myPfamResult$seq_id,
+                    table = orfStartDF$isoform_id
+                ),
+                2] - 1
+        myPfamResult$transcriptEnd <-
+            (myPfamResult$orf_aa_end * 3) +
+            orfStartDF[
+                match(
+                    x = myPfamResult$seq_id,
+                    table = orfStartDF$isoform_id
+                ),
+                2] - 1
+
+        ### convert from transcript to genomic coordinats
+        # extract exon data
+        myExons <-
+            as.data.frame(switchAnalyzeRlist$exons[which(
+                switchAnalyzeRlist$exons$isoform_id %in% myPfamResult$seq_id
+            ), ])
+        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
+        myPfamResultDf <-
+            plyr::ddply(
+                myPfamResult,
+                .progress = progressBar,
+                .variables = 'seq_id',
+                .fun = function(aDF) {
+                    transcriptId <- aDF$seq_id[1]
+                    localExons <-
+                        as.data.frame(myExonsSplit[[transcriptId]])
+
+                    # extract domain allignement
+                    localORFalignment <- aDF
+                    colnames(localORFalignment)[match(
+                        x = c('transcriptStart', 'transcriptEnd'),
+                        table = colnames(localORFalignment)
+                    )] <- c('start', 'end')
+
+                    # loop over domain alignment (migh be several)
+                    orfPosList <- list()
+                    for (j in 1:nrow(localORFalignment)) {
+                        domainInfo <-
+                            convertCoordinatsTranscriptToGenomic(
+                                transcriptCoordinats =  localORFalignment[j, ],
+                                exonStructure = localExons
+                            )
+
+                        ### look into active residues
+                        if (withActiveRes) {
+                            if (!is.na(
+                                localORFalignment$predicted_active_site[j]
+                            )) {
+                                activeResInfo <-
+                                    data.frame(activeRes = as.integer(unlist(
+                                        strsplit(
+                                            x = localORFalignment$predicted_active_site[j],
+                                            split = ','
+                                        )
+                                    )))
+
+                                activeResInfo$start <-
+                                    activeResInfo$activeRes  * 3 - 2
+                                activeResInfo$end   <-
+                                    activeResInfo$activeRes  * 3
+
+                                activeResInfoList <- list()
+                                for (k in 1:nrow(activeResInfo)) {
+                                    activeResInfoList[[as.character(k)]] <-
+                                        convertCoordinatsTranscriptToGenomic(
+                                            transcriptCoordinats = activeResInfo[k, ],
+                                            exonStructure = localExons
+                                        )[, c('pfamStartGenomic',
+                                              'pfamEndGenomic')]
+                                }
+                                activeResInfoDf <-
+                                    cbind(activeResInfo,
+                                          do.call(rbind, activeResInfoList))
+
+                                ### add it to the domain info
+                                domainInfo$activeResTranscriptStart <-
+                                    paste(activeResInfoDf$start, collapse = ',')
+                                domainInfo$activeResTranscriptEnd   <-
+                                    paste(activeResInfoDf$end, collapse = ',')
+                                domainInfo$activeResGenomicStart    <-
+                                    paste(activeResInfoDf$pfamStartGenomic,
+                                          collapse = ',')
+                                domainInfo$activeResGenomicEnd      <-
+                                    paste(activeResInfoDf$pfamEndGenomic,
+                                          collapse = ',')
+                            } else {
+                                ### Add NA instead of residues
+                                domainInfo$activeResTranscriptStart <- NA
+                                domainInfo$activeResTranscriptEnd   <- NA
+                                domainInfo$activeResGenomicStart    <- NA
+                                domainInfo$activeResGenomicEnd      <- NA
+                            }
+                        }
+
+
+                        orfPosList[[as.character(j)]] <- domainInfo
+
+                    }
+                    orfPosDf <- do.call(rbind, orfPosList)
+
+                    return(cbind(aDF, orfPosDf))
+                }
+            )
+
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        ### reorder data.frame
+        # make sure the basic data is last
+        colnames(myPfamResultDf)[1] <- 'isoform_id'
+        newOrderNames <- c('isoform_id', 'hmm_acc', 'hmm_name', 'clan')
+        myPfamResultDf <-
+            myPfamResultDf[, c(
+                which(colnames(myPfamResultDf) %in% newOrderNames) ,
+                which(!colnames(myPfamResultDf) %in% newOrderNames)
+            )]
+
+        # sort
+        myPfamResultDf <-
+            myPfamResultDf[order(
+                myPfamResultDf$isoform_id,
+                myPfamResultDf$transcriptStart,
+                myPfamResultDf$hmm_name
+            ), ]
+
+        # if active residues are pressent put them last
+        if (withActiveRes) {
+            newOrder <-
+                c(which(
+                    !grepl(
+                        'Predicted_active_site|ActiveRes',
+                        colnames(myPfamResultDf)
+                    )
+                ), which(
+                    grepl(
+                        'Predicted_active_site|ActiveRes',
+                        colnames(myPfamResultDf)
+                    )
+                ))
+            myPfamResultDf <- myPfamResultDf[, newOrder]
+        }
+
+        #myPfamResultDf$pfamStarExon <- NULL
+        #myPfamResultDf$pfamEndExon <- NULL
+
+        # add the pfam results to the switchAnalyzeRlist object
+        switchAnalyzeRlist$domainAnalysis <- myPfamResultDf
+
+        # add indication to transcriptDf
+        switchAnalyzeRlist$isoformFeatures$domain_identified <- 'no'
+        switchAnalyzeRlist$isoformFeatures$domain_identified[which(
+            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+        )] <- NA # sets NA for those not analyzed
+
+        switchAnalyzeRlist$isoformFeatures$domain_identified[which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                myPfamResultDf$isoform_id
+        )] <- 'yes'
+    }
+
+    ### Repport numbers
+    if(TRUE) {
+        n <- length(unique(myPfamResultDf$isoform_id))
+        p <-
+            round(n / length(unique(
+                switchAnalyzeRlist$isoformFeatures$isoform_id
+            )) * 100, digits = 2)
+
+        if (!quiet) {
+            message(paste(
+                'Added domain information to ',
+                n,
+                ' (',
+                p,
+                '%) transcripts',
+                sep = ''
+            ))
+        }
+    }
+
+    return(switchAnalyzeRlist)
+}
+
 analyzePFAM <- function(
     ### Core arguments
     switchAnalyzeRlist,
@@ -843,228 +1085,106 @@ analyzePFAM <- function(
 
     }
 
-    ### Add Domain isotypes
-    if(TRUE) {
-        tmp <-
-            myPfamResult %>%
-            pfamAnalyzeR::augment_pfam() %>%
-            pfamAnalyzeR::analyse_pfam_isotypes()
+    return(
+        .finalizePfamAnalysis(
+            myPfamResult = myPfamResult,
+            switchAnalyzeRlist = switchAnalyzeRlist,
+            withActiveRes = withActiveRes,
+            progressBar = progressBar,
+            quiet = quiet
+        )
+    )
+}
 
-        myPfamResult$domain_isotype        <- tmp$domain_isotype
-        myPfamResult$domain_isotype_simple <- tmp$domain_isotype_simple
-
-    }
-
-    ### Convert from AA coordinates to transcript and gnomic coordinats
+### Internal helper: takes a signal-peptide result data.frame (minimally needing
+### isoform_id and aa_removed - the AA position after which the signal peptide is
+### cleaved; any extra columns, e.g. network_used for SignalP4 or SP_Sec_SPI/OTHER
+### for SignalP5/6, are simply carried through untouched), converts the cleavage
+### site to transcript/genomic coordinates, and stores the result in the
+### switchAnalyzeRlist
+.finalizeSignalPAnalysis <- function(singalPresults, switchAnalyzeRlist, quiet) {
+    ### Convert from AA coordinats to transcript and genomic coordinats
     if (TRUE) {
-        if (!quiet) {
-            message('Converting AA coordinats to transcript and genomic coordinats...')
-        }
-        ### Remove unwanted columns
-        myPfamResult$alignment_start <- NULL # KVS update 01/2023
-        myPfamResult$alignment_end   <- NULL # KVS update 01/2023
-        myPfamResult$hmm_start <- NULL
-        myPfamResult$hmm_end <- NULL
-        myPfamResult$hmm_length <- NULL
-
-        colnames(myPfamResult)[which(
-            grepl('envelope_', colnames(myPfamResult)) # KVS update 01/2023
-        )] <- c('orf_aa_start', 'orf_aa_end')
-
-        ### convert from codons to transcript position
+        ### Convert cleavage site to transcript coordinats
+        # df with orf start
         orfStartDF <-
-            unique(as.data.frame(
-                switchAnalyzeRlist$orfAnalysis[,
-                    c('isoform_id', 'orfTransciptStart')
-                ]
-            ))
-        myPfamResult$transcriptStart <-
-            (myPfamResult$orf_aa_start  * 3 - 2) +
-            orfStartDF[
-                match(
-                    x = myPfamResult$seq_id,
-                    table = orfStartDF$isoform_id
-                ),
-                2] - 1
-        myPfamResult$transcriptEnd <-
-            (myPfamResult$orf_aa_end * 3) +
-            orfStartDF[
-                match(
-                    x = myPfamResult$seq_id,
-                    table = orfStartDF$isoform_id
-                ),
-                2] - 1
+            unique(as.data.frame(switchAnalyzeRlist$orfAnalysis[,c(
+                'isoform_id', 'orfTransciptStart'
+            )]))
+        # calculate start position
+        singalPresults$transcriptClevageAfter <-
+            (singalPresults$aa_removed  * 3) + orfStartDF[match(
+                x = singalPresults$isoform_id,
+                table = orfStartDF$isoform_id
+            ), 2] - 1
 
         ### convert from transcript to genomic coordinats
         # extract exon data
         myExons <-
             as.data.frame(switchAnalyzeRlist$exons[which(
-                switchAnalyzeRlist$exons$isoform_id %in% myPfamResult$seq_id
-            ), ])
+                switchAnalyzeRlist$exons$isoform_id %in%
+                    singalPresults$isoform_id
+            ),])
         myExonsSplit <- split(myExons, f = myExons$isoform_id)
 
-        # loop over the individual transcripts and extract the genomic coordiants of the domain and also for the active residues (takes 2 min for 17000 rows)
-        myPfamResultDf <-
+        # calculate genomic coordinat
+        singalPresults <-
             plyr::ddply(
-                myPfamResult,
-                .progress = progressBar,
-                .variables = 'seq_id',
+                singalPresults,
+                .variables = 'isoform_id',
                 .fun = function(aDF) {
-                    transcriptId <- aDF$seq_id[1]
-                    localExons <-
-                        as.data.frame(myExonsSplit[[transcriptId]])
+                    localExons <- myExonsSplit[[aDF$isoform_id[1]]]
 
-                    # extract domain allignement
-                    localORFalignment <- aDF
-                    colnames(localORFalignment)[match(
-                        x = c('transcriptStart', 'transcriptEnd'),
-                        table = colnames(localORFalignment)
-                    )] <- c('start', 'end')
-
-                    # loop over domain alignment (migh be several)
-                    orfPosList <- list()
-                    for (j in 1:nrow(localORFalignment)) {
-                        domainInfo <-
-                            convertCoordinatsTranscriptToGenomic(
-                                transcriptCoordinats =  localORFalignment[j, ],
-                                exonStructure = localExons
-                            )
-
-                        ### look into active residues
-                        if (withActiveRes) {
-                            if (!is.na(
-                                localORFalignment$predicted_active_site[j]
-                            )) {
-                                activeResInfo <-
-                                    data.frame(activeRes = as.integer(unlist(
-                                        strsplit(
-                                            x = localORFalignment$predicted_active_site[j],
-                                            split = ','
-                                        )
-                                    )))
-
-                                activeResInfo$start <-
-                                    activeResInfo$activeRes  * 3 - 2
-                                activeResInfo$end   <-
-                                    activeResInfo$activeRes  * 3
-
-                                activeResInfoList <- list()
-                                for (k in 1:nrow(activeResInfo)) {
-                                    activeResInfoList[[as.character(k)]] <-
-                                        convertCoordinatsTranscriptToGenomic(
-                                            transcriptCoordinats = activeResInfo[k, ],
-                                            exonStructure = localExons
-                                        )[, c('pfamStartGenomic',
-                                              'pfamEndGenomic')]
-                                }
-                                activeResInfoDf <-
-                                    cbind(activeResInfo,
-                                          do.call(rbind, activeResInfoList))
-
-                                ### add it to the domain info
-                                domainInfo$activeResTranscriptStart <-
-                                    paste(activeResInfoDf$start, collapse = ',')
-                                domainInfo$activeResTranscriptEnd   <-
-                                    paste(activeResInfoDf$end, collapse = ',')
-                                domainInfo$activeResGenomicStart    <-
-                                    paste(activeResInfoDf$pfamStartGenomic,
-                                          collapse = ',')
-                                domainInfo$activeResGenomicEnd      <-
-                                    paste(activeResInfoDf$pfamEndGenomic,
-                                          collapse = ',')
-                            } else {
-                                ### Add NA instead of residues
-                                domainInfo$activeResTranscriptStart <- NA
-                                domainInfo$activeResTranscriptEnd   <- NA
-                                domainInfo$activeResGenomicStart    <- NA
-                                domainInfo$activeResGenomicEnd      <- NA
-                            }
-                        }
-
-
-                        orfPosList[[as.character(j)]] <- domainInfo
-
-                    }
-                    orfPosDf <- do.call(rbind, orfPosList)
-
-                    return(cbind(aDF, orfPosDf))
+                    tempDf <-
+                        data.frame(
+                            start = aDF$transcriptClevageAfter,
+                            end = aDF$transcriptClevageAfter
+                        )
+                    aDF$genomicClevageAfter <-
+                        convertCoordinatsTranscriptToGenomic(
+                            transcriptCoordinats = tempDf,
+                            exonStructure = localExons
+                        )$pfamStartGenomic
+                    return(aDF)
                 }
             )
+
+        singalPresults$has_signal_peptide <- 'yes'
 
     }
 
     ### Add analysis to switchAnalyzeRlist
     if (TRUE) {
-        ### reorder data.frame
-        # make sure the basic data is last
-        colnames(myPfamResultDf)[1] <- 'isoform_id'
-        newOrderNames <- c('isoform_id', 'hmm_acc', 'hmm_name', 'clan')
-        myPfamResultDf <-
-            myPfamResultDf[, c(
-                which(colnames(myPfamResultDf) %in% newOrderNames) ,
-                which(!colnames(myPfamResultDf) %in% newOrderNames)
-            )]
-
-        # sort
-        myPfamResultDf <-
-            myPfamResultDf[order(
-                myPfamResultDf$isoform_id,
-                myPfamResultDf$transcriptStart,
-                myPfamResultDf$hmm_name
-            ), ]
-
-        # if active residues are pressent put them last
-        if (withActiveRes) {
-            newOrder <-
-                c(which(
-                    !grepl(
-                        'Predicted_active_site|ActiveRes',
-                        colnames(myPfamResultDf)
-                    )
-                ), which(
-                    grepl(
-                        'Predicted_active_site|ActiveRes',
-                        colnames(myPfamResultDf)
-                    )
-                ))
-            myPfamResultDf <- myPfamResultDf[, newOrder]
-        }
-
-        #myPfamResultDf$pfamStarExon <- NULL
-        #myPfamResultDf$pfamEndExon <- NULL
-
         # add the pfam results to the switchAnalyzeRlist object
-        switchAnalyzeRlist$domainAnalysis <- myPfamResultDf
+        switchAnalyzeRlist$signalPeptideAnalysis <- singalPresults
 
         # add indication to transcriptDf
-        switchAnalyzeRlist$isoformFeatures$domain_identified <- 'no'
-        switchAnalyzeRlist$isoformFeatures$domain_identified[which(
+        switchAnalyzeRlist$isoformFeatures$signal_peptide_identified <-
+            'no'
+        switchAnalyzeRlist$isoformFeatures$signal_peptide_identified[which(
             is.na(switchAnalyzeRlist$isoformFeatures$PTC)
         )] <- NA # sets NA for those not analyzed
-
-        switchAnalyzeRlist$isoformFeatures$domain_identified[which(
+        switchAnalyzeRlist$isoformFeatures$signal_peptide_identified[which(
             switchAnalyzeRlist$isoformFeatures$isoform_id %in%
-                myPfamResultDf$isoform_id
+                singalPresults$isoform_id
         )] <- 'yes'
-    }
 
-    ### Repport numbers
-    if(TRUE) {
-        n <- length(unique(myPfamResultDf$isoform_id))
+        n <- length(unique(singalPresults$isoform_id))
         p <-
-            round(n / length(unique(
-                switchAnalyzeRlist$isoformFeatures$isoform_id
-            )) * 100, digits = 2)
-
+            round(n / length(
+                unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
+            ) * 100, digits = 2)
         if (!quiet) {
-            message(paste(
-                'Added domain information to ',
-                n,
-                ' (',
-                p,
-                '%) transcripts',
-                sep = ''
-            ))
+            message(
+                paste(
+                    'Added signal peptide information to ',
+                    n,
+                    ' (',
+                    p,
+                    '%) transcripts',
+                    sep = ''
+                )
+            )
         }
     }
 
@@ -1518,92 +1638,7 @@ analyzeSignalP <- function(
 
     }
 
-    ### Convert from AA coordinats to transcript and genomic coordinats
-    if (TRUE) {
-        ### Convert cleavage site to transcript coordinats
-        # df with orf start
-        orfStartDF <-
-            unique(as.data.frame(switchAnalyzeRlist$orfAnalysis[,c(
-                'isoform_id', 'orfTransciptStart'
-            )]))
-        # calculate start position
-        singalPresults$transcriptClevageAfter <-
-            (singalPresults$aa_removed  * 3) + orfStartDF[match(
-                x = singalPresults$isoform_id,
-                table = orfStartDF$isoform_id
-            ), 2] - 1
-
-        ### convert from transcript to genomic coordinats
-        # extract exon data
-        myExons <-
-            as.data.frame(switchAnalyzeRlist$exons[which(
-                switchAnalyzeRlist$exons$isoform_id %in%
-                    singalPresults$isoform_id
-            ),])
-        myExonsSplit <- split(myExons, f = myExons$isoform_id)
-
-        # calculate genomic coordinat
-        singalPresults <-
-            plyr::ddply(
-                singalPresults,
-                .variables = 'isoform_id',
-                .fun = function(aDF) {
-                    localExons <- myExonsSplit[[aDF$isoform_id[1]]]
-
-                    tempDf <-
-                        data.frame(
-                            start = aDF$transcriptClevageAfter,
-                            end = aDF$transcriptClevageAfter
-                        )
-                    aDF$genomicClevageAfter <-
-                        convertCoordinatsTranscriptToGenomic(
-                            transcriptCoordinats = tempDf,
-                            exonStructure = localExons
-                        )$pfamStartGenomic
-                    return(aDF)
-                }
-            )
-
-        singalPresults$has_signal_peptide <- 'yes'
-
-    }
-
-    ### Add analysis to switchAnalyzeRlist
-    if (TRUE) {
-        # add the pfam results to the switchAnalyzeRlist object
-        switchAnalyzeRlist$signalPeptideAnalysis <- singalPresults
-
-        # add indication to transcriptDf
-        switchAnalyzeRlist$isoformFeatures$signal_peptide_identified <-
-            'no'
-        switchAnalyzeRlist$isoformFeatures$signal_peptide_identified[which(
-            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
-        )] <- NA # sets NA for those not analyzed
-        switchAnalyzeRlist$isoformFeatures$signal_peptide_identified[which(
-            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
-                singalPresults$isoform_id
-        )] <- 'yes'
-
-        n <- length(unique(singalPresults$isoform_id))
-        p <-
-            round(n / length(
-                unique(switchAnalyzeRlist$isoformFeatures$isoform_id)
-            ) * 100, digits = 2)
-        if (!quiet) {
-            message(
-                paste(
-                    'Added signal peptide information to ',
-                    n,
-                    ' (',
-                    p,
-                    '%) transcripts',
-                    sep = ''
-                )
-            )
-        }
-    }
-
-    return(switchAnalyzeRlist)
+    return(.finalizeSignalPAnalysis(singalPresults, switchAnalyzeRlist, quiet))
 }
 
 analyzeNetSurfP3 <- function(
@@ -2859,6 +2894,426 @@ analyzeDeepTMHMM <- function(
                 sep = ''
             ))
         }
+    }
+
+    return(switchAnalyzeRlist)
+}
+
+.expandInterProScanResults <- function(allResults, supportedSources) {
+    validEntries <- Filter(function(e) !is.null(e$xref) && !is.null(e$matches), allResults)
+
+    # Expanding the interProScan results - one entry per isoform instead of
+    # one entry per unique protein sequence
+    expandedRows <- unlist(lapply(validEntries, function(entry) {
+        seqIds <- vapply(entry$xref, function(x) x$id, character(1))
+
+        unlist(lapply(entry$matches, function(m) {
+            lapply(seqIds, function(seqId) list(seqId = seqId, match = m))
+        }), recursive = FALSE)
+    }), recursive = FALSE)
+
+    sources <- vapply(expandedRows, function(x) {
+        src <- x$match$source
+        if (is.null(src)) NA_character_ else src
+    }, character(1))
+
+    rowsPerSource <- stats::setNames(
+        lapply(supportedSources, function(s) unname(expandedRows[which(sources == s)])),
+        supportedSources
+    )
+
+    return(rowsPerSource)
+}
+
+### Pfam: builds a pfam_scan.pl-shaped data.frame so .finalizePfamAnalysis()
+### (shared with analyzePFAM()) can be reused as-is.
+###
+### Notes on fields with no InterProScan equivalent:
+###  - 'clan' is left NA.
+###  - 'significant' is hard-coded to 1, as InterProScan only ever returns hits
+###    that already passed Pfam's gathering-threshold (--cut_ga) cutoff
+###  - 'residue' (predicted active sites) is left NA
+.parseInterProScanPfamRows <- function(pfamMatchRows) {
+    rows <- lapply(pfamMatchRows, function(x) {
+        m <- x$match
+        lapply(m$locations, function(loc) {
+            data.frame(
+                seq_id = x$seqId,
+                alignment_start = loc$start,
+                alignment_end = loc$end,
+                envelope_start = if (is.null(loc$envelopeStart)) loc$start else loc$envelopeStart,
+                envelope_end   = if (is.null(loc$envelopeEnd))   loc$end   else loc$envelopeEnd,
+                hmm_acc  = m$signature$accession,
+                hmm_name = if (is.null(m$signature$name)) NA_character_ else m$signature$name,
+                type     = if (is.null(m$signature$type)) NA_character_ else m$signature$type,
+                hmm_start  = if (is.null(loc$hmmStart))  NA_integer_ else loc$hmmStart,
+                hmm_end    = if (is.null(loc$hmmEnd))    NA_integer_ else loc$hmmEnd,
+                hmm_length = if (is.null(loc$hmmLength)) NA_integer_ else loc$hmmLength,
+                bit_score = if (is.null(loc$score))  NA_real_ else loc$score,
+                E_value   = if (is.null(loc$evalue)) NA_real_ else loc$evalue,
+                significant = 1,
+                clan = NA_character_,
+                residue = NA_character_,
+                stringsAsFactors = FALSE
+            )
+        })
+    })
+    return(do.call(rbind, unlist(rows, recursive = FALSE)))
+}
+
+### SignalP: one row per isoform (the highest-scoring location across all of
+### that isoform's SignalP matches - InterProScan runs several organism-group
+### models per sequence, e.g. SignalP_fast_eukarya and SignalP_fast_other, and
+### only the most confident call is kept, mirroring one-call-per-isoform in
+### the existing SignalP parsers).
+###
+### Only the Sec/SPI signal type (accession 'SignalP-Sec-SPI') is supported -
+### matches for SignalP's prokaryote-specific types (Lipo/Sec-SPII, Tat/SPI,
+### TatLipo/Tat-SPII, Pilin/Sec-SPIII) are dropped before picking the
+### highest-scoring match. 
+.parseInterProScanSignalPRows <- function(signalPMatchRows) {
+    signalPMatchRows <- Filter(
+        function(x) identical(x$match$signature$accession, 'SignalP-Sec-SPI'),
+        signalPMatchRows
+    )
+
+    byIsoform <- split(signalPMatchRows, vapply(signalPMatchRows, function(x) x$seqId, character(1)))
+
+    rows <- lapply(byIsoform, function(isoformRows) {
+        candidates <- do.call(rbind, lapply(isoformRows, function(x) {
+            m <- x$match
+            do.call(rbind, lapply(m$locations, function(loc) {
+                data.frame(
+                    isoform_id = x$seqId,
+                    signal_peptide_type = if (is.null(m$signature$name)) NA_character_ else m$signature$name,
+                    aa_removed = loc$end,
+                    SP_Sec_SPI = if (is.null(loc$score)) NA_real_ else loc$score,
+                    stringsAsFactors = FALSE
+                )
+            }))
+        }))
+        candidates[which.max(candidates$SP_Sec_SPI), ]
+    })
+
+    return(do.call(rbind, rows))
+}
+
+### MobiDBLite: one row per predicted region (the outer consensus disorder
+### region as well as any nested compositional-bias sub-regions are all kept -
+### MobiDBLite frequently reports overlapping regions this way).
+.parseInterProScanMobiDBLiteRows <- function(mobiDBMatchRows) {
+    rows <- lapply(mobiDBMatchRows, function(x) {
+        m <- x$match
+        lapply(m$locations, function(loc) {
+            data.frame(
+                isoform_id = x$seqId,
+                orf_aa_start = loc$start,
+                orf_aa_end = loc$end,
+                compositional_bias = if (is.null(loc[['sequence-feature']])) NA_character_ else loc[['sequence-feature']],
+                stringsAsFactors = FALSE
+            )
+        })
+    })
+    return(do.call(rbind, unlist(rows, recursive = FALSE)))
+}
+
+.finalizeMobiDBLiteAnalysis <- function(myMobiDBLiteResult, switchAnalyzeRlist, progressBar, quiet) {
+    ### Convert from AA coordinats to transcript and genomic coordinats
+    if (TRUE) {
+        orfStartDF <- unique(as.data.frame(
+            switchAnalyzeRlist$orfAnalysis[
+                which(!is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+                c('isoform_id', 'orfTransciptStart')
+            ]
+        ))
+
+        myMobiDBLiteResult$transcriptStart <-
+            (myMobiDBLiteResult$orf_aa_start * 3 - 2) +
+            orfStartDF$orfTransciptStart[match(myMobiDBLiteResult$isoform_id, orfStartDF$isoform_id)] - 1
+        myMobiDBLiteResult$transcriptEnd <-
+            (myMobiDBLiteResult$orf_aa_end * 3) +
+            orfStartDF$orfTransciptStart[match(myMobiDBLiteResult$isoform_id, orfStartDF$isoform_id)] - 1
+
+        myExons <- as.data.frame(switchAnalyzeRlist$exons[which(
+            switchAnalyzeRlist$exons$isoform_id %in% myMobiDBLiteResult$isoform_id
+        ), ])
+        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+        myMobiDBLiteResult <- plyr::ddply(
+            myMobiDBLiteResult,
+            .progress = progressBar,
+            .variables = 'isoform_id',
+            .fun = function(aDF) {
+                localExons <- as.data.frame(myExonsSplit[[aDF$isoform_id[1]]])
+
+                localAlignment <- aDF
+                colnames(localAlignment)[match(
+                    c('transcriptStart', 'transcriptEnd'), colnames(localAlignment)
+                )] <- c('start', 'end')
+
+                posList <- lapply(seq_len(nrow(localAlignment)), function(j) {
+                    convertCoordinatsTranscriptToGenomic(
+                        transcriptCoordinats = localAlignment[j, ],
+                        exonStructure = localExons
+                    )
+                })
+
+                return(cbind(aDF, do.call(rbind, posList)))
+            }
+        )
+
+        colnames(myMobiDBLiteResult) <- gsub('pfam', 'idr', colnames(myMobiDBLiteResult))
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        switchAnalyzeRlist$idrAnalysis <- myMobiDBLiteResult
+
+        switchAnalyzeRlist$isoformFeatures$idr_identified <- 'no'
+        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+        )] <- NA # sets NA for those not analyzed
+        switchAnalyzeRlist$isoformFeatures$idr_identified[which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                myMobiDBLiteResult$isoform_id
+        )] <- 'yes'
+    }
+
+    ### Repport numbers
+    if (TRUE) {
+        n <- length(unique(myMobiDBLiteResult$isoform_id))
+        p <- round(n / length(unique(
+            switchAnalyzeRlist$isoformFeatures$isoform_id
+        )) * 100, digits = 2)
+
+        if (!quiet) {
+            message(paste(
+                'Added IDR information to ',
+                n,
+                ' (',
+                p,
+                '%) transcripts',
+                sep = ''
+            ))
+        }
+    }
+
+    return(switchAnalyzeRlist)
+}
+
+analyzeInterProScan <- function(
+    ### Core arguments
+    switchAnalyzeRlist,
+    pathToInterProScanResultFile,
+
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
+    overwritePreviousResults = TRUE,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Test input
+    if (TRUE) {
+        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+            stop(
+                'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+        if (is.null(switchAnalyzeRlist$orfAnalysis)) {
+            stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
+        }
+        if (class(pathToInterProScanResultFile) != 'character') {
+            stop(
+                'The \'pathToInterProScanResultFile\' argument must be a string (or vector of strings) pointing to the InterProScan JSON result file(s)'
+            )
+        }
+        if (! all(file.exists(pathToInterProScanResultFile))) {
+            stop('(At least one of) the file(s) \'pathToInterProScanResultFile\' points to does not exist')
+        }
+    }
+
+    if (showProgress & !quiet) {
+        progressBar <- 'text'
+    } else {
+        progressBar <- 'none'
+    }
+
+    ### Registry of currently supported analyses - to support more InterProScan
+    ### analyses (e.g. PIRSR, DeepTMHMM) add an entry here, a new .parseInterProScanXRows
+    ### function and a new .finalizeXAnalysis function;
+    ### use .finalizeXAnalysis function in the final for loop in this function
+    interProScanRegistry <- list(
+        Pfam = list(
+            source = 'Pfam',
+            parseFun = .parseInterProScanPfamRows,
+            targetSlot = 'domainAnalysis'
+        ),
+        SignalP = list(
+            source = 'SignalP',
+            parseFun = .parseInterProScanSignalPRows,
+            targetSlot = 'signalPeptideAnalysis'
+        ),
+        MobiDBLite = list(
+            source = 'MobiDB-lite',
+            parseFun = .parseInterProScanMobiDBLiteRows,
+            targetSlot = 'idrAnalysis'
+        )
+    )
+
+    ### Read and sanity-check JSON file(s)
+    if (TRUE) {
+        if (!quiet) {
+            message('Step 1 of 3: Reading InterProScan JSON result file(s)...')
+        }
+
+        allResults <- list()
+        for (aFile in pathToInterProScanResultFile) {
+            js <- tryCatch(
+                jsonlite::fromJSON(aFile, simplifyVector = FALSE),
+                error = function(e) {
+                    stop(paste0(
+                        'The file \'', aFile, '\' could not be parsed as JSON. Please make sure it is a ',
+                        'valid InterProScan JSON result file. Original error: ', conditionMessage(e)
+                    ))
+                }
+            )
+
+            if (is.null(js$results) || ! is.list(js$results)) {
+                stop(paste0(
+                    'The file \'', aFile, '\' does not appear to be a valid InterProScan JSON result ',
+                    'file (no top-level \'results\' entry was found).'
+                ))
+            }
+            if (length(js$results) > 0) {
+                firstEntry <- js$results[[1]]
+                if (is.null(firstEntry$xref) || is.null(firstEntry$matches)) {
+                    stop(paste0(
+                        'The file \'', aFile, '\' does not appear to be a valid InterProScan JSON result ',
+                        'file (result entries are missing the expected \'xref\'/\'matches\' fields).'
+                    ))
+                }
+            }
+
+            allResults <- c(allResults, js$results)
+        }
+
+        if (length(allResults) == 0) {
+            stop('The InterProScan result file(s) supplied do not contain any sequence results.')
+        }
+    }
+
+    ### Detect which of the supported analyses are actually present
+    if (TRUE) {
+        supportedSources <- vapply(interProScanRegistry, function(x) x$source, character(1))
+        rowsPerSource <- .expandInterProScanResults(allResults, supportedSources)
+
+        toolsFound <- names(interProScanRegistry)[
+            vapply(interProScanRegistry, function(x) length(rowsPerSource[[x$source]]) > 0, logical(1))
+        ]
+
+        if (length(toolsFound) == 0) {
+            warning(paste0(
+                'None of the analyses currently supported by analyzeInterProScan() (',
+                paste(names(interProScanRegistry), collapse = ', '),
+                ') were found in the supplied InterProScan result file(s). This can happen if those ',
+                'applications were not run as part of the InterProScan job, or if they were run but did ',
+                'not find anything for the supplied sequences. No changes were made to the switchAnalyzeRlist.'
+            ))
+            return(switchAnalyzeRlist)
+        }
+
+        if (!quiet) {
+            message(paste0(
+                'Step 2 of 3: Found results for: ', paste(toolsFound, collapse = ', '), '. Parsing...'
+            ))
+        }
+    }
+
+    ### Parse, convert coordinates and store each tool found
+    for (toolName in toolsFound) {
+        toolInfo <- interProScanRegistry[[toolName]]
+
+        resultDf <- toolInfo$parseFun(rowsPerSource[[toolInfo$source]])
+        resultDf <- unique(resultDf)
+
+        idCol <- if ('isoform_id' %in% colnames(resultDf)) 'isoform_id' else 'seq_id'
+
+        if (ignoreAfterBar | ignoreAfterSpace | ignoreAfterPeriod) {
+            resultDf[[idCol]] <- fixNames(
+                nameVec = resultDf[[idCol]],
+                ignoreAfterBar = ignoreAfterBar,
+                ignoreAfterSpace = ignoreAfterSpace,
+                ignoreAfterPeriod = ignoreAfterPeriod
+            )
+        }
+
+        if (! any(resultDf[[idCol]] %in% switchAnalyzeRlist$isoformFeatures$isoform_id)) {
+            warning(paste0(
+                'None of the ', toolName, ' results in the InterProScan file(s) matched the transcripts ',
+                'stored in the switchAnalyzeRlist. Skipping ', toolName, '.'
+            ))
+            next
+        }
+
+        resultDf <- resultDf[which(
+            resultDf[[idCol]] %in% switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+            )]
+        ), ]
+
+        if (nrow(resultDf) == 0) {
+            warning(paste0(
+                'None of the ', toolName, ' results in the InterProScan file(s) were for isoforms with an ',
+                'annotated ORF. Skipping ', toolName, '.'
+            ))
+            next
+        }
+
+        if (!is.null(switchAnalyzeRlist[[toolInfo$targetSlot]])) {
+            if (overwritePreviousResults) {
+                warning(paste0(
+                    'The switchAnalyzeRlist already contains a \'', toolInfo$targetSlot, '\' entry (likely from ',
+                    'a previous analysis). It will be overwritten with the ', toolName,
+                    ' results parsed from the InterProScan file(s).'
+                ))
+            } else {
+                warning(paste0(
+                    'The switchAnalyzeRlist already contains a \'', toolInfo$targetSlot, '\' entry (likely from ',
+                    'a previous analysis). ', toolName, ' results were found in the InterProScan file(s) but were ',
+                    'not used, since \'overwritePreviousResults\' is FALSE. Skipping ', toolName, '.'
+                ))
+                next
+            }
+        }
+
+        if (toolName == 'Pfam') {
+            switchAnalyzeRlist <- .finalizePfamAnalysis(
+                myPfamResult = resultDf,
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                withActiveRes = FALSE,
+                progressBar = progressBar,
+                quiet = quiet
+            )
+        } else if (toolName == 'SignalP') {
+            switchAnalyzeRlist <- .finalizeSignalPAnalysis(
+                singalPresults = resultDf,
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                quiet = quiet
+            )
+        } else if (toolName == 'MobiDBLite') {
+            switchAnalyzeRlist <- .finalizeMobiDBLiteAnalysis(
+                myMobiDBLiteResult = resultDf,
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                progressBar = progressBar,
+                quiet = quiet
+            )
+        }
+    }
+
+    if (!quiet) {
+        message('Step 3 of 3: Done')
     }
 
     return(switchAnalyzeRlist)

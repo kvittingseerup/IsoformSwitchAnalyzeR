@@ -124,6 +124,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

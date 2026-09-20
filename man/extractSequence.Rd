@@ -18,6 +18,7 @@ extractSequence(
     removeShortAAseq = TRUE,
     removeLongAAseq  = FALSE,
     alsoSplitFastaFile = FALSE,
+    maxFastaFileSize = 100,
     removeORFwithStop=TRUE,
     addToSwitchAnalyzeRlist = TRUE,
     writeToFile = TRUE,
@@ -51,14 +52,18 @@ A logical indicating whether the nucleotide sequence of the transcripts should b
 A logical indicating whether the amino acid (AA) sequence of the annotated open reading frames (ORF) should be extracted (necessary for pfam and SignalP analysis). The ORF can be annotated with the \code{analyzeORF} function. Default is TRUE.
 }
   \item{removeShortAAseq}{
-A logical indicating whether to remove sequences based on their length. This option exist to allows for easier usage of the Pfam and SignalP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be > 5 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is TRUE.
+A logical indicating whether to remove sequences based on their length. This option exist to allows for easier usage of the SignalP web server which currently has restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be > 5 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is TRUE.
 }
   \item{removeLongAAseq}{
-A logical indicating whether to removesequences based on their length. This option exist to allows for easier usage of the Pfam and SignalP web servers which both currently have restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be < 1000 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is FALSE.
+A logical indicating whether to removesequences based on their length. This option exist to allows for easier usage of the SignalP web server which currently has restrictions on allowed sequence lengths. If enabled AA sequences are filtered to be < 1000 AA. This will only affect the sequences written to the fasta file (if \code{writeToFile=TRUE}) not the sequences added to the switchAnalyzeRlist (if \code{addToSwitchAnalyzeRlist=TRUE}). Default is FALSE.
 }
 
 \item{alsoSplitFastaFile}{
-A subset of the web based analysis tools currently supported by IsoformSwitchAnalyzeR have restrictions on the number of sequences in each submission (currently PFAM and to a less extend SignalP). To enable easy use of those web tool this parameter was implemented. By setting this parameter to TRUE a number of amino acid FASTA files will ALSO be generated each only containing the number of sequences allow (currently max 500 for some tools) thereby enabling easy analysis of the data in multiple web-based submissions. Only considered (if \code{writeToFile=TRUE}).
+A subset of the web based analysis tools currently supported by IsoformSwitchAnalyzeR have restrictions on the number of sequences in each submission (e.g. InterProScan and, to a lesser extent, SignalP). To enable easy use of those web tools this parameter was implemented. By setting this parameter to TRUE a number of amino acid FASTA files will ALSO be generated, each containing at most \code{maxFastaFileSize} sequences, thereby enabling easy analysis of the data in multiple web-based submissions. Only considered (if \code{writeToFile=TRUE}).
+}
+
+\item{maxFastaFileSize}{
+A numeric giving the maximum number of sequences to include in each split FASTA file when \code{alsoSplitFastaFile=TRUE}. Default is 100 (the per-submission limit of the InterProScan web service).
 }
 
   \item{removeORFwithStop}{
@@ -89,10 +94,11 @@ The BSGenome object are loaded as separate packages. Use for example \code{libra
 The two fasta files outputted by this function (if \code{writeToFile=TRUE}) can be used as input to among others:
 \itemize{
     \item{\code{CPAT} : The Coding-Potential Assessment Tool, which can be run either locally or via their webserver \url{http://lilab.research.bcm.edu/cpat/} }
-    \item{\code{Pfam} : Prediction of protein domains, which can be run either locally or via their webserver \url{https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan} }
+    \item{\code{Pfam} : Prediction of protein domains, which can be run locally using the pfam_scan.pl script as described in the readme found \url{https://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/} }
     \item{\code{SignalP} : Prediction of Signal Peptide, which can be run either locally or via their webserver \url{https://services.healthtech.dtu.dk/services/SignalP-6.0/} }
+    \item{\code{InterProScan} : Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job, which can be run either locally or via their webserver \url{https://www.ebi.ac.uk/interpro/search/sequence/} }
 }
-See \code{?analyzeCPAT}, \code{?analyzePFAM} or \code{?analyzeSignalP} (under details) for suggested ways of running these tools.
+See \code{?analyzeCPAT}, \code{?analyzePFAM}, \code{?analyzeSignalP} or \code{?analyzeInterProScan} (under details) for suggested ways of running these tools.
 
 }
 
