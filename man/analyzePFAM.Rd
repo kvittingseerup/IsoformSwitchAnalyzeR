@@ -84,7 +84,7 @@ Furthermore depending on the exact tool used (local vs web-server) additional co
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr

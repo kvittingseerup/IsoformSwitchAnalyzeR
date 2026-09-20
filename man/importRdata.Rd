@@ -213,7 +213,6 @@ Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{importIsoformExpression}}\cr
 \code{\link{preFilter}}
 }

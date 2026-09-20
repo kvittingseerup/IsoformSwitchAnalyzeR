@@ -98,7 +98,7 @@ Depending on which analyses were found in the supplied InterProScan result file(
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr

@@ -118,7 +118,7 @@ The data.frame added have one row per isoform and contains the columns:
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr

@@ -1034,7 +1034,7 @@ preFilter()
 
 Where:
 
--   *createSwitchAnalyzeRlist()* is the central constructor of the switchAnalyzeRlist class which is both used by all the *import\<description\>()* functions and for construction of switchAnalyzeRlist from user supplied data sources. Note that this function also adds the 'iso_ref' and 'gene_ref columns to the isoformFeatures entry of a switchAnalyzeRlist. These reference indexes give a unique id to each gene and isoform in each comparison and thereby allow for easy integration of the different downstream analyses.
+-   *createSwitchAnalyzeRlist()* is the central (internal) constructor of the switchAnalyzeRlist class, used internally by all the *import\<description\>()* functions to build a switchAnalyzeRlist from their parsed input. It is not exported and should not be called directly -- use one of the *import\<description\>()* functions instead (most commonly *importRdata()*). Note that this function also adds the 'iso_ref' and 'gene_ref' columns to the isoformFeatures entry of a switchAnalyzeRlist. These reference indexes give a unique id to each gene and isoform in each comparison and thereby allow for easy integration of the different downstream analyses.
 -   *preFilter()* enables removal of non-interesting data such as non-expressed isoforms or genes with only one annotated isoform from a switchAnalyzeRlist.
 
 Some additional tools that are essential for the workflow are omitted form this list (more about them later in the [Other Tools in IsoformSwitchAnalyzeR] section).
@@ -1311,7 +1311,7 @@ Please note that CPM/TPM (Tags Per Million) values should NOT under any circumst
 
 <br />
 
-Alternatives to using *importRdata()* are either *importGTF()* or *createSwitchAnalyzeRlist()*.
+An alternative to using *importRdata()* is *importGTF()*.
 
 If the *importGTF()* function is used it will generate a switchAnalyzeRlist containing all transcripts in the GTF file:
 

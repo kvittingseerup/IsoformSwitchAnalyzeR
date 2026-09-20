@@ -71,7 +71,7 @@ The data.frame added have one row per topological region of an isoform and conta
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
