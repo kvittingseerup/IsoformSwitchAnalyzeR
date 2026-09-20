@@ -574,6 +574,7 @@ extractSequence <- function(
     removeShortAAseq = TRUE,
     removeLongAAseq  = FALSE,
     alsoSplitFastaFile = FALSE,
+    maxFastaFileSize = 100,
     removeORFwithStop = TRUE,
     addToSwitchAnalyzeRlist = TRUE,
     writeToFile = TRUE,
@@ -672,6 +673,10 @@ extractSequence <- function(
             if( ! removeLongAAseq ) {
                 warning('Since you are using the alsoSplitFastaFile you probably also want to use the \'removeLongAAseq\' option.')
             }
+        }
+
+        if( ! is.numeric(maxFastaFileSize) || length(maxFastaFileSize) != 1 || maxFastaFileSize < 1 || maxFastaFileSize %% 1 != 0 ) {
+            stop('The \'maxFastaFileSize\' argument must be a single positive integer')
         }
 
         if( !is.logical(forceReExtraction)) {
@@ -1206,19 +1211,20 @@ extractSequence <- function(
                 ### Make index
                 l <- length(transcriptORFaaSeq2)
 
-                maxfileSizes <- 500
+                maxfileSizes <- maxFastaFileSize
                 nFiles <- ceiling(l / maxfileSizes)
-                seqWithinEachFile <-  ceiling(l / nFiles)
 
-                indexVec <- unique( c( seq(
-                    from = 1,
-                    to = l,
-                    by = seqWithinEachFile # Max in PFAM Jan 2019
-                ), l))
+                chunkSizes <- rep(floor(l / nFiles), nFiles)
+                remainder <- l %% nFiles
+                if (remainder > 0) {
+                    chunkSizes[seq_len(remainder)] <- chunkSizes[seq_len(remainder)] + 1
+                }
+                chunkEnds <- cumsum(chunkSizes)
+                chunkStarts <- c(1, utils::head(chunkEnds, -1) + 1)
 
                 indexDf <- data.frame(
-                    start = indexVec[-length(indexVec)],
-                    end = indexVec[-1]
+                    start = chunkStarts,
+                    end = chunkEnds
                 )
                 n <- nrow(indexDf)
                 indexDf$file <- paste0('_subset_', 1:n,'_of_',n)

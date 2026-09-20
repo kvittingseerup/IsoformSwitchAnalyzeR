@@ -61,6 +61,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeCPC2}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

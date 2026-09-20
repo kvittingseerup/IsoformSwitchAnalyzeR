@@ -110,6 +110,7 @@ export('analyzeNetSurfP3')
 export('analyzeIUPred2A')
 export('analyzeDeepLoc2')
 export('analyzeDeepTMHMM')
+export('analyzeInterProScan')
 
 # Splicing analysis
 export('analyzeAlternativeSplicing')
