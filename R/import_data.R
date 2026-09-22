@@ -1141,6 +1141,7 @@ importGTF <- function(
     ### Core arguments
     pathToGTF,
     isoformNtFasta = NULL,
+    exonFeatureType = c('exon', 'CDS'),
 
     ### Advanced arguments
     extractAaSeq = FALSE,
@@ -1158,6 +1159,18 @@ importGTF <- function(
 ) {
     ### Test input
     if(TRUE) {
+        ### Test exonFeatureType
+        exonFeatureType <- tryCatch(
+            match.arg(exonFeatureType, choices = c('exon','CDS')),
+            error = function(e) {
+                stop('The \'exonFeatureType\' argument must be a single string, either "exon" or "CDS".')
+            }
+        )
+
+        if( exonFeatureType == 'CDS' & ! is.null(isoformNtFasta) ) {
+            stop('The \'isoformNtFasta\' argument cannot be combined with exonFeatureType="CDS".')
+        }
+
         ### Test existance of files
         if(TRUE) {
             if( pathToGTF == '' ) {
@@ -1231,7 +1244,9 @@ importGTF <- function(
             tmp <- capture.output(
                 suppressWarnings(
                     suppressMessages(
-                      if(onlyConsiderFullORF){
+                      if( exonFeatureType == 'CDS' ) {
+                        mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS'))
+                      } else if(onlyConsiderFullORF){
                         mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS','exon','start_codon','stop_codon'))
                       } else {
                         mfGTF <- rtracklayer::import(pathToGTF, format='gtf', feature.type = c('CDS','exon'))
@@ -1404,7 +1419,7 @@ importGTF <- function(
             if (!quiet) {
                 message('Massaging annoation...')
             }
-            exonAnoationIndex <- which(mfGTF$type == 'exon')
+            exonAnoationIndex <- which(mfGTF$type == exonFeatureType)
 
             colsToExtract <- c(
                 'transcript_id', 'gene_id', 'gene_name',
@@ -1423,7 +1438,7 @@ importGTF <- function(
                 myIso$gene_name <- NA
             }
             if (is.null(myIso$ref_gene_id)) {
-                myIso$ref_gene_id <- myIso$gene_name
+                myIso$ref_gene_id <- NA
             }
 
             ### Handle columns with multiple options
@@ -1446,7 +1461,22 @@ importGTF <- function(
             if (!quiet) {
                 message('converting GFF to switchAnalyzeRlist')
             }
-            exonAnoationIndex <- which(mfGTF$type == 'exon')
+            exonAnoationIndex <- which(mfGTF$type == exonFeatureType)
+
+            ### Unlike exon rows, CDS rows in RefSeq GFF3 files do not carry
+            ### transcript_id directly - only a Parent pointing at the mRNA
+            ### row's ID, which does carry transcript_id. Resolve it before
+            ### building myIso below
+            if( exonFeatureType == 'CDS' ) {
+                mRNArows <- as.data.frame(mfGTF@elementMetadata[
+                    which(mfGTF$type == 'mRNA'),
+                    na.omit(match(c('ID','transcript_id'), colnames(mfGTF@elementMetadata)))]
+                )
+                cdsParent <- sapply(mfGTF$Parent[exonAnoationIndex], function(x) x[1])
+                mfGTF$transcript_id[exonAnoationIndex] <-
+                    mRNArows$transcript_id[match(cdsParent, mRNArows$ID)]
+            }
+
             colsToExtract <- c(
                 'Parent',
                 'gene_id',
@@ -1490,6 +1520,9 @@ importGTF <- function(
             ### Handle columns not extracted
             if (is.null(myIso$gene_name)) {
                 myIso$gene_name <- NA
+            }
+            if (is.null(myIso$ref_gene_id)) {
+                myIso$ref_gene_id <- NA
             }
 
             ### Handle columns with multiple options
@@ -1579,7 +1612,9 @@ importGTF <- function(
     }
 
     ### Add CDS annoation from GTF file inc convertion to transcript coordinats
-    if (addAnnotatedORFs) {
+    ### Not applicable when exonFeatureType=='CDS': see the CDS-only ORF
+    ### synthesis block below (after the exon/CDS GRanges is built).
+    if (addAnnotatedORFs & exonFeatureType == 'exon') {
 
         if(   isGTF ) {
             # test whether any CDS are found
@@ -2027,6 +2062,10 @@ importGTF <- function(
 
         }
     }
+    if( exonFeatureType == 'CDS' ) {
+        ### PTC/NMD status is not determinable in CDS-only mode 
+        myIsoAnot$PTC <- FALSE
+    }
 
     ### Handle sequence input
     if(TRUE) {
@@ -2159,6 +2198,42 @@ importGTF <- function(
         myExons <- tmp
     }
 
+    ### For CDS-only import, derive trivial ORF-in-transcript coordinates
+    ### directly from the (already CDS-only) exon GRanges - the whole
+    ### isoform is the ORF, so no exon-junction/PTC calculation is done
+    if( exonFeatureType == 'CDS' ) {
+        if (!quiet) {
+            message('Deriving CDS-only ORF coordinates (isoform sequence == coding sequence)...')
+        }
+
+        isoLength     <- vapply(split(width(myExons), myExons$isoform_id), sum, numeric(1))
+        isoBlockCount <- vapply(split(width(myExons), myExons$isoform_id), length, integer(1))
+
+        ### Per isoform genomic span of the CDS (min start / max end), strand aware
+        isoRange <- unlist(range(split(myExons, myExons$isoform_id)))
+        isoRange$isoform_id <- isoRange@ranges@NAMES
+        isoRange@ranges@NAMES <- NULL
+
+        orfInfo <- data.frame(
+            isoform_id = isoRange$isoform_id,
+            orfTransciptStart = 1,
+            orfTransciptEnd = as.integer(isoLength[isoRange$isoform_id]),
+            orfTransciptLength = as.integer(isoLength[isoRange$isoform_id]),
+            orfStarExon = 1,
+            orfEndExon = as.integer(isoBlockCount[isoRange$isoform_id]),
+            orfStartGenomic = ifelse(
+                as.character(strand(isoRange)) == '+', start(isoRange), end(isoRange)
+            ),
+            orfEndGenomic = ifelse(
+                as.character(strand(isoRange)) == '+', end(isoRange), start(isoRange)
+            ),
+            stopDistanceToLastJunction = NA,
+            stopIndex = NA,
+            PTC = FALSE,
+            stringsAsFactors = FALSE
+        )
+    }
+
     # create replicates
     nrRep <-
         data.frame(
@@ -2196,7 +2271,7 @@ importGTF <- function(
         sourceId = 'gtf'
     )
 
-    if(addAnnotatedORFs) {
+    if( (addAnnotatedORFs & exonFeatureType == 'exon') | exonFeatureType == 'CDS' ) {
         # subset to those in list
         orfInfo <-
             orfInfo[which(orfInfo$isoform_id %in%
@@ -2243,7 +2318,7 @@ importGTF <- function(
             names(isoformNtSeq) %in% localSwichList$isoformFeatures$isoform_id
         )]
 
-        if(addAnnotatedORFs & extractAaSeq) {
+        if( ((addAnnotatedORFs & exonFeatureType == 'exon') | exonFeatureType == 'CDS') & extractAaSeq ) {
             localSwichList <- extractSequence(
                 switchAnalyzeRlist = localSwichList,
                 onlySwitchingGenes = FALSE,
@@ -2261,6 +2336,315 @@ importGTF <- function(
         message('Done.')
     }
     return(localSwichList)
+}
+
+importPredefinedSwitches <- function(
+    ### Core arguments
+    preDefinedSwitches,
+    isoformExonAnnoation,
+    isoformNtFasta = NULL,
+    omicDataType = 'transcriptomics',
+
+    ### Advanced arguments
+    ignoreAfterBar = TRUE,
+    ignoreAfterSpace = TRUE,
+    ignoreAfterPeriod = FALSE,
+    removeNonConvensionalChr = FALSE,
+    removeTECgenes = TRUE,
+    PTCDistance = 50,
+    addAnnotatedORFs = TRUE,
+    onlyConsiderFullORF = FALSE,
+    removeFusionTranscripts = TRUE,
+    removeUnstrandedTranscripts = TRUE,
+    showProgress = TRUE,
+    quiet = FALSE
+) {
+    ### Test input
+    if(TRUE) {
+        if( length(omicDataType) != 1 || ! omicDataType %in% c('transcriptomics','proteomics') ) {
+            stop('The \'omicDataType\' argument must be a single string, either "transcriptomics" or "proteomics".')
+        }
+
+        preDefinedSwitches <- as.data.frame(preDefinedSwitches)
+        preDefinedSwitches <- unique(preDefinedSwitches)
+
+        if( ! all(
+            c('isoformsUsedMore','isoformsUsedLess') %in% colnames(preDefinedSwitches)
+        )) {
+            stop('The \'preDefinedSwitches\' argument must contain the columns "isoformsUsedMore" and "isoformsUsedLess".')
+        }
+        if( ! all(
+            c('condition_1','condition_2') %in% colnames(preDefinedSwitches)
+        )) {
+            stop('The \'preDefinedSwitches\' argument must contain the columns "condition_1" and "condition_2".')
+        }
+
+        if( any( preDefinedSwitches$isoformsUsedMore == preDefinedSwitches$isoformsUsedLess )) {
+            stop('The "isoformsUsedMore" and "isoformsUsedLess" columns in \'preDefinedSwitches\' cannot contain the same isoform in the same row.')
+        }
+        if( any( preDefinedSwitches$condition_1 == preDefinedSwitches$condition_2 )) {
+            stop('The "condition_1" and "condition_2" columns in \'preDefinedSwitches\' cannot be the same.')
+        }
+
+        if( 'switch_q_value' %in% colnames(preDefinedSwitches) ) {
+            hasQvalue <- TRUE
+
+            if( any(
+                preDefinedSwitches$switch_q_value < 0 | preDefinedSwitches$switch_q_value > 1
+            )) {
+                stop('The \'switch_q_value\' column in \'preDefinedSwitches\' must be in the [0,1] interval.')
+            }
+            if( any( preDefinedSwitches$switch_q_value > 0.05 )) {
+                warning(
+                    paste(
+                        'Most journals and scientists consider an alpha larger than 0.05',
+                        'untrustworthy. We therefore recommend using \'switch_q_value\'',
+                        'smaller than or equal to 0.05',
+                        sep = ' '
+                    )
+                )
+            }
+        } else {
+            hasQvalue <- FALSE
+        }
+
+        ### An isoform cannot both be used more and used less within the same comparison
+        dualIsoTest <- plyr::ddply(
+            .data = preDefinedSwitches,
+            .variables = c('condition_1','condition_2'),
+            .fun = function(aDF) { # aDF <- preDefinedSwitches[1:3,]
+                localIso <- unique(c(aDF$isoformsUsedMore, aDF$isoformsUsedLess))
+
+                isoDup <- sapply(
+                    localIso,
+                    function(anIso) {
+                        anIso %in% aDF$isoformsUsedMore & anIso %in% aDF$isoformsUsedLess
+                    }
+                )
+
+                return( data.frame( anyDup = any(isoDup) ) )
+            }
+        )
+        if( any(dualIsoTest$anyDup) ) {
+            stop('An isoform cannot both be used more and used less within the same comparison (the same condition_1 vs condition_2 pair).')
+        }
+    }
+
+    ### Massage isoform names to match GTF conventions
+    if(TRUE) {
+        preDefinedSwitches$isoformsUsedMore <- fixNames(
+            nameVec = preDefinedSwitches$isoformsUsedMore,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+        )
+        preDefinedSwitches$isoformsUsedLess <- fixNames(
+            nameVec = preDefinedSwitches$isoformsUsedLess,
+            ignoreAfterBar = ignoreAfterBar,
+            ignoreAfterSpace = ignoreAfterSpace,
+            ignoreAfterPeriod = ignoreAfterPeriod
+        )
+
+        isoformsUsed <- unique(c(
+            preDefinedSwitches$isoformsUsedMore,
+            preDefinedSwitches$isoformsUsedLess
+        ))
+    }
+
+    ### Import annotation via importGTF
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 1 of 2: Importing GTF (this may take a while)...')
+        }
+
+        ### proteomics mode needs a coding-sequence-only (CDS) transcript
+        ### structure; transcriptomics mode uses the normal full exon structure
+        exonFeatureType <- if( omicDataType == 'proteomics' ) 'CDS' else 'exon'
+
+        switchAnalyzeRlist <- importGTF(
+            pathToGTF                  = isoformExonAnnoation,
+            isoformNtFasta              = isoformNtFasta,
+            exonFeatureType             = exonFeatureType,
+            addAnnotatedORFs            = addAnnotatedORFs,
+            onlyConsiderFullORF         = onlyConsiderFullORF,
+            removeNonConvensionalChr    = removeNonConvensionalChr,
+            ignoreAfterBar              = ignoreAfterBar,
+            ignoreAfterSpace            = ignoreAfterSpace,
+            ignoreAfterPeriod           = ignoreAfterPeriod,
+            removeTECgenes              = removeTECgenes,
+            PTCDistance                 = PTCDistance,
+            removeFusionTranscripts     = removeFusionTranscripts,
+            removeUnstrandedTranscripts = removeUnstrandedTranscripts,
+            quiet                       = TRUE
+        )
+
+        if( ! all( isoformsUsed %in% switchAnalyzeRlist$isoformFeatures$isoform_id ) ) {
+            missingIso <- setdiff(isoformsUsed, switchAnalyzeRlist$isoformFeatures$isoform_id)
+            stop(
+                paste0(
+                    'Not all isoforms listed in \'preDefinedSwitches\' were found in the annotation ',
+                    'supplied via \'isoformExonAnnoation\'.\n',
+                    'Specifically ', length(missingIso), ' isoform(s) were missing, for example: ',
+                    paste(utils::head(missingIso, 3), collapse = ', '), '.\n',
+                    'This is often solved via the \'ignoreAfterBar\', \'ignoreAfterSpace\' or ',
+                    '\'ignoreAfterPeriod\' arguments.'
+                )
+            )
+        }
+    }
+
+    ### Overwrite origin info
+    switchAnalyzeRlist$sourceId <- 'preDefinedSwitches'
+    switchAnalyzeRlist$omicDataType <- omicDataType
+
+    ### Subset to the genes touched by any pre-defined switch.
+    ### Note this keeps ALL isoforms of those genes (not just the ones named
+    ### in preDefinedSwitches) so switchPlotTranscript() can still show the
+    ### full transcript model - see subsetSwitchAnalyzeRlist()'s
+    ### sourceId=='preDefinedSwitches' handling.
+    if(TRUE) {
+        genesOfInterest <- unique(
+            switchAnalyzeRlist$isoformFeatures$gene_id[which(
+                switchAnalyzeRlist$isoformFeatures$isoform_id %in% isoformsUsed
+            )]
+        )
+
+        switchAnalyzeRlist <- suppressMessages(
+            subsetSwitchAnalyzeRlist(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                subset = switchAnalyzeRlist$isoformFeatures$gene_id %in% genesOfInterest
+            )
+        )
+    }
+
+    ### Build one set of isoformFeatures rows per (condition_1, condition_2) comparison
+    if(TRUE) {
+        if (!quiet) {
+            message('Step 2 of 2: Annotating pre-defined isoform switches...')
+        }
+
+        newIsoformFeatures <-
+            do.call(
+                rbind,
+                plyr::dlply(
+                    .data = preDefinedSwitches,
+                    .variables = c('condition_1','condition_2'),
+                    .fun = function(aDF) { # aDF <- preDefinedSwitches[1:3,]
+
+                        localGenes <- unique(
+                            switchAnalyzeRlist$isoformFeatures$gene_id[which(
+                                switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                                    c(aDF$isoformsUsedMore, aDF$isoformsUsedLess)
+                            )]
+                        )
+
+                        localIsoFeat <- switchAnalyzeRlist$isoformFeatures[which(
+                            switchAnalyzeRlist$isoformFeatures$gene_id %in% localGenes
+                        ),]
+
+                        localIsoFeat$condition_1 <- aDF$condition_1[1]
+                        localIsoFeat$condition_2 <- aDF$condition_2[1]
+
+                        ### Make index vectors
+                        useMoreIndex <- which(
+                            localIsoFeat$isoform_id %in% aDF$isoformsUsedMore
+                        )
+                        useLessIndex <- which(
+                            localIsoFeat$isoform_id %in% aDF$isoformsUsedLess
+                        )
+
+                        ### dIF: Inf/-Inf for the defined pair, NA (unknown) for
+                        ### the gene's other isoforms
+                        localIsoFeat$dIF <- NA
+                        localIsoFeat$dIF[useMoreIndex] <- Inf
+                        localIsoFeat$dIF[useLessIndex] <- -Inf
+
+                        ### Gene-level q-value: no real value was supplied so use
+                        ### a sentinel guaranteed to be < any sensible alpha
+                        localIsoFeat$gene_switch_q_value <- NA
+                        localIsoFeat$gene_switch_q_value[c(useMoreIndex, useLessIndex)] <- -1
+
+                        ### Isoform-level q-value: use the supplied value if
+                        ### given, else the same sentinel
+                        localIsoFeat$isoform_switch_q_value <- NA
+                        if( hasQvalue ) {
+                            localUsed <- unique(c(
+                                aDF$isoformsUsedMore,
+                                aDF$isoformsUsedLess
+                            ))
+
+                            isoQvalues <- sapply(
+                                localUsed,
+                                function(anIso) { # anIso <- localUsed[1]
+                                    tmp <- aDF[which(
+                                        aDF$isoformsUsedMore == anIso | aDF$isoformsUsedLess == anIso
+                                    ),]
+                                    min(tmp$switch_q_value)
+                                }
+                            )
+
+                            localIsoFeat$isoform_switch_q_value <- isoQvalues[match(
+                                localIsoFeat$isoform_id, names(isoQvalues)
+                            )]
+                        } else {
+                            localIsoFeat$isoform_switch_q_value[c(useMoreIndex, useLessIndex)] <- -1
+                        }
+
+                        return(localIsoFeat)
+                    }
+                )
+            )
+        rownames(newIsoformFeatures) <- NULL
+
+        ### Update isoformFeatures reference IDs (unique per gene x comparison)
+        if(TRUE) {
+            tmp <- stringr::str_c(
+                newIsoformFeatures$gene_id,
+                newIsoformFeatures$condition_1,
+                newIsoformFeatures$condition_2
+            )
+
+            newIsoformFeatures$gene_ref <- stringr::str_c(
+                'geneComp',
+                '_',
+                addZeroes(
+                    as.integer(factor(tmp, levels = unique(tmp)))
+                )
+            )
+            newIsoformFeatures$iso_ref <- stringr::str_c(
+                'isoComp',
+                '_',
+                addZeroes( seq_len(nrow(newIsoformFeatures)) )
+            )
+        }
+
+        ### Overwrite
+        switchAnalyzeRlist$isoformFeatures <- newIsoformFeatures
+    }
+
+    ### Update conditions / designMatrix to reflect the pre-defined comparisons
+    if(TRUE) {
+        allConditions <- unique(c(
+            preDefinedSwitches$condition_1,
+            preDefinedSwitches$condition_2
+        ))
+
+        switchAnalyzeRlist$conditions <- data.frame(
+            condition = allConditions,
+            nrReplicates = NA,
+            stringsAsFactors = FALSE
+        )
+
+        switchAnalyzeRlist$designMatrix <- data.frame(
+            sampleID = NA,
+            condition = allConditions,
+            stringsAsFactors = FALSE
+        )
+    }
+
+    ### Return switchAnalyzeRlist
+    if (!quiet) { message('Done.\n') }
+    return(switchAnalyzeRlist)
 }
 
 importIsoformExpression <- function(

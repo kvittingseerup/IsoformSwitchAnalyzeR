@@ -11,6 +11,7 @@ importGTF(
     ### Core arguments
     pathToGTF,
     isoformNtFasta = NULL,
+    exonFeatureType = c('exon', 'CDS'),
 
     ### Advanced arguments
     extractAaSeq = FALSE,
@@ -37,7 +38,17 @@ Can either be:
 }
 
 \item{isoformNtFasta}{
-A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 1) people working with non-model organisms where extracting the sequence from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index). The file will automatically be subsetted to the isoforms found in the gtf file so additional sequences (such as decoys) does not need to be manually removed. Please note this different from a fasta file with the sequences of the entire genome.
+A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 1) people working with non-model organisms where extracting the sequence from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index). The file will automatically be subsetted to the isoforms found in the gtf file so additional sequences (such as decoys) does not need to be manually removed. Please note this different from a fasta file with the sequences of the entire genome. Cannot be combined with \code{exonFeatureType="CDS"}.
+}
+
+\item{exonFeatureType}{
+A string, either \code{"exon"} (default) or \code{"CDS"}, indicating which GTF/GFF feature type defines the isoform structure stored in the \code{switchAnalyzeRlist}'s \code{exons} slot.
+
+With the default \code{"exon"}, the full (pre-mRNA) exon structure is used.
+
+With \code{"CDS"}, only the coding sequence is used - non-coding regions (UTRs) are excluded from the transcript model, and isoforms with no annotated CDS are dropped entirely. This is intended for workflows that need a clean coding-sequence/protein view of the transcriptome, e.g. matching against proteomics data. Since the whole isoform is now the ORF by construction, ORF-in-transcript coordinates become trivial and NMD/PTC status cannot be determined this way - so \code{onlyConsiderFullORF}, \code{PTCDistance} and \code{addAnnotatedORFs} are all ignored, and \code{orfAnalysis$PTC}/\code{isoformFeatures$PTC} are set to \code{FALSE}.
+
+\code{exonFeatureType="CDS"} is supported for both GTF and RefSeq GFF files, and cannot be combined with \code{isoformNtFasta}: a transcript fasta file provides the full isoform sequence independent of the \code{exons} slot, so it cannot be sliced down to just the CDS without redoing the exon-junction mapping this mode deliberately skips. Instead, extract sequence afterwards via \code{\link{extractSequence}(genomeObject=<a BSgenome>)} or \code{\link{isoformSwitchAnalysisPart1}(genomeObject=<a BSgenome>)}, both of which correctly build sequence from the (CDS-only) \code{exons} slot.
 }
 
 \item{extractAaSeq}{
@@ -91,7 +102,7 @@ The data.frame added have one row pr isoform and contains 11 columns:
     \item{\code{stopIndex}: The index, counting from the last exon (which is 0), of which exon is the stop codon is in.}
     \item{\code{PTC}: A logic indicating whether the isoform is classified as having a Premature Termination Codon. This is defined as having a stop codon more than \code{PTCDistance} (default is 50) nt upstream of the last exon exon junction.}
 }
-NA means no information was available aka no ORF (passing the \code{minORFlength} filter) was found.
+NA means no information was available aka no ORF (passing the \code{minORFlength} filter) was found. The exception is \code{exonFeatureType="CDS"} (see that argument): there \code{PTC} is \code{FALSE} rather than \code{NA} for every isoform, since an ORF (the whole isoform) was found by construction, but NMD-sensitivity itself is not determinable in that mode.
 
 }
 \references{
@@ -113,4 +124,11 @@ Kristoffer Vitting-Seerup
 
 aSwitchList <- importGTF(pathToGTF=system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"))
 aSwitchList
+
+### For a coding-sequence-only (e.g. proteomics) workflow:
+aCdsSwitchList <- importGTF(
+    pathToGTF = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"),
+    exonFeatureType = "CDS"
+)
+aCdsSwitchList
 }

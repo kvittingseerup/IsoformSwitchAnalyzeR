@@ -85,6 +85,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
     -   [Importing Data from Kallisto, Salmon, RSEM or StringTie]
     -   [Importing Data from Cufflinks/Cuffdiff]
     -   [Importing Data from Full-length Transcript Assemblers]
+    -   [Importing Pre-defined Isoform Switches]
 -   [Filtering]
 -   [Identifying Isoform Switches]
     -   [Testing for Isoform Switches via DEXSeq] (recommended)
@@ -857,6 +858,7 @@ The detailed workflow consists of the following steps (illustrated in Figure 2) 
     -   [Importing Data from Kallisto, Salmon, RSEM or StringTie]
     -   [Importing Data from Cufflinks/Cuffdiff]
     -   [Importing Data from Full-length Transcript Assemblers]
+    -   [Importing Pre-defined Isoform Switches]
 -   [Filtering]
 -   [Identifying Isoform Switches]
 -   [Analyzing Open Reading Frames]
@@ -1062,6 +1064,7 @@ To facilitate the usage of IsoformSwitchAnalyzeR, several dedicated wrappers for
 -   [Importing Data from Salmon via Tximeta]
 -   [Importing Data from Cufflinks/Cuffdiff]
 -   [Importing Data from Full-length Transcript Assemblers]
+-   [Importing Pre-defined Isoform Switches]
 
 For a (non-exhaustive) recommendations of bioinformatic tools which can perform the quantifications please refer to [What Quantification Tool(s) Should I Use?](#what-quantification-tools-should-i-use)
 
@@ -1322,6 +1325,43 @@ head(aSwitchList$conditions,2)
 ```
 
 From above, it is observed that dummy variables have been inserted in both *isoformFeatures* and *conditions* entries of the switchAnalyzeRlist. This approach is well suited if you just want to annotate a transcriptome and are not interested in expression. If you are interested in expression estimates and isoform switches, it is probably easier to use *importRdata*.
+
+Back to [Table of Content]
+
+<br />
+
+#### Importing Pre-defined Isoform Switches
+
+All the import functions described above build a switchAnalyzeRlist that IsoformSwitchAnalyzeR will *statistically test* for isoform switches (via [Identifying Isoform Switches]). Sometimes, however, the isoform switches are already known - for example because they were identified by a different approach entirely, such as a splicing/isoform QTL analysis, or a switch reported in the literature you want to annotate and visualize. For this use case IsoformSwitchAnalyzeR provides:
+
+```
+importPredefinedSwitches()
+```
+
+Instead of a count/abundance matrix and a design matrix, *importPredefinedSwitches()* takes a simple data.frame listing the isoform pairs that make up each switch:
+
+```{r, warning=FALSE, message=FALSE}
+predefinedSwitches <- read.delim(
+    system.file("extdata/predefined_switches_example.tsv", package = "IsoformSwitchAnalyzeR")
+)
+head(predefinedSwitches)
+```
+
+At a minimum this data.frame must have the columns *isoformsUsedMore* and *isoformsUsedLess* (the isoform pair making up the switch) and *condition_1*/*condition_2* (the comparison the switch belongs to - multiple comparisons can be supplied in one call, each identified by its own *condition_1*/*condition_2* pair). An optional *switch_q_value* column can be added if a significance estimate from the external method is available (if omitted, the switch is simply treated as significant).
+
+```{r, warning=FALSE, message=FALSE}
+aPredefinedSwitchList <- importPredefinedSwitches(
+    preDefinedSwitches   = predefinedSwitches,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package = "IsoformSwitchAnalyzeR"),
+    quiet = TRUE
+)
+```
+
+```{r}
+aPredefinedSwitchList
+```
+
+Since these switches were not derived from replicate expression data within IsoformSwitchAnalyzeR, the resulting switchAnalyzeRlist (identifiable via `aPredefinedSwitchList$sourceId == 'preDefinedSwitches'`) cannot be used with functions that rely on such data - most notably [Filtering] (*preFilter()* - all filtering should have been done upstream, before the switches were defined) and [Identifying Isoform Switches] (*isoformSwitchTestDEXSeq()*/*isoformSwitchTestSatuRn()*). The rest of the workflow - ORF analysis, external sequence analysis, prediction of functional consequences, and visualization via *switchPlotTranscript()* (rather than *switchPlot()*, which also requires replicate expression) - works as usual, including via *isoformSwitchAnalysisPart1()*/*isoformSwitchAnalysisPart2()* which automatically skip the filtering/testing steps for this type of switchAnalyzeRlist.
 
 Back to [Table of Content]
 

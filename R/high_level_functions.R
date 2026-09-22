@@ -530,10 +530,12 @@ isoformSwitchAnalysisPart2 <- function(
                         height = 700
                     )
                 }
-                extractConsequenceEnrichment(
-                    switchAnalyzeRlist = switchAnalyzeRlist,
-                    plot=TRUE,
-                    returnResult = FALSE
+                print(
+                    extractConsequenceEnrichment(
+                        switchAnalyzeRlist = switchAnalyzeRlist,
+                        plot=TRUE,
+                        returnResult = FALSE
+                    )
                 )
                 dev.off()
             } else {
@@ -579,10 +581,12 @@ isoformSwitchAnalysisPart2 <- function(
                         height = 700
                     )
                 }
-                extractSplicingEnrichment(
-                    switchAnalyzeRlist = switchAnalyzeRlist,
-                    plot=TRUE,
-                    returnResult = FALSE
+                print(
+                    extractSplicingEnrichment(
+                        switchAnalyzeRlist = switchAnalyzeRlist,
+                        plot=TRUE,
+                        returnResult = FALSE
+                    )
                 )
                 dev.off()
             } else {
