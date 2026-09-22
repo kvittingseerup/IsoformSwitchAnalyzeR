@@ -79,6 +79,7 @@ export('subsetSwitchAnalyzeRlist')
 # Import data
 export('importCufflinksFiles')
 export('importGTF')
+export('importPredefinedSwitches')
 export('importPairedGSEA')
 export('importIsoformExpression')
 export('importRdata')

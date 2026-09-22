@@ -208,7 +208,7 @@ summary.switchAnalyzeRlist <- function(object, ...) {
     analysisAdded <- setdiff(
         names(object),
         c(
-            'isoformFeatures','exons','conditions','sourceId',
+            'isoformFeatures','exons','conditions','sourceId','omicDataType',
             'isoformSwitchAnalysis','designMatrix',
             'isoformCountMatrix','isoformRepExpression','isoformRepIF',
             'runInfo'
@@ -312,6 +312,7 @@ createSwitchAnalyzeRlist <- function(
     isoformCountMatrix=NULL,
     isoformRepExpression=NULL,
     sourceId,
+    omicDataType = 'transcriptomics',
     removeFusionTranscripts = TRUE
 ){
     ### Test input
@@ -326,6 +327,9 @@ createSwitchAnalyzeRlist <- function(
             }
             if(class(sourceId) != 'character'){
                 stop('The sourceId argument must be a character')
+            }
+            if( length(omicDataType) != 1 || ! omicDataType %in% c('transcriptomics','proteomics') ) {
+                stop('The \'omicDataType\' argument must be a single string, either "transcriptomics" or "proteomics".')
             }
 
             # isoformFeatures
@@ -653,7 +657,8 @@ createSwitchAnalyzeRlist <- function(
             exons=exons,
             conditions=nrRep,
             designMatrix=designMatrix,
-            sourceId=sourceId
+            sourceId=sourceId,
+            omicDataType=omicDataType
         )
     )
 

@@ -17,6 +17,7 @@ createSwitchAnalyzeRlist(
     isoformCountMatrix=NULL,
     isoformRepExpression=NULL,
     sourceId,
+    omicDataType = 'transcriptomics',
     removeFusionTranscripts = TRUE
 )
 }
@@ -31,6 +32,8 @@ createSwitchAnalyzeRlist(
 	\item{isoformRepExpression}{ A data.frame with unfiltered biological (not technical) replicate isoform abundances. Must have a column called 'isoform_id' with the isoform_id that matches \code{isoformFeatures}. The name of the columns must match the sample names in the \code{designMatrix} argument and contain the estimated abundances.}
 
 	\item{sourceId}{A character stating the origin of the data used to create the switchAnalyzeRlist.}
+
+	\item{omicDataType}{A character, either \code{"transcriptomics"} (default) or \code{"proteomics"}, stating what kind of data the switchAnalyzeRlist was built from. Set to \code{"proteomics"} by \link{importPredefinedSwitches} when called with \code{omicDataType="proteomics"} (which also builds \code{exons} as a coding-sequence-only structure via \code{importGTF(exonFeatureType="CDS")}). All other import functions leave this at the \code{"transcriptomics"} default.}
 
 	\item{removeFusionTranscripts}{A logic indicating whether to remove genes with cross-chromosome fusion transcripts as IsoformSwitchAnalyzeR cannot handle them.}
 }
