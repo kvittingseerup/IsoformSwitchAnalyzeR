@@ -4,7 +4,7 @@
 Isoform Switch Analysis Workflow: Extract, Annotate and Visualize all Significant Isoform Switches
 }
 \description{
-This high-level function uses a pre-existing switchAnalyzeRlist as input. Then isoform switches are identified, annotated with ORF and intron retention. Then functional consequences are identified and isoform switch analysis plots are generated for the top \code{n} isoform switches. Lastly a plot summarizing the global effect of isoform switches with functional consequences is generated. If external analysis of protein domains (Pfam), coding potential (CPAT) or signal peptides (SignalP) should be incorporated please use the combination of \code{isoformSwitchAnalysisPart1} and \code{isoformSwitchAnalysisPart2} instead.
+This high-level function uses a pre-existing switchAnalyzeRlist as input. Then isoform switches are identified, annotated with ORF and intron retention. Then functional consequences are identified and isoform switch analysis plots are generated for the top \code{n} isoform switches. Lastly a plot summarizing the global effect of isoform switches with functional consequences is generated. If external sequence analysis (e.g. protein domains, coding potential, signal peptides or intrinsically disordered regions - see \code{isoformSwitchAnalysisPart2} for the full list of supported tools) should be incorporated please use the combination of \code{isoformSwitchAnalysisPart1} and \code{isoformSwitchAnalysisPart2} instead.
 }
 \usage{
 isoformSwitchAnalysisCombined(
@@ -67,7 +67,7 @@ This function performs the full Isoform Analysis Workflow by
     \item Remove non-expressed isoforms and single-isoform genes (see \link{preFilter})
     \item predict swithces (only if switches is not already annotated, see \link{isoformSwitchTestDEXSeq})
     \item Analyzing the isoforms for open reading frames (ORFs, see \link{analyzeORF})
-    \item Output fasta files containing the nucleotide and amino acid sequences which enables external sequence analysis with CPAT, Pfam and SignalP (see \link{extractSequence})
+    \item Output fasta files containing the nucleotide and amino acid sequences which enables external sequence analysis with any of the tools supported by \link{isoformSwitchAnalysisPart2} (see \link{extractSequence})
     \item Predict functional consequences of switching (see \link{analyzeSwitchConsequences})
     \item Ouput Isoform Switch Analysis plots for all genes with a signicant switch (see \link{switchPlot})
     \item Ouput a visualization of general consequences of isoform switches.

@@ -22,6 +22,7 @@ isoformSwitchAnalysisPart2(
     pathToSignalPresultFile = NULL,
     pathToDeepLoc2resultFile = NULL,
     pathToDeepTMHMMresultFile = NULL,
+    pathToInterProScanResultFile = NULL,
 
     ### Analysis and output arguments
     n = Inf,
@@ -94,6 +95,10 @@ A string indicating the full path to the DeepLoc2 result file(s). If multiple re
 A string indicating the full path to the DeepTMHMM result file. Can be gziped. If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings.
 }
 
+\item{pathToInterProScanResultFile}{
+A string indicating the full path to the InterProScan JSON result file(s). If multiple result files were created (multiple submissions, e.g. because of the per-submission sequence limit) just supply all the paths as a vector of strings. Since InterProScan can annotate protein domains (Pfam), signal peptides (SignalP) and intrinsically disordered regions (MobiDB-lite) in a single run, this argument cannot be combined with \code{pathToPFAMresultFile}, \code{pathToSignalPresultFile}, \code{pathToIUPred2AresultFile} or \code{pathToNetSurfP2resultFile}. See \link{analyzeInterProScan} for details.
+}
+
 \item{n}{
 The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved (each comparison is saved to its own sub-folder). Use Inf to create all. Default is Inf (all).
 }
@@ -119,7 +124,7 @@ A logic indicating whether all isoform switches as well as the summary of functi
 \details{
 This function performs the second part of a Isoform Analysis Workflow by:
 \enumerate{
-    \item Adding external sequence analysis (see \link{analyzeCPAT}, \link{analyzeCPC2}, \link{analyzePFAM} and \link{analyzeSignalP})
+    \item Adding external sequence analysis (see \link{analyzeCPAT}, \link{analyzeCPC2}, \link{analyzePFAM}, \link{analyzeIUPred2A}, \link{analyzeNetSurfP3}, \link{analyzeSignalP}, \link{analyzeDeepLoc2}, \link{analyzeDeepTMHMM} or \link{analyzeInterProScan})
     \item Predict functional consequences of switching (see \link{analyzeSwitchConsequences})
     \item Output Isoform Switch Consequence plots for all genes where there is a significant isoform switch (see \link{switchPlot})
     \item Output a visualization of general consequences of isoform switches.
@@ -152,7 +157,8 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeAlternativeSplicing}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{analyzeSwitchConsequences}}\cr
-\code{\link{switchPlotTopSwitches}}
+\code{\link{switchPlotTopSwitches}}\cr
+\code{\link{analyzeInterProScan}}
 }
 
 \examples{
@@ -172,8 +178,20 @@ exampleSwitchListIntermediary <- subsetSwitchAnalyzeRlist(
     abs(exampleSwitchListIntermediary$isoformFeatures$dIF) > 0.4
 )
 
-### Run part 2
+### Run part 2 (recommended: InterProScan for Pfam, SignalP and IDR annotation in one run)
 exampleSwitchListAnalyzed <- isoformSwitchAnalysisPart2(
+    switchAnalyzeRlist            = exampleSwitchListIntermediary,
+    pathToCPC2resultFile          = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
+    pathToInterProScanResultFile  = system.file("extdata/interproscan_results.json.gz", package = "IsoformSwitchAnalyzeR"),
+    pathToDeepLoc2resultFile      = system.file("extdata/deeploc2.csv", package = "IsoformSwitchAnalyzeR"),
+    pathToDeepTMHMMresultFile     = system.file("extdata/DeepTMHMM.gff3", package = "IsoformSwitchAnalyzeR"),
+    codingCutoff                  = 0.5,   # since we are using CPC2
+    removeNoncodinORFs            = TRUE,  # Because ORF was predicted de novo
+    outputPlots                   = FALSE  # keeps the function from outputting the plots from this example code
+)
+
+### Alternative: using Pfam, SignalP and IUPred2A instead of InterProScan
+exampleSwitchListAnalyzed2 <- isoformSwitchAnalysisPart2(
     switchAnalyzeRlist        = exampleSwitchListIntermediary,
     pathToCPC2resultFile      = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
     pathToPFAMresultFile      = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),

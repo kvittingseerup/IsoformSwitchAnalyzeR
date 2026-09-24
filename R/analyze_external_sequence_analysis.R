@@ -3010,6 +3010,7 @@ analyzeDeepTMHMM <- function(
                 orf_aa_start = loc$start,
                 orf_aa_end = loc$end,
                 compositional_bias = if (is.null(loc[['sequence-feature']])) NA_character_ else loc[['sequence-feature']],
+                idr_type = 'IDR',
                 stringsAsFactors = FALSE
             )
         })
