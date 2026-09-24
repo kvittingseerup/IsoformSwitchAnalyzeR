@@ -67,7 +67,8 @@ The data.frame added have one row pr isoform. The columns \code{isoform_id}, \co
 \references{
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{\code{SignalP} : Almagro et al. SignalP 5.0 improves signal peptide predictions using deep neural networks. Nat. Biotechnol (2019).}
+    \item{\code{SignalP 5} : Almagro et al. SignalP 5.0 improves signal peptide predictions using deep neural networks. Nat. Biotechnol (2019).}
+    \item{\code{SignalP 6} : Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models. Nat. Biotechnol (2022).}
 }
 }
 

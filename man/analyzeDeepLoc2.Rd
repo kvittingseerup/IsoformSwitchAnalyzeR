@@ -65,6 +65,7 @@ The data.frame added have one row pr isoform and contains 12 columns:
 \references{
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+    \item{\code{DeepLoc} : Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022).}
 }
 }
 

@@ -66,8 +66,8 @@ The data.frame added have one row per isoform and contains the columns:
     \item{\code{pfamStartGenomic}: The genomic coordinate of the start of the domain.}
     \item{\code{pfamEndGenomic}:  The genomic coordinate of the end of the domain.}
 
-    \item{\code{domain_isotype}: The domain isotype identified by pfamAnalyzeR (See Vitting-Seerup 2022 BioRxiv).}
-    \item{\code{domain_isotype_simple}: The simplified domain isotype identified by pfamAnalyzeR (See Vitting-Seerup 2022 BioRxiv).}
+    \item{\code{domain_isotype}: The domain isotype identified by pfamAnalyzeR (See Vitting-Seerup 2023 in References).}
+    \item{\code{domain_isotype_simple}: The simplified domain isotype identified by pfamAnalyzeR (See Vitting-Seerup 2023 in References).}
 }
 Furthermore depending on the exact tool used (local vs web-server) additional columns are added with information such as E score and type.
 }
@@ -76,7 +76,7 @@ Furthermore depending on the exact tool used (local vs web-server) additional co
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
-    \item{\code{pfamAnalyzeR} :Vitting-Seerup. Most protein domains exist as multiple variants with distinct structure and function. BioRxiv 2022}
+    \item{\code{pfamAnalyzeR} : Vitting-Seerup. Most protein domains exist as variants with distinct functions across cells, tissues and diseases. NAR Genomics and Bioinformatics (2023).}
 }
 }
 

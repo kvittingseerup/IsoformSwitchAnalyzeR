@@ -90,7 +90,7 @@ Depending on which analyses were found in the supplied InterProScan result file(
     \item{\code{InterProScan} : Blum et al. InterProScan 6: a modern large-scale protein function annotation pipeline. Bioinformatics Advances (2026) 6(1):vbag141. doi:10.1093/bioadv/vbag141}
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
     \item{\code{SignalP} : Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models. Nat. Biotechnol (2022) 40:1023-1025. doi:10.1038/s41587-021-01156-3}
-    \item{\code{MobiDB-lite} : Necci et al. MobiDB-lite 3.0: fast consensus annotation of intrinsic disorder flavors in proteins. Bioinformatics (2020) 36(22-23):5533-5534. doi:10.1093/bioinformatics/btaa1045}
+    \item{\code{MobiDB-lite} : Mehdiabadi et al. MobiDB-lite 4.0: faster prediction of intrinsic protein disorder and structural compactness. Bioinformatics (2025) 41(5):btaf297. doi:10.1093/bioinformatics/btaf297}
 }
 }
 
