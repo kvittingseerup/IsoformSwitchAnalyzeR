@@ -73,7 +73,7 @@ A \code{switchAnalyzeRlist} where the column \code{IR} indicating the number of 
 \references{
 \itemize{
     \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. bioRxiv (2018).}
+    \item{Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. Bioinformatics. (2019).}
 }
 }
 

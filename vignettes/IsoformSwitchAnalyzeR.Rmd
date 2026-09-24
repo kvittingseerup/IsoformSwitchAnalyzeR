@@ -263,30 +263,30 @@ If you are using the:
 
 <br />
 
-**Refrences**:
+**References**:
 
-1.  *Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Cancer Res. (2017)* [link](http://mcr.aacrjournals.org/content/15/9/1206.long).
+1.  *Vitting-Seerup et al. **The Landscape of Isoform Switches in Human Cancers.** Mol. Cancer Res. (2017)* [link](http://mcr.aacrjournals.org/content/15/9/1206.long).
 2.  *Vitting-Seerup et al. **IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences.** Bioinformatics (2019)* [link](http://dx.doi.org/10.1093/bioinformatics/btz247).
 3.  *Gilis et al. **satuRn: Scalable analysis of differential transcript usage for bulk and single-cell RNA-sequencing applications (version 2)**.* F1000Research, 10:374. [link](https://doi.org/10.12688/f1000research.51749.2)
 4.  *Vitting-Seerup et al. **spliceR: an R package for classification of alternative splicing and prediction of coding potential from RNA-seq data**. BMC Bioinformatics 2014, 15:81.* [link](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-15-81).
 5.  *Weischenfeldt et al. **Mammalian tissues defective in nonsense-mediated mRNA decay display highly aberrant splicing patterns**. Genome Biol 2012, 13:R35* [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2012-13-5-r35).
 6.  *Huber et al. **Orchestrating high-throughput genomic analysis with Bioconductor**. Nat. Methods, 2015, 12:115-121.* [link](https://www.nature.com/articles/nmeth.3252).
 7.  *Wang et al. **CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model**. Nucleic Acids Res. 2013, 41:e74.* [link](https://academic.oup.com/nar/article/41/6/e74/2902455).
-8.  *Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2012)* [link](https://academic.oup.com/nar/article/40/D1/D290/2903007).
-9.  \_Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models.\*\*. Nat. Biotechnol (2022)\_ [link](https://www.nature.com/articles/s41587-021-01156-3)
+8.  *Finn et al. **The Pfam protein families database**. Nucleic Acids Research (2014) Database Issue 42:D222-D230* [link](https://academic.oup.com/nar/article/42/D1/D222/1062431).
+9.  *Teufel et al. **SignalP 6.0 predicts all five types of signal peptides using protein language models**. Nat. Biotechnol (2022)* [link](https://www.nature.com/articles/s41587-021-01156-3).
 10. *Soneson et al. **Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.** F1000Research 4, 1521 (2015).* [link](https://f1000research.com/articles/4-1521/v2).
 11. *Robinson et al. **A scaling normalization method for differential expression analysis of RNA-seq data**. Genome Biology (2010)* [link](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25).
 12. *Ritchie et al. **limma powers differential expression analyses for RNA-sequencing and microarray studies**. Nucleic Acids Research (2015)* [link](https://academic.oup.com/nar/article/43/7/e47/2414268).
 13. *Anders et al. **Detecting differential usage of exons from RNA-seq data**. Genome Research (2012)* [link](https://genome.cshlp.org/content/22/10/2008.long).
 14. *Kang et al. **CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features**. Nucleic Acids Res (2017)* [link](https://academic.oup.com/nar/article/45/W1/W12/3831091).
-15. *H??ie et al. **NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning**. Nucleic Acids Research (2022)* [link](https://doi.org/10.1093/nar/gkac439)
-16. *Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018)* [link](https://doi.org/10.1093/nar/gky384)
-17. *Love et al. Tximeta: Reference sequence checksums for provenance identification in RNA-seq. PLoS Comput. Biol (2020)* [link](http://dx.doi.org/10.1371/journal.pcbi.1007664)
-18. *Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022)* [link](http://dx.doi.org/10.1093/nar/gkac278)
-19. *Hallgren et al. DeepTMHMM predicts alpha and beta transmembrane proteins using deep neural networks. bioRxiv (2022)* [link](https://doi.org/10.1101/2022.04.08.487609)
-20. *Vitting-Seerup. Most protein domains exist as multiple variants with distinct structure and function. bioRxiv (2022)* [link](https://www.biorxiv.org/content/10.1101/2022.08.12.503740v1)
-21. *Necci et al. MobiDB-lite 3.0: fast consensus annotation of intrinsic disorder flavors in proteins. Bioinformatics (2020)* [link](https://doi.org/10.1093/bioinformatics/btaa1045)
-22. *Blum et al. InterProScan 6: a modern large-scale protein function annotation pipeline. Bioinformatics Advances (2026)* [link](https://doi.org/10.1093/bioadv/vbag141)
+15. *Høie et al. **NetSurfP-3.0: accurate and fast prediction of protein structural features by protein language models and deep learning**. Nucleic Acids Research (2022)* [link](https://doi.org/10.1093/nar/gkac439).
+16. *Meszaros et al. **IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding**. Nucleic Acids Res (2018)* [link](https://doi.org/10.1093/nar/gky384).
+17. *Love et al. **Tximeta: Reference sequence checksums for provenance identification in RNA-seq**. PLoS Comput. Biol (2020)* [link](http://dx.doi.org/10.1371/journal.pcbi.1007664).
+18. *Thumuluri et al. **DeepLoc 2.0: multi-label subcellular localization prediction using protein language models**. Nucleic Acids Res (2022)* [link](http://dx.doi.org/10.1093/nar/gkac278).
+19. *Hallgren et al. **DeepTMHMM predicts alpha and beta transmembrane proteins using deep neural networks**. bioRxiv (2022)* [link](https://doi.org/10.1101/2022.04.08.487609).
+20. *Vitting-Seerup. **Most protein domains exist as variants with distinct functions across cells, tissues and diseases**. NAR Genomics and Bioinformatics (2023)* [link](https://doi.org/10.1093/nargab/lqad084).
+21. *Mehdiabadi et al. **MobiDB-lite 4.0: faster prediction of intrinsic protein disorder and structural compactness**. Bioinformatics (2025)* [link](https://doi.org/10.1093/bioinformatics/btaf297).
+22. *Blum et al. **InterProScan 6: a modern large-scale protein function annotation pipeline**. Bioinformatics Advances (2026)* [link](https://doi.org/10.1093/bioadv/vbag141).
 
 <br />
 

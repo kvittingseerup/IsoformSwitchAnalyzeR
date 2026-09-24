@@ -111,6 +111,7 @@ The data.frame added have one row per isoform and contains the columns:
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
     \item{\code{IUPred2A} : Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018).}
+    \item{\code{IUPred3} : Erdős et al. IUPred3: prediction of protein disorder enhanced with unambiguous experimental annotation and visualization of evolutionary conservation. Nucleic Acids Res (2021).}
 }
 }
 

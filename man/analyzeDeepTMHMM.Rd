@@ -63,7 +63,7 @@ The data.frame added have one row per topological region of an isoform and conta
 \references{
 \itemize{
     \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{\code{DeepTMHMM} : Hallgren et al: In prep.}
+    \item{\code{DeepTMHMM} : Hallgren et al. DeepTMHMM predicts alpha and beta transmembrane proteins using deep neural networks. bioRxiv (2022).}
 }
 }
 
