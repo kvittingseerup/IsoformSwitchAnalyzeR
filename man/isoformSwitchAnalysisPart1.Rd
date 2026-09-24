@@ -64,7 +64,7 @@ This function performs the first part of a Isoform Analysis Workflow by
     \item Remove low-expressed isoforms and single-isoform genes (see \link{preFilter})
     \item Identify isoform switches. This uses satuRn if there are more than 5 replicates in any condition and else DEXseq.
     \item If no ORFs are annotated the isoforms are analyzed for open reading frames (ORFs, see \link{analyzeORF})
-    \item The isoform nucleotide and ORF amino acid sequences are extracted and saved to fasta files as well as added to the switchAnalyzeRlist enabling external sequence analysis with CPAT, Pfam and SignalP (see vignette for more info).
+    \item The isoform nucleotide and ORF amino acid sequences are extracted and saved to fasta files as well as added to the switchAnalyzeRlist enabling external sequence analysis with \link{analyzeCPAT}, \link{analyzeCPC2}, \link{analyzePFAM}, \link{analyzeIUPred2A}, \link{analyzeNetSurfP3}, \link{analyzeSignalP}, \link{analyzeDeepLoc2}, \link{analyzeDeepTMHMM} or \link{analyzeInterProScan} (see vignette for more info).
 }
 
 if \code{prepareForWebServers=TRUE} both the "removeLongAAseq" and "alsoSplitFastaFile" will be enabled in the \code{extractSequence} function.
@@ -85,7 +85,16 @@ Kristoffer Vitting-Seerup
 \code{\link{isoformSwitchTestDEXSeq}}\cr
 \code{\link{isoformSwitchTestSatuRn}}\cr
 \code{\link{analyzeORF}}\cr
-\code{\link{extractSequence}}
+\code{\link{extractSequence}}\cr
+\code{\link{analyzeCPAT}}\cr
+\code{\link{analyzeCPC2}}\cr
+\code{\link{analyzePFAM}}\cr
+\code{\link{analyzeIUPred2A}}\cr
+\code{\link{analyzeNetSurfP3}}\cr
+\code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeDeepLoc2}}\cr
+\code{\link{analyzeDeepTMHMM}}\cr
+\code{\link{analyzeInterProScan}}
 }
 
 \examples{

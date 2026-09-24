@@ -339,7 +339,7 @@ The resulting fasta files enables the usage of external sequence analysis tools.
 -   Tools for localization prediction
     -   DeepTMHMM: Predicts protein toplology (location compared to cell membrane) and can be run from from this [webserver](https://biolib.com/DTU/DeepTMHMM)
     -   DeepLoc2: Predicts sub-cellular location and can be run from this [webserver](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0).
--   InterProScan: Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). This is an alternative to running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - see [Importing External Sequence Analysis] below.
+-   InterProScan: Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **This is the recommended way to obtain these three annotations**, replacing running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - see [Importing External Sequence Analysis] below.
 
 <br />
 
@@ -565,7 +565,7 @@ extractSwitchSummary( exampleSwitchList )
 
 <br />
 
-In a typical workflow, the user would here have to use produced fasta files to perform the external analysis tools (Pfam (for prediction of protein domains), SignalP (for prediction of signal peptides), CPAT or CPC2 (for prediction of coding potential, since they perform similar analysis so it is only necessary to run one of them)), Prediction of sub-cellular location (DeepLoc2) and isoform toplogy (DeepTmHmm), IUPred2A or NetSurfP-3 (for prediction of Intrinsically Disordered Regions (IDR), since they perform similar analysis so it is only necessary to run one of them. The main difference is that NetSurfP-3 is newer but IUPred2A also allows for prediction of IDBS (which are also integrated into the IsoformSwitchAnalyzeR workflow)). For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
+In a typical workflow, the user would here have to use the produced fasta files to perform the external analysis tools. We recommend running InterProScan, which in a single job predicts protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (IDR, via MobiDB-lite). Alternatively these three types of annotation can be obtained by running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - the main reason to do so is that IUPred2A additionally predicts Intrinsically Disordered Binding Regions (IDBR), which InterProScan/MobiDB-lite does not provide. In addition, CPAT or CPC2 (for prediction of coding potential, only one of them is necessary), DeepLoc2 (sub-cellular location) and DeepTMHMM (isoform topology) can be run. For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
 
 <br />
 
@@ -580,18 +580,31 @@ The second part of the isoform switch analysis workflow, which includes importin
 # (e.g. pathToCPC2resultFile = "/myFiles/myCPC2results.txt" )
 
 exampleSwitchList <- isoformSwitchAnalysisPart2(
-  switchAnalyzeRlist        = exampleSwitchList, 
-  n                         = 10,    # if plotting was enabled, it would only output the top 10 switches
+  switchAnalyzeRlist            = exampleSwitchList,
+  n                             = 10,    # if plotting was enabled, it would only output the top 10 switches
+  removeNoncodinORFs            = TRUE,
+  pathToCPC2resultFile          = system.file("extdata/cpc2_result.txt"              , package = "IsoformSwitchAnalyzeR"),
+  pathToInterProScanResultFile  = system.file("extdata/interproscan_results.json.gz" , package = "IsoformSwitchAnalyzeR"),
+  outputPlots                   = FALSE  # keeps the function from outputting the plots from this example
+)
+```
+
+Alternatively to InterProScan, the same protein-domain, signal-peptide and IDR annotation can be obtained by running Pfam, SignalP and IUPred2A (or NetSurfP-3) separately:
+
+```{r, eval = FALSE}
+exampleSwitchList <- isoformSwitchAnalysisPart2(
+  switchAnalyzeRlist        = exampleSwitchList,
+  n                         = 10,
   removeNoncodinORFs        = TRUE,
   pathToCPC2resultFile      = system.file("extdata/cpc2_result.txt"         , package = "IsoformSwitchAnalyzeR"),
   pathToPFAMresultFile      = system.file("extdata/pfam_results.txt"        , package = "IsoformSwitchAnalyzeR"),
   pathToIUPred2AresultFile  = system.file("extdata/iupred2a_result.txt.gz"  , package = "IsoformSwitchAnalyzeR"),
   pathToSignalPresultFile   = system.file("extdata/signalP_results.txt"     , package = "IsoformSwitchAnalyzeR"),
-  outputPlots               = FALSE  # keeps the function from outputting the plots from this example
+  outputPlots               = FALSE
 )
 ```
 
-Please note that if you had to submit your data as multiple runs at the SignalP website you can just supply a vector of strings indicating the path to each of the resulting files and IsoformSwitchAnalyzeR will read them all and integrate them.
+Please note that if you had to submit your data as multiple runs at the InterProScan (or SignalP) website you can just supply a vector of strings indicating the path to each of the resulting files and IsoformSwitchAnalyzeR will read them all and integrate them.
 
 The exampleSwitchList now contains all the information needed to analyze isoform switches and alternative splicing both for individual genes as well as genome-wide summary statistics or analysis.
 
@@ -912,9 +925,10 @@ This corresponds to running the following functions in sequential order (just li
 mySwitchList <- analyzeCPAT( mySwitchList ) # OR
 mySwitchList <- analyzeCPC2( mySwitchList )
 
+mySwitchList <- analyzeInterProScan( mySwitchList ) # recommended: Pfam + SignalP + IDR in one go
+# OR, run these separately instead:
 mySwitchList <- analyzePFAM( mySwitchList )
 mySwitchList <- analyzeSignalP( mySwitchList )
-
 analyzeIUPred2A() # OR
 analyzeNetSurfP3()
 
@@ -1589,9 +1603,9 @@ The two fasta files that are the output by *extractSequence()* (if writeToFile=T
 -   SignalP : Prediction of Signal Peptides -- a short N-terminal sequence of a peptide indicating where a protein should be membrane bound or secreted. SignalP can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/SignalP-6.0/) (v5 and v6 is supported).
 -   IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) -- the parts of a protein protein which does not have a fixed three-dimensional structure (as opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu). IUPred3 is also supported by IsoformSwitchAnalyzeR (as it produces identical result files).
 -   NetSurfP-3 : Prediction of Intrinsically Disordered Regions (IDR) -- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-3 can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
--   analyzeDeepTMHMM : Prediction of protein topology -- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
--   analyzeDeepLoc2 : Prediction of sub-cellular localization(s) of protein.
--   InterProScan : Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job. Can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). This is an alternative to running Pfam, SignalP, and (partially) IUPred2A/NetSurfP-3 separately.
+-   DeepTMHMM : Prediction of protein topology -- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
+-   DeepLoc2 : Prediction of sub-cellular localization(s) of protein.
+-   InterProScan : Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job. Can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **Recommended** over running Pfam, SignalP, and (partially) IUPred2A/NetSurfP-3 separately.
 
 Please note that:
 
@@ -1608,8 +1622,8 @@ We suggest that the external sequence analysis tools are run as follows:
 -   SignalP : Use the amino acid fasta file (\_AA.fasta). If using the [webserver](https://services.healthtech.dtu.dk/services/SignalP-6.0/) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the webserver the results can be downloaded using the "Downloads" button in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the "pathToSignalPresultFile" argument. If a stand-alone version was just supply the path to the summary result file.
 -   IUPred2A : 1) Go to the [webserver](https://iupred2a.elte.hu) 2) Upload the amino acoid file (\_AA) created with extractSequence() function. 3) Add your email (you will recieve a notification when the job is done). 4) In the email use the link indicated by "The text file can be found here:" and save the result (right click on a blank space and use "save as" or use the keybord shortcut "ctrl/cmd + s"). 5) Supply a string indicating the path to the downloaded file to the "pathToIUPred2AresultFile" argument. If multiple files are created (multiple web-server runs) just supply the path to all of them as a string.
 -   NetSurfP-3 : 1) Go to [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/). 2) Upload the amino acid file (\_AA) created with extractSequence() function. 3) Submit your job. 4) Wait till job is finished (if you submit your email you will receive a notification). 5) In the top-right corner of the result site use the "Export All" button to download the results as a CSV file. 6) Supply a string indicating the path to the downloaded csv file directly to the "pathToNetSurfP3resultFile" argument. If you run NetSurfP-3 locally just use the "--csv" argument and provide the resulting csv file to the *pathToNetSurfP3resultFile* argument.
--   analyzeDeepTMHMM: DeepTMHMM can be run from from this [website](https://biolib.com/DTU/DeepTMHMM) and afterwards all files can be downloaded as a "gff3 format" file can be used as input to this function.
--   analyzeDeepLoc2 can be run from this [website](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0) and choose "Short output (no figures)". Once it is done you can download by pressing the "Download prediction results: CSV Summary" at the top of the result section (just above the red "Probability thresholds" button).
+-   DeepTMHMM : Can be run from from this [website](https://biolib.com/DTU/DeepTMHMM) and afterwards all files can be downloaded as a "gff3 format" file can be used as input to this function.
+-   DeepLoc2 : Can be run from this [website](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0) and choose "Short output (no figures)". Once it is done you can download by pressing the "Download prediction results: CSV Summary" at the top of the result section (just above the red "Probability thresholds" button).
 -   InterProScan : 1) Go to the [webserver](https://www.ebi.ac.uk/interpro/search/sequence/) (or run the stand-alone tool locally). 2) Upload the amino acid fasta file (\_AA.fasta) created with extractSequence() - remember only up to 100 sequences can be submitted at a time (the default *maxFastaFileSize* in extractSequence()). 3) Submit your job and wait for it to complete. 4) Download the result in JSON format and supply the path to that file to the "pathToInterProScanResultFile" argument - if you had to split your sequences into multiple batches just supply all the resulting JSON files as a vector of strings. A more detailed walkthrough is found under details in the documentation of the analyzeInterProScan() function (?analyzeInterProScan).
 
 Back to [Table of Content]
@@ -1624,18 +1638,19 @@ After the external sequence analysis with have been performed (please remember t
 analyzeCPAT() # OR
 analyzeCPC2()
 
+# Recommended: import Pfam + SignalP + MobiDB-lite results from a single InterProScan JSON file
+analyzeInterProScan()
+# OR, run these separately instead:
 analyzePFAM()
 analyzeSignalP()
 analyzeIUPred2A() # OR
 analyzeNetSurfP3()
-# OR, to import Pfam + SignalP + MobiDB-lite results from a single InterProScan JSON file:
-analyzeInterProScan()
 
 analyzeDeepLoc2()
 analyzeDeepTMHMM()
 ```
 
-Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP3. Similarly, analyzeInterProScan() can be used instead of analyzePFAM() and analyzeSignalP() (and, for the IDR portion, instead of analyzeIUPred2A()/analyzeNetSurfP3()) if you ran InterProScan instead of those tools separately.
+Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP3. We recommend using analyzeInterProScan() instead of analyzePFAM() and analyzeSignalP() (and, for the IDR portion, instead of analyzeIUPred2A()/analyzeNetSurfP3()), since it obtains all three annotations from a single InterProScan run.
 
 The functions are used as:
 
@@ -1665,30 +1680,10 @@ exampleSwitchListAnalyzed <- analyzeCPC2(
     removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
 )
 
-### Add PFAM analysis
-exampleSwitchListAnalyzed <- analyzePFAM(
-    switchAnalyzeRlist   = exampleSwitchListAnalyzed,
-    pathToPFAMresultFile = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
-    showProgress=FALSE
-)
-
-### Add SignalP analysis
-exampleSwitchListAnalyzed <- analyzeSignalP(
-    switchAnalyzeRlist       = exampleSwitchListAnalyzed,
-    pathToSignalPresultFile  = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR")
-)
-
-### Add IUPred2A analysis
-exampleSwitchListAnalyzed <- analyzeIUPred2A(
-    switchAnalyzeRlist        = exampleSwitchListAnalyzed,
-    pathToIUPred2AresultFile = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR"),
-    showProgress = FALSE
-)
-
-### Add NetSurfP3 analysis
-exampleSwitchListAnalyzed <- analyzeNetSurfP3(
-    switchAnalyzeRlist = exampleSwitchListAnalyzed,
-    pathToNetSurfP3resultFile = system.file("extdata/netsurfp3_result.csv.gz", package = "IsoformSwitchAnalyzeR"),
+### Add InterProScan analysis (recommended: imports Pfam + SignalP + MobiDB-lite results in one call)
+exampleSwitchListAnalyzed <- analyzeInterProScan(
+    switchAnalyzeRlist            = exampleSwitchListAnalyzed,
+    pathToInterProScanResultFile  = system.file("extdata/interproscan_results.json.gz", package = "IsoformSwitchAnalyzeR"),
     showProgress = FALSE
 )
 
@@ -1710,17 +1705,35 @@ exampleSwitchListAnalyzed <- analyzeDeepTMHMM(
 exampleSwitchListAnalyzed
 ```
 
-Alternatively, if you ran InterProScan instead of Pfam/SignalP/(IUPred2A or NetSurfP-3) separately, a single call to *analyzeInterProScan()* imports whichever of those three analyses are present in the supplied JSON result file(s):
+Alternatively to InterProScan, the same protein-domain, signal-peptide and IDR annotation can be obtained by running Pfam, SignalP and IUPred2A (or NetSurfP-3) separately:
 
-```{r}
-### Add InterProScan analysis (alternative to analyzePFAM()+analyzeSignalP()+analyzeIUPred2A()/analyzeNetSurfP3() above)
-exampleSwitchListAnalyzedInterProScan <- analyzeInterProScan(
-    switchAnalyzeRlist            = exampleSwitchListIntermediary,
-    pathToInterProScanResultFile  = system.file("extdata/interproscan_results.json.gz", package = "IsoformSwitchAnalyzeR"),
+```{r, eval = FALSE}
+### Add PFAM analysis
+exampleSwitchListAnalyzedSeparateTools <- analyzePFAM(
+    switchAnalyzeRlist   = exampleSwitchListIntermediary,
+    pathToPFAMresultFile = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),
+    showProgress=FALSE
+)
+
+### Add SignalP analysis
+exampleSwitchListAnalyzedSeparateTools <- analyzeSignalP(
+    switchAnalyzeRlist       = exampleSwitchListAnalyzedSeparateTools,
+    pathToSignalPresultFile  = system.file("extdata/signalP_results.txt", package = "IsoformSwitchAnalyzeR")
+)
+
+### Add IUPred2A analysis
+exampleSwitchListAnalyzedSeparateTools <- analyzeIUPred2A(
+    switchAnalyzeRlist        = exampleSwitchListAnalyzedSeparateTools,
+    pathToIUPred2AresultFile = system.file("extdata/iupred2a_result.txt.gz", package = "IsoformSwitchAnalyzeR"),
     showProgress = FALSE
 )
 
-exampleSwitchListAnalyzedInterProScan
+### Add NetSurfP3 analysis
+exampleSwitchListAnalyzedSeparateTools <- analyzeNetSurfP3(
+    switchAnalyzeRlist = exampleSwitchListAnalyzedSeparateTools,
+    pathToNetSurfP3resultFile = system.file("extdata/netsurfp3_result.csv.gz", package = "IsoformSwitchAnalyzeR"),
+    showProgress = FALSE
+)
 ```
 
 Here, the *pathTo\<tool_name\>resultFile* points to the result files constructed as suggested in [Advice for Running External Sequence Analysis Tools and Downloading Results] and in the detailed documentation of each of the individual functions. The part of the examples using system.file() is not necessary when using your own data - just supply the path as a string (e.g. "/myFiles/myCPATresults.txt")
