@@ -38,7 +38,9 @@ analyzeSwitchConsequences(
 \arguments{
     \item{switchAnalyzeRlist}{A \code{switchAnalyzeRlist} object containing the result of an isoform switch analysis (such as the one provided by \code{isoformSwitchTestDEXSeq}) as well as additional annotation data for the isoforms.}
 
-    \item{consequencesToAnalyze}{A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between isoforms (else they would be identical and not annotated as separate isoforms). See details for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, protein domains annotated and signal peptides annotated by Pfam).}
+    \item{consequencesToAnalyze}{A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between isoforms (else they would be identical and not annotated as separate isoforms). See details for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, protein domains annotated and signal peptides annotated by Pfam).
+
+Several of these consequence types require non-coding (UTR) sequence or the full pre-mRNA structure, which coding-sequence-only (CDS-only) data doesn't have. When \code{switchAnalyzeRlist$omicDataType} is \code{"proteomics"} (see \link{importPredefinedSwitches}), these are handled specially - see \bold{Details} below.}
 
     \item{alpha}{The cutoff which the FDR correct p-values (q-values) must be smaller than for calling significant switches. Default is 0.05.}
 
@@ -76,29 +78,35 @@ For sequences similarity analysis the two compared sequences are (globally) alig
 
 If AA sequences were trimmed in the process of exporting the fasta files when using \code{extractSequence} the regions not analyzed in both isoforms will be ignored.
 
+\bold{Behavior when \code{omicDataType = "proteomics"}}: some consequence types require sequence or structure that isn't present on coding-sequence-only (CDS-only) data - \code{tss}, \code{tts}, \code{isoform_class_code}, \code{5_utr_length}, \code{3_utr_length}, \code{isoform_seq_similarity}, \code{5_utr_seq_similarity}, \code{3_utr_seq_similarity}, \code{NMD_status} and \code{coding_potential} cannot be analyzed for proteomics data (each is marked below). If \code{consequencesToAnalyze} is left at its default, or set to \code{'all'}, any of these are dropped from the analysis. If any of them are requested explicitly, \code{analyzeSwitchConsequences} instead stops with an error.
+
+Separately, since with CDS-only exons the whole isoform \emph{is} the ORF, \code{isoform_length} and \code{ORF_length} become equivalent for proteomics data. If \code{isoform_length} is requested, it is replaced with \code{ORF_length} - or simply dropped, if \code{ORF_length} was already requested too.
+
+More generally, for proteomics data all consequences should be interpreted in relation to the coding sequence only, since non-coding (UTR) regions are not part of the underlying \code{switchAnalyzeRlist}.
+
 The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 \itemize{
     \item \code{all} : Test transcripts for any of the differences described below. Please note that jointly the analysis below covers all transcript feature meaning that they should be different. Furthermore note that 'class_code' will only be included if the switchAnalyzeRlist was made from Cufflinks/Cuffdiff output.
 
-    \item \code{tss} : Test transcripts for whether they use different Transcription Start Site (TSS) (more than \code{ntCutoff} from each other).
+    \item \code{tss} : Test transcripts for whether they use different Transcription Start Site (TSS) (more than \code{ntCutoff} from each other). Not available for proteomics data (requires full pre-mRNA structure).
 
-    \item \code{tts} : Test transcripts for whether they use different Transcription Termination Site (TTS) (more than \code{ntCutoff} from each other).
+    \item \code{tts} : Test transcripts for whether they use different Transcription Termination Site (TTS) (more than \code{ntCutoff} from each other). Not available for proteomics data (requires full pre-mRNA structure).
 
     \item \code{last_exon} : Test whether transcripts utilizes different last exons (defined as the last exon of each transcript is non-overlapping).
 
-    \item \code{isoform_seq_similarity} : Test whether the isoform nucleotide sequences are different (as described above). Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}.
+    \item \code{isoform_seq_similarity} : Test whether the isoform nucleotide sequences are different (as described above). Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Not available for proteomics data (requires UTR sequence).
 
-    \item \code{isoform_length} : Test transcripts for differences in isoform length. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Please note that this is a less powerful analysis than implemented in 'isoform_seq_similarity' as two equally long sequences might be very different.
+    \item \code{isoform_length} : Test transcripts for differences in isoform length. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Please note that this is a less powerful analysis than implemented in 'isoform_seq_similarity' as two equally long sequences might be very different. For proteomics data this is translated to \code{ORF_length} instead (see \bold{Details}).
 
     \item \code{exon_number} : Test transcripts for differences in exon number.
 
-    \item \code{intron_structure} : Test transcripts for differences in intron structure, e.g. usage of exon-exon junctions. This analysis corresponds to analyzing whether all introns in one isoform is also found in the other isoforms.
+    \item \code{intron_structure} : Test transcripts for differences in intron structure, e.g. usage of exon-exon junctions. This analysis corresponds to analyzing whether all introns in one isoform is also found in the other isoforms. For proteomics data this describes coding-sequence structure only.
 
-    \item \code{intron_retention} : Test for differences in intron retentions (and their genomic positions). Require that \code{analyzeIntronRetention} have been run.
+    \item \code{intron_retention} : Test for differences in intron retentions (and their genomic positions). Require that \code{analyzeIntronRetention} have been run. For proteomics data this describes coding-sequence structure only.
 
-    \item \code{isoform_class_code} : Test transcripts for differences in the transcript classification provide by cufflinks. For a updated list of class codes see \url{http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/#transfrag-class-codes}.
+    \item \code{isoform_class_code} : Test transcripts for differences in the transcript classification provide by cufflinks. For a updated list of class codes see \url{http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/#transfrag-class-codes}. Not available for proteomics data.
 
-    \item \code{coding_potential} : Test transcripts for differences in coding potential, as indicated by the CPAT or CPC2 analysis. Requires that \code{analyzeCPAT} or \code{analyzeCPC2} have been used to add external conding potential analysis to the \code{switchAnalyzeRlist}.
+    \item \code{coding_potential} : Test transcripts for differences in coding potential, as indicated by the CPAT or CPC2 analysis. Requires that \code{analyzeCPAT} or \code{analyzeCPC2} have been used to add external conding potential analysis to the \code{switchAnalyzeRlist}. Not available for proteomics data.
 
     \item \code{ORF_seq_similarity} : Test whether the amino acid sequences of the ORFs are different (as described above). Reported as different if the measured JCsim is smaller than \code{AaJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{AaCutoff}. Requires that least one of the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
@@ -106,15 +114,15 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 
     \item \code{ORF_length} : Test transcripts for differences in length of Open Reading Frames (ORF). Note that this is a less powerful analysis than implemented in \code{ORF_seq_similarity} as two equally long sequences might be very different. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that least one of the isoforms are annotated with a ORF either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{5_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 5' UnTranslated Region (UTR) are different (as described above). The 5'UTR is defined as the region from the transcript start to the ORF start. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with an ORF.
+    \item \code{5_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 5' UnTranslated Region (UTR) are different (as described above). The 5'UTR is defined as the region from the transcript start to the ORF start. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with an ORF. Not available for proteomics data (requires UTR sequence).
 
-    \item \code{5_utr_length} : Test transcripts for differences in the length of the 5' UnTranslated Region (UTR). The 5'UTR is defined as the region from the transcript start to the ORF start. Note that this is a less powerful analysis than implemented in '5_utr_seq_similarity' as two equally long sequences might be very different. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{5_utr_length} : Test transcripts for differences in the length of the 5' UnTranslated Region (UTR). The 5'UTR is defined as the region from the transcript start to the ORF start. Note that this is a less powerful analysis than implemented in '5_utr_seq_similarity' as two equally long sequences might be very different. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF. Not available for proteomics data (no UTR in CDS-only data).
 
-    \item \code{3_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 3' UnTranslated Region (UTR) are different (as described above). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{3_utr_seq_similarity} : Test whether the isoform nucleotide sequences of the 3' UnTranslated Region (UTR) are different (as described above). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Reported as different if the measured JCsim is smaller than \code{ntJCsimCutoff} and the length difference of the aligned and combined region is larger than \code{ntCutoff}. Requires that both the isoforms are annotated with a ORF. Not available for proteomics data (requires UTR sequence).
 
-    \item \code{3_utr_length} : Test transcripts for differences in the length of the 3' UnTranslated Regions (UTR). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Note that this is a less powerful analysis than implemented in \code{3_utr_seq_similarity} as two equally long sequences might be very different. Requires that \code{identifyORF} have been used to predict NMD sensitivity or that the ORF was imported though one of the dedicated import functions implemented in isoformSwitchAnalyzeR. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{3_utr_length} : Test transcripts for differences in the length of the 3' UnTranslated Regions (UTR). The 3'UTR is defined as the region from the end of the ORF to the transcript end. Note that this is a less powerful analysis than implemented in \code{3_utr_seq_similarity} as two equally long sequences might be very different. Requires that \code{identifyORF} have been used to predict NMD sensitivity or that the ORF was imported though one of the dedicated import functions implemented in isoformSwitchAnalyzeR. Only reported if the difference is larger than indicated by the \code{ntCutoff} and \code{ntFracCutoff}. Requires that both the isoforms are annotated with a ORF. Not available for proteomics data (no UTR in CDS-only data).
 
-    \item \code{NMD_status} : Test transcripts for differences in sensitivity to Nonsense Mediated Decay (NMD). Requires that both the isoforms have been annotated with PTC either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
+    \item \code{NMD_status} : Test transcripts for differences in sensitivity to Nonsense Mediated Decay (NMD). Requires that both the isoforms have been annotated with PTC either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist. Not available for proteomics data.
 
     \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 

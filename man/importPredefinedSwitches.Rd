@@ -54,11 +54,11 @@ A (vector of) text string(s) providing the path(s) to a fasta file with the nucl
 }
 
 \item{omicDataType}{
-A string, either \code{"transcriptomics"} (default) or \code{"proteomics"}, stating what kind of data the pre-defined switches were derived from.
+A string, either \code{"transcriptomics"} (default) or \code{"proteomics"}, stating what kind of data the pre-defined switches were derived from. This is forwarded as-is to \link{importGTF}'s own \code{omicDataType} argument.
 
-With \code{"transcriptomics"}, \link{importGTF} is called with \code{exonFeatureType="exon"} (the normal full exon structure), and the resulting \code{switchAnalyzeRlist} has \code{omicDataType="transcriptomics"}.
+With \code{"transcriptomics"}, \link{importGTF} uses the normal full exon structure, and the resulting \code{switchAnalyzeRlist} has \code{omicDataType="transcriptomics"}.
 
-With \code{"proteomics"}, \link{importGTF} is called with \code{exonFeatureType="CDS"} instead - so the \code{exons} slot (and everything built from it) is coding-sequence-only, non-coding isoforms are dropped, and NMD/PTC status is not determined (see \code{exonFeatureType} in \link{importGTF} for full details) - and the resulting \code{switchAnalyzeRlist} has \code{omicDataType="proteomics"}. Because of this, \code{"proteomics"} cannot be combined with \code{isoformNtFasta} (same restriction as \code{importGTF(exonFeatureType="CDS")}) - extract sequence afterwards via \code{extractSequence(genomeObject=<a BSgenome>)} instead.
+With \code{"proteomics"}, \link{importGTF} uses a coding-sequence-only structure instead - so the \code{exons} slot (and everything built from it) is coding-sequence-only, non-coding isoforms are dropped, and NMD/PTC status is not determined (see \code{omicDataType} in \link{importGTF} for full details) - and the resulting \code{switchAnalyzeRlist} has \code{omicDataType="proteomics"}. Because of this, \code{"proteomics"} cannot be combined with \code{isoformNtFasta} (same restriction as \code{importGTF(omicDataType="proteomics")}) - extract sequence afterwards via \code{extractSequence(genomeObject=<a BSgenome>)} instead.
 }
 
 \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids (in both \code{preDefinedSwitches} and the annotation) by ignoring everything after the first bar ("|"). Default is TRUE.}

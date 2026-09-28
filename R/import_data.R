@@ -1141,7 +1141,7 @@ importGTF <- function(
     ### Core arguments
     pathToGTF,
     isoformNtFasta = NULL,
-    exonFeatureType = c('exon', 'CDS'),
+    omicDataType = 'transcriptomics',
 
     ### Advanced arguments
     extractAaSeq = FALSE,
@@ -1159,16 +1159,14 @@ importGTF <- function(
 ) {
     ### Test input
     if(TRUE) {
-        ### Test exonFeatureType
-        exonFeatureType <- tryCatch(
-            match.arg(exonFeatureType, choices = c('exon','CDS')),
-            error = function(e) {
-                stop('The \'exonFeatureType\' argument must be a single string, either "exon" or "CDS".')
-            }
-        )
+        ### Test omicDataType and derive exonFeatureType from it
+        if( length(omicDataType) != 1 || ! omicDataType %in% c('transcriptomics','proteomics') ) {
+            stop('The \'omicDataType\' argument must be a single string, either "transcriptomics" or "proteomics".')
+        }
+        exonFeatureType <- if( omicDataType == 'proteomics' ) 'CDS' else 'exon'
 
         if( exonFeatureType == 'CDS' & ! is.null(isoformNtFasta) ) {
-            stop('The \'isoformNtFasta\' argument cannot be combined with exonFeatureType="CDS".')
+            stop('The \'isoformNtFasta\' argument cannot be combined with omicDataType="proteomics" (which uses CDS-only import - see the \'omicDataType\' argument for details).')
         }
 
         ### Test existance of files
@@ -2268,7 +2266,8 @@ importGTF <- function(
         designMatrix = designMatrix,
         isoformCountMatrix = repExp,
         removeFusionTranscripts = removeFusionTranscripts,
-        sourceId = 'gtf'
+        sourceId = 'gtf',
+        omicDataType = omicDataType
     )
 
     if( (addAnnotatedORFs & exonFeatureType == 'exon') | exonFeatureType == 'CDS' ) {
@@ -2457,14 +2456,10 @@ importPredefinedSwitches <- function(
             message('Step 1 of 2: Importing GTF (this may take a while)...')
         }
 
-        ### proteomics mode needs a coding-sequence-only (CDS) transcript
-        ### structure; transcriptomics mode uses the normal full exon structure
-        exonFeatureType <- if( omicDataType == 'proteomics' ) 'CDS' else 'exon'
-
         switchAnalyzeRlist <- importGTF(
             pathToGTF                  = isoformExonAnnoation,
             isoformNtFasta              = isoformNtFasta,
-            exonFeatureType             = exonFeatureType,
+            omicDataType                = omicDataType,
             addAnnotatedORFs            = addAnnotatedORFs,
             onlyConsiderFullORF         = onlyConsiderFullORF,
             removeNonConvensionalChr    = removeNonConvensionalChr,

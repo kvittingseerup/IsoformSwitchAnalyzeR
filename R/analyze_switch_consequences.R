@@ -25,6 +25,11 @@ analyzeSwitchConsequences <- function(
     showProgress = TRUE,
     quiet = FALSE
 ) {
+    ### Capture the as-supplied consequencesToAnalyze before any massaging, so
+    ### the proteomics-mode checks below can tell whether the caller used the
+    ### default/'all' or supplied an explicit list.
+    rawConsequencesToAnalyze <- consequencesToAnalyze
+
     ### Check input
     if (TRUE) {
         # check switchAnalyzeRlist
@@ -122,6 +127,95 @@ analyzeSwitchConsequences <- function(
 
         if ('all' %in% consequencesToAnalyze) {
             consequencesToAnalyze <- acceptedTypes
+        }
+
+        ### omicDataType == 'proteomics' handling
+        isProteomics <- !is.null(switchAnalyzeRlist$omicDataType) &&
+            switchAnalyzeRlist$omicDataType == 'proteomics'
+
+        if (isProteomics) {
+            ### 'isoform_length' and 'ORF_length' are identical when the whole
+            ### isoform is the ORF (CDS-only exons) - translate/dedupe rather
+            ### than silently double-report the same thing.
+            if ('isoform_length' %in% consequencesToAnalyze) {
+                warning(
+                    paste(
+                        'With proteomics data, \'isoform_length\' and \'ORF_length\' are identical',
+                        '(the whole isoform is the ORF) - \'ORF_length\' will be analyzed instead of',
+                        '\'isoform_length\'.',
+                        sep = ' '
+                    )
+                )
+                consequencesToAnalyze <- union(
+                    setdiff(consequencesToAnalyze, 'isoform_length'),
+                    'ORF_length'
+                )
+            }
+
+            ### Consequences that require full (non-CDS-only) transcript
+            ### structure and are therefore not meaningful for proteomics data
+            proteomicsExcludedConsequences <- c(
+                'tss',
+                'tts',
+                'isoform_class_code',
+                '5_utr_length',
+                '3_utr_length',
+                'isoform_seq_similarity',
+                '5_utr_seq_similarity',
+                '3_utr_seq_similarity',
+                'NMD_status',
+                'coding_potential'
+            )
+
+            excludedRequested <- intersect(
+                consequencesToAnalyze, proteomicsExcludedConsequences
+            )
+
+            if (length(excludedRequested)) {
+                ### Must match the consequencesToAnalyze default in the
+                ### function signature above
+                defaultConsequencesToAnalyze <- c(
+                    'intron_retention',
+                    'coding_potential',
+                    'ORF_seq_similarity',
+                    'NMD_status',
+                    'domains_identified',
+                    'domain_isotype',
+                    'IDR_identified',
+                    'IDR_type',
+                    'signal_peptide_identified'
+                )
+                isDefaultOrAll <-
+                    identical(
+                        sort(rawConsequencesToAnalyze),
+                        sort(defaultConsequencesToAnalyze)
+                    ) | 'all' %in% rawConsequencesToAnalyze
+
+                if (isDefaultOrAll) {
+                    consequencesToAnalyze <- setdiff(
+                        consequencesToAnalyze, proteomicsExcludedConsequences
+                    )
+                    if (!quiet) {
+                        message(
+                            paste(
+                                'The switchAnalyzeRlist has omicDataType \'proteomics\': dropping',
+                                paste(excludedRequested, collapse = ', '),
+                                'from consequencesToAnalyze (not meaningful for coding-sequence-only',
+                                'data).\nAnalyzing:',
+                                paste(consequencesToAnalyze, collapse = ', ')
+                            )
+                        )
+                    }
+                } else {
+                    stop(
+                        paste(
+                            'The following consequences cannot be analyzed when omicDataType is',
+                            '\'proteomics\':',
+                            paste(excludedRequested, collapse = ', ')
+                        )
+                    )
+                }
+            }
         }
 
         ## Test whether annotation is advailable

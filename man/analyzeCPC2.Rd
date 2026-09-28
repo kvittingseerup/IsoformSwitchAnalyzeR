@@ -32,6 +32,8 @@ analyzeCPC2(
 }
 
 \details{
+This function cannot be run on proteomics data. If \code{switchAnalyzeRlist$omicDataType} is \code{"proteomics"} (see \link{importPredefinedSwitches}), \code{analyzeCPC2()} stops with an error, since coding-sequence-only data is already known to be coding by construction, making coding-potential prediction meaningless.
+
 Notes for how to run the external tools:
 Use default parameters and if required select the most similar species. If the [webserver](\url{http://cpc2.cbi.pku.edu.cn/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" button). If a stand-alone version was just just supply the path to the result file.
 

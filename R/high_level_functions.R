@@ -241,6 +241,20 @@ isoformSwitchAnalysisPart2 <- function(
             )
         }
 
+        isProteomics <- !is.null(switchAnalyzeRlist$omicDataType) &&
+            switchAnalyzeRlist$omicDataType == 'proteomics'
+        if (isProteomics && (!is.null(pathToCPATresultFile) | !is.null(pathToCPC2resultFile))) {
+            stop(
+                paste(
+                    'CPAT/CPC2 coding-potential analysis cannot be run on proteomics data',
+                    '(coding-sequence-only data is already known to be coding by construction)',
+                    '- do not supply \'pathToCPATresultFile\' or \'pathToCPC2resultFile\' when',
+                    'switchAnalyzeRlist$omicDataType is \'proteomics\'.',
+                    sep = ' '
+                )
+            )
+        }
+
         if (!is.null(pathToCPATresultFile) & !is.null(pathToCPC2resultFile) ) {
             stop(
                 paste(
