@@ -25,6 +25,19 @@ analyzeCPAT <- function(
             )
         }
 
+        if (!is.null(switchAnalyzeRlist$omicDataType) && switchAnalyzeRlist$omicDataType == 'proteomics') {
+            stop(
+                paste(
+                    'CPAT predicts coding potential from the full transcript sequence,',
+                    'which is not meaningful for proteomics data (coding-sequence-only',
+                    '\'exons\', already known to be coding by construction).',
+                    'analyzeCPAT() cannot be run on a switchAnalyzeRlist with omicDataType',
+                    '\'proteomics\'.',
+                    sep = ' '
+                )
+            )
+        }
+
         # file
         if (class(pathToCPATresultFile) != 'character') {
             stop(
@@ -242,6 +255,19 @@ analyzeCPC2 <- function(
         if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
+            )
+        }
+
+        if (!is.null(switchAnalyzeRlist$omicDataType) && switchAnalyzeRlist$omicDataType == 'proteomics') {
+            stop(
+                paste(
+                    'CPC2 predicts coding potential from the full transcript sequence,',
+                    'which is not meaningful for proteomics data (coding-sequence-only',
+                    '\'exons\', already known to be coding by construction).',
+                    'analyzeCPC2() cannot be run on a switchAnalyzeRlist with omicDataType',
+                    '\'proteomics\'.',
+                    sep = ' '
+                )
             )
         }
 

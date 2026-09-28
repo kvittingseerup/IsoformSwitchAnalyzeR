@@ -63,10 +63,10 @@ A logic indicating whether to remove ORF information from the isoforms which the
 }
 
   \item{pathToCPATresultFile}{
-Path to the CPAT result file. If the webserver is used please download the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file. See \link{analyzeCPAT} for details.
+Path to the CPAT result file. If the webserver is used please download the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file. See \link{analyzeCPAT} for details. Cannot be supplied when \code{switchAnalyzeRlist$omicDataType} is \code{"proteomics"} - \code{isoformSwitchAnalysisPart2} will stop with an error.
 }
 \item{pathToCPC2resultFile}{
-Path to the CPC2 result file. If the webserver is used please download the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file. See \link{analyzeCPC2} for details.
+Path to the CPC2 result file. If the webserver is used please download the tab-delimited file from the bottom of the result page and give that as input, else simply supply the result file. See \link{analyzeCPC2} for details. Cannot be supplied when \code{switchAnalyzeRlist$omicDataType} is \code{"proteomics"} - \code{isoformSwitchAnalysisPart2} will stop with an error.
 }
 
 \item{pathToPFAMresultFile}{

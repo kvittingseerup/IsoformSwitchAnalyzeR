@@ -34,6 +34,8 @@ analyzeCPAT(
 }
 
 \details{
+This function cannot be run on proteomics data. If \code{switchAnalyzeRlist$omicDataType} is \code{"proteomics"} (see \link{importPredefinedSwitches}), \code{analyzeCPAT()} stops with an error, since coding-sequence-only data is already known to be coding by construction, making coding-potential prediction meaningless.
+
 Notes for how to run the external tools:
 Use default parameters. If the websever (\url{http://lilab.research.bcm.edu/cpat/}) was used download the tab-delimited result file (from the bottom of the result page). If a stand-alone version was just just supply the path to the result file.
 
