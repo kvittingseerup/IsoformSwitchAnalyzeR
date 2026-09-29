@@ -1,5 +1,6 @@
 \name{analyzeIUPred2A}
 \alias{analyzeIUPred2A}
+\encoding{UTF-8}
 
 \title{
 Import Result of IUPred2A or IUPred3 analysis

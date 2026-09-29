@@ -1,5 +1,6 @@
 \name{extractSplicingEnrichment}
 \alias{extractSplicingEnrichment}
+\encoding{UTF-8}
 \title{
 Analyze data for enrichment of specific type of alternative splicing
 }
