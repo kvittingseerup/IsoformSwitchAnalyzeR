@@ -1,3 +1,9 @@
+Changes in version 2.11.3 (2026-09)
+- Update type: Major
+- Added a new function analyzeInterProScan() to parse Pfam, SignalP, and Mobi-DBLite results obtained from the InterProScan tool.
+- Major bug fixes
+- Fixed stale links and references
+
 Changes in version 2.11.2 (2026-09)
 - Update type: Minor.
 - Updated the package citation throughout the documentation and vignette to
