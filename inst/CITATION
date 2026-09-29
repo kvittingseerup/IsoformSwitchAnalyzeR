@@ -1,23 +1,26 @@
 citHeader("To cite package 'IsoformSwitchAnalyzeR' in publications, use:")
 
-citEntry(
-   entry="Article",
-   title = "The Landscape of Isoform Switches in Human Cancers",
-   author = "Kristoffer Vitting-Seerup, Albin Sandelin",
-   journal = "Mol. Cancer Res",
-   year = 2017,
-   doi = "10.1158/1541-7786.MCR-16-0459",
-   url = "http://mcr.aacrjournals.org/content/early/2017/06/02/1541-7786.MCR-16-0459",
-   textVersion = "Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017)."
-)
-
-citEntry(
-   entry="Article",
-   title = "IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences",
-   author = "Kristoffer Vitting-Seerup, Albin Sandelin",
-   journal = "Bioinformatics",
-   year = 2019,
-   doi = "10.1093/bioinformatics/btz247",
-   url = "http://dx.doi.org/10.1093/bioinformatics/btz247",
-   textVersion = "Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. Bioinformatics. (2019)."
+bibentry(
+   bibtype = "Article",
+   title   = "IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data",
+   author  = c(
+      person("Chunxu", "Han"),
+      person("Jeroen", "Gilis"),
+      person("Elena", "Iriondo Delgado"),
+      person("Lieven", "Clement"),
+      person("Kristoffer", "Vitting-Seerup")
+   ),
+   journal = "NAR Genomics and Bioinformatics",
+   year    = 2026,
+   volume  = 8,
+   number  = 3,
+   pages   = "lqag098",
+   doi     = "10.1093/nargab/lqag098",
+   url     = "https://doi.org/10.1093/nargab/lqag098",
+   textVersion = paste(
+      "Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K (2026).",
+      "IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in",
+      "long-read and single-cell sequencing data. NAR Genomics and",
+      "Bioinformatics, 8(3), lqag098. https://doi.org/10.1093/nargab/lqag098"
+   )
 )

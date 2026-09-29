@@ -94,6 +94,7 @@ The data.frame added have one row per isoform per comparison of condition and co
 }
 
 \references{
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 Gilis, J., Vitting-Seerup, K., Van den Berge, K., & Clement, L. (2022). satuRn: Scalable analysis of differential transcript usage for bulk and single-cell RNA-sequencing applications (version 2). F1000Research, 10:374. https://doi.org/10.12688/f1000research.51749.2
 }
 

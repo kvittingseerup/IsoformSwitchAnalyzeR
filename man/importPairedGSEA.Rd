@@ -128,7 +128,7 @@ If no genes match after filtering, an empty \code{switchAnalyzeRlist} is returne
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 Dam, S.H., Olsen, L.R. & Vitting-Seerup, K. Expression and splicing mediate distinct biological signals. BMC Biol 21, 220 (2023).
 }
 \author{
