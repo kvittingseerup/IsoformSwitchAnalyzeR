@@ -60,11 +60,12 @@ analyzeORF <- function(
             ))
         }
 
-        if (orfMethod %in% c('mostUpstreamAnnoated', 'longestAnnotated')) {
+        if (orfMethod %in% c('mostUpstreamAnnoated', 'longestAnnotated', 'longest.AnnotatedWhenPossible')) {
             if (is.null(cds)) {
                 stop(paste(
-                    'When using orfMethod is \'mostUpstreamAnnoated\' or',
-                    '\'longestAnnotated\', a CDSSet must be supplied to',
+                    'When using orfMethod is \'mostUpstreamAnnoated\',',
+                    '\'longestAnnotated\' or \'longest.AnnotatedWhenPossible\',',
+                    'a CDSSet must be supplied to',
                     'the \'cds\' argument '
                 ))
             }
@@ -295,9 +296,9 @@ analyzeORF <- function(
 
             ### Subset to those analyzed (if annoation is used)
             if (useAnnoated) {
-                tmpSwitchAnalyzeRlist$isoform_feature <-
-                    tmpSwitchAnalyzeRlist$isoform_feature[which(
-                        tmpSwitchAnalyzeRlist$isoform_feature$isoform_id %in%
+                tmpSwitchAnalyzeRlist$isoformFeatures <-
+                    tmpSwitchAnalyzeRlist$isoformFeatures[which(
+                        tmpSwitchAnalyzeRlist$isoformFeatures$isoform_id %in%
                             overlappingAnnotStart2$isoform_id
                     ),]
                 tmpSwitchAnalyzeRlist$exons <-
@@ -573,6 +574,7 @@ extractSequence <- function(
     removeShortAAseq = TRUE,
     removeLongAAseq  = FALSE,
     alsoSplitFastaFile = FALSE,
+    maxFastaFileSize = 100,
     removeORFwithStop = TRUE,
     addToSwitchAnalyzeRlist = TRUE,
     writeToFile = TRUE,
@@ -671,6 +673,10 @@ extractSequence <- function(
             if( ! removeLongAAseq ) {
                 warning('Since you are using the alsoSplitFastaFile you probably also want to use the \'removeLongAAseq\' option.')
             }
+        }
+
+        if( ! is.numeric(maxFastaFileSize) || length(maxFastaFileSize) != 1 || maxFastaFileSize < 1 || maxFastaFileSize %% 1 != 0 ) {
+            stop('The \'maxFastaFileSize\' argument must be a single positive integer')
         }
 
         if( !is.logical(forceReExtraction)) {
@@ -1205,19 +1211,20 @@ extractSequence <- function(
                 ### Make index
                 l <- length(transcriptORFaaSeq2)
 
-                maxfileSizes <- 500
+                maxfileSizes <- maxFastaFileSize
                 nFiles <- ceiling(l / maxfileSizes)
-                seqWithinEachFile <-  ceiling(l / nFiles)
 
-                indexVec <- unique( c( seq(
-                    from = 1,
-                    to = l,
-                    by = seqWithinEachFile # Max in PFAM Jan 2019
-                ), l))
+                chunkSizes <- rep(floor(l / nFiles), nFiles)
+                remainder <- l %% nFiles
+                if (remainder > 0) {
+                    chunkSizes[seq_len(remainder)] <- chunkSizes[seq_len(remainder)] + 1
+                }
+                chunkEnds <- cumsum(chunkSizes)
+                chunkStarts <- c(1, utils::head(chunkEnds, -1) + 1)
 
                 indexDf <- data.frame(
-                    start = indexVec[-length(indexVec)],
-                    end = indexVec[-1]
+                    start = chunkStarts,
+                    end = chunkEnds
                 )
                 n <- nrow(indexDf)
                 indexDf$file <- paste0('_subset_', 1:n,'_of_',n)
@@ -1362,7 +1369,7 @@ addORFfromGTF <- function(
                 pathToGTF = pathToGTF,
                 addAnnotatedORFs = TRUE,
                 onlyConsiderFullORF = onlyConsiderFullORF,
-                removeNonConvensionalChr = FALSE,
+                removeNonConvensionalChr = removeNonConvensionalChr,
                 ignoreAfterBar = ignoreAfterBar,
                 ignoreAfterSpace = ignoreAfterSpace,
                 ignoreAfterPeriod = ignoreAfterPeriod,
@@ -1497,8 +1504,8 @@ addORFfromGTF <- function(
     ### Return
     if (!quiet) {
         message('Done.')
-        return(switchAnalyzeRlist)
     }
+    return(switchAnalyzeRlist)
 }
 
 analyzeNovelIsoformORF <- function(
@@ -1532,7 +1539,12 @@ analyzeNovelIsoformORF <- function(
             stop('No ORF annotation pressent. Run addORFfromGTF() first and try again.')
         }
         nWithout <- sum(switchAnalyzeRlist$orfAnalysis$orf_origin == 'not_annotated_yet')
-        nWithout <- nWithout + (sum(!is.na(switchAnalyzeRlist$orfAnalysis$PTC)) * as.integer(analysisAllIsoformsWithoutORF))
+        if (analysisAllIsoformsWithoutORF) {
+            nWithout <- nWithout + sum(
+                switchAnalyzeRlist$orfAnalysis$orf_origin == 'Annotation' &
+                    is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+            )
+        }
 
         if( nWithout == 0) {
             stop('There appear not to be any isoforms not already annotated with ORFs - meaning there is no need to run this function')

@@ -67,7 +67,7 @@ switchPlotIsoUsage(
   \item{confidenceInterval}{The confidence level used in the confidence intervals if confidenceIntervalErrorbars is enabled. Default is 0.95 corresponding to 95\% (recommended).}
   \item{alphas}{A numeric vector of length two giving the significance levels represented in plots. The numbers indicate the q-value cutoff for significant (*) and highly significant (***) respectively. Default 0.05 and 0.001 which should be interpret as q<0.05 and q<0.001 respectively). If q-values are higher than this they will be annotated as 'ns' (not significant).}
   \item{logYaxis}{A logical indicating whether the y-axis of the plot should be log10 transformed (a pseudocount of 1 will be added to avid large negative values). Default is FALSE.}
-  \item{extendFactor}{A numeric controlling the distance (as fraction of expression) between the bars indicating the expression values and the indications of significance. Default is 0.1}
+  \item{extendFactor}{A numeric controlling the distance (as fraction of expression) between the bars indicating the expression values and the indications of significance. Default is 0.05}
   \item{localTheme}{General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().}
 }
 
@@ -86,7 +86,7 @@ Note that the bar indicating significance levels will only be shown if the analy
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 
 \author{Kristoffer Vitting-Seerup}

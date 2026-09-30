@@ -23,7 +23,7 @@ prepareSalmonFileDataFrame(
 }
 
 \arguments{
-\item{parentDir}{ Parent directory where each quantified sample is in a sub-directory. The function will then look for files containing the (suffix) of the default files names for the quantification tools. The suffixes identified are 'abundance.tsv' for Kallisto, 'quant.sf' for Salmon, 'isoforms.results' for RSEM and 't_data.ctab' for StringTie. This is an alternative to \code{sampleVector} (aka only one of them should be used).}
+\item{parentDir}{ Parent directory where each quantified sample is in a sub-directory. The function will look for a Salmon quantification file (named 'quant.sf', optionally gzipped as 'quant.sf.gz') within each sub-directory.}
 
 \item{pattern}{ A character string containing a regular expression for which files to import (applied to full path). Default is "" corresponding to all. See base::grepl for more details.}
 
@@ -46,7 +46,7 @@ The data.frame with 3 columns.
 
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 
 \author{

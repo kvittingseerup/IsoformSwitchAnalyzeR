@@ -14,7 +14,7 @@ extractSwitchSummary(
     alpha=0.05,
     dIFcutoff = 0.1,
     onlySigIsoforms = FALSE,
-    includeCombined=nrow(unique(switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_1')])) > 1
+    includeCombined=nrow(unique(switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_2')])) > 1
 )
 }
 
@@ -44,7 +44,7 @@ A \code{data.frame} with the number of switches found in each comparison (as wel
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 
 \author{

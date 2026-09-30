@@ -59,7 +59,7 @@ A logic indicating whether the analysis should be returned as a data.frame. If F
 }
 
 \details{
-The significance test is performed with R's build in \code{prop.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
+The significance test is performed with R's build in \code{fisher.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
 }
 
 \value{
@@ -68,8 +68,7 @@ If \code{returnResult=TRUE} a data.frame with the statistical summary for each o
 
 \references{
 \itemize{
-    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. Bioinformatics (2019).}
+    \item{Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
 }
 }
 \author{

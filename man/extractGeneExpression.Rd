@@ -39,11 +39,11 @@ The count matrix obtained if \code{extractCounts=TRUE} is the same as would be o
 }
 
 \value{
-A data.frame with the replicate count/abundance estimates as well as gene_id (and gene_name if \code{extractCounts=TRUE})
+A data.frame with the replicate count/abundance estimates as well as gene_id (and gene_name if \code{addGeneNames=TRUE})
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 \author{
 Kristoffer Vitting-Seerup

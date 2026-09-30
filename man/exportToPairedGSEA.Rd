@@ -30,7 +30,7 @@ A logical value indicating whether to save the results as an RDS file. Default i
 The name of the RDS file to be saved when \code{writeToFile=TRUE}. Default is \code{"pairedGSEA_input.rds"}.
 }
   \item{overwrite}{
-A logical value indicating whether to overwrite an existing RDS file with the same name. Default is \code{FALSE}.
+A logical value indicating whether to overwrite an existing RDS file with the same name. Default is \code{TRUE}.
 }
   \item{quiet}{
 A logical value indicating whether to suppress progress messages. Default is \code{FALSE}.

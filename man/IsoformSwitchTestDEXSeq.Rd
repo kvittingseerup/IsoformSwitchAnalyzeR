@@ -36,7 +36,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 }
 
 \item{reduceToSwitchingGenes}{
-A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains at least one isoform significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters) - works on dIF values corrected for confounding effects if overwriteIFvalues=TRUE. Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
+A logic indicating whether the switchAnalyzeRlist should be reduced to the genes which contains at least one isoform significantly differential used (as indicated by the \code{alpha} and \code{dIFcutoff} parameters). Enabling this will make the downstream analysis a lot faster since fewer genes needs to be analyzed. Default is TRUE.
 }
 
 \item{reduceFurtherToGenesWithConsequencePotential}{
@@ -51,15 +51,13 @@ A logic indicating whether both isoforms the pairs considered if \code{reduceFur
 A logic indicating whether the an isoform should be kept in all comparisons even if it is only deemed significant (as defined by the \code{alpha} and \code{dIFcutoff} parameters) in one comparison. This will not affect downstream runtimes only make the switchAnalyzeRlist use slightly more memmory (scaling with the number of conditions compared). Default is TRUE.
 }
 
-\item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Defaults is FALSE.}
+\item{showProgress}{ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.}
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
 }
 
 \details{
 This function uses DEXSeq to test for differential isoform usage using the replicate count matrix. This is done by for each pairwise comparison building and testing one model (building one combined model and testing each pairwise comparison from that is not supported by DEXSeq).
-
-isoformSwitchTestDEXSeq also allows for estimation of effect sizes (IF and dIF) corrected for confounding effects (controlled by \code{correctForConfoundingFactors = TRUE}) (recommended). Confounding effects (stored as additional column(s) in the design matrix ( switchAnalyzeRlist$designMatrix )) is done by by performing a batch correction on the isoform abundance matrix with limma::removeBatchEffect() and afterwards recalculate the IF matrix and summarize the IF and dIF values. These new estimates can be added to the switchAnalyzeRlist (overwriting the existing values) by setting \code{overwriteIFvalues = TRUE}.
 
 Note that the actual testing via DEXSeq always will take confounding effects into account (a full model including all confounding effects are always made).
 }
@@ -92,7 +90,7 @@ The data.frame added have one row per isoform per comparison of condition and co
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 Anders et al. Detecting differential usage of exons from RNA-seq data. Genome Research (2012).
 }
 

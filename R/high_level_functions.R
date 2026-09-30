@@ -212,6 +212,7 @@ isoformSwitchAnalysisPart2 <- function(
     pathToSignalPresultFile = NULL,
     pathToDeepLoc2resultFile = NULL,
     pathToDeepTMHMMresultFile = NULL,
+    pathToInterProScanResultFile = NULL,
 
     ### Analysis and output arguments
     n = Inf,
@@ -258,7 +259,7 @@ isoformSwitchAnalysisPart2 <- function(
         if (!is.null(pathToCPATresultFile) & !is.null(pathToCPC2resultFile) ) {
             stop(
                 paste(
-                    'Since CPC2 and CPAT performs the same type of analysis results should only be suppled to ONE of the \'pathToCPATresultFile\' and \'pathToCPC2resultFile\' arguments.',
+                    'Since CPC2 and CPAT performs the same type of analysis results should only be supplied to ONE of the \'pathToCPATresultFile\' and \'pathToCPC2resultFile\' arguments.',
                     sep = ' '
                 )
             )
@@ -287,7 +288,34 @@ isoformSwitchAnalysisPart2 <- function(
         if (!is.null(pathToNetSurfP2resultFile) & !is.null(pathToIUPred2AresultFile) ) {
             stop(
                 paste(
-                    'Since NetSurfP2 and IUPred2A performs the same type of analysis results should only be suppled to ONE of the \'pathToIUPred2AresultFile\' and \'pathToNetSurfP2resultFile\' arguments.',
+                    'Since NetSurfP2 and IUPred2A performs the same type of analysis results should only be supplied to ONE of the \'pathToIUPred2AresultFile\' and \'pathToNetSurfP2resultFile\' arguments.',
+                    sep = ' '
+                )
+            )
+        }
+
+        if (!is.null(pathToPFAMresultFile) & !is.null(pathToInterProScanResultFile) ) {
+            stop(
+                paste(
+                    'Since Pfam and InterProScan can both annotate protein domains results should only be supplied to ONE of the \'pathToPFAMresultFile\' and \'pathToInterProScanResultFile\' arguments.',
+                    sep = ' '
+                )
+            )
+        }
+
+        if (!is.null(pathToSignalPresultFile) & !is.null(pathToInterProScanResultFile) ) {
+            stop(
+                paste(
+                    'Since SignalP and InterProScan can both annotate signal peptides results should only be supplied to ONE of the \'pathToSignalPresultFile\' and \'pathToInterProScanResultFile\' arguments.',
+                    sep = ' '
+                )
+            )
+        }
+
+        if ( (!is.null(pathToIUPred2AresultFile) | !is.null(pathToNetSurfP2resultFile)) & !is.null(pathToInterProScanResultFile) ) {
+            stop(
+                paste(
+                    'Since IUPred2A/NetSurfP3 and InterProScan can both annotate intrinsically disordered regions results should only be supplied to ONE of the \'pathToIUPred2AresultFile\'/\'pathToNetSurfP2resultFile\' and \'pathToInterProScanResultFile\' arguments.',
                     sep = ' '
                 )
             )
@@ -353,9 +381,9 @@ isoformSwitchAnalysisPart2 <- function(
     }
     if (!is.null(pathToNetSurfP2resultFile)) {
         switchAnalyzeRlist <-
-            analyzeNetSurfP2(
+            analyzeNetSurfP3(
                 switchAnalyzeRlist = switchAnalyzeRlist,
-                pathToNetSurfP2resultFile = pathToNetSurfP2resultFile,
+                pathToNetSurfP3resultFile = pathToNetSurfP2resultFile,
                 quiet = TRUE
             )
     }
@@ -380,6 +408,14 @@ isoformSwitchAnalysisPart2 <- function(
             analyzeDeepTMHMM(
                 switchAnalyzeRlist = switchAnalyzeRlist,
                 pathToDeepTMHMMresultFile = pathToDeepTMHMMresultFile,
+                quiet = TRUE
+            )
+    }
+    if (!is.null(pathToInterProScanResultFile)) {
+        switchAnalyzeRlist <-
+            analyzeInterProScan(
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                pathToInterProScanResultFile = pathToInterProScanResultFile,
                 quiet = TRUE
             )
     }

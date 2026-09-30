@@ -62,8 +62,8 @@ The data.frame added have one row per topological region of an isoform and conta
 
 \references{
 \itemize{
-    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{\code{DeepTMHMM} : Hallgren et al: In prep.}
+    \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
+    \item{\code{DeepTMHMM} : Hallgren et al. DeepTMHMM predicts alpha and beta transmembrane proteins using deep neural networks. bioRxiv (2022).}
 }
 }
 
@@ -71,12 +71,13 @@ The data.frame added have one row per topological region of an isoform and conta
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeIUPred2A}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

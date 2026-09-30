@@ -81,7 +81,7 @@ Additional columns can be used to describe other co-factors such as batch effect
 Can either be:
 \itemize{
     \item{\code{1}: A string indicating the full path to the (gziped or unpacked) GTF file with the annotation of the isoforms quantified. If you are using a refrence-only workflow (tools such as Kallisto/Salmon/RSEM etc) this argument should point to the refrence database GTF corresponding to the fasta file that you used to build the refrence index. If you use a guided/de-novo transcriptome assembly approach (tools like StringTie and Cufflinks) this argument should point to the GTF file created at the "merge" stage of the workflow. Please refere to the "What Quantification Tool(s) Should I Use" section of the vignette for a more detailed description of the two different workflows. An example could be "myAnnotation/myGenome/isoformsQuantified.gtf")}
-    \item{\code{2}: A string indicating the full path to the (gziped or unpacked) RefSeq GFF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GFF file. Please note only GFF files from RefSeq downloaded from \url{ftp://ftp.ncbi.nlm.nih.gov/genomes/} are supported (see database FAQ in vignette for more info). An example could be "RefSeq/isoformsQuantified.gff")}
+    \item{\code{2}: A string indicating the full path to the (gziped or unpacked) RefSeq GFF file which have been quantified. If supplied the exon structure and isoform annotation will be obtained from the GFF file. Please note only GFF files from RefSeq downloaded from \url{https://ftp.ncbi.nlm.nih.gov/genomes/} are supported (see database FAQ in vignette for more info). An example could be "RefSeq/isoformsQuantified.gff")}
     \item{\code{3}: A \code{GRange} object (see \code{?GRanges}) containing one entry per exon per isoform with the genomic coordinates of that exon. This \code{GRange} should furthermore contain two meta data columns called 'isoform_id' and 'gene_id' indicating both which isoform the exon belongs to as well as which gene the isoform belongs to. The 'isoform_id' column must match the isoform ids used in the 'isoform_id' column of the \code{isoformRepExpression} data.frame. If possible we suggest that a third columns called 'gene_name' with the corresponding gene names/symbols is also added. If not supplied gene_name will be annotated as missing (NA).}
 }
 }
@@ -155,7 +155,7 @@ A logic indicating whether numeric design matrix columns that may represent cate
 }
 
 \item{showProgress}{
-A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.
+A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
 }
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
@@ -206,14 +206,13 @@ For many of the downstream steps in the IsoformSwitchAnalyzeR workflow additiona
 
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 \author{
 Kristoffer Vitting-Seerup
 }
 
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{importIsoformExpression}}\cr
 \code{\link{preFilter}}
 }

@@ -48,7 +48,7 @@ If \code{returnResult=TRUE} a data.frame with the summary for each comparison. T
     \item{condition_1: Condition 1.}
     \item{condition_2: Condition 2.}
 
-    \item{location_gain: The location gained. Is "None if no location was lost"}
+    \item{location_gain: The location gained. Is "None if no location was gained"}
     \item{location_loss: The location Lost. Is "None if no location was lost"}
 
     \item{n_switch: The number of isoform switches with the location change.}
@@ -59,8 +59,7 @@ If \code{returnResult=TRUE} a data.frame with the summary for each comparison. T
 
 \references{
 \itemize{
-    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. Bioinformatics (2019).}
+    \item{Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
 }
 }
 \author{
