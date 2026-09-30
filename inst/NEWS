@@ -1,3 +1,7 @@
+Changes in version 2.11.4 (2026-09)
+- Update type: Minor.
+- Fixed the 'annotationImportance' argument behaviour in switchPlotTranscript(). See issue #318.
+
 Changes in version 2.11.3 (2026-09)
 - Update type: Major
 - Added a new function analyzeInterProScan() to parse Pfam, SignalP, and Mobi-DBLite results obtained from the InterProScan tool.
