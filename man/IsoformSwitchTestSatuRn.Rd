@@ -69,6 +69,7 @@ A \code{switchAnalyzeRlist} where the following have been modified:
 \itemize{
     \item{\code{1}: Two columns, \code{isoform_switch_q_value} and \code{gene_switch_q_value} in the \code{isoformFeatures} entry have been filled out summarizing the result of the above described test as affected by the \code{testIntegration} argument.}
     \item{\code{2}: A \code{data.frame} containing the details of the analysis have been added (called 'isoformSwitchAnalysis').}
+    \item{\code{3}: The \code{alpha} and \code{dIFcutoff} used are recorded in \code{runInfo$isoformSwitchTestSatuRn} so \code{summary()}/\code{show()} can report the cutoffs actually used.}
 }
 
 The data.frame added have one row per isoform per comparison of condition and contains the following columns:

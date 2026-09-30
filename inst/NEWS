@@ -1,6 +1,7 @@
 Changes in version 2.11.4 (2026-09)
 - Update type: Minor.
 - Fixed the 'annotationImportance' argument behaviour in switchPlotTranscript(). See issue #318.
+- Fixed the show() method of switchAnalyzeRlist ignoring the dIFcutoff used in isoformSwitchTestDEXSeq(). See issue #313.
 
 Changes in version 2.11.3 (2026-09)
 - Update type: Major
