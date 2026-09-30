@@ -86,7 +86,7 @@ Depending on which analyses were found in the supplied InterProScan result file(
 
 \references{
 \itemize{
-    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+    \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
     \item{\code{InterProScan} : Blum et al. InterProScan 6: a modern large-scale protein function annotation pipeline. Bioinformatics Advances (2026) 6(1):vbag141. doi:10.1093/bioadv/vbag141}
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
     \item{\code{SignalP} : Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models. Nat. Biotechnol (2022) 40:1023-1025. doi:10.1038/s41587-021-01156-3}
