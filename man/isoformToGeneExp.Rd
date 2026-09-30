@@ -19,7 +19,7 @@ isoformToGeneExp(
 A replicate isoform abundance matrix (not log-transformed) with genes as rows and samples as columns. The isoform:gene relationship can be provided by either:
 \itemize{
     \item{Having \code{isoformRepExpression} contain two additional columns 'isoform_id' and 'gene_id' indicating which isoforms are a part of which gene}
-    \item{Using the {isoformGeneAnnotation} argument}.
+    \item{Using the \code{isoformGeneAnnotation} argument}.
 }
 Importantly \code{isoformRepExpression} must contain isoform ids either as separate column called 'isoform_id' or as row.names. The function will figure it out by itself in what combination the annotation is supplied.
 }
@@ -42,7 +42,7 @@ This function returns a data.frame with gene expression from all samples. The ge
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 \author{
 Kristoffer Vitting-Seerup

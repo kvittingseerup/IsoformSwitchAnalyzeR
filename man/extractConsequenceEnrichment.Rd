@@ -47,7 +47,7 @@ A logic indicating whether reverse the analysis meaning if "Domain gains"" are a
 A logic indicting whether the analysis should be plotted. If TRUE and \code{returnResult = FALSE} the ggplot2 object will be returned instead. Default is TRUE.
 }
   \item{localTheme}{
-General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw(base_size = 14).
+General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw(base_size = 12).
 }
 
  \item{minEventsForPlotting}{
@@ -82,13 +82,13 @@ If \code{returnResult=TRUE} a data.frame with the statistical summary for each o
     \item{nUp: The number of genes with the consequence described in the feature column.}
     \item{nDown: The number of genes with the opposite consequence of what is described in the feature column (as described in the parentheses of the feature column.}
     \item{propQval: The q-values resulting when p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).}
+    \item{Significant: A logic (TRUE/FALSE) indicating whether propQval is below the significance cutoff given by \code{alpha}.}
 }
 }
 
 \references{
 \itemize{
-    \item{Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{Vitting-Seerup et al. IsoformSwitchAnalyzeR: Analysis of changes in genome-wide patterns of alternative splicing and its functional consequences. Bioinformatics (2019).}
+    \item{Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
 }
 }
 \author{

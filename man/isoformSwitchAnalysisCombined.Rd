@@ -4,7 +4,7 @@
 Isoform Switch Analysis Workflow: Extract, Annotate and Visualize all Significant Isoform Switches
 }
 \description{
-This high-level function uses a pre-existing switchAnalyzeRlist as input. Then isoform switches are identified, annotated with ORF and intron retention. Then functional consequences are identified and isoform switch analysis plots are generated for the top \code{n} isoform switches. Lastly a plot summarizing the global effect of isoform switches with functional consequences is generated. If external analysis of protein domains (Pfam), coding potential (CPAT) or signal peptides (SignalP) should be incorporated please use the combination of \code{isoformSwitchAnalysisPart1} and \code{isoformSwitchAnalysisPart2} instead.
+This high-level function uses a pre-existing switchAnalyzeRlist as input. Then isoform switches are identified, annotated with ORF and intron retention. Then functional consequences are identified and isoform switch analysis plots are generated for the top \code{n} isoform switches. Lastly a plot summarizing the global effect of isoform switches with functional consequences is generated. If external sequence analysis (e.g. protein domains, coding potential, signal peptides or intrinsically disordered regions - see \code{isoformSwitchAnalysisPart2} for the full list of supported tools) should be incorporated please use the combination of \code{isoformSwitchAnalysisPart1} and \code{isoformSwitchAnalysisPart2} instead.
 }
 \usage{
 isoformSwitchAnalysisCombined(
@@ -40,11 +40,11 @@ A string indicating the full path to the (gziped or unpacked) GTF file which con
 }
 
 \item{n}{
-The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use Inf to create all. Default is Inf (all).
+The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved (each comparison is saved to its own sub-folder). Use Inf to create all. Default is Inf (all).
 }
 
   \item{consequencesToAnalyze}{
-    A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated and signal peptides annotated by Pfam).
+    A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','ORF_seq_similarity','NMD_status') (corresponding to analyze: intron retention, ORF AA sequence similarity and NMD status).
 }
 
   \item{pathToOutput}{
@@ -67,7 +67,7 @@ This function performs the full Isoform Analysis Workflow by
     \item Remove non-expressed isoforms and single-isoform genes (see \link{preFilter})
     \item predict swithces (only if switches is not already annotated, see \link{isoformSwitchTestDEXSeq})
     \item Analyzing the isoforms for open reading frames (ORFs, see \link{analyzeORF})
-    \item Output fasta files containing the nucleotide and amino acid sequences which enables external sequence analysis with CPAT, Pfam and SignalP (see \link{extractSequence})
+    \item Output fasta files containing the nucleotide and amino acid sequences which enables external sequence analysis with any of the tools supported by \link{isoformSwitchAnalysisPart2} (see \link{extractSequence})
     \item Predict functional consequences of switching (see \link{analyzeSwitchConsequences})
     \item Ouput Isoform Switch Analysis plots for all genes with a signicant switch (see \link{switchPlot})
     \item Ouput a visualization of general consequences of isoform switches.
@@ -84,7 +84,7 @@ This function outputs:
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 \author{
 Kristoffer Vitting-Seerup

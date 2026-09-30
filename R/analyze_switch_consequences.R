@@ -762,7 +762,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 'extracellular_region_count',
                 'intracellular_region_count'
             )  %in% consequencesToAnalyze
-        ) %in% consequencesToAnalyze) {
+        ) ) {
             if ( ! 'topologyAnalysis' %in% names(switchAnalyzeRlist) ) {
                 stop(
                     'Cannot test for differences in topology as such results are not annotated. Run analyzeDeepTMHMM() and try again.'
@@ -1067,14 +1067,12 @@ compareAnnotationOfTwoIsoforms <- function(
                 ), ]
             idrData$isoform_id <-
                 factor(idrData$isoform_id, levels = isoformsToAnalyze)
+            idrCols <- c('idrStartGenomic', 'idrEndGenomic', 'orf_aa_start', 'orf_aa_end')
+            if ('idr_type' %in% colnames(idrData)) {
+                idrCols <- c(idrCols, 'idr_type')
+            }
             idrDataSplit <-
-                split(idrData[, c(
-                    'idrStartGenomic',
-                    'idrEndGenomic',
-                    'orf_aa_start',
-                    'orf_aa_end',
-                    'idr_type'
-                )], f = idrData$isoform_id)
+                split(idrData[, idrCols], f = idrData$isoform_id)
 
             ### Remove those overlapping trimmed regions
             if( exists('regionToOmmit') ) {
@@ -1365,7 +1363,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 ttsDifferent <-
                     abs(ttsCoordinats[1] - ttsCoordinats[2]) > ntCutoff
                 mostDownstream <-
-                    names(localExonData)[which.max(ttsDifferent)]
+                    names(localExonData)[which.max(ttsCoordinats)]
             } else {
                 ttsCoordinats <- start(localExonData)
 
@@ -1373,7 +1371,7 @@ compareAnnotationOfTwoIsoforms <- function(
                 ttsDifferent <-
                     abs(ttsCoordinats[1] - ttsCoordinats[2]) > ntCutoff
                 mostDownstream <-
-                    names(localExonData)[which.min(ttsDifferent)]
+                    names(localExonData)[which.min(ttsCoordinats)]
             }
 
             # make repport
@@ -1549,8 +1547,8 @@ compareAnnotationOfTwoIsoforms <- function(
                     gaps(ranges(aGR))
                 })
 
-            differentintron_structure <- !any(
-                all(localIntrons[[1]] %in% localIntrons[[2]]),
+            differentintron_structure <- !(
+                all(localIntrons[[1]] %in% localIntrons[[2]]) &
                 all(localIntrons[[2]] %in% localIntrons[[1]])
             )
 
@@ -2232,11 +2230,6 @@ compareAnnotationOfTwoIsoforms <- function(
 
                         differentDomainLength <- nrow(localOverlapDfDiff) > 0
 
-                        localIndex <-
-                            which(isoComparison$featureCompared == 'domain_length')
-                        isoComparison$isoformsDifferent[localIndex] <-
-                            differentDomainLength
-
                     } else {
                         differentDomainLength <- FALSE
                     }
@@ -2244,6 +2237,11 @@ compareAnnotationOfTwoIsoforms <- function(
                 } else {
                     differentDomainLength <- FALSE
                 }
+
+                localIndex <-
+                    which(isoComparison$featureCompared == 'domain_length')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentDomainLength
 
                 ### Repport if any difference
                 if (differentDomainLength & addDescription) {
@@ -2255,7 +2253,7 @@ compareAnnotationOfTwoIsoforms <- function(
                         all( c(TRUE, FALSE) %in% localOverlapDfDiff$maxIsUp )
                     ) {
                         isoComparison$switchConsequence[localIndex] <-
-                            #'IDR length gain and loss'
+                            # 'IDR length gain and loss'
                             'Mixed Domain length differences'
                     } else if(
                         all(localOverlapDfDiff$maxIsUp)
@@ -2511,17 +2509,17 @@ compareAnnotationOfTwoIsoforms <- function(
                         differentIdrType <- any( na.omit(
                             localOverlapDf$upType != localOverlapDf$dnType
                         ))
-
-                        localIndex <-
-                            which(isoComparison$featureCompared == 'IDR_type')
-                        isoComparison$isoformsDifferent[localIndex] <-
-                            differentIdrType
                     } else {
                         differentIdrType <- FALSE
                     }
                 } else {
                     differentIdrType <- FALSE
                 }
+
+                localIndex <-
+                    which(isoComparison$featureCompared == 'IDR_type')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentIdrType
 
                 if (differentIdrType & addDescription) {
 
@@ -2636,21 +2634,21 @@ compareAnnotationOfTwoIsoforms <- function(
 
                         differentIdrLength <- nrow(localOverlapDfDiff) > 0
 
-                        localIndex <-
-                            which(isoComparison$featureCompared == 'IDR_length')
-                        isoComparison$isoformsDifferent[localIndex] <-
-                            differentIdrLength
-
                     } else {
-                        differentIdrType <- FALSE
+                        differentIdrLength <- FALSE
                     }
 
                 } else {
-                    differentIdrType <- FALSE
+                    differentIdrLength <- FALSE
                 }
 
+                localIndex <-
+                    which(isoComparison$featureCompared == 'IDR_length')
+                isoComparison$isoformsDifferent[localIndex] <-
+                    differentIdrLength
+
                 ### Repport if any difference
-                if (differentIdrType & addDescription) {
+                if (differentIdrLength & addDescription) {
 
                     localOverlapDfDiff$maxIsUp <- localOverlapDfDiff$maxLength == localOverlapDfDiff$upLength
 
@@ -2659,7 +2657,7 @@ compareAnnotationOfTwoIsoforms <- function(
                         all( c(TRUE, FALSE) %in% localOverlapDfDiff$maxIsUp )
                     ) {
                         isoComparison$switchConsequence[localIndex] <-
-                            #'IDR length gain and loss'
+                            # 'IDR length gain and loss'
                             'Mixed IDR length differences'
                     } else if(
                         all(localOverlapDfDiff$maxIsUp)
@@ -3038,7 +3036,10 @@ compareAnnotationOfTwoIsoforms <- function(
                 minLength <- min(c(upLength, dnLength))
                 maxLength <- max(c(upLength, dnLength))
 
-                differentLength <- abs(lengthGain) > AaCutoff & (minLength / maxLength) < AaFracCutoff
+                differentLength <- abs(lengthGain) > AaCutoff
+                if (!is.null(AaFracCutoff)) {
+                    differentLength <- differentLength & (minLength / maxLength) < AaFracCutoff
+                }
 
                 # make repport
                 localIndex <-
@@ -3072,7 +3073,10 @@ compareAnnotationOfTwoIsoforms <- function(
                 minLength <- min(c(upLength, dnLength))
                 maxLength <- max(c(upLength, dnLength))
 
-                differentLength <- abs(lengthGain) > AaCutoff & (minLength / maxLength) < AaFracCutoff
+                differentLength <- abs(lengthGain) > AaCutoff
+                if (!is.null(AaFracCutoff)) {
+                    differentLength <- differentLength & (minLength / maxLength) < AaFracCutoff
+                }
 
                 # make repport
                 localIndex <-
@@ -3568,7 +3572,11 @@ extractConsequenceEnrichment <- function(
             'sub_cell_shift_to_Extracellular',
 
             # topology
-            'isoform_topology'
+            'isoform_topology',
+            'extracellular_region_count',
+            'intracellular_region_count',
+            'extracellular_region_length',
+            'intracellular_region_length'
         )
 
         if (!all(consequencesToAnalyze %in% c('all', acceptedTypes))) {
@@ -3799,7 +3807,7 @@ extractConsequenceEnrichment <- function(
 
         g1 <- ggplot(data=consequenceBalance2, aes(y=feature2, x=propOfRelevantEvents, color=Significant)) +
             #geom_point(size=4) +
-            geom_errorbarh(aes(xmax = propCiLo, xmin=propCiHi), height = .3) +
+            geom_errorbarh(aes(xmax = propCiHi, xmin=propCiLo), height = .3) +
             geom_point(aes(size=nTot)) +
             facet_wrap(~Comparison) +
             geom_vline(xintercept=0.5, linetype='dashed') +

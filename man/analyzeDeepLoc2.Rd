@@ -28,7 +28,7 @@ A \code{switchAnalyzeRlist} object
 A string indicating the full path to the DeepLoc2 result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the DeepLoc2 tool.
 }
 
-    \item{enforceProbabilityCutoff}{ A logic indicating whether the location specific probability cutoff developed for DeepLoc2 should be strictly enforced (see details). This filter works independently from \code{probabilityCutoff}. If FALSE the localization called internally by DeepLoc2 are used. Default is NULL.}
+    \item{enforceProbabilityCutoff}{ A logic indicating whether the location specific probability cutoff developed for DeepLoc2 should be strictly enforced (see details). This filter works independently from \code{probabilityCutoff}. If FALSE the localization called internally by DeepLoc2 are used. Default is TRUE.}
 
     \item{probabilityCutoff}{ A numeric between 0 and 1 indicating the minimum probability for calling a sub-cellular localization. This filter works independently from \code{enforceProbabilityCutoff}. If NULL the localization called internally by DeepLoc2 are used. Default is NULL.}
     
@@ -64,7 +64,8 @@ The data.frame added have one row pr isoform and contains 12 columns:
 
 \references{
 \itemize{
-    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+    \item{\code{DeepLoc} : Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022).}
+    \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
 }
 }
 
@@ -72,12 +73,13 @@ The data.frame added have one row pr isoform and contains 12 columns:
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

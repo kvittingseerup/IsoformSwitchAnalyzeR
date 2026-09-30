@@ -35,7 +35,7 @@ analyzeCPC2(
 This function cannot be run on proteomics data. If \code{switchAnalyzeRlist$omicDataType} is \code{"proteomics"} (see \link{importPredefinedSwitches}), \code{analyzeCPC2()} stops with an error, since coding-sequence-only data is already known to be coding by construction, making coding-potential prediction meaningless.
 
 Notes for how to run the external tools:
-Use default parameters and if required select the most similar species. If the [webserver](\url{http://cpc2.cbi.pku.edu.cn/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" button). If a stand-alone version was just just supply the path to the result file.
+Use default parameters and if required select the most similar species. If the [webserver](\url{https://cpc2.gao-lab.org/batch.php}) (batch submission) was used, download the tab-delimited result file (via the "Download the result" button). If a stand-alone version was just just supply the path to the result file.
 
 Please note that the \code{analyzeCPC2()} function will automatically only import the CPC2 results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 }
@@ -46,7 +46,7 @@ Two columns are added to \code{isoformFeatures}: 'codingPotentialValue' and 'cod
 
 \references{
     \itemize{
-        \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+        \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
         \item{\code{CPC2} : Kang et al CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features. Nucleic Acids Res. 2017}
     }
 }
@@ -55,12 +55,13 @@ Two columns are added to \code{isoformFeatures}: 'codingPotentialValue' and 'cod
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzeCPAT}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

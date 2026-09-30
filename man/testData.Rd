@@ -27,8 +27,8 @@ see \code{?createSwitchAnalyzeRlist} for detailed format of an \code{switchAnaly
 \details{
 The three example switchAnalyzeRlist are:
 \itemize{
-    \item { \code{exampleSwitchList} : Which corresponds to a newly created \code{switchAnalyzeRlist} such as one would get by using either of the import* function (such as \code{importCufflinksData}) or by using \code{createSwitchAnalyzeRlist} on your own data. Not this is a small subset to allow for fast example generation.}
-    \item { \code{exampleSwitchListIntermediary} : Which corresponds to the exampleSwitchList data (see above) which have been analyzed with the \code{isoformSwitchAnalysisPart1} function meaning that it have been filtered, tested for isoform switches, ORF have been predicted and both nucleotide and ORF amino acid sequences have been added to the \code{switchAnalyzeRlist}. Not this is a small subset to allow for fast example generation.}
+    \item { \code{exampleSwitchList} : Which corresponds to a newly created \code{switchAnalyzeRlist} such as one would get by using one of the import* functions (such as \code{importRdata}) on your own data. Note this is a small subset to allow for fast example generation.}
+    \item { \code{exampleSwitchListIntermediary} : Which corresponds to the exampleSwitchList data (see above) which have been analyzed with the \code{isoformSwitchAnalysisPart1} function meaning that it have been filtered, tested for isoform switches, ORF have been predicted and both nucleotide and ORF amino acid sequences have been added to the \code{switchAnalyzeRlist}. Note this is a small subset to allow for fast example generation.}
     \item { \code{exampleSwitchListAnalyzed} : Which corresponds to a subset of two of the TCGA Cancer types analyzed in Vitting-Seerup et al 2017 which have been analyzed with the full switch analysis workflow (including external sequence analysis of protein domains (via Pfam), coding potential (via CPAT) and signal peptides (via SignalP)). Note that the nucleotide and amino acid sequences normally added to the switchAnalyzeRlist have been removed from the switchAnalyzeRlist (but also that they can easily be added again with the \link{extractSequence} function).}
 }
 }
@@ -40,7 +40,7 @@ The exampleSwitchListAnalyzed is a subset of two of the TCGA Cancer types analyz
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 
 \examples{

@@ -49,7 +49,7 @@ A logic indicating whether to plot the number/fraction of genes (if TRUE) or swi
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
 }
   \item{returnResult}{
-A logic indicating whether the summarized results should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
+A logic indicating whether the summarized results should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is FALSE.
 }
 }
 
@@ -89,7 +89,7 @@ If \code{returnResult=TRUE} a data.frame with the number (and fraction) of switc
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 \author{
 Kristoffer Vitting-Seerup

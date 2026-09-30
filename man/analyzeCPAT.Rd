@@ -48,7 +48,7 @@ Two columns are added to \code{isoformFeatures}: 'codingPotentialValue' and 'cod
 
 \references{
     \itemize{
-        \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
+        \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
         \item{\code{CPAT} : Wang et al. CPAT: Coding-Potential Assessment Tool using an alignment-free logistic regression model. Nucleic Acids Res. 2013, 41:e74.}
     }
 }
@@ -57,12 +57,13 @@ Two columns are added to \code{isoformFeatures}: 'codingPotentialValue' and 'cod
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeCPC2}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

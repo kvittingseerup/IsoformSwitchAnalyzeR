@@ -40,7 +40,7 @@ A signal peptide is a short peptide sequence which indicate a protein is destine
 The SignalP web-server is less stringent than PFAM with regards to the number of sequences in the files uploaded so we suggest trying the combined fasta file first - and if that does not work try the files containing subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools:
-If using the web-server (\url{http://www.cbs.dtu.dk/services/SignalP/}) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results can be downloaded using the "Downloads" bottom in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the pathToSignalPresultFile argument. If a stand-alone version was just supply the path to the summary result file.
+If using the web-server (\url{https://services.healthtech.dtu.dk/services/SignalP-6.0/}) SignalP should be run with the parameter "Short output (no figures)" under "Output format" and one should select the appropriate "Organism group". When using a stand-alone version SignalP should be run with the '-f summary' option. If using the web-server the results can be downloaded using the "Downloads" bottom in the top-right corner where the user should select "Prediction summary" and supply the path to the resulting file to the pathToSignalPresultFile argument. If a stand-alone version was just supply the path to the summary result file.
 
 Please note that the \code{analyzeSignalP()} function will automatically only import the SignalP results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file.
 
@@ -50,21 +50,25 @@ Also note that analyzeSignalP automatically subset SignalP results to only conta
 \value{
 A column called 'signal_peptide_identified' is added to \code{isoformFeatures} containing a binary indication (yes/no) of whether a transcript contains a signal peptide or not. Furthermore the data.frame 'signalPeptideAnalysis' is added to the \code{switchAnalyzeRlist} containing the details of the signal peptide analysis.
 
-The data.frame added have one row pr isoform and contains 6 columns:
+The data.frame added have one row pr isoform. The columns \code{isoform_id}, \code{has_signal_peptide}, \code{aa_removed}, \code{transcriptClevageAfter} and \code{genomicClevageAfter} are always present, but the remaining columns depend on which SignalP version's results were supplied:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{has_signal_peptide}: A text string indicating whether there is a signal peptide or not. Can be yes or no}
-    \item{\code{network_used}: A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Reference: \url{http://www.cbs.dtu.dk/services/SignalP/instructions.php}}
     \item{\code{aa_removed}: A integer giving the number of amino acids removed when the signal peptide is cleaved off.}
     \item{\code{transcriptClevageAfter}: The transcript position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
     \item{\code{genomicClevageAfter}: The genomic position of the last nucleotide in the isoform which is removed when the signal peptide is cleaved off.}
+    \item{\code{network_used}: (Only present for SignalP 4 results). A text string indicating whether SignalP used the Neural Network (NN) optimized for proteins with trans-membrane sections (string='TM') or proteins without trans-membrane sections (string='noTM'). Per default, SignalP 4.1 uses the NN with TM as a preprocessor to determine whether to use TM or noTM in the final prediction (if 4 or more positions are predicted to be in a transmembrane state, TM is used, otherwise SignalP-noTM). Reference: \url{https://services.healthtech.dtu.dk/services/SignalP-4.1/}}
+    \item{\code{SP_Sec_SPI}: (Only present for SignalP 5/6 results). The predicted probability that the isoform has a Sec/SPI-type (the standard) signal peptide.}
+    \item{\code{OTHER}: (Only present for SignalP 5/6 results). The predicted probability that the isoform does not have a signal peptide.}
+    \item{\code{CS_Position}: (Only present for SignalP 5/6 results). The raw cleavage-site description reported by SignalP, from which \code{aa_removed} is derived.}
 }
 }
 
 \references{
 \itemize{
-    \item{\code{This function} : Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).}
-    \item{\code{SignalP} : Almagro et al. SignalP 5.0 improves signal peptide predictions using deep neural networks. Nat. Biotechnol (2019).}
+    \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
+    \item{\code{SignalP 5} : Almagro et al. SignalP 5.0 improves signal peptide predictions using deep neural networks. Nat. Biotechnol (2019).}
+    \item{\code{SignalP 6} : Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models. Nat. Biotechnol (2022).}
 }
 }
 
@@ -72,11 +76,12 @@ The data.frame added have one row pr isoform and contains 6 columns:
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeCPAT}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 \examples{

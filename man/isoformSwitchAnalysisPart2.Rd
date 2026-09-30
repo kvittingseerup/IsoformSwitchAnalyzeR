@@ -22,6 +22,7 @@ isoformSwitchAnalysisPart2(
     pathToSignalPresultFile = NULL,
     pathToDeepLoc2resultFile = NULL,
     pathToDeepTMHMMresultFile = NULL,
+    pathToInterProScanResultFile = NULL,
 
     ### Analysis and output arguments
     n = Inf,
@@ -94,12 +95,16 @@ A string indicating the full path to the DeepLoc2 result file(s). If multiple re
 A string indicating the full path to the DeepTMHMM result file. Can be gziped. If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings.
 }
 
+\item{pathToInterProScanResultFile}{
+A string indicating the full path to the InterProScan JSON result file(s). If multiple result files were created (multiple submissions, e.g. because of the per-submission sequence limit) just supply all the paths as a vector of strings. Since InterProScan can annotate protein domains (Pfam), signal peptides (SignalP) and intrinsically disordered regions (MobiDB-lite) in a single run, this argument cannot be combined with \code{pathToPFAMresultFile}, \code{pathToSignalPresultFile}, \code{pathToIUPred2AresultFile} or \code{pathToNetSurfP2resultFile}. See \link{analyzeInterProScan} for details.
+}
+
 \item{n}{
-The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved to each sub-folder indicated by \code{splitConditions, splitFunctionalConsequences}. Use Inf to create all. Default is Inf (all).
+The number of top genes (after filtering and sorted according to \code{sortByQvals}) that should be saved (each comparison is saved to its own sub-folder). Use Inf to create all. Default is Inf (all).
 }
 
   \item{consequencesToAnalyze}{
-    A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated and signal peptides annotated by Pfam).
+    A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between transcripts (else there would be identical). See details in \link{analyzeSwitchConsequences} for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','domain_isotype','IDR_identified','IDR_type','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, PFAM domains annotated, PFAM domain isotypes, IDRs identified, IDR type and signal peptides annotated by Pfam).
 }
 
   \item{pathToOutput}{
@@ -119,7 +124,7 @@ A logic indicating whether all isoform switches as well as the summary of functi
 \details{
 This function performs the second part of a Isoform Analysis Workflow by:
 \enumerate{
-    \item Adding external sequence analysis (see \link{analyzeCPAT}, \link{analyzeCPC2}, \link{analyzePFAM} and \link{analyzeSignalP})
+    \item Adding external sequence analysis (see \link{analyzeCPAT}, \link{analyzeCPC2}, \link{analyzePFAM}, \link{analyzeIUPred2A}, \link{analyzeNetSurfP3}, \link{analyzeSignalP}, \link{analyzeDeepLoc2}, \link{analyzeDeepTMHMM} or \link{analyzeInterProScan})
     \item Predict functional consequences of switching (see \link{analyzeSwitchConsequences})
     \item Output Isoform Switch Consequence plots for all genes where there is a significant isoform switch (see \link{switchPlot})
     \item Output a visualization of general consequences of isoform switches.
@@ -136,7 +141,7 @@ This function
 }
 
 \references{
-Vitting-Seerup et al. The Landscape of Isoform Switches in Human Cancers. Mol. Cancer Res. (2017).
+Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.
 }
 \author{
 Kristoffer Vitting-Seerup
@@ -152,7 +157,8 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeAlternativeSplicing}}\cr
 \code{\link{extractSwitchSummary}}\cr
 \code{\link{analyzeSwitchConsequences}}\cr
-\code{\link{switchPlotTopSwitches}}
+\code{\link{switchPlotTopSwitches}}\cr
+\code{\link{analyzeInterProScan}}
 }
 
 \examples{
@@ -172,8 +178,20 @@ exampleSwitchListIntermediary <- subsetSwitchAnalyzeRlist(
     abs(exampleSwitchListIntermediary$isoformFeatures$dIF) > 0.4
 )
 
-### Run part 2
+### Run part 2 (recommended: InterProScan for Pfam, SignalP and IDR annotation in one run)
 exampleSwitchListAnalyzed <- isoformSwitchAnalysisPart2(
+    switchAnalyzeRlist            = exampleSwitchListIntermediary,
+    pathToCPC2resultFile          = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
+    pathToInterProScanResultFile  = system.file("extdata/interproscan_results.json.gz", package = "IsoformSwitchAnalyzeR"),
+    pathToDeepLoc2resultFile      = system.file("extdata/deeploc2.csv", package = "IsoformSwitchAnalyzeR"),
+    pathToDeepTMHMMresultFile     = system.file("extdata/DeepTMHMM.gff3", package = "IsoformSwitchAnalyzeR"),
+    codingCutoff                  = 0.5,   # since we are using CPC2
+    removeNoncodinORFs            = TRUE,  # Because ORF was predicted de novo
+    outputPlots                   = FALSE  # keeps the function from outputting the plots from this example code
+)
+
+### Alternative: using Pfam, SignalP and IUPred2A instead of InterProScan
+exampleSwitchListAnalyzed2 <- isoformSwitchAnalysisPart2(
     switchAnalyzeRlist        = exampleSwitchListIntermediary,
     pathToCPC2resultFile      = system.file("extdata/cpc2_result.txt", package = "IsoformSwitchAnalyzeR"),
     pathToPFAMresultFile      = system.file("extdata/pfam_results.txt", package = "IsoformSwitchAnalyzeR"),

@@ -320,7 +320,7 @@ createSwitchAnalyzeRlist <- function(
         ### each feature individually
         if(TRUE) {
             if(! is.data.frame(isoformFeatures)){
-                stop('The isoform_feature argument must be a data.frame')
+                stop('The isoformFeatures argument must be a data.frame')
             }
             if(class(exons) != 'GRanges'){
                 stop('The exons argument must be a GenomicRanges (GRanges)')
@@ -392,12 +392,12 @@ createSwitchAnalyzeRlist <- function(
                 ))
             }
 
-            ### gene_id duplications
+            ### isoform_id duplications
             idSplit2 <- split( as.character(exons@seqnames), f=exons$isoform_id)
             idSplit2 <- lapply(idSplit2, unique)
-            idSplit2 <- sapply(idSplit2, length)
-            if(any( idLength == 1)) {
-                isoformsToRemove <- names(idLength)[which(idLength > 1)]
+            idLength2 <- sapply(idSplit2, length)
+            if(any( idLength2 == 1)) {
+                isoformsToRemove <- names(idLength2)[which(idLength2 > 1)]
             } else {
                 stop(paste(
                     'The isoform_ids must be uniqe - we identified multiple',
@@ -482,7 +482,7 @@ createSwitchAnalyzeRlist <- function(
                     stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
                 }
 
-                if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
+                if( !  identical( isoformCountMatrix$isoform_id , isoformRepExpression$isoform_id ) ) {
                     stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
                 }
             }
@@ -516,12 +516,17 @@ createSwitchAnalyzeRlist <- function(
                     )
                 }
                 if( j1 >= jcCutoff ) {
+                    if( countsSuppled ) {
+                        nOverlapMatrix <- length(unique(isoformCountMatrix$isoform_id))
+                    } else {
+                        nOverlapMatrix <- length(unique(isoformRepExpression$isoform_id))
+                    }
                     warning(
                         paste(
                             'The annotation (count matrix and isoform annotation)',
                             'contain differences in which isoforms are analyzed.',
                             'specifically the annotation provided contain:',
-                            length(unique(isoformAnnotation$isoform_id)) - length(unique(isoformCountMatrix$isoform_id)),
+                            length(unique(isoformFeatures$isoform_id)) - nOverlapMatrix,
                             'more isoforms than the count matrix.',
                             'Please make sure this is on purpouse since differences',
                             'will cause inaccurate quantification and thereby skew all analysis.',
@@ -534,20 +539,20 @@ createSwitchAnalyzeRlist <- function(
                     if( countsSuppled ) {
                         isoformsUsed <- intersect(
                             isoformCountMatrix$isoform_id,
-                            isoformAnnotation$isoform_id
+                            isoformFeatures$isoform_id
                         )
                     } else {
                         isoformsUsed <- intersect(
                             isoformRepExpression$isoform_id,
-                            isoformAnnotation$isoform_id
+                            isoformFeatures$isoform_id
                         )
                     }
 
-                    isoformExonStructure <- isoformExonStructure[which(
-                        isoformExonStructure$isoform_id %in% isoformsUsed
+                    exons <- exons[which(
+                        exons$isoform_id %in% isoformsUsed
                     ), ]
-                    isoformAnnotation <-isoformAnnotation[which(
-                        isoformAnnotation$isoform_id    %in% isoformsUsed
+                    isoformFeatures <-isoformFeatures[which(
+                        isoformFeatures$isoform_id    %in% isoformsUsed
                     ), ]
 
                     if( countsSuppled ) {

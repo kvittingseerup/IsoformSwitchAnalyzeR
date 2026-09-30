@@ -93,16 +93,10 @@ if(TRUE) {
                 }
             }
 
-            # If there are several (different) isoforms with same expression level (that is not as rare as I thought it was) - chose the one with the most exons - if still eqiual chose random.
+            # If there are several (different) isoforms with same expression level (that is not as rare as I thought it was) - chose the one with the most exons (which.max deterministically keeps the first candidate if there is still a tie in length).
             if(length(unique(isoformSubset$isoform_id[maxIsoformIndex])) > 1) {
-                # chose the longest one
+                # chose the longest one (ties are resolved deterministically by which.max, which keeps the first)
                 maxIsoformIndex <- maxIsoformIndex[which.max(isoformSubset$width[maxIsoformIndex])]
-
-                # If there are several (different) isoforms with same length
-                if(length(unique(isoformSubset$isoform_id[maxIsoformIndex])) > 1) {
-                    # chose one at random
-                    maxIsoformIndex <- sample(maxIsoformIndex,size=1)
-                }
             }
             return(maxIsoformIndex)
         }
@@ -201,26 +195,13 @@ if(TRUE) {
                 }
 
             } else { # multiple skipping
-                if(asTypes$MESI > 0) { # if a MESI have already been annotated, add a ',' to destinguish them from each other
-                    for(i in 1:nrow(coordinats)) {
-                        if(i == 1) { # if a MESI have already been anotated
-                            asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=',') # start with a ','
-                            asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=',') # start with a ','
-                        } else {
-                            asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=';')
-                            asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=';')
-                        }
-                    }
-
-                } else { # if NO MESI have been anotated before
-                    for(i in 1:nrow(coordinats)) {
-                        if(is.na(asTypes$MESI.start)) {
-                            asTypes$MESI.start <- paste( coordinats$start[i] )
-                            asTypes$MESI.end   <- paste( coordinats$end[i] )
-                        } else {
-                            asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=';')
-                            asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=';')
-                        }
+                for(i in 1:nrow(coordinats)) {
+                    if(is.na(asTypes$MESI.start)) {
+                        asTypes$MESI.start <- paste( coordinats$start[i] )
+                        asTypes$MESI.end   <- paste( coordinats$end[i] )
+                    } else {
+                        asTypes$MESI.start <- paste(asTypes$MESI.start, coordinats$start[i], sep=';')
+                        asTypes$MESI.end   <- paste(asTypes$MESI.end,   coordinats$end[i],   sep=';')
                     }
                 }
 
@@ -265,13 +246,13 @@ if(TRUE) {
                     index22 <- index22[-removeIndex] # remve those to be ignored
 
                     if(length(index22) > 0) { # if there is any exons left
-                        t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'], startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[1])), transcript = 1, stringsAsFactors=FALSE)
+                        t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'], startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[2])), transcript = 2, stringsAsFactors=FALSE)
                     } else {
                         t2 <- data.frame()
                     }
 
                 } else { # if the exons are not in the ignore exons list
-                    t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'] ,startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[1])), transcript = 1, stringsAsFactors=FALSE)
+                    t2 <- data.frame(start = transcript2[index22,'start'], end = transcript2[index22,'end'] ,startExon = (index22 %in% 1), endExon = (index22 %in% (numberOfExons[2])), transcript = 2, stringsAsFactors=FALSE)
                 }
             } else { # if there is no skipping in this transcript
                 t2 <- data.frame()
