@@ -19,7 +19,7 @@ isoformToGeneExp(
 A replicate isoform abundance matrix (not log-transformed) with genes as rows and samples as columns. The isoform:gene relationship can be provided by either:
 \itemize{
     \item{Having \code{isoformRepExpression} contain two additional columns 'isoform_id' and 'gene_id' indicating which isoforms are a part of which gene}
-    \item{Using the {isoformGeneAnnotation} argument}.
+    \item{Using the \code{isoformGeneAnnotation} argument}.
 }
 Importantly \code{isoformRepExpression} must contain isoform ids either as separate column called 'isoform_id' or as row.names. The function will figure it out by itself in what combination the annotation is supplied.
 }

@@ -48,7 +48,7 @@ A data.frame with two columns indicating which pairwise comparisons the switchAn
 \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
 
 \item{showProgress}{
-A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is FALSE.
+A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
 }
 
 \item{quiet}{ A logic indicating whether to avoid printing progress messages (incl. progress bar). Default is FALSE}
@@ -61,7 +61,7 @@ The Tximeta R package (Love et al 2020) is used to import Salmon and associated 
 }
 
 \value{
-A SwitchAnalyzeRlist containing the data supplied stored into the SwitchAnalyzeRlist format (created by \code{createSwitchAnalyzeRlist()}). For details about the format see details of \code{\link{createSwitchAnalyzeRlist}}.
+A SwitchAnalyzeRlist containing the data supplied stored into the SwitchAnalyzeRlist format (internally constructed via \code{createSwitchAnalyzeRlist()}). For details about the format see details of \code{\link{createSwitchAnalyzeRlist}}.
 }
 
 
@@ -78,7 +78,6 @@ Kristoffer Vitting-Seerup
 
 \seealso{
 \code{\link{prepareSalmonFileDataFrame}}\cr
-\code{\link{createSwitchAnalyzeRlist}}\cr
 \code{\link{importIsoformExpression}}\cr
 \code{\link{importRdata}}\cr
 \code{\link{preFilter}}

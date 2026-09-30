@@ -53,7 +53,7 @@ The minimum number of events (total gain/loss) must be present before the result
 }
 
   \item{returnResult}{
-A logic indicating whether the analysis should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is FLASE.
+A logic indicating whether the analysis should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
 }
 }
 

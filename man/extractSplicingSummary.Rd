@@ -49,7 +49,7 @@ A logic indicating whether to plot the number/fraction of genes (if TRUE) or swi
 General ggplo2 theme with which the plot is made, see \code{?ggplot2::theme} for more info. Default is theme_bw().
 }
   \item{returnResult}{
-A logic indicating whether the summarized results should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is TRUE.
+A logic indicating whether the summarized results should be returned as a data.frame. If FALSE (and \code{plot=TRUE}) the ggplot2 object will be returned instead. Default is FALSE.
 }
 }
 

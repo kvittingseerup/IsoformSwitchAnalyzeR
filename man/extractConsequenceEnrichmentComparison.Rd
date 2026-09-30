@@ -59,7 +59,7 @@ A logic indicating whether the analysis should be returned as a data.frame. If F
 }
 
 \details{
-The significance test is performed with R's build in \code{prop.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
+The significance test is performed with R's build in \code{fisher.test()} with default parameters and resulting p-values are corrected via p.adjust() using FDR (Benjamini-Hochberg).
 }
 
 \value{

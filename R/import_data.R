@@ -616,7 +616,7 @@ importCufflinksFiles <- function(
             isoformDiffanalysis <- suppressWarnings( dplyr::inner_join(
                 isoformDiffanalysis,
                 isoformFPKMcombined,
-                by=c("sample_2" = "sample_name", "isoform_id" = "isoform_id")
+                by=c("sample_1" = "sample_name", "isoform_id" = "isoform_id")
             ) )
             colnames(isoformDiffanalysis)[which(grepl(
                 'iso_stderr$',
@@ -738,13 +738,8 @@ importCufflinksFiles <- function(
         addIsoformNt <- FALSE
 
         if( !is.null(isoformNtFasta) ) {
-            isoformNtSeq <- do.call(
-                c,
-                lapply(isoformNtFasta, function(aFile) {
-                    Biostrings::readDNAStringSet(
-                        filepath = isoformNtFasta, format = 'fasta'
-                    )
-                })
+            isoformNtSeq <- Biostrings::readDNAStringSet(
+                filepath = isoformNtFasta, format = 'fasta'
             )
 
             if(!is(isoformNtSeq, "DNAStringSet")) {
@@ -863,7 +858,7 @@ importCufflinksFiles <- function(
     ### Fix to correct for Cufflinks annotation problem where cufflinks assignes
     # transcripts from several annotated genes to 1 cuffgene
     if (   fixCufflinksAnnotationProblem ) {
-        if (!quiet) { message('Step 4 of 3: Fixing cufflinks annotation problem...')}
+        if (!quiet) { message('Step 4 of 5: Fixing cufflinks annotation problem...')}
 
         geneName <- unique(isoformData[, c('gene_id', 'gene_name')])
         geneNameSplit <-
@@ -927,7 +922,7 @@ importCufflinksFiles <- function(
                         df$gene_stderr_1 <- NA
                         df$gene_stderr_2 <- NA
                         df$gene_log2_fold_change <- log2(
-                            (df$gene_value_2[2] + 0.0001) /
+                            (df$gene_value_2[1] + 0.0001) /
                                 (df$gene_value_1[1] + 0.0001)
                         )
                         df$gene_p_value <- 1
@@ -1305,7 +1300,7 @@ importGTF <- function(
             if(   geneIdPressent ) {
                 stop(
                     paste0(
-                        'This is not a RefSeq GFF file (from ftp://ftp.ncbi.nlm.nih.gov/genomes/).',
+                        'This is not a RefSeq GFF file (from https://ftp.ncbi.nlm.nih.gov/genomes/).',
                         '\nIsoformSwitchAnalyzeR only handles RefSeq GFF files so please supply GTF file instead.',
                         '\n(for more info see FAQ about annotate databases in vignette).'
                     )
@@ -1423,7 +1418,7 @@ importGTF <- function(
                 myIso$gene_name <- NA
             }
             if (is.null(myIso$ref_gene_id)) {
-                myIso$ref_gene_id <- myIso$gene_name
+                myIso$ref_gene_id <- NA
             }
 
             ### Handle columns with multiple options
@@ -1438,7 +1433,7 @@ importGTF <- function(
             if( length(isoTypeCol) == 0 ) {
                 myIso$isoType <- NA
             } else {
-                myIso$isoType <- myIso[,isoTypeCol]
+                myIso$isoType <- myIso[,isoTypeCol[1]]
             }
 
         }
@@ -1492,6 +1487,10 @@ importGTF <- function(
                 myIso$gene_name <- NA
             }
 
+            if (is.null(myIso$ref_gene_id)) {
+                myIso$ref_gene_id <- NA
+            }
+
             ### Handle columns with multiple options
             geneTypeCol <- which(colnames(myIso) %in% c('gene_type','gene_biotype'))
             if( length(geneTypeCol) == 0 ) {
@@ -1504,7 +1503,7 @@ importGTF <- function(
             if( length(isoTypeCol) == 0 ) {
                 myIso$isoType <- NA
             } else {
-                myIso$isoType <- myIso[,isoTypeCol]
+                myIso$isoType <- myIso[,isoTypeCol[1]]
             }
         }
 
@@ -2033,13 +2032,8 @@ importGTF <- function(
         addIsoformNt <- FALSE
 
         if( !is.null(isoformNtFasta) ) {
-            isoformNtSeq <- do.call(
-                c,
-                lapply(isoformNtFasta, function(aFile) {
-                    Biostrings::readDNAStringSet(
-                        filepath = isoformNtFasta, format = 'fasta'
-                    )
-                })
+            isoformNtSeq <- Biostrings::readDNAStringSet(
+                filepath = isoformNtFasta, format = 'fasta'
             )
 
             if(!is(isoformNtSeq, "DNAStringSet")) {
@@ -2809,9 +2803,9 @@ importIsoformExpression <- function(
                 )
             )
 
-            localDataList$abundance <- localDataList$abundance[,which(!allZero)]
-            localDataList$counts <- localDataList$counts[,which(!allZero)]
-            localDataList$length <- localDataList$length[,which(!allZero)]
+            localDataList$abundance <- localDataList$abundance[,which(!allZero), drop = FALSE]
+            localDataList$counts <- localDataList$counts[,which(!allZero), drop = FALSE]
+            localDataList$length <- localDataList$length[,which(!allZero), drop = FALSE]
 
             if( ncol(localDataList$abundance) == 0 ) {
                 stop('No libraries left after failed quantifications were removed.')
@@ -3202,7 +3196,7 @@ importRdata <- function(
           stop('The column name and order of \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
         }
         
-        if( !  identical( isoformCountMatrix$isoform_id , isoformCountMatrix$isoform_id ) ) {
+        if( !  identical( isoformCountMatrix$isoform_id , isoformRepExpression$isoform_id ) ) {
           stop('The ids and order of the \'isoform_id\' column in \'isoformCountMatrix\' and \'isoformRepExpression\' must be identical')
         }
       }
@@ -3663,13 +3657,13 @@ importRdata <- function(
             genesToKeep <- isoformExonAnnoation$gene_id[which(
               isoformExonAnnoation$isoform_id %in% isoformRepExpression$isoform_id
             )]
-            
+
             ### Ensure all isoforms quantified are kept
             isoToKeep <- union(
               isoformExonAnnoation$isoform_id[which(
                 isoformExonAnnoation$gene_id %in% genesToKeep
               )],
-              isoformCountMatrix$isoform_id
+              isoformRepExpression$isoform_id
             )
           }
         }
@@ -3711,7 +3705,11 @@ importRdata <- function(
         if (!'gene_name' %in% colnames(isoformAnnotation)) {
           isoformAnnotation$gene_name <- NA
         }
-        
+
+        if (!'ref_gene_id' %in% colnames(isoformAnnotation)) {
+          isoformAnnotation$ref_gene_id <- NA
+        }
+
         isoformAnnotation <- isoformAnnotation[order(
           isoformAnnotation$gene_id,
           isoformAnnotation$gene_name,
@@ -4108,13 +4106,8 @@ importRdata <- function(
     addIsoformNt <- FALSE
     
     if(!is.null(isoformNtFasta)) {
-      isoformNtSeq <- do.call(
-        c,
-        lapply(isoformNtFasta, function(aFile) {
-          Biostrings::readDNAStringSet(
-            filepath = isoformNtFasta, format = 'fasta'
-          )
-        })
+      isoformNtSeq <- Biostrings::readDNAStringSet(
+        filepath = isoformNtFasta, format = 'fasta'
       )
       
       if(!is(isoformNtSeq, "DNAStringSet")) {
@@ -4271,7 +4264,7 @@ importRdata <- function(
                   nIsoWihoutNames - nIsoWihoutNames2,
                   ' isoforms were assigned the ref_gene_id and gene_name of their associated gene_id.',
                   '\n        This was only done when the parent gene_id were associated with a single ref_gene_id/gene_name.',
-                  #'\n',
+                  # '\n',
                   sep = ''
                 )
               )
@@ -4413,7 +4406,7 @@ importRdata <- function(
                     '\n        annotated isoform (defined via overlap in genomic exon coordinates).',
                     '\n        This was only done if the overlap met the requriements',
                     '\n        indicated by the three fixStringTieViaOverlap* arguments.',
-                    #'\n',
+                    # '\n',
                     sep = ''
                   )
                 )
@@ -4567,7 +4560,7 @@ importRdata <- function(
                   nProblems - nProblems2 ,
                   ' gene_ids which were associated with multiple ref_gene_id/gene_names',
                   '\n        were split into mutliple genes via their ref_gene_id/gene_names.',
-                  #'\n',
+                  # '\n',
                   sep = ''
                 )
               )
@@ -4649,7 +4642,7 @@ importRdata <- function(
               length(unique(isoAnnotCanBeCorrected$gene_id)),
               ' genes_id were assigned their original gene_id instead of the StringTie gene_id.',
               '\n        This was only done when it could be done unambiguous.',
-              #'\n',
+              # '\n',
               sep = ''
             )
           )
@@ -4859,7 +4852,7 @@ importRdata <- function(
       ### Estimate SVAs
       nSv = sva::num.sv(
         dat = isoformRepExpressionLogFilt,
-        mod = localModel,
+        mod = localModel
       )
       svaAdded <- FALSE
       
@@ -6014,16 +6007,16 @@ preFilter <- function(
       columnsToExtraxt <-
         na.omit(match(
           columnsToExtraxt,
-          colnames(switchAnalyzeRlist$isoformFeature)
+          colnames(switchAnalyzeRlist$isoformFeatures)
         ))
-      #localData <- unique( switchAnalyzeRlist$isoformFeature[, columnsToExtraxt ] ) # no need
+      #localData <- unique( switchAnalyzeRlist$isoformFeatures[, columnsToExtraxt ] ) # no need
       isoformCountData <- switchAnalyzeRlist$isoformCountMatrix %>%
         rename_with(~ paste0("Count_", .), -isoform_id)
       IFData <- switchAnalyzeRlist$isoformRepIF %>%
         #rownames_to_column(var = "isoform_id") %>%
         rename_with(~ paste0("IF_", .), -isoform_id)
       localData <-
-        switchAnalyzeRlist$isoformFeature[, columnsToExtraxt]
+        switchAnalyzeRlist$isoformFeatures[, columnsToExtraxt]
       localData <- localData %>%
         inner_join(isoformCountData, by = "isoform_id") %>%
         inner_join(IFData, by = "isoform_id")
@@ -6086,13 +6079,13 @@ preFilter <- function(
         sample_values <- row[match(paste0(prefix, sampleIDs), names(row))]
         count_total <- sum(sample_values > cutoff, na.rm = TRUE)
         total_samples <- length(sampleIDs)
-        count_total >= 3 & count_total >= min.prop * total_samples
+        count_total >= min.prop * total_samples
       }
       
       filteredData <- data %>%
         filter(condition_1 == comparison$condition_1 & condition_2 == comparison$condition_2) %>%
         rowwise() %>%
-        filter(filter_logic(across()))
+        filter(filter_logic(across(everything())))
       return(filteredData)
     }
     
@@ -6338,26 +6331,17 @@ importPairedGSEA <- function(
   
   # Ensure that diff_results has the required columns
   required_cols <- c("gene", "lfc_expression", "pvalue_expression", "padj_expression")
-  tryCatch({
-    missing_cols <- setdiff(required_cols, colnames(diff_results))
-    if (length(missing_cols) > 0) {
-      stop(
-        paste0(
-          "The input diff_results is missing required columns: ",
-          paste(missing_cols, collapse = ", "), ".\n",
-          "Please provide a differential expression result table containing at least ",
-          "'gene', 'lfc_expression', 'pvalue_expression', and 'padj_expression'."
-        )
-      )
-    }
-  }, error = function(e) {
+  missing_cols <- setdiff(required_cols, colnames(diff_results))
+  if (length(missing_cols) > 0) {
     stop(
       paste0(
-        "The input diff_results appears to be invalid. ",
-        "Please ensure it is a valid paired DGE/DGS analysis result, which is the output of paired_diff() from pairedGSEA."
+        "The input diff_results is missing required columns: ",
+        paste(missing_cols, collapse = ", "), ".\n",
+        "Please provide a differential expression result table containing at least ",
+        "'gene', 'lfc_expression', 'pvalue_expression', and 'padj_expression'."
       )
     )
-  })
+  }
   
   # Match and add gene-level results to isoformFeatures
   switch_list$isoformFeatures$gene_log2_fold_change <- diff_results$lfc_expression[
@@ -6385,9 +6369,13 @@ importPairedGSEA <- function(
     min.Count.prop = min.Count.prop,
     IFcutoff = IFcutoff,
     min.IF.prop = min.IF.prop,
+    acceptedGeneBiotype = acceptedGeneBiotype,
+    acceptedIsoformClassCode = acceptedIsoformClassCode,
     removeSingleIsoformGenes = removeSingleIsoformGenes,
     reduceToSwitchingGenes = reduceToSwitchingGenes,
     reduceFurtherToGenesWithConsequencePotential = reduceFurtherToGenesWithConsequencePotential,
+    onlySigIsoforms = onlySigIsoforms,
+    keepIsoformInAllConditions = keepIsoformInAllConditions,
     alpha = alpha,
     dIFcutoff = dIFcutoff
   )

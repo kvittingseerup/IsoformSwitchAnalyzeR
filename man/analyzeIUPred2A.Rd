@@ -1,5 +1,6 @@
 \name{analyzeIUPred2A}
 \alias{analyzeIUPred2A}
+\encoding{UTF-8}
 
 \title{
 Import Result of IUPred2A or IUPred3 analysis
@@ -34,11 +35,11 @@ A string indicating the full path to the IUPred2A result file. If multiple resul
 }
 
 \item{smoothingWindowSize}{
-An integer indicating how large a sliding window should be used to calculate a smoothed (via mean) disordered probability score of a particular position in a peptide. This has as a smoothing effect which prevents IDRs from not being detected (or from being split into sub-IDRs) by a single residue with low probability. The trade off is worse accuracy of detecting the exact edges of the IDRs. To turn of smoothing simply set to 1. Default is 5 amino acids.
+An integer indicating how large a sliding window should be used to calculate a smoothed (via mean) disordered probability score of a particular position in a peptide. This has as a smoothing effect which prevents IDRs from not being detected (or from being split into sub-IDRs) by a single residue with low probability. The trade off is worse accuracy of detecting the exact edges of the IDRs. To turn of smoothing simply set to 1. Default is 11 amino acids.
 }
 
 \item{probabilityCutoff}{
-A double indicating the cutoff applied to the (smoothed) disordered probability score (see "smoothingWindowSize" argument above) for calling a residue as "disordered". The default, 30 amino acids, is an accepted standard for long IDRs.
+A double indicating the cutoff applied to the (smoothed) disordered probability score (see "smoothingWindowSize" argument above) for calling a residue as "disordered". Default is 0.5.
 }
 
 \item{minIdrSize}{
@@ -96,8 +97,8 @@ The data.frame added have one row per isoform and contains the columns:
     \item{\code{orf_aa_start}: The start coordinate given as amino acid position (of the ORF).}
     \item{\code{orf_aa_end}: The end coordinate given as amino acid position (of the ORF).}
     \item{\code{idr_type}: A text string indicating the IDR type (one of 'IDR' or 'IDR_w_binding_region'.}
-    \item{\code{nr_idr_binding_sites_overlapping}: (Only if \code{annotateBindingSites=TRUE}). An integer indicating the number of IDBRs predicted within the IDR.}
-    \item{\code{max_fraction_of_idr_binding_sites_overlapping}: (Only if \code{annotateBindingSites=TRUE}). A fraction indicating the the largest overlap any IDBR had with the IDR.}
+    \item{\code{nr_idr_binding_region_overlapping}: (Only if \code{annotateBindingSites=TRUE}). An integer indicating the number of IDBRs predicted within the IDR.}
+    \item{\code{max_fraction_of_idr_binding_region_overlapping}: (Only if \code{annotateBindingSites=TRUE}). A fraction indicating the the largest overlap any IDBR had with the IDR.}
     \item{\code{transcriptStart}: The transcript coordinate of the start of the IDR.}
     \item{\code{transcriptEnd}: The transcript coordinate of the end of the IDR.}
     \item{\code{idrStarExon}: The exon index in which the start of the IDR is located.}
@@ -111,6 +112,7 @@ The data.frame added have one row per isoform and contains the columns:
 \itemize{
     \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
     \item{\code{IUPred2A} : Meszaros et al. IUPred2A: Context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res (2018).}
+    \item{\code{IUPred3} : Erdős et al. IUPred3: prediction of protein disorder enhanced with unambiguous experimental annotation and visualization of evolutionary conservation. Nucleic Acids Res (2021).}
 }
 }
 
@@ -118,12 +120,13 @@ The data.frame added have one row per isoform and contains the columns:
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzeSignalP}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

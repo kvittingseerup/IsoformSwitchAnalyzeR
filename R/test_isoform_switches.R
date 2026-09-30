@@ -527,8 +527,8 @@ isoformSwitchTestDEXSeq <- function(
                     designSubset$condition <- factor(
                         designSubset$condition,
                         levels = unique(c(
-                            comaprisonsToMake$condition_1,
-                            comaprisonsToMake$condition_2
+                            aComp$condition_1,
+                            aComp$condition_2
                         )
                     ))
 
@@ -574,8 +574,8 @@ isoformSwitchTestDEXSeq <- function(
                     designSubset$condition <- factor(
                         designSubset$condition,
                         levels = unique(c(
-                            comaprisonsToMake$condition_1,
-                            comaprisonsToMake$condition_2
+                            aComp$condition_1,
+                            aComp$condition_2
                         ))
                     )
                     colnames(designSubset)[1] <- 'sample'
@@ -868,7 +868,7 @@ extractSwitchSummary <- function(
     dIFcutoff = 0.1,
     onlySigIsoforms = FALSE,
     includeCombined = nrow(unique(
-        switchAnalyzeRlist$isoformFeatures[, c('condition_1', 'condition_1')]
+        switchAnalyzeRlist$isoformFeatures[, c('condition_1', 'condition_2')]
     )) > 1
 ) {
     ### Test input
@@ -1221,6 +1221,20 @@ extractSwitchOverlap <- function(
             ))]
         }
         if (nrow(dataDF) == 0) {
+            backUpDf <-
+                unique(switchAnalyzeRlist$isoformFeatures[, c(
+                    'condition_1', 'condition_2'
+                )])
+            backUpDf <-
+                data.frame(
+                    Comparison = paste(
+                        backUpDf$condition_1,
+                        backUpDf$condition_2, sep = ' vs '),
+                    nrIsoforms = 0,
+                    nrSwitches = 0,
+                    nrGenes = 0,
+                    stringsAsFactors = FALSE
+                )
             return(backUpDf)
         }
 
@@ -1554,7 +1568,7 @@ extractTopSwitches <- function(
                     .data = dataDF2,
                     .variables = 'comparison',
                     .fun = function(aDF) {
-                        if ( n > nrow(dataDF2) ) {
+                        if ( n > nrow(aDF) ) {
                             if (filterForConsequences) {
                                 warning(paste(
                                     'Less than',n ,'genes with significant',
@@ -1567,7 +1581,7 @@ extractTopSwitches <- function(
                                     'switches were found. Returning those.'
                                 ))
                             }
-                            n2 <- nrow(dataDF2)
+                            n2 <- nrow(aDF)
                         } else {
                             n2 <- n
                         }
@@ -1663,7 +1677,7 @@ extractTopSwitches <- function(
         }
 
         ### Reduce to the number wanted
-        if (!is.na(n)) {
+        if (! is.infinite(n)) {
             if (inEachComparison) {
                 dataDF2$comparison <-
                     paste(dataDF2$condition_1,
@@ -1680,7 +1694,7 @@ extractTopSwitches <- function(
                     .variables = 'comparison',
                     .inform = TRUE,
                     .fun = function(aDF) {
-                        if ( n > nrow(dataDF2) ) {
+                        if ( n > nrow(aDF) ) {
                             if (filterForConsequences) {
                                 warning(paste(
                                     'Less than',n ,'genes with significant',
@@ -1693,7 +1707,7 @@ extractTopSwitches <- function(
                                     'switches were found. Returning those.'
                                 ))
                             }
-                            n2 <- nrow(dataDF)
+                            n2 <- nrow(aDF)
                         } else {
                             n2 <- n
                         }
