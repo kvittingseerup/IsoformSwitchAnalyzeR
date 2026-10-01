@@ -14,7 +14,7 @@ extractSwitchSummary(
     alpha=0.05,
     dIFcutoff = 0.1,
     onlySigIsoforms = FALSE,
-    includeCombined=nrow(unique(switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_1')])) > 1
+    includeCombined=nrow(unique(switchAnalyzeRlist$isoformFeatures[,c('condition_1','condition_2')])) > 1
 )
 }
 

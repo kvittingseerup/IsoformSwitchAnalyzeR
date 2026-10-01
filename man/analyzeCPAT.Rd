@@ -55,12 +55,13 @@ Two columns are added to \code{isoformFeatures}: 'codingPotentialValue' and 'cod
 Kristoffer Vitting-Seerup
 }
 \seealso{
-\code{\link{createSwitchAnalyzeRlist}}\cr
+\code{\link{importRdata}}\cr
 \code{\link{extractSequence}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeNetSurfP3}}\cr
 \code{\link{analyzeCPC2}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{analyzeSwitchConsequences}}
 }
 

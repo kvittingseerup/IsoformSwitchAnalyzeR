@@ -38,7 +38,7 @@ analyzeSwitchConsequences(
 \arguments{
     \item{switchAnalyzeRlist}{A \code{switchAnalyzeRlist} object containing the result of an isoform switch analysis (such as the one provided by \code{isoformSwitchTestDEXSeq}) as well as additional annotation data for the isoforms.}
 
-    \item{consequencesToAnalyze}{A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between isoforms (else they would be identical and not annotated as separate isoforms). See details for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, protein domains annotated and signal peptides annotated by Pfam).}
+    \item{consequencesToAnalyze}{A vector of strings indicating what type of functional consequences to analyze. Do note that there is bound to be some differences between isoforms (else they would be identical and not annotated as separate isoforms). See details for full list of usable strings and their meaning. Default is c('intron_retention','coding_potential','ORF_seq_similarity','NMD_status','domains_identified','domain_isotype','IDR_identified','IDR_type','signal_peptide_identified') (corresponding to analyze: intron retention, CPAT result, ORF AA sequence similarity, NMD status, protein domains annotated, protein domain isotypes, IDRs identified, IDR type and signal peptides annotated by Pfam).}
 
     \item{alpha}{The cutoff which the FDR correct p-values (q-values) must be smaller than for calling significant switches. Default is 0.05.}
 
@@ -54,7 +54,7 @@ analyzeSwitchConsequences(
 
     \item{AaCutoff}{ An integer indicating the length difference (in AA) a comparison must be larger than for reporting differences when evaluating 'ORF_seq_similarity', primarily implemented to avoid differences in very short AA sequences being classified as different. Default is 10 (AA).}
 
-    \item{AaFracCutoff}{An numeric indicating the cutoff of length difference of the protein domain or IDR. The difference is measured as a fraction of the longest region, a comparison must be larger than before reporting it. Only used when analyzing 'domain_length' or 'IDR_length'. For example setting AaFracCutoff = 0.8 means the short protein domain (or IDR) must be less than 80\% of the length of the long region, before it is reported. NULL disables the filter. Default is 0.8.}
+    \item{AaFracCutoff}{An numeric indicating the cutoff of length difference of the protein domain, IDR or topology region. The difference is measured as a fraction of the longest region, a comparison must be larger than before reporting it. Only used when analyzing 'domain_length', 'IDR_length', 'extracellular_region_length' or 'intracellular_region_length'. For example setting AaFracCutoff = 0.8 means the short protein domain (or IDR/region) must be less than 80\% of the length of the long region, before it is reported. NULL disables the filter. Default is 0.8.}
 
     \item{AaJCsimCutoff}{An numeric (between 0 and 1) indicating the cutoff on Jaccard Similarity (JCsim) (see details) between the overlap of two amino acid (AA) sequences. If the measured JCsim is smaller than this cutoff the sequences are considered different and reported as such. This cutoff affect the result of the 'ORF_seq_similarity' analysis. Default is 0.9}
 
@@ -78,7 +78,7 @@ If AA sequences were trimmed in the process of exporting the fasta files when us
 
 The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 \itemize{
-    \item \code{all} : Test transcripts for any of the differences described below. Please note that jointly the analysis below covers all transcript feature meaning that they should be different. Furthermore note that 'class_code' will only be included if the switchAnalyzeRlist was made from Cufflinks/Cuffdiff output.
+    \item \code{all} : Test transcripts for any of the differences described below. Please note that jointly the analysis below covers all transcript feature meaning that they should be different. Furthermore note that 'isoform_class_code' will only be included if the switchAnalyzeRlist was made from Cufflinks/Cuffdiff output.
 
     \item \code{tss} : Test transcripts for whether they use different Transcription Start Site (TSS) (more than \code{ntCutoff} from each other).
 
@@ -116,21 +116,21 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 
     \item \code{NMD_status} : Test transcripts for differences in sensitivity to Nonsense Mediated Decay (NMD). Requires that both the isoforms have been annotated with PTC either via \code{identifyORF} or by supplying a GTF file and setting \code{addAnnotatedORFs=TRUE} when creating the switchAnalyzeRlist.
 
-    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{domains_identified} : Test transcripts for differences in the name and order of which domains are identified by the Pfam in the transcripts. Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-  \item \code{domain_isotype} : Test transcripts for differences in the isotype of overlapping protein domain. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+  \item \code{domain_isotype} : Test transcripts for differences in the isotype of overlapping protein domain. Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{domain_length} : Test transcripts for differences in the length of overlapping domains of the same type (same hmm_name) thereby enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not truncate the protein domain. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{domain_length} : Test transcripts for differences in the length of overlapping domains of the same type (same hmm_name) thereby enabling analysis of protein domain truncation. Do however note that a small difference in length is will likely not truncate the protein domain. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis (Will be different unless the two isoforms have the same domains at the same genomic location). Requires that \code{analyzePFAM} have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{genomic_domain_position} : Test transcripts for differences in the genomic position of the domains identified by the Pfam analysis (Will be different unless the two isoforms have the same domains at the same genomic location). Requires that \code{analyzePFAM} (or \code{analyzeInterProScan}) have been used to add external Pfam analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
-    \item \code{IDR_identified} : Test for differences in isoform IDRs. Specifically the two isoforms are analyzed for whether they contain IDRs which do not overlap in genomic coordinates. Requires that \code{analyzeNetSurfP2} or \code{analyzeIUPred2A} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
+    \item \code{IDR_identified} : Test for differences in isoform IDRs. Specifically the two isoforms are analyzed for whether they contain IDRs which do not overlap in genomic coordinates. Requires that \code{analyzeNetSurfP3}, \code{analyzeIUPred2A} or \code{analyzeInterProScan} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
-    \item \code{IDR_length} : Test for differences in the length of overlapping (in genomic coordinates) IDRs. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzeNetSurfP2} or \code{analyzeIUPred2A} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
+    \item \code{IDR_length} : Test for differences in the length of overlapping (in genomic coordinates) IDRs. The length difference, measured in AA, must be larger than \code{AaCutoff} and \code{AaFracCutoff}. Requires that \code{analyzeNetSurfP3}, \code{analyzeIUPred2A} or \code{analyzeInterProScan} have been used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
     \item \code{IDR_type} : Test for differences in IDR type. Specifically the two isoforms are tested for overlapping IDRs (genomic coordinates) and overlapping IDRs are compared with regards to their IDR type (IDR vs IDR w binding site). Only available if \code{analyzeIUPred2A} was used to add external IDR analysis to the \code{switchAnalyzeRlist}.
 
-    \item \code{signal_peptide_identified} : Test transcripts for differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
+    \item \code{signal_peptide_identified} : Test transcripts for differences in whether a signal peptide was identified or not by the SignalP analysis. Requires that \code{analyzeSignalP} (or \code{analyzeInterProScan}) have been used to add external SignalP analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
 
 
     \item \code{sub_cell_location} : Test for any differences in predicted sub-cellular localization. Requires that \code{analyzeDeepLoc2} have been used to add external location analysis to the \code{switchAnalyzeRlist}. Requires that both the isoforms are annotated with a ORF.
@@ -162,7 +162,7 @@ The arguments passed to \code{consequencesToAnalyze} must be a combination of:
 \value{
 The supplied \code{switchAnalyzeRlist} is returned, but now annotated with the predicted functional consequences as follows. First a column called 'switchConsequencesGene' is added to \code{isoformFeatures} entry of \code{switchAnalyzeRlist}. This column containing a binary indication (TRUE/FALSE (and NA)) of whether the switching gene have predicted functional consequences or not.
 
-Secondly the data.frame 'switchConsequence' is added to the \code{switchAnalyzeRlist} containing one row feature analyzed per comparison of isoforms pr comparison of condition. It contains 8 columns:
+Secondly the data.frame 'switchConsequence' is added to the \code{switchAnalyzeRlist} containing one row feature analyzed per comparison of isoforms pr comparison of condition. It contains 12 columns:
 \itemize{
     \item{\code{gene_ref} : A unique reference to a specific gene in a specific comparison of conditions. Enables easy handles to integrate data from all the parts of a \code{switchAnalyzeRlist}.}
     \item{\code{gene_id}: The id of the gene which the isoforms compared belongs to. Matches the 'gene_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
@@ -190,6 +190,7 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzePFAM}}\cr
 \code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeInterProScan}}\cr
 \code{\link{extractConsequenceSummary}}\cr
 \code{\link{extractConsequenceEnrichment}}\cr
 \code{\link{extractConsequenceEnrichmentComparison}} \cr
@@ -215,8 +216,7 @@ consequencesOfInterest <- c(
 
 exampleSwitchListAnalyzed <- analyzeSwitchConsequences(
     exampleSwitchListAnalyzed,
-    consequencesToAnalyze = consequencesOfInterest,
-
+    consequencesToAnalyze = consequencesOfInterest
 )
 
 ### simple overview

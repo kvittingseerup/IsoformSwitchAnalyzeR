@@ -25,11 +25,11 @@ extractTopSwitches(
 A \code{switchAnalyzeRlist} object.
 }
 
-\item{extractGenes}{
-A logic indicating whether to extract the (top) switching isoforms (if FALSE) or top switching genes (if TRUE). Default is TRUE (extract genes).
-}
 \item{filterForConsequences}{
 A logical indicating whether to filter for genes with functional consequences. Requires that analyzeSwitchConsequences() have been run on the switchAnalyzeRlist. Default is FALSE.
+}
+\item{extractGenes}{
+A logic indicating whether to extract the (top) switching isoforms (if FALSE) or top switching genes (if TRUE). Default is TRUE (extract genes).
 }
 
 \item{alpha}{
