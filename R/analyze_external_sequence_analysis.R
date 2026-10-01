@@ -2463,7 +2463,7 @@ analyzeDeepLoc2 <- function(
         ### Read in and test col names
         if(TRUE) {
             ### Tap separated
-            if(ncol(tmp) == 13 ) {
+            if(ncol(tmp) %in% c(13, 18) ) {
                 deepLocRes <- do.call(rbind, plyr::llply(
                     pathToDeepLoc2resultFile,
                     .fun = function(
@@ -2491,7 +2491,7 @@ analyzeDeepLoc2 <- function(
 
             }
 
-            if(! ncol(tmp) %in% c(1, 13) ) {
+            if(! ncol(tmp) %in% c(1, 13, 18) ) {
                 ### File format not recogniced
                 stop('The file does not appear to be a DeepLoc result file. Double check and try agian...')
             }
@@ -2501,7 +2501,7 @@ analyzeDeepLoc2 <- function(
                 ### remove potential dupliations
                 deepLocRes <- dplyr::distinct(deepLocRes)
 
-                ### Test columns
+                ### Test columns (DeepLoc 2.0 has 13, DeepLoc 2.1 adds membrane types)
                 expectedCols <- c(
                     "Protein_ID",
                     "Localizations",
@@ -2518,7 +2518,19 @@ analyzeDeepLoc2 <- function(
                     "Peroxisome"
                 )
 
-                if( ! all( colnames(deepLocRes) == expectedCols ) ) {
+                expectedColsV21 <- c(
+                    expectedCols[1:3],
+                    "Membrane types",
+                    expectedCols[4:13],
+                    "Peripheral",
+                    "Transmembrane",
+                    "Lipid anchor",
+                    "Soluble"
+                )
+
+                isV21 <- identical(colnames(deepLocRes), expectedColsV21)
+
+                if( ! (isV21 | identical(colnames(deepLocRes), expectedCols)) ) {
                     stop('The file(s) pointed to by \'pathToDeepLoc2resultFile\' appears not to be DeepLoc Result file')
                 }
 
@@ -2569,6 +2581,11 @@ analyzeDeepLoc2 <- function(
         deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations, ' ','_')
         deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations, '/','_')
         deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations,'\\|',',')
+
+        if(isV21) {
+            deepLocRes$Membrane_types <- stringr::str_replace_all(deepLocRes$Membrane_types, ' ','_')
+            deepLocRes$Membrane_types <- stringr::str_replace_all(deepLocRes$Membrane_types,'\\|',',')
+        }
     }
 
     ### Filter
@@ -2602,14 +2619,7 @@ analyzeDeepLoc2 <- function(
             )
 
 
-            colOi <- setdiff(
-                colnames(deepLocRes),
-                c('isoform_id','Localizations')
-            )
-
-            probCutoff <- probCutoff[match(
-                colOi, names(probCutoff)
-            )]
+            colOi <- names(probCutoff)
 
             ### Identify locations above the specific cutoffs
             deepLocRes$Localizations <- apply(
@@ -2624,13 +2634,53 @@ analyzeDeepLoc2 <- function(
             deepLocRes$Localizations[which(
                 deepLocRes$Localizations == ''
             )] <- NA
+
+            ### Membrane type specific cutoffs (DeepLoc 2.1 only)
+            if(isV21) {
+                memCutoff <- c(
+                    0.62,
+                    0.56,
+                    0.65,
+                    0.47
+                )
+                names(memCutoff) <- c(
+                    'Peripheral',
+                    'Transmembrane',
+                    'Lipid_anchor',
+                    'Soluble'
+                )
+
+                memOi <- names(memCutoff)
+
+                ### Identify membrane types above the specific cutoffs
+                deepLocRes$Membrane_types <- apply(
+                    deepLocRes[,memOi],
+                    1,
+                    function(x) {
+                        paste(memOi[which(x >= memCutoff)], collapse = ',')
+                    }
+                )
+
+                ### Set those without membrane type to NA
+                deepLocRes$Membrane_types[which(
+                    deepLocRes$Membrane_types == ''
+                )] <- NA
+            }
         }
 
         ### User specific cutoff
         if(!is.null(probabilityCutoff)) {
-            colOi <- setdiff(
-                colnames(deepLocRes),
-                c('isoform_id','Localizations')
+            colOi <- c(
+                'Cytoplasm',
+                'Nucleus',
+                'Extracellular',
+                'Cell_membrane',
+                'Mitochondrion',
+                'Plastid',
+                'Endoplasmic_reticulum',
+                'Lysosome_Vacuole',
+                'Golgi_apparatus',
+                'Peroxisome'
             )
 
             ### Identify locations above the specific cutoffs
@@ -2646,6 +2696,23 @@ analyzeDeepLoc2 <- function(
             deepLocRes$Localizations[which(
                 deepLocRes$Localizations == ''
             )] <- NA
+
+            ### Membrane types (DeepLoc 2.1 only)
+            if(isV21) {
+                memOi <- c('Peripheral', 'Transmembrane', 'Lipid_anchor', 'Soluble')
+
+                deepLocRes$Membrane_types <- apply(
+                    deepLocRes[,memOi],
+                    1,
+                    function(x) {
+                        paste(memOi[which(x >= probabilityCutoff)], collapse = ',')
+                    }
+                )
+
+                deepLocRes$Membrane_types[which(
+                    deepLocRes$Membrane_types == ''
+                )] <- NA
+            }
         }
     }
 
@@ -2659,6 +2726,15 @@ analyzeDeepLoc2 <- function(
         switchAnalyzeRlist$isoformFeatures$sub_cell_location <- deepLocRes$Localizations[match(
             switchAnalyzeRlist$isoformFeatures$isoform_id, deepLocRes$isoform_id
         )]
+
+        # add membrane type to isoformFeatures (DeepLoc 2.1 only)
+        if(isV21) {
+            switchAnalyzeRlist$isoformFeatures$membrane_type <- deepLocRes$Membrane_types[match(
+                switchAnalyzeRlist$isoformFeatures$isoform_id, deepLocRes$isoform_id
+            )]
+        } else {
+            switchAnalyzeRlist$isoformFeatures$membrane_type <- NULL
+        }
     }
 
 
@@ -2675,6 +2751,20 @@ analyzeDeepLoc2 <- function(
             'Added subcellular information to ', nLoc, ' (', pLoc, '%) transcripts',
             sep = ''
         ))
+
+        if(isV21) {
+            nMem <- sum(!is.na(deepLocRes$Membrane_types))
+
+            pMem <-
+                round(nMem / length(unique(
+                    switchAnalyzeRlist$isoformFeatures$isoform_id
+                )) * 100, digits = 2)
+
+            message(paste(
+                'Added membrane type information to ', nMem, ' (', pMem, '%) transcripts',
+                sep = ''
+            ))
+        }
 
     }
     return(switchAnalyzeRlist)
