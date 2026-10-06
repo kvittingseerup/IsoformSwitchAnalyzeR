@@ -3108,6 +3108,158 @@ analyzeDeepTMHMM <- function(
     return(do.call(rbind, unlist(rows, recursive = FALSE)))
 }
 
+### PIRSR: one row per annotated residue/span (siteLocation). Only a subset
+### of PIRSR's categories are parsed (see allowedCategories below); all are
+### treated as residue-level annotations, though a few (e.g. some BINDING
+### entries) span a handful of consecutive residues rather than one position.
+### DISULFID's start/end are the two bonded cysteine positions specifically,
+### not a contiguous region - downstream plotting should render those as 2
+### points rather than a span.
+.parseInterProScanPIRSRRows <- function(pirsrMatchRows) {
+    allowedCategories <- c(
+        'ACT_SITE', 'BINDING', 'CARBOHYD', 'CROSSLNK',
+        'DISULFID', 'LIPID', 'METAL', 'MOD_RES'
+    )
+
+    siteLocationRows <- unlist(lapply(pirsrMatchRows, function(x) {
+        m <- x$match
+        sites <- unlist(lapply(m$locations, function(loc) loc$sites), recursive = FALSE)
+
+        unlist(lapply(sites, function(site) {
+            descParts <- strsplit(site$description, ':', fixed = TRUE)[[1]]
+            category <- trimws(descParts[1])
+            subCategory <- if (length(descParts) > 1) {
+                trimws(paste(descParts[-1], collapse = ':'))
+            } else {
+                NA_character_
+            }
+
+            lapply(site$siteLocations, function(sl) {
+                list(
+                    seqId = x$seqId,
+                    hmmAcc = m$signature$accession,
+                    category = category,
+                    subCategory = subCategory,
+                    start = sl$start,
+                    end = sl$end,
+                    residue = sl$residue
+                )
+            })
+        }), recursive = FALSE)
+    }), recursive = FALSE)
+
+    siteLocationRows <- Filter(
+        function(r) r$category %in% allowedCategories,
+        siteLocationRows
+    )
+
+    rows <- lapply(siteLocationRows, function(r) {
+        data.frame(
+            seq_id = r$seqId,
+            orf_aa_start = r$start,
+            orf_aa_end = r$end,
+            category = r$category,
+            sub_category = r$subCategory,
+            residue = r$residue,
+            hmm_acc = r$hmmAcc,
+            stringsAsFactors = FALSE
+        )
+    })
+
+    return(do.call(rbind, rows))
+}
+
+.finalizePIRSRAnalysis <- function(myPIRSRResult, switchAnalyzeRlist, progressBar, quiet) {
+    ### Convert from AA coordinats to transcript and genomic coordinats
+    if (TRUE) {
+        orfStartDF <- unique(as.data.frame(
+            switchAnalyzeRlist$orfAnalysis[
+                which(!is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+                c('isoform_id', 'orfTransciptStart')
+            ]
+        ))
+
+        myPIRSRResult$transcriptStart <-
+            (myPIRSRResult$orf_aa_start * 3 - 2) +
+            orfStartDF$orfTransciptStart[match(myPIRSRResult$seq_id, orfStartDF$isoform_id)] - 1
+        myPIRSRResult$transcriptEnd <-
+            (myPIRSRResult$orf_aa_end * 3) +
+            orfStartDF$orfTransciptStart[match(myPIRSRResult$seq_id, orfStartDF$isoform_id)] - 1
+
+        myExons <- as.data.frame(switchAnalyzeRlist$exons[which(
+            switchAnalyzeRlist$exons$isoform_id %in% myPIRSRResult$seq_id
+        ), ])
+        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+        myPIRSRResult <- plyr::ddply(
+            myPIRSRResult,
+            .progress = progressBar,
+            .variables = 'seq_id',
+            .fun = function(aDF) {
+                localExons <- as.data.frame(myExonsSplit[[aDF$seq_id[1]]])
+
+                localAlignment <- aDF
+                colnames(localAlignment)[match(
+                    c('transcriptStart', 'transcriptEnd'), colnames(localAlignment)
+                )] <- c('start', 'end')
+
+                posList <- lapply(seq_len(nrow(localAlignment)), function(j) {
+                    convertCoordinatsTranscriptToGenomic(
+                        transcriptCoordinats = localAlignment[j, ],
+                        exonStructure = localExons
+                    )
+                })
+
+                return(cbind(aDF, do.call(rbind, posList)))
+            }
+        )
+
+        colnames(myPIRSRResult)[1] <- 'isoform_id'
+        colnames(myPIRSRResult) <- gsub('pfam', 'pirsr', colnames(myPIRSRResult))
+
+        myPIRSRResult <- myPIRSRResult[order(
+            myPIRSRResult$isoform_id,
+            myPIRSRResult$transcriptStart,
+            myPIRSRResult$category
+        ), ]
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        switchAnalyzeRlist$pirsrAnalysis <- myPIRSRResult
+
+        switchAnalyzeRlist$isoformFeatures$pirsr_hit_found <- 'no'
+        switchAnalyzeRlist$isoformFeatures$pirsr_hit_found[which(
+            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+        )] <- NA # sets NA for those not analyzed
+        switchAnalyzeRlist$isoformFeatures$pirsr_hit_found[which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                myPIRSRResult$isoform_id
+        )] <- 'yes'
+    }
+
+    ### Repport numbers
+    if (TRUE) {
+        n <- length(unique(myPIRSRResult$isoform_id))
+        p <- round(n / length(unique(
+            switchAnalyzeRlist$isoformFeatures$isoform_id
+        )) * 100, digits = 2)
+
+        if (!quiet) {
+            message(paste(
+                'Added PIRSR information to ',
+                n,
+                ' (',
+                p,
+                '%) transcripts',
+                sep = ''
+            ))
+        }
+    }
+
+    return(switchAnalyzeRlist)
+}
+
 .finalizeMobiDBLiteAnalysis <- function(myMobiDBLiteResult, switchAnalyzeRlist, progressBar, quiet) {
     ### Convert from AA coordinats to transcript and genomic coordinats
     if (TRUE) {
@@ -3232,7 +3384,7 @@ analyzeInterProScan <- function(
     }
 
     ### Registry of currently supported analyses - to support more InterProScan
-    ### analyses (e.g. PIRSR, DeepTMHMM) add an entry here, a new .parseInterProScanXRows
+    ### analyses (e.g. DeepTMHMM) add an entry here, a new .parseInterProScanXRows
     ### function and a new .finalizeXAnalysis function;
     ### use .finalizeXAnalysis function in the final for loop in this function
     interProScanRegistry <- list(
@@ -3250,6 +3402,11 @@ analyzeInterProScan <- function(
             source = 'MobiDB-lite',
             parseFun = .parseInterProScanMobiDBLiteRows,
             targetSlot = 'idrAnalysis'
+        ),
+        PIRSR = list(
+            source = 'PIRSR',
+            parseFun = .parseInterProScanPIRSRRows,
+            targetSlot = 'pirsrAnalysis'
         )
     )
 
@@ -3396,6 +3553,13 @@ analyzeInterProScan <- function(
         } else if (toolName == 'MobiDBLite') {
             switchAnalyzeRlist <- .finalizeMobiDBLiteAnalysis(
                 myMobiDBLiteResult = resultDf,
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                progressBar = progressBar,
+                quiet = quiet
+            )
+        } else if (toolName == 'PIRSR') {
+            switchAnalyzeRlist <- .finalizePIRSRAnalysis(
+                myPIRSRResult = resultDf,
                 switchAnalyzeRlist = switchAnalyzeRlist,
                 progressBar = progressBar,
                 quiet = quiet

@@ -251,7 +251,8 @@ If you are using the:
 -   **Pfam isotypes**: Please cite reference *19*.
 -   **SignalP**: Please cite reference *8*.
 -   **MobiDB-lite**: Please cite reference *20*.
--   **InterProScan**: Please cite reference *21*. If used to obtain Pfam, SignalP or MobiDB-lite results (via *analyzeInterProScan()*) please also cite the corresponding tool above.
+-   **PIRSR**: Please cite reference *23*.
+-   **InterProScan**: Please cite reference *21*. If used to obtain Pfam, SignalP, MobiDB-lite or PIRSR results (via *analyzeInterProScan()*) please also cite the corresponding tool above.
 -   **NetSurf3-P**: Please cite reference *14*.
 -   **IUPred2A**: Please cite reference *15*.
 -   **DeepLoc 2**: Please cite reference *17*.
@@ -288,6 +289,7 @@ If you are using the:
 20. *Mehdiabadi et al. **MobiDB-lite 4.0: faster prediction of intrinsic protein disorder and structural compactness**. Bioinformatics (2025)* [link](https://doi.org/10.1093/bioinformatics/btaf297).
 21. *Blum et al. **InterProScan 6: a modern large-scale protein function annotation pipeline**. Bioinformatics Advances (2026)* [link](https://doi.org/10.1093/bioadv/vbag141).
 22. *Ødum et al. **DeepLoc 2.1: multi-label membrane protein type prediction using protein language models**. Nucleic Acids Res (2024)* [link](https://doi.org/10.1093/nar/gkae237).
+23. *Chen et al. **PIRSitePredict for protein functional site prediction using position-specific rules**. Database (2019)* [link](https://doi.org/10.1093/database/baz026).
 
 <br />
 
@@ -340,7 +342,7 @@ The resulting fasta files enables the usage of external sequence analysis tools.
 -   Tools for localization prediction
     -   DeepTMHMM: Predicts protein toplology (location compared to cell membrane) and can be run from from this [webserver](https://biolib.com/DTU/DeepTMHMM)
     -   DeepLoc2: Predicts sub-cellular location and can be run from this [webserver](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0). The newer DeepLoc 2.1 additionally predicts membrane type and can be run from this [webserver](https://services.healthtech.dtu.dk/services/DeepLoc-2.1/). Result files from both versions are supported.
--   InterProScan: Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **This is the recommended way to obtain these three annotations**, replacing running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - see [Importing External Sequence Analysis] below.
+-   InterProScan: Combined prediction of protein domains (Pfam), signal peptides (SignalP), Intrinsically Disordered Regions (MobiDB-lite) and functional sites such as active sites, binding sites and disulfide bonds (PIRSR) in a single job, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **This is the recommended way to obtain the domain, signal peptide and IDR annotations**, replacing running Pfam, SignalP and IUPred2A/NetSurfP-3 separately. It is also the only supported source of PIRSR functional-site annotation - see [Importing External Sequence Analysis] below.
 
 <br />
 
@@ -566,7 +568,7 @@ extractSwitchSummary( exampleSwitchList )
 
 <br />
 
-In a typical workflow, the user would here have to use the produced fasta files to perform the external analysis tools. We recommend running InterProScan, which in a single job predicts protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (IDR, via MobiDB-lite). Alternatively these three types of annotation can be obtained by running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - the main reason to do so is that IUPred2A additionally predicts Intrinsically Disordered Binding Regions (IDBR), which InterProScan/MobiDB-lite does not provide. In addition, CPAT or CPC2 (for prediction of coding potential, only one of them is necessary), DeepLoc2 (sub-cellular location; version 2.1 also predicts membrane type) and DeepTMHMM (isoform topology) can be run. For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
+In a typical workflow, the user would here have to use the produced fasta files to perform the external analysis tools. We recommend running InterProScan, which in a single job predicts protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (IDR, via MobiDB-lite). InterProScan additionally annotates functional sites (PIRSR: e.g. active sites, binding sites, disulfide bonds and modified residues), which cannot be obtained any other way in IsoformSwitchAnalyzeR. Alternatively the first three types of annotation can be obtained by running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - the main reason to do so is that IUPred2A additionally predicts Intrinsically Disordered Binding Regions (IDBR), which InterProScan/MobiDB-lite does not provide. In addition, CPAT or CPC2 (for prediction of coding potential, only one of them is necessary), DeepLoc2 (sub-cellular location; version 2.1 also predicts membrane type) and DeepTMHMM (isoform topology) can be run. For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
 
 <br />
 
@@ -926,7 +928,7 @@ This corresponds to running the following functions in sequential order (just li
 mySwitchList <- analyzeCPAT( mySwitchList ) # OR
 mySwitchList <- analyzeCPC2( mySwitchList )
 
-mySwitchList <- analyzeInterProScan( mySwitchList ) # recommended: Pfam + SignalP + IDR in one go
+mySwitchList <- analyzeInterProScan( mySwitchList ) # recommended: Pfam + SignalP + IDR (+ PIRSR functional sites) in one go
 # OR, run these separately instead:
 mySwitchList <- analyzePFAM( mySwitchList )
 mySwitchList <- analyzeSignalP( mySwitchList )
@@ -1614,7 +1616,7 @@ The two fasta files that are the output by *extractSequence()* (if writeToFile=T
 -   NetSurfP-3 : Prediction of Intrinsically Disordered Regions (IDR) -- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-3 can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
 -   DeepTMHMM : Prediction of protein topology -- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
 -   DeepLoc2 : Prediction of sub-cellular localization(s) of protein. DeepLoc 2.1 additionally predicts the membrane type(s) of the protein. Both DeepLoc 2.0 and 2.1 result files are supported.
--   InterProScan : Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job. Can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **Recommended** over running Pfam, SignalP, and (partially) IUPred2A/NetSurfP-3 separately.
+-   InterProScan : Combined prediction of protein domains (Pfam), signal peptides (SignalP), Intrinsically Disordered Regions (MobiDB-lite) and functional sites such as active sites, binding sites and disulfide bonds (PIRSR) in a single job. Can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **Recommended** over running Pfam, SignalP, and (partially) IUPred2A/NetSurfP-3 separately. It is also the only supported source of PIRSR functional-site annotation.
 
 Please note that:
 
@@ -1647,7 +1649,7 @@ After the external sequence analysis with have been performed (please remember t
 analyzeCPAT() # OR
 analyzeCPC2()
 
-# Recommended: import Pfam + SignalP + MobiDB-lite results from a single InterProScan JSON file
+# Recommended: import Pfam + SignalP + MobiDB-lite + PIRSR results from a single InterProScan JSON file
 analyzeInterProScan()
 # OR, run these separately instead:
 analyzePFAM()
@@ -1659,7 +1661,7 @@ analyzeDeepLoc2()
 analyzeDeepTMHMM()
 ```
 
-Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP3. We recommend using analyzeInterProScan() instead of analyzePFAM() and analyzeSignalP() (and, for the IDR portion, instead of analyzeIUPred2A()/analyzeNetSurfP3()), since it obtains all three annotations from a single InterProScan run.
+Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP3. We recommend using analyzeInterProScan() instead of analyzePFAM() and analyzeSignalP() (and, for the IDR portion, instead of analyzeIUPred2A()/analyzeNetSurfP3()), since it obtains the domain, signal peptide and IDR annotations (plus PIRSR functional sites, which are only available this way) from a single InterProScan run.
 
 The functions are used as:
 
@@ -1689,7 +1691,7 @@ exampleSwitchListAnalyzed <- analyzeCPC2(
     removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
 )
 
-### Add InterProScan analysis (recommended: imports Pfam + SignalP + MobiDB-lite results in one call)
+### Add InterProScan analysis (recommended: imports Pfam + SignalP + MobiDB-lite + PIRSR results in one call)
 exampleSwitchListAnalyzed <- analyzeInterProScan(
     switchAnalyzeRlist            = exampleSwitchListAnalyzed,
     pathToInterProScanResultFile  = system.file("extdata/interproscan_results.json.gz", package = "IsoformSwitchAnalyzeR"),

@@ -136,6 +136,7 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
             'signalPeptideAnalysis',
             'AlternativeSplicingAnalysis',
             'idrAnalysis',
+            'pirsrAnalysis',
             'subCellLocationAnalysis'
         ),
         names(switchAnalyzeRlist)
@@ -307,6 +308,8 @@ summary.switchAnalyzeRlist <- function(object, ...) {
             'switchConsequence'          ,'Switch Consequences'   , analysisAdded)
         analysisAdded <- gsub(
             'idrAnalysis'          ,'IDR'   , analysisAdded)
+        analysisAdded <- gsub(
+            'pirsrAnalysis'        ,'PIRSR results'   , analysisAdded)
         analysisAdded <- gsub(
             'subCellLocationAnalysis'          ,'Sub-cellular localization'   , analysisAdded)
 
