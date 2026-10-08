@@ -85,14 +85,14 @@ Depending on which analyses were found in the supplied InterProScan result file(
     \item{\code{compositional_bias}: A text string indicating the type of compositional bias MobiDB-lite identified for this region (e.g. "Polyampholyte", "Proline-rich", "Glycine-rich"), or \code{NA} for the outer consensus-disorder region. Not available from IUPred2A/NetSurfP3.}
 }
 
-\bold{pirsrAnalysis} (PIRSR functional-site annotation). One row per annotated residue (or short stretch of residues):
+\bold{pirsrAnalysis} (PIRSR functional-site annotation). One row per annotated residue, stretch of residues, or pair of linked residues:
 \itemize{
     \item{\code{isoform_id}, \code{orf_aa_start}, \code{orf_aa_end}, \code{transcriptStart}, \code{transcriptEnd}, \code{pirsrStarExon}, \code{pirsrEndExon}, \code{pirsrStartGenomic}, \code{pirsrEndGenomic}: Positional data, converted as for \code{domainAnalysis}. For a single-residue annotation start and end are identical.}
-    \item{\code{category}: The PIRSR feature category - ACT_SITE (catalytic residues), BINDING (ligand-binding residues), CARBOHYD (glycosylation sites), CROSSLNK (covalent cross-links to other proteins, e.g. ubiquitin/SUMO conjugation), DISULFID (disulfide bonds), LIPID (lipid attachment sites), METAL (metal-ion-binding residues) or MOD_RES (modified residues, e.g. hydroxylation or carboxylation).}
+    \item{\code{category}: The PIRSR feature category - ACT_SITE (catalytic residues), BINDING (ligand-binding residues), CARBOHYD (glycosylation sites), CROSSLNK (covalent cross-links, either to another protein, e.g. ubiquitin/SUMO conjugation, or between two residues of the same protein, e.g. the Cys-Tyr thioether of cysteine dioxygenase), DISULFID (disulfide bonds), LIPID (lipid attachment sites), METAL (metal-ion-binding residues) or MOD_RES (modified residues, e.g. hydroxylation or carboxylation).}
     \item{\code{sub_category}: Free-text detail as reported by PIRSR, e.g. the bound ligand for BINDING ("Mg(2+)", "ATP"), the catalytic role for ACT_SITE ("Proton donor") or the specific modification for MOD_RES. \code{NA} when PIRSR gives no further detail.}
-    \item{\code{residue}: The amino acid letter(s) at the annotated position(s) in the isoform.}
+    \item{\code{residue}: The amino acid letter(s) at the annotated position(s) in the isoform. For multi-residue annotations this is the full sequence from \code{orf_aa_start} to \code{orf_aa_end}, which can be long (e.g. for DISULFID and intrachain CROSSLNK).}
     \item{\code{hmm_acc}: Accession of the PIRSR rule that produced the annotation (e.g. PIRSR604808-2). The same residue can be annotated by several rules.}
-    \item{Note for DISULFID: start and end are the positions of the two bonded cysteines, not a contiguous functional region, so each row should be interpreted as two residues.}
+    \item{Note for DISULFID and intrachain CROSSLNK: start and end are the positions of the two linked residues (e.g. the two bonded cysteines of a disulfide bond), not a contiguous functional region, so each row should be interpreted as two residues. Interchain CROSSLNK rows (cross-links to another protein) instead refer to a single residue, so start and end are identical.}
 }
 }
 

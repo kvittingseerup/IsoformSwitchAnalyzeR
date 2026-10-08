@@ -14,6 +14,7 @@ switchPlotTranscript <- function(
     plotTopology = TRUE,
     IFcutoff = 0.05,
     abbreviateLocations = TRUE,
+    abbreviateMembraneTypes = TRUE,
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -298,6 +299,7 @@ switchPlotTranscript <- function(
                     'PTC',
                     'class_code',
                     'sub_cell_location',
+                    'membrane_type',
                     'solubility_status',
                     'isoform_switch_q_value',
                     'IF_overall',
@@ -362,6 +364,11 @@ switchPlotTranscript <- function(
             if(!is.null(isoInfo$sub_cell_location)) {
                 if(all(is.na(isoInfo$sub_cell_location))) {
                     isoInfo$sub_cell_location <- NULL
+                }
+            }
+            if(!is.null(isoInfo$membrane_type)) {
+                if(all(is.na(isoInfo$membrane_type))) {
+                    isoInfo$membrane_type <- NULL
                 }
             }
             if(!is.null(isoInfo$solubility_status)) {
@@ -642,10 +649,12 @@ switchPlotTranscript <- function(
                 } else {
                     domainStart <- NULL # By setting them to null they are ignore from hereon out
                     domainEnd   <- NULL
+                    domainName  <- NULL
                 }
             } else {
                 domainStart <- NULL # By setting them to null they are ignore from hereon out
                 domainEnd   <- NULL
+                domainName  <- NULL
             }
         }
 
@@ -715,10 +724,12 @@ switchPlotTranscript <- function(
                 } else {
                     idrStart <- NULL # By setting them to null they are ignore from hereon out
                     idrEnd   <- NULL
+                    idrName  <- NULL
                 }
             } else {
                 idrStart <- NULL # By setting them to null they are ignore from hereon out
                 idrEnd   <- NULL
+                idrName  <- NULL
             }
         }
 
@@ -1102,6 +1113,34 @@ switchPlotTranscript <- function(
                     nameDF$newTxName,
                     '\n(Location: ',
                     isoInfo$sub_cell_location[match(
+                        nameDF$oldTxName,
+                        isoInfo$isoform_id
+                    )],
+                    ')'
+                )
+            }
+
+            ### Modify if membrane type is defined
+            if( 'membrane_type' %in% colnames(isoInfo) ) {
+                if(abbreviateMembraneTypes) {
+                    isoInfo$membrane_type <- sapply(
+                        str_split(isoInfo$membrane_type, ','),
+                        function(x) {
+                            x <- gsub(pattern = 'Lipid_anchor'    , replacement = 'LipidAnch', x = x)
+                            x <- gsub(pattern = 'Peripheral'      , replacement = 'Periph'   , x = x)
+                            x <- gsub(pattern = 'Soluble'         , replacement = 'Soluble'  , x = x)
+                            x <- gsub(pattern = 'Transmembrane'   , replacement = 'TM'       , x = x)
+                            x <- paste(x, collapse = ', ')
+                            return(x)
+                        }
+                    )
+
+                }
+
+                nameDF$newTxName <- paste0(
+                    nameDF$newTxName,
+                    '\n(Membrane type: ',
+                    isoInfo$membrane_type[match(
                         nameDF$oldTxName,
                         isoInfo$isoform_id
                     )],

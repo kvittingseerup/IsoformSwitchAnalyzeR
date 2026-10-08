@@ -23,6 +23,7 @@ switchPlotTranscript(
     plotTopology = TRUE,
     IFcutoff = 0.05,
     abbreviateLocations = TRUE,
+    abbreviateMembraneTypes = TRUE,
     rectHegith = 0.2,
     codingWidthFactor = 2,
     nrArrows = 20,
@@ -72,7 +73,7 @@ Since some of the annotation collected potentially overlap (mainly protein domai
 }
 
 \item{plotTopology}{
-A logical whether to plot toplogical information as a thin line above the plot. If topology was not annoated with \code{analyzeDeepTMHMM} this argument will be ignored and topology will not be plotted.
+A logical whether to plot toplogical information as a thin line above the plot. If topology was not annotated with \code{analyzeDeepTMHMM} this argument will be ignored and topology will not be plotted.
 }
 
 \item{IFcutoff}{
@@ -80,7 +81,11 @@ The cutoff used for the minimum contribution to gene expression (in at least one
 }
 
 \item{abbreviateLocations}{
-A logic indicating whether to abbreviate subcellular locations annoated. See details. Default is TRUE.
+A logic indicating whether to abbreviate subcellular locations annotated. See details. Default is TRUE.
+}
+
+\item{abbreviateMembraneTypes}{
+A logic indicating whether to abbreviate the membrane types annotated (only available if a DeepLoc 2.1 result file was added with \code{analyzeDeepLoc2}). See details. Default is TRUE.
 }
 
   \item{rectHegith}{
@@ -133,7 +138,7 @@ This function generates a plot visualizing all the annotation for the transcript
     \item{\code{Transcript status} : Specifically from data imported from cufflinks/cuffdiff. The status (class code) of the transcript is added in brackets after the transcript name.}
 }
 
-The abbeviation used if \code{abbreviateLocations=TRUE} are:\cr
+The abbreviations used if \code{abbreviateLocations=TRUE} are:\cr
 Cyto    : Cytoplasm \cr
 ER      : Endoplasmic Reticulum \cr
 ExtCell : ExtraCellular \cr
@@ -144,6 +149,12 @@ Mito    : Mitochondrion \cr
 Nucl    : Nucleus \cr
 Perox   : Peroxisome \cr
 Plastid : Plastid
+
+The abbreviations used if \code{abbreviateMembraneTypes=TRUE} are:\cr
+LipidAnch : Lipid_anchor \cr
+Periph    : Peripheral \cr
+Soluble   : Soluble \cr
+TM        : Transmembrane
 }
 
 \value{

@@ -3112,9 +3112,10 @@ analyzeDeepTMHMM <- function(
 ### of PIRSR's categories are parsed (see allowedCategories below); all are
 ### treated as residue-level annotations, though a few (e.g. some BINDING
 ### entries) span a handful of consecutive residues rather than one position.
-### DISULFID's start/end are the two bonded cysteine positions specifically,
-### not a contiguous region - downstream plotting should render those as 2
-### points rather than a span.
+### DISULFID's and intrachain CROSSLNK's start/end are the two linked residue
+### positions specifically (with `residue` holding the whole stretch between
+### them), not a contiguous region - downstream plotting should render those
+### as 2 points rather than a span. Interchain CROSSLNK has start == end.
 .parseInterProScanPIRSRRows <- function(pirsrMatchRows) {
     allowedCategories <- c(
         'ACT_SITE', 'BINDING', 'CARBOHYD', 'CROSSLNK',
