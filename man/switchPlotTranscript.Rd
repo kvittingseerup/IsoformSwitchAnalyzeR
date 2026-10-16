@@ -4,7 +4,7 @@
 Plot Transcript Structure and Annotation
 }
 \description{
-This function plots the transcript structure of all (or selected) isoforms from a gene along with all the annotation added to the \code{switchAnalyzeRlist} including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains as well as annotated signal peptides.
+This function plots the transcript structure of all (or selected) isoforms from a gene along with all the annotation added to the \code{switchAnalyzeRlist} including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains, annotated signal peptides as well as PIRSR functional sites.
 }
 \usage{
 switchPlotTranscript(
@@ -21,6 +21,7 @@ switchPlotTranscript(
     ifMultipleIdenticalAnnotation = 'summarize',
     annotationImportance = c('signal_peptide','protein_domain','idr'),
     plotTopology = TRUE,
+    plotPIRSR = TRUE,
     IFcutoff = 0.05,
     abbreviateLocations = TRUE,
     abbreviateMembraneTypes = TRUE,
@@ -74,6 +75,10 @@ Since some of the annotation collected potentially overlap (mainly protein domai
 
 \item{plotTopology}{
 A logical whether to plot toplogical information as a thin line above the plot. If topology was not annotated with \code{analyzeDeepTMHMM} this argument will be ignored and topology will not be plotted.
+}
+
+\item{plotPIRSR}{
+A logical whether to plot the PIRSR functional sites (e.g. active sites, binding sites and disulfide bonds) as markers on top of the transcripts. If PIRSR was not annotated with \code{analyzeInterProScan} (or no PIRSR site is found in the plotted isoforms) this argument will be ignored and no PIRSR annotation will be plotted. See details. Default is TRUE.
 }
 
 \item{IFcutoff}{
@@ -135,6 +140,8 @@ This function generates a plot visualizing all the annotation for the transcript
 
     \item{\code{Topology} : By adding a line above the transcript where the color of the line indicate whether that part of the transcript is a signale peptide, intracellular or extracellular.}
 
+    \item{\code{PIRSR functional sites} : By adding markers on top of the ORF at the position of the annotated residues, with one marker shape per PIRSR category. Requires that the result of an external InterProScan analysis including PIRSR have been added with \code{analyzeInterProScan}. Two linked residues (disulfide bonds and cross-links) are connected by a bracket below the transcript. Interchain disulfide bonds and cross-links are annotated on a single residue and are therefore shown as a single marker (without a bracket). Sites not annotated in all plotted isoforms with an ORF are colored red.}
+
     \item{\code{Transcript status} : Specifically from data imported from cufflinks/cuffdiff. The status (class code) of the transcript is added in brackets after the transcript name.}
 }
 
@@ -155,6 +162,16 @@ LipidAnch : Lipid_anchor \cr
 Periph    : Peripheral \cr
 Soluble   : Soluble \cr
 TM        : Transmembrane
+
+If the IDR annotation was added with \code{analyzeInterProScan} (MobiDB-lite) the IDRs are named by their compositional bias instead of their type, with the consensus disorder region (no compositional bias) named 'IDR'. The abbreviations used for the compositional biases (prefixed with 'IDR_' to differentiate them from protein domains) are:\cr
+IDR_Cys-rich : Cysteine-rich \cr
+IDR_Gly-rich : Glycine-rich \cr
+IDR_LowCmplx : Low complexity \cr
+IDR_NegPolyE : Negative Polyelectrolyte \cr
+IDR_Polar    : Polar \cr
+IDR_PolyAmph : Polyampholyte \cr
+IDR_PosPolyE : Positive Polyelectrolyte \cr
+IDR_Pro-rich : Proline-rich
 }
 
 \value{
@@ -172,7 +189,8 @@ Kristoffer Vitting-Seerup
 \code{\link{analyzeORF}}\cr
 \code{\link{analyzeCPAT}}\cr
 \code{\link{analyzePFAM}}\cr
-\code{\link{analyzeSignalP}}
+\code{\link{analyzeSignalP}}\cr
+\code{\link{analyzeInterProScan}}
 }
 \examples{
 ### Prepare for plotting

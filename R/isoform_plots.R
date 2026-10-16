@@ -1,3 +1,101 @@
+### PIRSR annotates residues. This function converts the PIRSR
+### annotation of the isoforms to the genomic positions needed for plotting.
+### One row is returned pr feature, where 'kind' is one of:
+###   point  : A single residue. g1 == g2 is the genomic position of the middle
+###            base of the codon.
+###   pair   : Two residues linked to each other (DISULFID and intrachain
+###            CROSSLNK). g1 and g2 are the genomic positions of the two residues.
+###   region : A BINDING row spanning several residues. g1 and g2 are the first
+###            and last genomic base of the row.
+### 'changed' is TRUE if the feature (the same category at the same genomic
+### position) is missing in at least one of the 'isoformsAnalyzed'.
+getPIRSRplotFeatures <- function(pirsrAnalysis, isoformIds, exonInfoSplit, isoformsAnalyzed = isoformIds) {
+    pirsr <- pirsrAnalysis[which(pirsrAnalysis$isoform_id %in% isoformIds), ]
+    # the same residue is often annotated by multiple PIRSR models
+    pirsr <- pirsr[which(!duplicated(
+        pirsr[, c('isoform_id', 'category', 'orf_aa_start', 'orf_aa_end')]
+    )), ]
+    if (nrow(pirsr) == 0) {
+        return(NULL)
+    }
+    pirsr$isoform_id <- as.character(pirsr$isoform_id)
+
+    ### Genomic position(s) of every feature
+    toGenomic <- function(isoformId, transcriptStart, transcriptEnd) {
+        genomic <- convertCoordinatsTranscriptToGenomic(
+            transcriptCoordinats = data.frame(start = transcriptStart, end = transcriptEnd),
+            exonStructure        = as.data.frame(exonInfoSplit[[isoformId]])
+        )
+        # the function was written for Pfam domains - use neutral names for the columns
+        colnames(genomic)[colnames(genomic) == 'pfamStartGenomic'] <- 'startGenomic'
+        colnames(genomic)[colnames(genomic) == 'pfamEndGenomic']   <- 'endGenomic'
+        return(genomic)
+    }
+    features <- lapply(seq_len(nrow(pirsr)), function(i) {
+        aRow <- pirsr[i, ]
+        isoformId <- aRow$isoform_id
+
+        if (aRow$orf_aa_start == aRow$orf_aa_end) {
+            # a residue - use the middle base of the codon
+            g <- toGenomic(isoformId, aRow$transcriptStart + 1, aRow$transcriptStart + 1)$startGenomic
+            return(data.frame(isoform_id = isoformId, category = aRow$category, kind = 'point', g1 = g, g2 = g, stringsAsFactors = FALSE))
+        }
+        if (aRow$category == 'BINDING') {
+            # a binding row spanning several residues
+            g <- toGenomic(isoformId, aRow$transcriptStart, aRow$transcriptEnd)
+            return(data.frame(isoform_id = isoformId, category = aRow$category, kind = 'region',
+                              g1 = min(g$startGenomic, g$endGenomic), g2 = max(g$startGenomic, g$endGenomic), stringsAsFactors = FALSE))
+        }
+        # two linked residues (start and end of the annotation)
+        gStart <- toGenomic(isoformId, aRow$transcriptStart + 1, aRow$transcriptStart + 1)$startGenomic
+        gEnd   <- toGenomic(isoformId, aRow$transcriptEnd   - 1, aRow$transcriptEnd   - 1)$startGenomic
+        return(data.frame(isoform_id = isoformId, category = aRow$category, kind = 'pair', g1 = gStart, g2 = gEnd, stringsAsFactors = FALSE))
+    })
+
+    features <- do.call(rbind, features)
+
+    ### Is the feature lost in any of the isoforms?
+    featureKey <- paste(features$category, features$g1, features$g2, sep = ':')
+    nIsoformsWithFeature <- tapply(
+        features$isoform_id,
+        featureKey,
+        function(x) length(unique(x[which(x %in% isoformsAnalyzed)]))
+    )
+    features$changed <- unname(nIsoformsWithFeature[featureKey]) < length(isoformsAnalyzed)
+
+    return(features)
+}
+
+### Name used for each IDR region in the plot (labels and legend). MobiDB-lite
+### regions are named by their compositional bias (abbreviated to keep the
+### legend small and prefixed with 'IDR_' to differentiate them from Pfam
+### domains) with the consensus disorder region (no bias) named 'IDR';
+### the result of the other tools are named by their idr_type.
+getIdrPlotName <- function(idrAnalysis) {
+    if( ! 'compositional_bias' %in% colnames(idrAnalysis) ) {
+        return(idrAnalysis$idr_type)
+    }
+
+    biasAbbreviations <- c(
+        'Polyampholyte'            = 'IDR_PolyAmph',
+        'Low complexity'           = 'IDR_LowCmplx',
+        'Polar'                    = 'IDR_Polar',
+        'Positive Polyelectrolyte' = 'IDR_PosPolyE',
+        'Negative Polyelectrolyte' = 'IDR_NegPolyE',
+        'Proline-rich'             = 'IDR_Pro-rich',
+        'Glycine-rich'             = 'IDR_Gly-rich',
+        'Cysteine-rich'            = 'IDR_Cys-rich'
+    )
+
+    idrName <- idrAnalysis$compositional_bias
+    matchIndex <- match(idrName, names(biasAbbreviations))
+    idrName[which(!is.na(matchIndex))] <-
+        unname(biasAbbreviations)[matchIndex[which(!is.na(matchIndex))]]
+    idrName[which(is.na(idrAnalysis$compositional_bias))] <- 'IDR'
+
+    return(idrName)
+}
+
 switchPlotTranscript <- function(
     ### Core arguments
     switchAnalyzeRlist,
@@ -12,6 +110,7 @@ switchPlotTranscript <- function(
     ifMultipleIdenticalAnnotation = 'summarize',
     annotationImportance = c('signal_peptide', 'protein_domain','idr'),
     plotTopology = TRUE,
+    plotPIRSR = TRUE,
     IFcutoff = 0.05,
     abbreviateLocations = TRUE,
     abbreviateMembraneTypes = TRUE,
@@ -81,6 +180,11 @@ switchPlotTranscript <- function(
                 plotTopology <- FALSE
             }
 
+        }
+
+        ### Don't plot PIRSR if it is not annotated
+        if(plotPIRSR) {
+            plotPIRSR <- 'pirsrAnalysis' %in% names(switchAnalyzeRlist)
         }
 
         isConditional <- ! is.null(condition1)
@@ -445,6 +549,28 @@ switchPlotTranscript <- function(
             chrName <- as.character(seqnames(exonInfo)[1])
         }
 
+        ### PIRSR data (genomic positions of the annotated residues)
+        pirsrFeatures <- NULL
+        pirsrXform <- list() # collects how the genomic coordinates are transformed for the plot (see pirsrToPlotX)
+        if(plotPIRSR) {
+            pirsrFeatures <- getPIRSRplotFeatures(
+                pirsrAnalysis = switchAnalyzeRlist$pirsrAnalysis,
+                isoformIds    = isoform_id,
+                exonInfoSplit = exonInfoSplit,
+                # only isoforms with an ORF can loose a PIRSR annotation
+                isoformsAnalyzed = if (inclORF) {
+                    isoform_id[which(isoform_id %in% switchAnalyzeRlist$orfAnalysis$isoform_id[which(
+                        !is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)
+                    )])]
+                } else {
+                    isoform_id
+                }
+            )
+            if(is.null(pirsrFeatures)) {
+                plotPIRSR <- FALSE
+            }
+        }
+
         ### ORF data
         if(TRUE) {
             if (inclORF) {
@@ -525,6 +651,16 @@ switchPlotTranscript <- function(
                     idrAnalysis$isoform_id <-
                         factor(idrAnalysis$isoform_id,
                                levels = unique(isoInfo$isoform_id))
+
+                    # MobiDB-lite reports the consensus disorder region (no
+                    # compositional bias) together with nested bias regions.
+                    # The consensus region is placed first so the nested regions
+                    # are drawn on top of it (later regions overwrite earlier).
+                    if( 'compositional_bias' %in% colnames(idrAnalysis) ) {
+                        idrAnalysis <- idrAnalysis[order(
+                            ! is.na(idrAnalysis$compositional_bias)
+                        ), ]
+                    }
 
                     #idrAnalysis$idrName <- 'IDR'
                     idrAnalysis$id <- 1:nrow(idrAnalysis)
@@ -678,7 +814,7 @@ switchPlotTranscript <- function(
                               idrAnalysis$isoform_id,
                               drop = FALSE)
                     idrName  <-
-                        split(idrAnalysis$idr_type,
+                        split(getIdrPlotName(idrAnalysis),
                               idrAnalysis$isoform_id,
                               drop = FALSE)
 
@@ -1194,6 +1330,8 @@ switchPlotTranscript <- function(
 
         ### Rescale coordinats if nessesary
         if (rescaleTranscripts) {
+            pirsrXform$shift <- min(myTranscriptPlotData[, c('start', 'end')])
+
             # Might as well work with smaller numbers
             myTranscriptPlotData[, c('start', 'end')] <-
                 myTranscriptPlotData[, c('start', 'end')] -
@@ -1225,6 +1363,8 @@ switchPlotTranscript <- function(
                     myCoordinats$newCoordinates [i:nrow(myCoordinats)] - difference
             }
 
+            pirsrXform$map <- myCoordinats
+
             # replace original values
             myTranscriptPlotData$start <-
                 myCoordinats$newCoordinates[match(
@@ -1253,6 +1393,9 @@ switchPlotTranscript <- function(
             # calculate how much to extract
             subtractNr <- max(myTranscriptPlotData[, c('start', 'end')])
 
+            pirsrXform$minCoordinat <- minCoordinat
+            pirsrXform$subtractNr   <- subtractNr
+
             # calculate new coordinats (by subtracting everthing becomes negative, and abs inverts to postive = evertyhing is inversed)
             newCoordinats <-
                 abs(myTranscriptPlotData[, c('start', 'end')] - subtractNr)
@@ -1265,6 +1408,27 @@ switchPlotTranscript <- function(
             # transpose back so min coordiant is the same
             myTranscriptPlotData[, c('start', 'end')] <-
                 myTranscriptPlotData[, c('start', 'end')] + minCoordinat
+        }
+
+        ### Function converting genomic positions to the (rescaled and potentially
+        ### reversed) coordinats the transcripts are plotted in
+        pirsrToPlotX <- function(genomicPosition) {
+            x <- genomicPosition
+            if( ! is.null(pirsrXform$map) ) {
+                x <- x - pirsrXform$shift + 1
+                x <- approx(
+                    x    = pirsrXform$map$orgCoordinates,
+                    y    = pirsrXform$map$newCoordinates,
+                    xout = x,
+                    rule = 2
+                )$y
+            }
+            if( ! is.null(pirsrXform$minCoordinat) ) {
+                x <- x - pirsrXform$minCoordinat + 1
+                x <- abs(x - pirsrXform$subtractNr)
+                x <- x + pirsrXform$minCoordinat
+            }
+            return(x)
         }
 
         ### order data
@@ -1666,6 +1830,93 @@ switchPlotTranscript <- function(
             }
         }
 
+        ### Create objects for the PIRSR residues
+        pirsrPlotData <- NULL
+        if(plotPIRSR) {
+            ### Connect to the rows the transcripts are plotted in
+            newName  <- nameDF$newTxName[match(pirsrFeatures$isoform_id, nameDF$oldTxName)]
+            rowIndex <- match(newName, idData$transcript)
+            pirsrFeatures$idNr     <- idData$idNr[rowIndex]
+            pirsrFeatures$seqnames <- idData$seqnames[rowIndex]
+            pirsrFeatures <- pirsrFeatures[which(!is.na(pirsrFeatures$idNr)), ]
+
+            if(nrow(pirsrFeatures)) {
+                ### Convert to plot coordinats
+                pirsrFeatures$x1 <- pirsrToPlotX(pirsrFeatures$g1)
+                pirsrFeatures$x2 <- pirsrToPlotX(pirsrFeatures$g2)
+
+                ### One shape pr category
+                pirsrCategories <- data.frame(
+                    category = c('ACT_SITE'   , 'BINDING'     , 'CARBOHYD'     , 'CROSSLNK'  , 'DISULFID'      , 'LIPID'          , 'METAL'        , 'MOD_RES'),
+                    name     = c('Active site', 'Binding site', 'Glycosylation', 'Cross-link', 'Disulfide bond', 'Lipid attachment', 'Metal binding', 'Modified residue'),
+                    shape    = c(24           , 22            , 3              , 4           , 23              , 8                , 21             , 25),
+                    stringsAsFactors = FALSE
+                )
+                pirsrShapes <- pirsrCategories$shape
+                names(pirsrShapes) <- pirsrCategories$name
+                pirsrFeatures$Category <- factor(
+                    pirsrFeatures$category,
+                    levels = pirsrCategories$category,
+                    labels = pirsrCategories$name
+                )
+
+                makePirsrDf <- function(index, x) {
+                    data.frame(
+                        x        = x,
+                        idNr     = pirsrFeatures$idNr[index],
+                        seqnames = pirsrFeatures$seqnames[index],
+                        Category = pirsrFeatures$Category[index],
+                        changed  = pirsrFeatures$changed[index]
+                    )
+                }
+                pointRows  <- which(pirsrFeatures$kind == 'point')
+                pairRows   <- which(pirsrFeatures$kind == 'pair')
+                regionRows <- which(pirsrFeatures$kind == 'region')
+
+                ### Residues (single residues and the two residues of a pair)
+                markers <- rbind(
+                    makePirsrDf(pointRows, pirsrFeatures$x1[pointRows]),
+                    makePirsrDf(pairRows , pirsrFeatures$x1[pairRows ]),
+                    makePirsrDf(pairRows , pirsrFeatures$x2[pairRows ])
+                )
+
+                ### The line indicating the distance between two linked residues
+                segments <- data.frame(
+                    xmin     = pmin(pirsrFeatures$x1[pairRows], pirsrFeatures$x2[pairRows]),
+                    xmax     = pmax(pirsrFeatures$x1[pairRows], pirsrFeatures$x2[pairRows]),
+                    idNr     = pirsrFeatures$idNr[pairRows],
+                    seqnames = pirsrFeatures$seqnames[pairRows],
+                    changed  = pirsrFeatures$changed[pairRows]
+                )
+
+                ### The rectangle of a binding row spanning several residues
+                rectMid <- (pirsrFeatures$x1[regionRows] + pirsrFeatures$x2[regionRows]) / 2
+                rects <- data.frame(
+                    xmin     = pmin(pirsrFeatures$x1[regionRows], pirsrFeatures$x2[regionRows]),
+                    xmax     = pmax(pirsrFeatures$x1[regionRows], pirsrFeatures$x2[regionRows]),
+                    idNr     = pirsrFeatures$idNr[regionRows],
+                    seqnames = pirsrFeatures$seqnames[regionRows],
+                    changed  = pirsrFeatures$changed[regionRows]
+                )
+
+                ### Invisible markers so categories only drawn as rectangles are also in the legend
+                legendMarkers <- makePirsrDf(regionRows, rectMid)
+                legendMarkers <- legendMarkers[which(
+                    ! legendMarkers$Category %in% markers$Category
+                ), ]
+
+                pirsrPlotData <- list(
+                    markers       = markers,
+                    segments      = segments,
+                    rects         = rects,
+                    legendMarkers = legendMarkers,
+                    shapes        = pirsrShapes[which(names(pirsrShapes) %in% as.character(pirsrFeatures$Category))]
+                )
+            } else {
+                plotPIRSR <- FALSE
+            }
+        }
+
     }
 
 
@@ -1755,6 +2006,136 @@ switchPlotTranscript <- function(
                 ) +
                 scale_color_manual(values = lineColors)
 
+        }
+
+        ### PIRSR residues - black markers with a white halo (visible on any background)
+        if(plotPIRSR) {
+            markerSize <- 1.1
+            pirsrChangedColor <- '#E41A1C' # residues lost in at least one of the other isoforms
+            markerStroke <- 0.7
+            haloSize     <- markerSize + 0.35
+            haloStroke   <- 1.2
+            # The outer side of a square marker (shape 22) in line width units - used to draw the
+            # rectangles with exactly the same height (and border) as the squares. The rectangle
+            # is a thick line with square caps (caps are as long as half the thickness).
+            squareLinewidth <- function(size, stroke) {
+                outline <- stroke * ggplot2::.stroke / 2       # outline width (in lwd units, 1 lwd = 0.75 pt)
+                sidePt  <- 0.75 * (size * ggplot2::.pt + outline) + outline * 0.75
+                sidePt / (0.75 * ggplot2::.pt)
+            }
+
+            ### Indicate the distance between the two residues of a pair with a bracket just below the transcript
+            if(nrow(pirsrPlotData$segments)) {
+                seg <- pirsrPlotData$segments
+                barBottom <- rectHegith * codingWidthFactor
+                maxLevels <- 3
+
+                ### Place overlapping brackets on separate levels (within each transcript)
+                seg$level <- 0
+                minGap <- 0.006 * diff(range(c(myTranscriptPlotData$start, myTranscriptPlotData$end)))
+                rowKey <- paste(seg$idNr, seg$seqnames)
+                for (aKey in unique(rowKey)) {
+                    idx <- which(rowKey == aKey)
+                    idx <- idx[order(seg$xmin[idx])]
+                    levelEnd <- numeric(0)
+                    for (i in idx) {
+                        free <- which(seg$xmin[i] > levelEnd + minGap)
+                        lvl <- if (length(free)) free[1] else min(length(levelEnd) + 1, maxLevels)
+                        levelEnd[lvl] <- max(c(if (lvl <= length(levelEnd)) levelEnd[lvl], seg$xmax[i]))
+                        seg$level[i] <- lvl - 1
+                    }
+                }
+                bracketY <- barBottom + 0.025 + seg$level * 0.02
+
+                linesDf <- rbind(
+                    data.frame(x = seg$xmin, xend = seg$xmax, y = seg$idNr - bracketY, yend = seg$idNr - bracketY, seqnames = seg$seqnames, changed = seg$changed),
+                    data.frame(x = seg$xmin, xend = seg$xmin, y = seg$idNr - bracketY, yend = seg$idNr - barBottom, seqnames = seg$seqnames, changed = seg$changed),
+                    data.frame(x = seg$xmax, xend = seg$xmax, y = seg$idNr - bracketY, yend = seg$idNr - barBottom, seqnames = seg$seqnames, changed = seg$changed)
+                )
+                myPlot <-
+                    myPlot +
+                    geom_segment(
+                        data = linesDf,
+                        aes(x = x, xend = xend, y = y, yend = yend),
+                        colour = 'white', linewidth = 1.2, lineend = 'round'
+                    ) +
+                    geom_segment(
+                        data = linesDf[which(!linesDf$changed), ],
+                        aes(x = x, xend = xend, y = y, yend = yend),
+                        colour = 'black', linewidth = 0.45, lineend = 'round'
+                    ) +
+                    geom_segment(
+                        data = linesDf[which(linesDf$changed), ],
+                        aes(x = x, xend = xend, y = y, yend = yend),
+                        colour = pirsrChangedColor, linewidth = 0.45, lineend = 'round'
+                    )
+            }
+
+            ### Rectangle for a binding row spanning several residues (same height as a square marker)
+            if(nrow(pirsrPlotData$rects)) {
+                rectsBlack <- pirsrPlotData$rects[which(!pirsrPlotData$rects$changed), ]
+                rectsRed   <- pirsrPlotData$rects[which(pirsrPlotData$rects$changed), ]
+                myPlot <-
+                    myPlot +
+                    geom_segment(
+                        data = pirsrPlotData$rects,
+                        aes(x = xmin, xend = xmax, y = idNr, yend = idNr),
+                        colour = 'white', linewidth = squareLinewidth(haloSize, haloStroke), lineend = 'square'
+                    ) +
+                    geom_segment(
+                        data = rectsBlack,
+                        aes(x = xmin, xend = xmax, y = idNr, yend = idNr),
+                        colour = 'black', linewidth = squareLinewidth(markerSize, markerStroke), lineend = 'square'
+                    ) +
+                    geom_segment(
+                        data = rectsRed,
+                        aes(x = xmin, xend = xmax, y = idNr, yend = idNr),
+                        colour = pirsrChangedColor, linewidth = squareLinewidth(markerSize, markerStroke), lineend = 'square'
+                    )
+            }
+
+            ### Residues
+            if(nrow(pirsrPlotData$markers)) {
+                myPlot <-
+                    myPlot +
+                    geom_point(
+                        data = pirsrPlotData$markers,
+                        aes(x = x, y = idNr, shape = Category),
+                        colour = 'white', fill = 'white', size = haloSize, stroke = haloStroke,
+                        show.legend = FALSE
+                    ) +
+                    geom_point(
+                        data = pirsrPlotData$markers[which(!pirsrPlotData$markers$changed), ],
+                        aes(x = x, y = idNr, shape = Category),
+                        colour = 'black', fill = 'black', size = markerSize, stroke = markerStroke
+                    ) +
+                    geom_point(
+                        data = pirsrPlotData$markers[which(pirsrPlotData$markers$changed), ],
+                        aes(x = x, y = idNr, shape = Category),
+                        colour = pirsrChangedColor, fill = pirsrChangedColor, size = markerSize, stroke = markerStroke
+                    )
+            }
+            if(nrow(pirsrPlotData$legendMarkers)) {
+                myPlot <-
+                    myPlot +
+                    geom_point(
+                        data = pirsrPlotData$legendMarkers,
+                        aes(x = x, y = idNr, shape = Category),
+                        colour = 'black', fill = 'black', size = markerSize, alpha = 0
+                    )
+            }
+
+            myPlot <-
+                myPlot +
+                scale_shape_manual(
+                    # explain the red color if it is used
+                    name = if (any(pirsrFeatures$changed)) 'PIRSR\n(red: not present\nin all isoforms)' else 'PIRSR',
+                    values = pirsrPlotData$shapes
+                ) +
+                guides(shape = guide_legend(
+                    order = 3, # last
+                    override.aes = list(colour = 'black', fill = 'black', alpha = 1, size = markerSize)
+                ))
         }
 
         ### Optimize apperance
@@ -2319,11 +2700,10 @@ expressionAnalysisPlot <- function(
                             switchAnalyzeRlist$idrAnalysis$isoform_id
                             %in% isoform_id
                         ),
-                        c('isoform_id', 'idr_type')
                         ]
                 idrList <-
                     split(
-                        localIdrs$idr_type,
+                        getIdrPlotName(localIdrs),
                         f = localIdrs$isoform_id
                     )
                 idrNames <-
