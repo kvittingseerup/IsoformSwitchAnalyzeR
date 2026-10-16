@@ -1376,6 +1376,8 @@ Filtering on isoform counts allows removal of non-used isoforms that only appear
 
 The filter on Isoform Fraction allows removal of isoforms that only contribute minimally to the gene expression thereby speeding up and simplifying the rest of the downstream analysis without losing important isoforms.
 
+Both the count and the Isoform Fraction filter require an isoform to pass in a minimum number of samples in each comparison, controlled by the *min.Count.prop* and *min.IF.prop* arguments. By default (`"smaller_group"`) this number is set separately for each comparison to the size of the smaller of the two groups, so isoforms expressed in all samples of the smaller group are retained when the groups have different sizes. Supplying a number instead applies that proportion of the samples as the threshold in all comparisons.
+
 Filtering on unwanted isoform classes is only an option available if using data form Cufflinks/Cuffdiff since the Tuxedo workflow includes classification of transcript types. This allows for removal of, for example, transcripts classified as "Possible polymerase run-on fragment" or "Repeat". See full description of Cufflinks/Cuffdiff transcript classification [here](http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/#transfrag-class-codes)
 
 The *preFilter()* function is used as follows:

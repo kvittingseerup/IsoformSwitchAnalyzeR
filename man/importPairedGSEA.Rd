@@ -35,9 +35,9 @@ importPairedGSEA(
   
   # preFilter() function relevant
   isoCount = 10,
-  min.Count.prop = 0.7,
+  min.Count.prop = "smaller_group",
   IFcutoff = 0.1,
-  min.IF.prop = 0.5,
+  min.IF.prop = "smaller_group",
   acceptedGeneBiotype = NULL,
   acceptedIsoformClassCode = NULL,
   removeSingleIsoformGenes = TRUE,
