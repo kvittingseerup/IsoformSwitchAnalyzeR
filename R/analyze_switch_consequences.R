@@ -172,8 +172,11 @@ analyzeSwitchConsequences <- function(
             )
 
             if (length(excludedRequested)) {
-                ### Must match the consequencesToAnalyze default in the
-                ### function signature above
+                ### Known "friendly" defaults, i.e. a caller forwarding its own
+                ### unmodified default rather than an explicit request. Must
+                ### match the consequencesToAnalyze default in the function
+                ### signature above (shared with isoformSwitchAnalysisPart2())
+                ### and in isoformSwitchAnalysisCombined()
                 defaultConsequencesToAnalyze <- c(
                     'intron_retention',
                     'coding_potential',
@@ -185,11 +188,21 @@ analyzeSwitchConsequences <- function(
                     'IDR_type',
                     'signal_peptide_identified'
                 )
+                combinedDefaultConsequencesToAnalyze <- c(
+                    'intron_retention',
+                    'ORF_seq_similarity',
+                    'NMD_status'
+                )
                 isDefaultOrAll <-
                     identical(
                         sort(rawConsequencesToAnalyze),
                         sort(defaultConsequencesToAnalyze)
-                    ) | 'all' %in% rawConsequencesToAnalyze
+                    ) |
+                    identical(
+                        sort(rawConsequencesToAnalyze),
+                        sort(combinedDefaultConsequencesToAnalyze)
+                    ) |
+                    'all' %in% rawConsequencesToAnalyze
 
                 if (isDefaultOrAll) {
                     consequencesToAnalyze <- setdiff(

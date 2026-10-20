@@ -91,7 +91,7 @@ If \code{addAnnotatedORFs=TRUE} a \code{data.frame} containing the details of th
 The data.frame added have one row pr isoform and contains 11 columns:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-    \item{\code{orfTransciptStart}: The start position of the ORF in transcript Coordinates, here defined as the position of the 'A' in the 'AUG' start motif.}
+    \item{\code{orfTransciptStart}: The start position of the ORF in transcript Coordinates, here defined as the position of the 'A' in the 'AUG' start motif. For annotated ORFs whose CDS begins part-way through a codon (a GTF/GFF \code{phase} of 1 or 2, as seen for 5'-incomplete transcripts such as those tagged \code{cds_start_NF}) the start is the first complete codon, i.e. the leading bases given by the phase are skipped. If the file has no phase information the CDS is assumed to start at a complete codon.}
     \item{\code{orfTransciptEnd}: The end position of the ORF in transcript coordinates, here defined as the last nucleotide before the STOP codon (meaning the stop codon is not included in these coordinates).}
     \item{\code{orfTransciptLength}: The length of the ORF}
     \item{\code{orfStarExon}: The exon in which the start codon is}

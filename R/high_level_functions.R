@@ -15,6 +15,8 @@ isoformSwitchAnalysisPart1 <- function(
     quiet = FALSE
 ) {
     isConditional <- switchAnalyzeRlist$sourceId != 'preDefinedSwitches'
+    isProteomics <- !is.null(switchAnalyzeRlist$omicDataType) &&
+        switchAnalyzeRlist$omicDataType == 'proteomics'
 
     nrAnalysis <- 3
 
@@ -52,6 +54,19 @@ isoformSwitchAnalysisPart1 <- function(
 
         ### Test ORF annotation
         if( is.null(switchAnalyzeRlist$orfAnalysis) ) {
+            if( isProteomics ) {
+                stop(
+                    paste(
+                        'The switchAnalyzeRlist has omicDataType \'proteomics\' but no \'orfAnalysis\' entry.',
+                        'For proteomics data the whole (CDS-only) isoform is the ORF by construction - this',
+                        'should already be annotated by importGTF()/importPredefinedSwitches() when called',
+                        'with omicDataType=\'proteomics\'. isoformSwitchAnalysisPart1() cannot predict an ORF',
+                        'from a GTF for this data (predicting an ORF within a transcript is not meaningful',
+                        'when the transcript already is the coding sequence).',
+                        sep = ' '
+                    )
+                )
+            }
             if( is.null(pathToGTF)) {
                 stop('When ORFs are not annotated you must supply the GTF with known annotation to the \'pathToGTF\' argument.')
             }
@@ -179,18 +194,43 @@ isoformSwitchAnalysisPart1 <- function(
             )
         )
         if(outputSequences) {
-            message(
-                paste(
-                    'The nucleotide and amino acid sequences of these isoforms',
-                    'have been outputted to the supplied directory.',
-                    '\nThese sequences enabling external analysis of',
-                    'protein domians (Pfam), coding potential (CPAT/CPC2) or',
-                    'signal peptides (SignalIP).',
-                    '\nSee ?analyzeCPAT, ?analyzeCPC2, ?analyzePFAM or?analyzeSignalIP',
-                    '(under details) for suggested ways of running these three tools.',
-                    sep = ' '
+            if (isProteomics) {
+                message(
+                    paste(
+                        'The nucleotide and amino acid sequences of these isoforms have been',
+                        'outputted to the supplied directory.',
+                        '\nThese sequences enable external analysis of:',
+                        '\n  - protein domains: Pfam or InterProScan',
+                        '\n  - signal peptides: SignalP or InterProScan',
+                        '\n  - intrinsically disordered regions: IUPred2A, NetSurfP3, or InterProScan',
+                        '\n  - subcellular localization: DeepLoc2',
+                        '\n  - transmembrane topology: DeepTMHMM',
+                        '\nSee ?analyzePFAM, ?analyzeSignalP, ?analyzeIUPred2A, ?analyzeNetSurfP3,',
+                        '?analyzeDeepLoc2, ?analyzeDeepTMHMM, or ?analyzeInterProScan (under details)',
+                        'for suggested ways of running these tools.',
+                        sep = ' '
+                    )
                 )
-            )
+            } else {
+                message(
+                    paste(
+                        'The nucleotide and amino acid sequences of these isoforms have been',
+                        'outputted to the supplied directory.',
+                        '\nThese sequences enable external analysis of:',
+                        '\n  - protein domains: Pfam or InterProScan',
+                        '\n  - coding potential: CPAT or CPC2',
+                        '\n  - signal peptides: SignalP or InterProScan',
+                        '\n  - intrinsically disordered regions: IUPred2A, NetSurfP3, or InterProScan',
+                        '\n  - subcellular localization: DeepLoc2',
+                        '\n  - transmembrane topology: DeepTMHMM',
+                        '\nSee ?analyzeCPAT, ?analyzeCPC2, ?analyzePFAM, ?analyzeSignalP,',
+                        '?analyzeIUPred2A, ?analyzeNetSurfP3, ?analyzeDeepLoc2, ?analyzeDeepTMHMM,',
+                        'or ?analyzeInterProScan (under details) for suggested ways of running',
+                        'these tools.',
+                        sep = ' '
+                    )
+                )
+            }
         }
 
     }

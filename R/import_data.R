@@ -1622,8 +1622,12 @@ importGTF <- function(
 
                 ### Prepare CDS data
                 myCDS <-
-                    mfGTF[which(mfGTF$type == 'CDS'), 'transcript_id']
-                colnames(mcols(myCDS)) <- 'isoform_id'
+                    mfGTF[which(mfGTF$type == 'CDS'),
+                          intersect(c('transcript_id', 'phase'), colnames(mcols(mfGTF)))]
+                colnames(mcols(myCDS))[colnames(mcols(myCDS)) == 'transcript_id'] <- 'isoform_id'
+
+                ### Start the ORF at the first complete codon (GTF phase)
+                myCDS <- trimCdsToFirstCodon(myCDS)
 
                 ### Prepare exon data
                 localExons <- mfGTF[which(mfGTF$type == 'exon'), 'transcript_id']
@@ -1702,7 +1706,8 @@ importGTF <- function(
                     ))
 
                 ### Extract CDS
-                myCDS <- mfGTF[which(mfGTF$type == 'CDS'),c('ID','transcript_id','Parent')]
+                myCDS <- mfGTF[which(mfGTF$type == 'CDS'),
+                               intersect(c('ID','transcript_id','Parent','phase'), colnames(mcols(mfGTF)))]
                 myCDS$Parent <- sapply(myCDS$Parent, function(x) x[1])
 
                 ### Transfer ids
@@ -1715,6 +1720,9 @@ importGTF <- function(
                 myCDS <- myCDS[which(
                     myCDS$transcript_id %in% myIsoAnot$isoform_id
                 ),]
+
+                ### Start the ORF at the first complete codon (GFF phase)
+                myCDS <- trimCdsToFirstCodon(myCDS, idCol = 'transcript_id')
 
                 ### Get it
                 myCDS <-
@@ -2206,16 +2214,49 @@ importGTF <- function(
         isoRange$isoform_id <- isoRange@ranges@NAMES
         isoRange@ranges@NAMES <- NULL
 
+        ### The ORF starts at the first complete codon: skip the bases given by the
+        ### GTF/GFF phase of the first CDS row. Phase is re-read from the original
+        ### (un-merged) CDS rows since the exon merging above dropped it. Both
+        ### lengths come from the same rows so overlapping rows cannot skew the difference.
+        cdsRows <- mfGTF[exonAnoationIndex,
+                         intersect(c('transcript_id', 'phase'), colnames(mcols(mfGTF)))]
+        colnames(mcols(cdsRows))[colnames(mcols(cdsRows)) == 'transcript_id'] <- 'isoform_id'
+        cdsRows <- cdsRows[which(cdsRows$isoform_id %in% myExons$isoform_id)]
+        cdsTrim <- trimCdsToFirstCodon(cdsRows)
+
+        rawLen       <- vapply(split(width(cdsRows), cdsRows$isoform_id), sum, numeric(1))
+        trimLen      <- vapply(split(width(cdsTrim), cdsTrim$isoform_id), sum, numeric(1))
+        phaseApplied <- rawLen - trimLen[names(rawLen)]
+
+        ### Genomic start of the first complete codon (low end on '+', high end on '-')
+        trimRange    <- unlist(range(split(cdsTrim, cdsTrim$isoform_id)))
+        startGenomic <- ifelse(
+            as.character(strand(trimRange)) == '+', start(trimRange), end(trimRange)
+        )
+        names(startGenomic) <- names(trimRange)
+
+        ### Start exon (5'->3' order): 1 unless the phase used up the first CDS block(s)
+        startExon    <- setNames(rep(1L, length(isoLength)), names(isoLength))
+        blocksPerIso <- split(myExons, myExons$isoform_id)
+        for (iso in names(phaseApplied)[which(phaseApplied > 0)]) {
+            blocks <- blocksPerIso[[iso]]
+            startExon[iso] <- if (as.character(strand(blocks))[1] == '+') {
+                sum(end(blocks) < startGenomic[[iso]]) + 1L
+            } else {
+                sum(start(blocks) > startGenomic[[iso]]) + 1L
+            }
+        }
+
         orfInfo <- data.frame(
             isoform_id = isoRange$isoform_id,
-            orfTransciptStart = 1,
+            orfTransciptStart = 1L + as.integer(phaseApplied[isoRange$isoform_id]),
             orfTransciptEnd = as.integer(isoLength[isoRange$isoform_id]),
-            orfTransciptLength = as.integer(isoLength[isoRange$isoform_id]),
-            orfStarExon = 1,
-            orfEndExon = as.integer(isoBlockCount[isoRange$isoform_id]),
-            orfStartGenomic = ifelse(
-                as.character(strand(isoRange)) == '+', start(isoRange), end(isoRange)
+            orfTransciptLength = as.integer(
+                isoLength[isoRange$isoform_id] - phaseApplied[isoRange$isoform_id]
             ),
+            orfStarExon = as.integer(startExon[isoRange$isoform_id]),
+            orfEndExon = as.integer(isoBlockCount[isoRange$isoform_id]),
+            orfStartGenomic = as.numeric(startGenomic[isoRange$isoform_id]),
             orfEndGenomic = ifelse(
                 as.character(strand(isoRange)) == '+', end(isoRange), start(isoRange)
             ),
