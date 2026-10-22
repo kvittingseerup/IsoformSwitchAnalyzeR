@@ -2510,10 +2510,20 @@ importPredefinedSwitches <- function(
 
         if( ! all( isoformsUsed %in% switchAnalyzeRlist$isoformFeatures$isoform_id ) ) {
             missingIso <- setdiff(isoformsUsed, switchAnalyzeRlist$isoformFeatures$isoform_id)
+
+            if( omicDataType == 'proteomics' ) {
+                proteomicsNote <- paste0(
+                    ' (for omicDataType = \'proteomics\' an isoform is also missing if it has no CDS ',
+                    'in the annotation)'
+                )
+            } else {
+                proteomicsNote <- ''
+            }
+
             stop(
                 paste0(
                     'Not all isoforms listed in \'preDefinedSwitches\' were found in the annotation ',
-                    'supplied via \'isoformExonAnnoation\'.\n',
+                    'supplied via \'isoformExonAnnoation\'', proteomicsNote, '.\n',
                     'Specifically ', length(missingIso), ' isoform(s) were missing, for example: ',
                     paste(utils::head(missingIso, 3), collapse = ', '), '.\n',
                     'This is often solved via the \'ignoreAfterBar\', \'ignoreAfterSpace\' or ',
