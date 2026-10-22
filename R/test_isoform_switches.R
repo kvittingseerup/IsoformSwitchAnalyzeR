@@ -275,6 +275,16 @@ isoformSwitchTestSatuRn <- function(
         ### add results to switchAnalyzeRlist
         switchAnalyzeRlist$isoformSwitchAnalysis <- resultOfPairwiseTest
 
+        ### Record the cutoffs actually used so summary()/show() can report
+        ### them accurately instead of assuming their own defaults
+        if (is.null(switchAnalyzeRlist$runInfo)) {
+            switchAnalyzeRlist$runInfo <- list()
+        }
+        switchAnalyzeRlist$runInfo$isoformSwitchTestSatuRn <- list(
+            alpha = alpha,
+            dIFcutoff = dIFcutoff
+        )
+
         ### reduce to genes with at least one significant isoform if TRUE
         if (reduceToSwitchingGenes) {
             if (reduceFurtherToGenesWithConsequencePotential) {
@@ -782,6 +792,16 @@ isoformSwitchTestDEXSeq <- function(
 
         switchAnalyzeRlist$isoformSwitchAnalysis <- dexseqPairwiseResults
     }
+
+    ### Record the cutoffs actually used so summary()/show() can report
+    ### them accurately instead of assuming their own defaults
+    if (is.null(switchAnalyzeRlist$runInfo)) {
+        switchAnalyzeRlist$runInfo <- list()
+    }
+    switchAnalyzeRlist$runInfo$isoformSwitchTestDEXSeq <- list(
+        alpha = alpha,
+        dIFcutoff = dIFcutoff
+    )
 
     ### Print status
     if (!quiet) {

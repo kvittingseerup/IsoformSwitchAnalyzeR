@@ -817,6 +817,29 @@ switchPlotTranscript <- function(
         if(TRUE) {
             ### Loop over each transcript and make the data.frame with all the annotation data (this is currently the rate limiting step)
             myTranscriptPlotDataList <- list()
+
+            ### Overwrite $Domain for every atomic sub-interval that falls
+            ### within [start,end]. Called once per annotation category below;
+            ### whichever call happens last "wins" an overlap.
+            applyOverlapLabels <- function(exonsDevided, starts, ends, labels) {
+                if (!length(starts) || !length(ends)) {
+                    return(exonsDevided)
+                }
+                labels <- rep_len(labels, length(starts))
+                for (j in seq_along(starts)) {
+                    coordinatPair <- c(starts[j], ends[j])
+                    if (all(!is.na(coordinatPair))) {
+                        aRange <- IRanges(min(coordinatPair), max(coordinatPair))
+                        exonsDevided$Domain[queryHits(findOverlaps(
+                            subject = aRange,
+                            query = ranges(exonsDevided),
+                            type = 'within'
+                        ))] <- labels[j]
+                    }
+                }
+                return(exonsDevided)
+            }
+
             for (i in seq(along.with = exonInfoSplit)) {
                 # extract data
                 transcriptName <- names(exonInfoSplit)[i]
@@ -892,67 +915,45 @@ switchPlotTranscript <- function(
                     }
                 }
 
-                # domain - loop over each domain
-                if (length(localDomainStart)) {
-                    for (j in 1:length(localDomainStart)) {
-                        coordinatPair <- c(localDomainStart[j], localDomainEnd[j])
-                        if( all( !is.na(coordinatPair)) ) {
-                            domainRange <-
-                                IRanges(min(coordinatPair), max(coordinatPair))
-                            localExonsDevided$Domain[queryHits(findOverlaps(
-                                subject = domainRange,
-                                query = ranges(localExonsDevided),
-                                type = 'within'
-                            ))] <- domainName[[transcriptName]][j]
-                        }
-                    }
+                # domain / idr / signal peptide - overwrite order follows
+                # 'annotationImportance' (lowest priority first, so the
+                # highest-priority category is applied last and wins
+                # wherever two annotated regions overlap)
+                overlapSpecs <- list(
+                    protein_domain = list(
+                        starts = localDomainStart,
+                        ends   = localDomainEnd,
+                        labels = domainName[[transcriptName]]
+                    ),
+                    idr = list(
+                        starts = localIdrStart,
+                        ends   = localIdrEnd,
+                        labels = idrName[[transcriptName]]
+                    ),
+                    signal_peptide = list(
+                        starts = localOrfStart,
+                        ends   = localPepticeCleaveage,
+                        labels = 'Signal Peptide'
+                    )
+                )
+                for (category in rev(annotationImportance)) {
+                    localExonsDevided <- applyOverlapLabels(
+                        localExonsDevided,
+                        overlapSpecs[[category]]$starts,
+                        overlapSpecs[[category]]$ends,
+                        overlapSpecs[[category]]$labels
+                    )
                 }
 
-                # IDR
-                if (length(localIdrStart)) {
-                    for (j in 1:length(localIdrStart)) {
-                        coordinatPair <- c(localIdrStart[j], localIdrEnd[j])
-                        if( all( !is.na(coordinatPair)) ) {
-                            domainRange <-
-                                IRanges(min(coordinatPair), max(coordinatPair))
-                            localExonsDevided$Domain[queryHits(findOverlaps(
-                                subject = domainRange,
-                                query = ranges(localExonsDevided),
-                                type = 'within'
-                            ))] <- idrName[[transcriptName]][j]
-                        }
-                    }
-                }
-
-                # signal peptide
-                if (length(localPepticeCleaveage)) {
-                    coordinatPair <- c(localOrfStart, localPepticeCleaveage)
-                    if( all( !is.na(coordinatPair)) ) {
-                        peptideRange <-
-                            IRanges(min(coordinatPair), max(coordinatPair))
-                        localExonsDevided$Domain[queryHits(findOverlaps(
-                            subject = peptideRange,
-                            query = ranges(localExonsDevided),
-                            type = 'within'
-                        ))] <- 'Signal Peptide'
-                    }
-                }
-
-                # trimmed
-                if (length(localtrimmedStart)) {
-                    for (j in 1:length(localtrimmedStart)) {
-                        coordinatPair <- c(localtrimmedStart[j], localtrimmedEnd[j])
-                        if( all( !is.na(coordinatPair)) ) {
-                            domainRange <-
-                                IRanges(min(coordinatPair), max(coordinatPair))
-                            localExonsDevided$Domain[queryHits(findOverlaps(
-                                subject = domainRange,
-                                query = ranges(localExonsDevided),
-                                type = 'within'
-                            ))] <- 'Not Analyzed'
-                        }
-                    }
-                }
+                # trimmed - always applied last, unconditionally: it marks
+                # regions we lack annotation confidence in rather than a
+                # category competing under 'annotationImportance'
+                localExonsDevided <- applyOverlapLabels(
+                    localExonsDevided,
+                    localtrimmedStart,
+                    localtrimmedEnd,
+                    'Not Analyzed'
+                )
 
                 # topology - loop over each domain
                 if (length(localTopStart)) {

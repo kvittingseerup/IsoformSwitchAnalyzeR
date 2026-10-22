@@ -243,8 +243,25 @@ summary.switchAnalyzeRlist <- function(object, ...) {
         is.na( object$isoformFeatures$gene_switch_q_value )
     )
     if(includingSwitches) {
+        ### Use the alpha/dIFcutoff the switch test was actually run with,
+        ### if recorded (see isoformSwitchTestDEXSeq()/isoformSwitchTestSatuRn()).
+        ### Falls back to extractSwitchSummary()'s own defaults for objects
+        ### created before this was tracked.
+        alpha <- 0.05
+        dIFcutoff <- 0.1
+        testInfo <- object$runInfo$isoformSwitchTestDEXSeq
+        if (is.null(testInfo)) {
+            testInfo <- object$runInfo$isoformSwitchTestSatuRn
+        }
+        if (!is.null(testInfo)) {
+            alpha <- testInfo$alpha
+            dIFcutoff <- testInfo$dIFcutoff
+        }
+
         try(
-            switchNumber <- extractSwitchSummary(object),
+            switchNumber <- extractSwitchSummary(
+                object, alpha = alpha, dIFcutoff = dIFcutoff
+            ),
             silent = TRUE
         )
         if( exists('switchNumber') ) {
@@ -262,7 +279,10 @@ summary.switchAnalyzeRlist <- function(object, ...) {
                 switchNumber <- rbind(switchNumberHead, '...', switchNumberTail)
             }
 
-            cat('\nSwitching features:\n')
+            cat(sprintf(
+                '\nSwitching features (alpha=%s, dIFcutoff=%s):\n',
+                alpha, dIFcutoff
+            ))
             print(switchNumber)
 
             ## add to analysis performed
