@@ -1236,9 +1236,13 @@ Please note the "salmonDf" object also works directly with the *tximeta::tximeta
 
 ```{R, include=FALSE}
 salmonImportOK <- tryCatch({
-    con <- url("ftp://ftp.ensembl.org/pub/", open = "r")
-    close(con)
-    TRUE
+    probeFile <- tempfile(fileext = ".fa.gz")
+    probeOK <- download.file(
+        "ftp://ftp.ensembl.org/pub/release-98/fasta/drosophila_melanogaster/ncrna/Drosophila_melanogaster.BDGP6.22.ncrna.fa.gz",
+        probeFile, quiet = TRUE, mode = "wb"
+    ) == 0 && file.size(probeFile) > 0
+    unlink(probeFile)
+    probeOK
 }, error = function(e) FALSE, warning = function(w) FALSE)
 ```
 
