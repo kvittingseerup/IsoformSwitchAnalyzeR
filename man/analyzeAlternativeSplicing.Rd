@@ -64,6 +64,8 @@ Since the comparison is to the hypothetical pre-RNA the interpretation of an eve
         \item{\code{ATSS}}: Alternative Transcription Start Sites. Compared to the hypothetical pre-RNA an alternative transcription start sites was used. Since it is compared to the pre-RNA, the ATSS site used is per definition more downstream than the the pre-RNA .
         \item{\code{ATTS}}: Alternative Transcription Termination Sites. Compared to the hypothetical pre-RNA an alternative transcription Termination sites was used. Since it is compared to the pre-RNA, the ATTS site used is per definition more upstream than the the pre-RNA.
 }
+
+For proteomics data (\code{switchAnalyzeRlist$omicDataType} is \code{"proteomics"}, see \link{importPredefinedSwitches}), the \code{exons} slot is coding-sequence-only (CDS-only) rather than the full pre-mRNA exon structure. The function itself is unchanged, but the "pre-RNA" referred to above is then the coding sequence only, so all classified events (\code{ES}, \code{MEE}, \code{MES}, \code{IR}, \code{A5}, \code{A3}, \code{ATSS}, \code{ATTS}) should be interpreted in relation to the coding sequence only, since non-coding (UTR) regions are not part of the underlying data.
 }
 
 \value{
