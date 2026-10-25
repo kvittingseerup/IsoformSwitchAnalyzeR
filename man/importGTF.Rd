@@ -11,6 +11,7 @@ importGTF(
     ### Core arguments
     pathToGTF,
     isoformNtFasta = NULL,
+    omicDataType = 'transcriptomics',
 
     ### Advanced arguments
     extractAaSeq = FALSE,
@@ -37,7 +38,17 @@ Can either be:
 }
 
 \item{isoformNtFasta}{
-A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 1) people working with non-model organisms where extracting the sequence from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index). The file will automatically be subsetted to the isoforms found in the gtf file so additional sequences (such as decoys) does not need to be manually removed. Please note this different from a fasta file with the sequences of the entire genome.
+A (vector of) text string(s) providing the path(s) to the a fasta file containing the nucleotide sequence of all isoforms quantified. This is useful for: 1) people working with non-model organisms where extracting the sequence from a BSgenome might require extra work. 2) workflow speed-up for people who already have the fasta file (which most people running Salmon, Kallisto or RSEM for the quantification have as that is used to build the index). The file will automatically be subsetted to the isoforms found in the gtf file so additional sequences (such as decoys) does not need to be manually removed. Please note this different from a fasta file with the sequences of the entire genome. Cannot be combined with \code{omicDataType="proteomics"}.
+}
+
+\item{omicDataType}{
+A string, either \code{"transcriptomics"} (default) or \code{"proteomics"}, indicating what kind of data the resulting \code{switchAnalyzeRlist} will be used with. This also determines which GTF/GFF feature type defines the isoform structure stored in the \code{exons} slot, and is stored as-is in the returned \code{switchAnalyzeRlist}'s \code{omicDataType} field (see \link{switchAnalyzeRlist}).
+
+With the default \code{"transcriptomics"}, the full (pre-mRNA) exon structure is used (the GTF/GFF \code{"exon"} feature type).
+
+With \code{"proteomics"}, only the coding sequence is used (the GTF/GFF \code{"CDS"} feature type) - non-coding regions (UTRs) are excluded from the transcript model, and isoforms with no annotated CDS are dropped entirely. This is intended for workflows that need a clean coding-sequence/protein view of the transcriptome, e.g. matching against proteomics data. Since the whole isoform is now the ORF by construction, ORF-in-transcript coordinates become trivial and NMD/PTC status cannot be determined this way - so \code{onlyConsiderFullORF}, \code{PTCDistance} and \code{addAnnotatedORFs} are all ignored, and \code{orfAnalysis$PTC}/\code{isoformFeatures$PTC} are set to \code{FALSE}.
+
+\code{omicDataType="proteomics"} is supported for both GTF and RefSeq GFF files, and cannot be combined with \code{isoformNtFasta}: a transcript fasta file provides the full isoform sequence independent of the \code{exons} slot, so it cannot be sliced down to just the CDS without redoing the exon-junction mapping this mode deliberately skips. Instead, extract sequence afterwards via \code{\link{extractSequence}(genomeObject=<a BSgenome>)} or \code{\link{isoformSwitchAnalysisPart1}(genomeObject=<a BSgenome>)}, both of which correctly build sequence from the (CDS-only) \code{exons} slot.
 }
 
 \item{extractAaSeq}{
@@ -80,7 +91,7 @@ If \code{addAnnotatedORFs=TRUE} a \code{data.frame} containing the details of th
 The data.frame added have one row pr isoform and contains 11 columns:
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
-    \item{\code{orfTransciptStart}: The start position of the ORF in transcript Coordinates, here defined as the position of the 'A' in the 'AUG' start motif.}
+    \item{\code{orfTransciptStart}: The start position of the ORF in transcript Coordinates, here defined as the position of the 'A' in the 'AUG' start motif. For annotated ORFs whose CDS begins part-way through a codon (a GTF/GFF \code{phase} of 1 or 2, as seen for 5'-incomplete transcripts such as those tagged \code{cds_start_NF}) the start is the first complete codon, i.e. the leading bases given by the phase are skipped. If the file has no phase information the CDS is assumed to start at a complete codon.}
     \item{\code{orfTransciptEnd}: The end position of the ORF in transcript coordinates, here defined as the last nucleotide before the STOP codon (meaning the stop codon is not included in these coordinates).}
     \item{\code{orfTransciptLength}: The length of the ORF}
     \item{\code{orfStarExon}: The exon in which the start codon is}
@@ -91,7 +102,7 @@ The data.frame added have one row pr isoform and contains 11 columns:
     \item{\code{stopIndex}: The index, counting from the last exon (which is 0), of which exon is the stop codon is in.}
     \item{\code{PTC}: A logic indicating whether the isoform is classified as having a Premature Termination Codon. This is defined as having a stop codon more than \code{PTCDistance} (default is 50) nt upstream of the last exon exon junction.}
 }
-NA means no information was available aka no ORF (passing the \code{minORFlength} filter) was found.
+NA means no information was available aka no ORF (passing the \code{minORFlength} filter) was found. The exception is \code{omicDataType="proteomics"} (see that argument): there \code{PTC} is \code{FALSE} rather than \code{NA} for every isoform, since an ORF (the whole isoform) was found by construction, but NMD-sensitivity itself is not determinable in that mode.
 
 }
 \references{
@@ -113,4 +124,11 @@ Kristoffer Vitting-Seerup
 
 aSwitchList <- importGTF(pathToGTF=system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"))
 aSwitchList
+
+### For a coding-sequence-only (proteomics) workflow:
+aCdsSwitchList <- importGTF(
+    pathToGTF = system.file("extdata/example.gtf.gz", package="IsoformSwitchAnalyzeR"),
+    omicDataType = "proteomics"
+)
+aCdsSwitchList
 }

@@ -1,3 +1,9 @@
+Changes in version 2.11.5 (2026-10)
+- Update type: Major.
+- Added functionality for importing predefined isoform switches
+- Added handling of proteomics data imported with importPredefinedSwitches()
+- Minor bug fixes
+
 Changes in version 2.11.4 (2026-09)
 - Update type: Minor.
 - Fixed the 'annotationImportance' argument behaviour in switchPlotTranscript(). See issue #318.
