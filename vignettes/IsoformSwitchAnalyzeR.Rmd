@@ -658,7 +658,7 @@ subset(
 
 Let us take a look at the isoform switch in the ZAK gene (7th most significant gene) using the switchPlot functionality. Note that since the switchAnalyzeRlist contains two different comparison (LUAD and COAD) we need to specify the conditions to plot (this is not necessary if there is only one condition in your data).
 
-```{r, fig.width=12.5, fig.height=7, warning=FALSE}
+```{r, fig.width=13, fig.height=9, warning=FALSE}
 switchPlot(
     exampleSwitchListAnalyzed,
     gene='ZAK',
@@ -668,7 +668,7 @@ switchPlot(
 )
 ```
 
-From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Interestingly the long isoform contains a SAM_1 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Since only the long isoform have a IDR with a predicted binding site this IDR strengthens the new-interaction-partners hypothesis. Lastly we see that both the topological analysis (the small boxes above the transcripts) and the subcellular location analysis (indicated below the isoform name to the left) suggest all transcripts are intracellular.
+From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Furthermore, the shortest isoform has a truncated kinase domain ("Non-ref Isotype" in the legend) and the functional sites predicted by PIRSR (the markers on the transcripts) show that it lacks the ATP-binding residues in the N-terminal part of the domain (red markers are sites not present in all isoforms). Interestingly the long isoform contains a SAM_2 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Since only the long isoform have a long C-terminal IDR, which MobiDB-lite divides into polar and polyampholyte regions (IDR_Polar and IDR_PolyAmph in the legend), this IDR strengthens the new-interaction-partners hypothesis. Lastly we see that both the topological analysis (the small boxes above the transcripts) and the subcellular location analysis (indicated below the isoform name to the left, together with the predicted membrane type) suggest all transcripts are intracellular.
 
 If you want to save this plot as a pdf file via the *pdf* command, you need to specify "onefile = FALSE". The following code chunk will produce a nicely-sized figure:
 
@@ -714,7 +714,7 @@ extractConsequenceSummary(
 
 Note the "consequencesToAnalyze" argument enables analysis of only a subset of features.
 
-From this summary plots above many things can be seen. First of all, the most frequent changes affect protein domains, Intrinsically Disordered Regions (IDR) and length of extracellular domains. The most frequent "switch" (both gain and loss of fatures) is in the sub-cellular locations of isoforms. We also notice some consequences are un-evenly distributed (e.g. many more instances of "domain loss" compared to "domain gains"). Such differences can be systematically analyzed as shown below.
+From this summary plots above many things can be seen. First of all, the most frequent changes affect protein domains, Intrinsically Disordered Regions (IDR) and length of extracellular domains. The most frequent "switch" (both gain and loss of fatures) in COAD is in the sub-cellular locations of isoforms. We also notice some consequences are un-evenly distributed (e.g. many more instances of "domain loss" compared to "domain gains"). Such differences can be systematically analyzed as shown below.
 
 <br />
 
@@ -734,7 +734,7 @@ extractConsequenceEnrichment(
 
 For each pair of opposing consequences (e.g. protein domain loss vs gain) this plot shows the fraction of switches (x-axis) that results in the consequence indicated (e.g. protein domain loss) (y-axis). The fraction is calculated only considering switches affected by either of the opposing consequence indicated on the y-axis. If this fraction is significantly different from 0.5 it indicates there is a systematic bias in the functional consequences of isoform switches.
 
-From the analysis above, it is therefore quite clear, that many of the opposing consequences are significantly unevenly distributed. In other words, many types of consequences seem to be used in a cancer-specific manner. It is specifically noteworthy there is a significant loss of protein domains, IDRs. Interestingly there is also a significant gain of non-reference protein domain isotypes (as the y-axis indicate loss and the fraction is \< 0.5) suggesting domain isotopes are also specifically regulated. Lastly this analysis indicate that in COAD there are significantly more switches resulting in isoforms located in additional sub-cellular places (as y-axis indicate loss but the fraction is \< 0.5). More on these location gains later.
+From the analysis above, it is therefore quite clear, that many of the opposing consequences are significantly unevenly distributed. In other words, many types of consequences seem to be used in a cancer-specific manner. It is specifically noteworthy there is a significant loss of protein domains, IDRs. Interestingly there is also a significant gain of non-reference protein domain isotypes (as the y-axis indicate loss and the fraction is \< 0.5) suggesting domain isotopes are also specifically regulated. Lastly, in contrast to the other consequences, there is no significant bias in the sub-cellular location changes, although they are frequent in COAD (more on these location changes later).
 
 Please note this enrichment analysis does not consider mixed consequences such as sub-cellular location switch, domain switch and IDR switch.
 
@@ -753,7 +753,7 @@ extractConsequenceEnrichmentComparison(
 
 The analysis shows that compared to LUAD, COAD have a significantly higher fraction of switches resulting in protein domain loss, but there is no difference in switches from noncoding to coding transcripts.
 
-As indicated by the analysis done above with *extractConsequenceEnrichment()* and *extractConsequenceSummary()* there seems to be a lot of location changes - especially in COAD. We can further investigate these as follows:
+As indicated by the analysis done above with *extractConsequenceSummary()* there seems to be a lot of location changes - especially in COAD. We can further investigate these as follows:
 
 ```{r, fig.width=9, fig.height=5}
 extractSubCellShifts(
@@ -1880,11 +1880,11 @@ subset(switchingIso, gene_name == 'ZAK')
 
 From which we can see the details of both isoforms (since we supplied "extractGenes = FALSE") involved in the isoforms switch in ZAK. The isoform switch can visually be analyzed using a switch plot which summarizes all the concatenated information about the isoforms. Specifically the switch plot is a composite plot visualizing:
 
-1)  The isoform structures along with the concatenated annotations (including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains as well as annotated signal peptides)
+1)  The isoform structures along with the concatenated annotations (including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains, signal peptides, IDRs and functional sites (PIRSR) as well as the predicted sub-cellular location and membrane type)
 2)  Gene and isoform expression and any annotated differential expression analysis of these
 3)  Isoform usage including the result of the isoform switch test
 
-```{r, fig.width=12, fig.height=7}
+```{r, fig.width=12, fig.height=9}
 switchPlot(exampleSwitchListAnalyzedSubset, gene = 'ZAK')
 ```
 
@@ -1942,7 +1942,7 @@ switchPlotIsoUsage()   # Visualizes the isoform usage
 
 As illustrated here:
 
-```{r, fig.width=12, fig.height=3}
+```{r, fig.width=12, fig.height=5}
 ### exampleSwitchListAnalyzedSubset is created above
 
 switchPlotTranscript(exampleSwitchListAnalyzedSubset, gene = 'ZAK')

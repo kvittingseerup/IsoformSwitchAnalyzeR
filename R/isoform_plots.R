@@ -6,7 +6,9 @@
 ###   pair   : Two residues linked to each other (DISULFID and intrachain
 ###            CROSSLNK). g1 and g2 are the genomic positions of the two residues.
 ###   region : A BINDING row spanning several residues. g1 and g2 are the first
-###            and last genomic base of the row.
+###            and last genomic base of the row. A row spanning an exon junction
+###            is returned as one region for each exon (so it is not drawn
+###            across the intron).
 ### 'changed' is TRUE if the feature (the same category at the same genomic
 ### position) is missing in at least one of the 'isoformsAnalyzed'.
 getPIRSRplotFeatures <- function(pirsrAnalysis, isoformIds, exonInfoSplit, isoformsAnalyzed = isoformIds) {
@@ -41,10 +43,21 @@ getPIRSRplotFeatures <- function(pirsrAnalysis, isoformIds, exonInfoSplit, isofo
             return(data.frame(isoform_id = isoformId, category = aRow$category, kind = 'point', g1 = g, g2 = g, stringsAsFactors = FALSE))
         }
         if (aRow$category == 'BINDING') {
-            # a binding row spanning several residues
-            g <- toGenomic(isoformId, aRow$transcriptStart, aRow$transcriptEnd)
-            return(data.frame(isoform_id = isoformId, category = aRow$category, kind = 'region',
-                              g1 = min(g$startGenomic, g$endGenomic), g2 = max(g$startGenomic, g$endGenomic), stringsAsFactors = FALSE))
+            # a binding row spanning several residues - split it at the exon junctions
+            exonDf <- as.data.frame(exonInfoSplit[[isoformId]])
+            exonWidths <- if (exonDf$strand[1] == '-') rev(exonDf$width) else exonDf$width
+            exonEndInTranscript <- cumsum(exonWidths)
+            junctions <- exonEndInTranscript[which(
+                exonEndInTranscript >= aRow$transcriptStart & exonEndInTranscript < aRow$transcriptEnd
+            )]
+            pieceStart <- c(aRow$transcriptStart, junctions + 1)
+            pieceEnd   <- c(junctions, aRow$transcriptEnd)
+            pieces <- lapply(seq_along(pieceStart), function(j) {
+                g <- toGenomic(isoformId, pieceStart[j], pieceEnd[j])
+                data.frame(isoform_id = isoformId, category = aRow$category, kind = 'region',
+                           g1 = min(g$startGenomic, g$endGenomic), g2 = max(g$startGenomic, g$endGenomic), stringsAsFactors = FALSE)
+            })
+            return(do.call(rbind, pieces))
         }
         # two linked residues (start and end of the annotation)
         gStart <- toGenomic(isoformId, aRow$transcriptStart + 1, aRow$transcriptStart + 1)$startGenomic
@@ -1899,6 +1912,18 @@ switchPlotTranscript <- function(
                     changed  = pirsrFeatures$changed[regionRows]
                 )
 
+                ### A rectangle which is too short to be drawn (e.g. a single base, which has no length
+                ### and therefore is not drawn at all) is drawn as a square marker instead
+                shortRect <- which(
+                    (rects$xmax - rects$xmin) < 0.003 * diff(range(c(myTranscriptPlotData$start, myTranscriptPlotData$end)))
+                )
+                if (length(shortRect)) {
+                    markers    <- rbind(markers, makePirsrDf(regionRows[shortRect], rectMid[shortRect]))
+                    rects      <- rects[-shortRect, ]
+                    rectMid    <- rectMid[-shortRect]
+                    regionRows <- regionRows[-shortRect]
+                }
+
                 ### Invisible markers so categories only drawn as rectangles are also in the legend
                 legendMarkers <- makePirsrDf(regionRows, rectMid)
                 legendMarkers <- legendMarkers[which(
@@ -2010,7 +2035,7 @@ switchPlotTranscript <- function(
 
         ### PIRSR residues - black markers with a white halo (visible on any background)
         if(plotPIRSR) {
-            markerSize <- 1.1
+            markerSize <- 1.8
             pirsrChangedColor <- '#E41A1C' # residues lost in at least one of the other isoforms
             markerStroke <- 0.7
             haloSize     <- markerSize + 0.35
@@ -2096,22 +2121,46 @@ switchPlotTranscript <- function(
 
             ### Residues
             if(nrow(pirsrPlotData$markers)) {
+                ### Spread markers that overlap (e.g. multiple annotations of the same residue) along
+                ### the y-axis (within each transcript) so all of them are visible. The markers of a
+                ### cluster are spread evenly (max +-0.28, the transcript is +-0.4).
+                markersDf <- pirsrPlotData$markers
+                markersDf$y <- markersDf$idNr
+                markerGap <- 0.01 * diff(range(c(myTranscriptPlotData$start, myTranscriptPlotData$end)))
+                markerRowKey <- paste(markersDf$idNr, markersDf$seqnames)
+                for (aKey in unique(markerRowKey)) {
+                    idx <- which(markerRowKey == aKey)
+                    idx <- idx[order(markersDf$x[idx], markersDf$Category[idx])]
+                    clusterId <- cumsum(c(TRUE, diff(markersDf$x[idx]) >= markerGap))
+                    for (aCluster in unique(clusterId)) {
+                        inCluster <- idx[which(clusterId == aCluster)]
+                        nMarkers <- length(inCluster)
+                        if (nMarkers > 1) {
+                            step <- min(0.14, 0.56 / (nMarkers - 1))
+                            offsets <- (seq_len(nMarkers) - (nMarkers + 1) / 2) * step
+                            # centre first so neighbouring markers alternate above and below
+                            offsets <- offsets[order(abs(offsets), -offsets)]
+                            markersDf$y[inCluster] <- markersDf$idNr[inCluster] + offsets
+                        }
+                    }
+                }
+
                 myPlot <-
                     myPlot +
                     geom_point(
-                        data = pirsrPlotData$markers,
-                        aes(x = x, y = idNr, shape = Category),
+                        data = markersDf,
+                        aes(x = x, y = y, shape = Category),
                         colour = 'white', fill = 'white', size = haloSize, stroke = haloStroke,
                         show.legend = FALSE
                     ) +
                     geom_point(
-                        data = pirsrPlotData$markers[which(!pirsrPlotData$markers$changed), ],
-                        aes(x = x, y = idNr, shape = Category),
+                        data = markersDf[which(!markersDf$changed), ],
+                        aes(x = x, y = y, shape = Category),
                         colour = 'black', fill = 'black', size = markerSize, stroke = markerStroke
                     ) +
                     geom_point(
-                        data = pirsrPlotData$markers[which(pirsrPlotData$markers$changed), ],
-                        aes(x = x, y = idNr, shape = Category),
+                        data = markersDf[which(markersDf$changed), ],
+                        aes(x = x, y = y, shape = Category),
                         colour = pirsrChangedColor, fill = pirsrChangedColor, size = markerSize, stroke = markerStroke
                     )
             }
@@ -2128,14 +2177,35 @@ switchPlotTranscript <- function(
             myPlot <-
                 myPlot +
                 scale_shape_manual(
-                    # explain the red color if it is used
-                    name = if (any(pirsrFeatures$changed)) 'PIRSR\n(red: not present\nin all isoforms)' else 'PIRSR',
+                    name = 'PIRSR',
                     values = pirsrPlotData$shapes
                 ) +
                 guides(shape = guide_legend(
-                    order = 3, # last
+                    order = 3, ncol = 2,
                     override.aes = list(colour = 'black', fill = 'black', alpha = 1, size = markerSize)
                 ))
+
+            ### Legend entry explaining the marker colors (only needed if some sites are red)
+            if (any(pirsrFeatures$changed)) {
+                statusLevels <- c('All isoforms', 'Not all isoforms')
+                statusDf <- data.frame(
+                    x = rep(min(myTranscriptPlotData$start), 2),
+                    y = rep(idData$idNr[1], 2),
+                    Status = factor(statusLevels, levels = statusLevels)
+                )
+                myPlot <-
+                    myPlot +
+                    geom_point(
+                        data = statusDf,
+                        aes(x = x, y = y, alpha = Status),
+                        shape = 15, size = markerSize
+                    ) +
+                    scale_alpha_manual(name = 'Site present in', values = c(0, 0)) +
+                    guides(alpha = guide_legend(
+                        order = 4, # below the PIRSR legend
+                        override.aes = list(colour = c('black', pirsrChangedColor), alpha = 1, size = markerSize)
+                    ))
+            }
         }
 
         ### Optimize apperance
@@ -4009,7 +4079,7 @@ switchPlot <- function(
 
     ### Expression legend
     print(expressionLegend,
-          vp = viewport(layout.pos.row = 9:15, layout.pos.col = lastTwoCols))
+          vp = viewport(layout.pos.row = 11:16, layout.pos.col = lastTwoCols))
 
     # expression
     print(
@@ -4036,7 +4106,7 @@ switchPlot <- function(
 
     # Transcript Legend
     print(transcriptLegend,
-          vp = viewport(layout.pos.row = 2:8, layout.pos.col = lastTwoCols))
+          vp = viewport(layout.pos.row = 1:10, layout.pos.col = lastTwoCols))
 
 }
 
