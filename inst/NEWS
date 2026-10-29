@@ -1,3 +1,10 @@
+Changes in version 2.11.6 (2026-10)
+- Update type: Major.
+- Added handling PIRSR results to analyzeInterProScan() function
+- Updated analyzeDeepLoc2() function to handle DeepLoc2.1 results
+- Added PIRSR, MobiDBLite, and DeepLoc2.1 results to switchPlotTranscript()
+- Changed preFilter default arguments to better handle unbalanced group sizes. See issue #321.
+
 Changes in version 2.11.5 (2026-10)
 - Update type: Major.
 - Added functionality for importing predefined isoform switches
