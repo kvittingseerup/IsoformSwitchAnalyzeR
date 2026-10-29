@@ -930,6 +930,74 @@ convertCoordinatsTranscriptToGenomic <- function(
 
 }
 
+### Removes, from the 5' end of every isoform's CDS, the bases that belong to a
+### codon started upstream of the annotated CDS (the GTF/GFF 'phase' of the first
+### CDS row in transcription order) so the CDS starts at its first complete
+### codon. Isoforms without phase information (or phase 0) are left untouched.
+### Note: not idempotent - the phase column is kept, so call it once only.
+trimCdsToFirstCodon <- function(cds, idCol = 'isoform_id') {
+    if (is.null(mcols(cds)$phase)) {
+        return(cds)
+    }
+    cdsPhase <- as.integer(mcols(cds)$phase)
+    cdsPhase[is.na(cdsPhase)] <- 0L
+
+    ### Sort into transcription order within each isoform
+    ids    <- as.character(mcols(cds)[[idCol]])
+    isPlus <- as.character(strand(cds)) == '+'
+    ord    <- order(ids, ifelse(isPlus, start(cds), -end(cds)))
+    cds      <- cds[ord]
+    cdsPhase <- cdsPhase[ord]
+    ids      <- ids[ord]
+    isPlus   <- isPlus[ord]
+
+    ### Only the first CDS row of each isoform carries the phase that matters
+    firstRow <- which(!duplicated(ids))
+    toTrim   <- firstRow[cdsPhase[firstRow] > 0L]
+    if (!length(toTrim)) {
+        return(cds)
+    }
+
+    ### Common case: the first CDS row is longer than its phase - just shorten it
+    wide   <- toTrim[width(cds)[toTrim] > cdsPhase[toTrim]]
+    plusW  <- wide[isPlus[wide]]
+    minusW <- wide[!isPlus[wide]]
+    if (length(plusW)) {
+        start(cds)[plusW] <- start(cds)[plusW] + cdsPhase[plusW]
+    }
+    if (length(minusW)) {
+        end(cds)[minusW] <- end(cds)[minusW] - cdsPhase[minusW]
+    }
+
+    ### Rare case: the first row is not longer than its phase, so the first
+    ### complete codon starts in a later row - walk along the rows
+    narrow  <- setdiff(toTrim, wide)
+    dropRow <- integer(0)
+    for (r in narrow) {
+        rows      <- which(ids == ids[r])
+        remaining <- cdsPhase[r]
+        for (k in rows) {
+            w <- width(cds)[k]
+            if (remaining >= w) {
+                dropRow   <- c(dropRow, k)
+                remaining <- remaining - w
+            } else {
+                if (isPlus[k]) {
+                    start(cds)[k] <- start(cds)[k] + remaining
+                } else {
+                    end(cds)[k] <- end(cds)[k] - remaining
+                }
+                remaining <- 0L
+            }
+            if (remaining == 0L) break
+        }
+    }
+    if (length(dropRow)) {
+        cds <- cds[-dropRow]
+    }
+    return(cds)
+}
+
 analyseCds <- function(
     myCDS,
     localExons,

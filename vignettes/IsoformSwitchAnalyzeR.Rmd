@@ -85,6 +85,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
     -   [Importing Data from Kallisto, Salmon, RSEM or StringTie]
     -   [Importing Data from Cufflinks/Cuffdiff]
     -   [Importing Data from Full-length Transcript Assemblers]
+    -   [Importing Pre-defined Isoform Switches]
 -   [Filtering]
 -   [Identifying Isoform Switches]
     -   [Testing for Isoform Switches via DEXSeq] (recommended)
@@ -113,6 +114,7 @@ In summary, IsoformSwitchAnalyzeR enables analysis of RNA-seq data with isoform 
 
 -   [Applying on Long-read Sequencing Data]
 -   [Applying on Single-cell Sequencing Data]
+-   [Applying on Proteomics Data]
 -   [Augmenting ORF Predictions with Pfam Results]
 -   [Analyze Small Upstream ORFs]
 -   [Remove Sequences Stored in SwitchAnalyzeRlist]
@@ -878,6 +880,7 @@ The detailed workflow consists of the following steps (illustrated in Figure 2) 
     -   [Importing Data from Kallisto, Salmon, RSEM or StringTie]
     -   [Importing Data from Cufflinks/Cuffdiff]
     -   [Importing Data from Full-length Transcript Assemblers]
+    -   [Importing Pre-defined Isoform Switches]
 -   [Filtering]
 -   [Identifying Isoform Switches]
 -   [Analyzing Open Reading Frames]
@@ -1084,6 +1087,7 @@ To facilitate the usage of IsoformSwitchAnalyzeR, several dedicated wrappers for
 -   [Importing Data from Salmon via Tximeta]
 -   [Importing Data from Cufflinks/Cuffdiff]
 -   [Importing Data from Full-length Transcript Assemblers]
+-   [Importing Pre-defined Isoform Switches]
 
 For a (non-exhaustive) recommendations of bioinformatic tools which can perform the quantifications please refer to [What Quantification Tool(s) Should I Use?](#what-quantification-tools-should-i-use)
 
@@ -1236,9 +1240,13 @@ Please note the "salmonDf" object also works directly with the *tximeta::tximeta
 
 ```{R, include=FALSE}
 salmonImportOK <- tryCatch({
-    con <- url("ftp://ftp.ensembl.org/pub/", open = "r")
-    close(con)
-    TRUE
+    probeFile <- tempfile(fileext = ".fa.gz")
+    probeOK <- download.file(
+        "ftp://ftp.ensembl.org/pub/release-98/fasta/drosophila_melanogaster/ncrna/Drosophila_melanogaster.BDGP6.22.ncrna.fa.gz",
+        probeFile, quiet = TRUE, mode = "wb"
+    ) == 0 && file.size(probeFile) > 0
+    unlink(probeFile)
+    probeOK
 }, error = function(e) FALSE, warning = function(w) FALSE)
 ```
 
@@ -1352,6 +1360,43 @@ head(aSwitchList$conditions,2)
 ```
 
 From above, it is observed that dummy variables have been inserted in both *isoformFeatures* and *conditions* entries of the switchAnalyzeRlist. This approach is well suited if you just want to annotate a transcriptome and are not interested in expression. If you are interested in expression estimates and isoform switches, it is probably easier to use *importRdata*.
+
+Back to [Table of Content]
+
+<br />
+
+#### Importing Pre-defined Isoform Switches
+
+All the import functions described above build a switchAnalyzeRlist that IsoformSwitchAnalyzeR will *statistically test* for isoform switches (via [Identifying Isoform Switches]). Sometimes, however, the isoform switches are already known - for example because they were identified by a different approach entirely, such as a splicing/isoform QTL analysis, or a switch reported in the literature you want to annotate and visualize. For this use case IsoformSwitchAnalyzeR provides:
+
+```
+importPredefinedSwitches()
+```
+
+Instead of a count/abundance matrix and a design matrix, *importPredefinedSwitches()* takes a simple data.frame listing the isoform pairs that make up each switch:
+
+```{r, warning=FALSE, message=FALSE}
+predefinedSwitches <- read.delim(
+    system.file("extdata/predefined_switches_example.tsv", package = "IsoformSwitchAnalyzeR")
+)
+head(predefinedSwitches)
+```
+
+At a minimum this data.frame must have the columns *isoformsUsedMore* and *isoformsUsedLess* (the isoform pair making up the switch) and *condition_1*/*condition_2* (the comparison the switch belongs to - multiple comparisons can be supplied in one call, each identified by its own *condition_1*/*condition_2* pair). An optional *switch_q_value* column can be added if a significance estimate from the external method is available (if omitted, the switch is simply treated as significant).
+
+```{r, warning=FALSE, message=FALSE}
+aPredefinedSwitchList <- importPredefinedSwitches(
+    preDefinedSwitches   = predefinedSwitches,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package = "IsoformSwitchAnalyzeR"),
+    quiet = TRUE
+)
+```
+
+```{r}
+aPredefinedSwitchList
+```
+
+Since these switches were not derived from replicate expression data within IsoformSwitchAnalyzeR, the resulting switchAnalyzeRlist (identifiable via `aPredefinedSwitchList$sourceId == 'preDefinedSwitches'`) cannot be used with functions that rely on such data - most notably [Filtering] (*preFilter()* - all filtering should have been done upstream, before the switches were defined) and [Identifying Isoform Switches] (*isoformSwitchTestDEXSeq()*/*isoformSwitchTestSatuRn()*). The rest of the workflow - ORF analysis, external sequence analysis, prediction of functional consequences, and visualization via *switchPlotTranscript()* (rather than *switchPlot()*, which also requires replicate expression) - works as usual, including via *isoformSwitchAnalysisPart1()*/*isoformSwitchAnalysisPart2()* which automatically skip the filtering/testing steps for this type of switchAnalyzeRlist.
 
 Back to [Table of Content]
 
@@ -2139,6 +2184,39 @@ Back to [Table of Content]
 ### Applying on Single-cell Sequencing Data
 
 Single-cell sequencing has emerged to measure the expression of individual cells which unveils the hidden cellular heterogeneity. IsoformSwitchAnalyzeR enables isoform switch analysis between different conditions for each cell type. To achieve this, we recommend the employment of [AggregateExpression()](https://satijalab.org/seurat/reference/aggregateexpression) function from the Seurat package to achieve psedobulk, which sums together gene counts of all the cells from the same sample for each cell type. Then proceed with [Detailed Workflow] mentioned above.
+
+Back to [Table of Content]
+
+<br />
+
+### Applying on Proteomics Data
+
+IsoformSwitchAnalyzeR can also analyze proteomics data, where each isoform's exon structure is restricted to its coding sequence (CDS). This is enabled by setting `omicDataType = "proteomics"` on *importPredefinedSwitches()* (see [Importing Pre-defined Isoform Switches]), which builds the `exons` slot from the GTF/GFF's `CDS` features instead of its `exon` features, and tags the resulting switchAnalyzeRlist with `omicDataType = "proteomics"` (see the switchAnalyzeRlist documentation, e.g. by running `?switchAnalyzeRlist` in R).
+
+Since the whole isoform is now the ORF by construction, a few things follow automatically: ORF-in-transcript coordinates become trivial, and NMD-sensitivity is not determinable (`PTC` is set to `FALSE` rather than predicted). The rest of the workflow proceeds as usual, with two categories of restriction:
+
+**Coding-potential prediction is disabled.** *analyzeCPAT()* and *analyzeCPC2()* both predict coding potential from the full transcript sequence, which is meaningless for data that is already known to be coding by construction - both stop with an error if called on proteomics data, and *isoformSwitchAnalysisPart2()* stops immediately if `pathToCPATresultFile`/`pathToCPC2resultFile` are supplied for it. All other external tools (Pfam, SignalP, IUPred2A/NetSurfP3, DeepLoc2, DeepTMHMM, InterProScan) are unaffected, since they annotate the ORF's amino acid sequence, which is well-defined regardless of `omicDataType`.
+
+**Some consequence types aren't meaningful.** `tss`, `tts`, `isoform_class_code`, `5_utr_length`, `3_utr_length`, `isoform_seq_similarity`, `5_utr_seq_similarity`, `3_utr_seq_similarity`, `NMD_status` and `coding_potential` all require the full pre-mRNA structure or non-coding (UTR) sequence, neither of which exist in CDS-only data. If *analyzeSwitchConsequences()* is called with its default `consequencesToAnalyze` (or `'all'`), these are dropped automatically; if any are requested explicitly, it stops with an error instead. Separately, `isoform_length` and `ORF_length` are identical for proteomics data (again, since the whole isoform is the ORF) - if requested, `isoform_length` is translated to `ORF_length` with a warning. *isoformSwitchAnalysisPart2()* and *isoformSwitchAnalysisCombined()* inherit this behavior automatically through their own default `consequencesToAnalyze` lists.
+
+```
+### Import proteomics (CDS-only) data via importPredefinedSwitches()
+predefinedSwitches <- read.delim(
+    system.file("extdata/predefined_switches_example.tsv", package = "IsoformSwitchAnalyzeR")
+)
+aPredefinedSwitchListProteomics <- importPredefinedSwitches(
+    preDefinedSwitches   = predefinedSwitches,
+    isoformExonAnnoation = system.file("extdata/example.gtf.gz", package = "IsoformSwitchAnalyzeR"),
+    omicDataType         = "proteomics",
+    quiet = TRUE
+)
+aPredefinedSwitchListProteomics$omicDataType
+
+### The default consequencesToAnalyze silently drops what isn't meaningful here
+aPredefinedSwitchListProteomics <- analyzeSwitchConsequences(aPredefinedSwitchListProteomics)
+```
+
+For the full details of each restriction, see the documentation of *importGTF()*, *analyzeSwitchConsequences()*, *analyzeCPAT()* and *isoformSwitchAnalysisPart2()* (e.g. by running `?analyzeSwitchConsequences` in R).
 
 Back to [Table of Content]
 
