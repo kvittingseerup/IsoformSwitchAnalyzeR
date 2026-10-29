@@ -5,7 +5,7 @@
 Import Result of an InterProScan analysis
 }
 \description{
-Allows for easy integration of the results of an InterProScan (\url{https://www.ebi.ac.uk/interpro/search/sequence/}) analysis - obtained either via the webserver or the stand-alone command-line tool - in the IsoformSwitchAnalyzeR workflow. InterProScan combines multiple external sequence analyses into a single JSON result file, so a single call to \code{analyzeInterProScan()} can populate the same \code{switchAnalyzeRlist} slots that \code{analyzePFAM()}, \code{analyzeSignalP()}, \code{analyzeIUPred2A()} and \code{analyzeNetSurfP3()} otherwise populate individually - only the analyses actually present in the supplied file(s) are imported. Please note that \code{pathToInterProScanResultFile} must point to InterProScan's output in JSON format specifically. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeInterProScan if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the results of an InterProScan (\url{https://www.ebi.ac.uk/interpro/search/sequence/}) analysis - obtained either via the webserver or the stand-alone command-line tool - in the IsoformSwitchAnalyzeR workflow. InterProScan combines multiple external sequence analyses into a single JSON result file, so a single call to \code{analyzeInterProScan()} can populate the same \code{switchAnalyzeRlist} slots that \code{analyzePFAM()}, \code{analyzeSignalP()}, \code{analyzeIUPred2A()} and \code{analyzeNetSurfP3()} otherwise populate individually - only the analyses actually present in the supplied file(s) are imported. In addition, InterProScan's PIRSR results (functional-site annotation such as active sites, binding sites, disulfide bonds and modified residues) are imported into a new 'pirsrAnalysis' slot - this analysis has no counterpart among the other analyze* functions. Please note that \code{pathToInterProScanResultFile} must point to InterProScan's output in JSON format specifically. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeInterProScan if you have predicted the ORFs with \code{analyzeORF}.
 }
 \usage{
 analyzeInterProScan(
@@ -30,7 +30,7 @@ A string indicating the full path to the InterProScan JSON result file. If multi
 \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
 \item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
 \item{ignoreAfterPeriod}{ A logic indicating whether to subset the gene/isoform is by ignoring everything after the first period ("."). Should be used with care. Default is FALSE.}
-\item{overwritePreviousResults}{ A logic indicating, for each of Pfam/SignalP/MobiDB-lite, what to do if the \code{switchAnalyzeRlist} already contains a corresponding entry ('domainAnalysis', 'signalPeptideAnalysis' or 'idrAnalysis' - for example from a previous \code{analyzePFAM}/\code{analyzeSignalP}/\code{analyzeIUPred2A}/\code{analyzeNetSurfP3}/\code{analyzeInterProScan} call). If TRUE (default) the existing entry is overwritten with the results found in the InterProScan file(s). If FALSE the existing entry is left untouched and a message is given noting that matching results were found in the InterProScan file(s) but were not used. Default is TRUE.}
+\item{overwritePreviousResults}{ A logic indicating, for each of Pfam/SignalP/MobiDB-lite/PIRSR, what to do if the \code{switchAnalyzeRlist} already contains a corresponding entry ('domainAnalysis', 'signalPeptideAnalysis', 'idrAnalysis' or 'pirsrAnalysis' - for example from a previous \code{analyzePFAM}/\code{analyzeSignalP}/\code{analyzeIUPred2A}/\code{analyzeNetSurfP3}/\code{analyzeInterProScan} call). If TRUE (default) the existing entry is overwritten with the results found in the InterProScan file(s). If FALSE the existing entry is left untouched and a message is given noting that matching results were found in the InterProScan file(s) but were not used. Default is TRUE.}
 \item{showProgress}{
 A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). Default is TRUE.
 }
@@ -38,7 +38,7 @@ A logic indicating whether to make a progress bar (if TRUE) or not (if FALSE). D
 }
 
 \details{
-InterProScan is a sequence analysis tool which scans protein sequences against a diverse array of prediction methods in a single job, and returns the combined results as one JSON file. \code{analyzeInterProScan()} currently imports results from three of those methods: Pfam (protein domains - see \code{\link{analyzePFAM}}), SignalP (signal peptides - see \code{\link{analyzeSignalP}}) and MobiDB-lite (Intrinsically Disordered Regions - see \code{\link{analyzeIUPred2A}} and \code{\link{analyzeNetSurfP3}}). Any other application present in the same result file (e.g. PANTHER, TMHMM) is ignored. If none of the three supported analyses are found in the supplied file(s), a warning is given and the \code{switchAnalyzeRlist} is returned unchanged.
+InterProScan is a sequence analysis tool which scans protein sequences against a diverse array of prediction methods in a single job, and returns the combined results as one JSON file. \code{analyzeInterProScan()} currently imports results from four of those methods: Pfam (protein domains - see \code{\link{analyzePFAM}}), SignalP (signal peptides - see \code{\link{analyzeSignalP}}), MobiDB-lite (Intrinsically Disordered Regions - see \code{\link{analyzeIUPred2A}} and \code{\link{analyzeNetSurfP3}}) and PIRSR (functional sites - see below). Any other application present in the same result file (e.g. PANTHER, TMHMM) is ignored. If none of the four supported analyses are found in the supplied file(s), a warning is given and the \code{switchAnalyzeRlist} is returned unchanged.
 
 Because InterProScan limits the number of sequences accepted per submission, \code{\link{extractSequence}} splits the amino acid fasta file into batches of 100 sequences by default (\code{maxFastaFileSize} argument) - upload/submit each batch separately and supply all the resulting JSON result files as a vector of strings to \code{pathToInterProScanResultFile}.
 
@@ -50,15 +50,17 @@ Notes for how to run InterProScan: \cr
 
 Please note that SignalP results are only imported for the Sec/SPI signal peptide type (the type relevant to eukaryotes) - matches for SignalP's prokaryote-specific types (Lipoprotein/Sec-SPII, Tat/SPI, TatLipo/Tat-SPII, Pilin/Sec-SPIII) are not currently imported.
 
-Domains/signal peptides/IDRs are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times (many different IsoformSwitchAnalyzeR workflows on the same organism) you can just run InterProScan once on all isoforms and then supply the entire file to \code{analyzeInterProScan()}.
+PIRSR (PIR Site Rules) annotates functional sites by transferring curated UniProtKB site annotations (e.g. a catalytic or ligand-binding residue in a template protein) to homologous sequences, using family- and site-specific profile HMMs. Of PIRSR's feature categories, \code{analyzeInterProScan()} imports ACT_SITE, BINDING, CARBOHYD, CROSSLNK, DISULFID, LIPID, METAL and MOD_RES; the others (e.g. CHAIN, MOTIF, NP_BIND, REGION, SITE) are ignored.
+
+Domains/signal peptides/IDRs/PIRSR sites are only added to isoforms annotated as having an ORF even if other isoforms exists in the file. This means if you quantify the same isoform many times (many different IsoformSwitchAnalyzeR workflows on the same organism) you can just run InterProScan once on all isoforms and then supply the entire file to \code{analyzeInterProScan()}.
 
 Please note that the \code{analyzeInterProScan()} function will automatically only import the results from the isoforms stored in the switchAnalyzeRlist - even if many more are stored in the result file(s).
 
-By default (\code{overwritePreviousResults=TRUE}) any pre-existing domain/signal peptide/IDR analysis already stored in the \code{switchAnalyzeRlist} (e.g. from a previous \code{analyzePFAM}/\code{analyzeSignalP}/\code{analyzeIUPred2A}/\code{analyzeNetSurfP3} call) is overwritten with the corresponding results found in the InterProScan file(s). Set \code{overwritePreviousResults=FALSE} to instead keep the existing results untouched - in that case a message is given for each analysis where this happens, informing you that matching results were available in the InterProScan file(s) but were not used.
+By default (\code{overwritePreviousResults=TRUE}) any pre-existing domain/signal peptide/IDR/PIRSR analysis already stored in the \code{switchAnalyzeRlist} (e.g. from a previous \code{analyzePFAM}/\code{analyzeSignalP}/\code{analyzeIUPred2A}/\code{analyzeNetSurfP3} call) is overwritten with the corresponding results found in the InterProScan file(s). Set \code{overwritePreviousResults=FALSE} to instead keep the existing results untouched - in that case a message is given for each analysis where this happens, informing you that matching results were available in the InterProScan file(s) but were not used.
 }
 
 \value{
-Depending on which analyses were found in the supplied InterProScan result file(s), up to three columns are added to \code{isoformFeatures} ('domain_identified', 'signal_peptide_identified', 'idr_identified'), each a binary indication (yes/no) of whether a transcript contains that type of feature. The corresponding data.frame(s) are added to the \code{switchAnalyzeRlist}:
+Depending on which analyses were found in the supplied InterProScan result file(s), up to four columns are added to \code{isoformFeatures} ('domain_identified', 'signal_peptide_identified', 'idr_identified', 'pirsr_hit_found'), each a binary indication (yes/no) of whether a transcript contains that type of feature ('pirsr_hit_found' indicates whether at least one PIRSR site annotation was found). The corresponding data.frame(s) are added to the \code{switchAnalyzeRlist}:
 
 \bold{domainAnalysis} (see \code{\link{analyzePFAM}} for details on most columns). One row per domain identified:
 \itemize{
@@ -82,6 +84,16 @@ Depending on which analyses were found in the supplied InterProScan result file(
     \item{\code{isoform_id}, \code{orf_aa_start}, \code{orf_aa_end}, \code{transcriptStart}, \code{transcriptEnd}, \code{idrStarExon}, \code{idrEndExon}, \code{idrStartGenomic}, \code{idrEndGenomic}}
     \item{\code{compositional_bias}: A text string indicating the type of compositional bias MobiDB-lite identified for this region (e.g. "Polyampholyte", "Proline-rich", "Glycine-rich"), or \code{NA} for the outer consensus-disorder region. Not available from IUPred2A/NetSurfP3.}
 }
+
+\bold{pirsrAnalysis} (PIRSR functional-site annotation). One row per annotated residue, stretch of residues, or pair of linked residues:
+\itemize{
+    \item{\code{isoform_id}, \code{orf_aa_start}, \code{orf_aa_end}, \code{transcriptStart}, \code{transcriptEnd}, \code{pirsrStarExon}, \code{pirsrEndExon}, \code{pirsrStartGenomic}, \code{pirsrEndGenomic}: Positional data, converted as for \code{domainAnalysis}. For a single-residue annotation start and end are identical.}
+    \item{\code{category}: The PIRSR feature category - ACT_SITE (catalytic residues), BINDING (ligand-binding residues), CARBOHYD (glycosylation sites), CROSSLNK (covalent cross-links, either to another protein, e.g. ubiquitin/SUMO conjugation, or between two residues of the same protein, e.g. the Cys-Tyr thioether of cysteine dioxygenase), DISULFID (disulfide bonds), LIPID (lipid attachment sites), METAL (metal-ion-binding residues) or MOD_RES (modified residues, e.g. hydroxylation or carboxylation).}
+    \item{\code{sub_category}: Free-text detail as reported by PIRSR, e.g. the bound ligand for BINDING ("Mg(2+)", "ATP"), the catalytic role for ACT_SITE ("Proton donor") or the specific modification for MOD_RES. \code{NA} when PIRSR gives no further detail.}
+    \item{\code{residue}: The amino acid letter(s) at the annotated position(s) in the isoform. For multi-residue annotations this is the full sequence from \code{orf_aa_start} to \code{orf_aa_end}, which can be long (e.g. for DISULFID and intrachain CROSSLNK).}
+    \item{\code{hmm_acc}: Accession of the PIRSR rule that produced the annotation (e.g. PIRSR604808-2). The same residue can be annotated by several rules.}
+    \item{Note for DISULFID and intrachain CROSSLNK: start and end are the positions of the two linked residues (e.g. the two bonded cysteines of a disulfide bond), not a contiguous functional region, so each row should be interpreted as two residues. Interchain CROSSLNK rows (cross-links to another protein) instead refer to a single residue, so start and end are identical.}
+}
 }
 
 \references{
@@ -91,6 +103,7 @@ Depending on which analyses were found in the supplied InterProScan result file(
     \item{\code{Pfam} : Finn et al. The Pfam protein families database. Nucleic Acids Research (2014)  Database Issue 42:D222-D230}
     \item{\code{SignalP} : Teufel et al. SignalP 6.0 predicts all five types of signal peptides using protein language models. Nat. Biotechnol (2022) 40:1023-1025. doi:10.1038/s41587-021-01156-3}
     \item{\code{MobiDB-lite} : Mehdiabadi et al. MobiDB-lite 4.0: faster prediction of intrinsic protein disorder and structural compactness. Bioinformatics (2025) 41(5):btaf297. doi:10.1093/bioinformatics/btaf297}
+    \item{\code{PIRSR} : Chen et al. PIRSitePredict for protein functional site prediction using position-specific rules. Database (2019) baz026. doi:10.1093/database/baz026}
 }
 }
 

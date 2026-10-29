@@ -6270,9 +6270,9 @@ importSalmonData <- function(
 preFilter <- function(
     switchAnalyzeRlist,
     isoCount = 10,
-    min.Count.prop = 0.7,
+    min.Count.prop = "smaller_group",
     IFcutoff = 0.1,
-    min.IF.prop = 0.5,
+    min.IF.prop = "smaller_group",
     acceptedGeneBiotype = NULL,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
@@ -6330,8 +6330,8 @@ preFilter <- function(
       }
     }
     if (!is.null(min.Count.prop)) {
-      if (!is.numeric(min.Count.prop)) {
-        stop('The min.Count.prop argument must be a numeric')
+      if (!is.numeric(min.Count.prop) & !identical(min.Count.prop, 'smaller_group')) {
+        stop('The min.Count.prop argument must be a numeric or "smaller_group"')
       }
     }
     if (!is.null(IFcutoff)) {
@@ -6341,8 +6341,8 @@ preFilter <- function(
     }
     
     if (!is.null(min.IF.prop)) {
-      if (!is.numeric(min.IF.prop)) {
-        stop('The min.IF.prop argument must be a numeric')
+      if (!is.numeric(min.IF.prop) & !identical(min.IF.prop, 'smaller_group')) {
+        stop('The min.IF.prop argument must be a numeric or "smaller_group"')
       }
     }
     
@@ -6501,15 +6501,22 @@ preFilter <- function(
     ### Function to filter based on the cutoff and min proportion 
     filter_comparison <- function(data, comparison, cutoff, min.prop, designMatrix,prefix = "") {
       
-      sampleIDs <- designMatrix %>%
-        filter(condition %in% c(comparison$condition_1, comparison$condition_2)) %>%
-        pull(sampleID)
-      
+      comparisonDesign <- designMatrix %>%
+        filter(condition %in% c(comparison$condition_1, comparison$condition_2))
+      sampleIDs <- comparisonDesign$sampleID
+
+      ### Number of samples that must pass the cutoff
+      if (identical(min.prop, 'smaller_group')) {
+        # as.character: unused factor levels would otherwise give a group size of 0
+        minSamples <- min(table(as.character(comparisonDesign$condition)))
+      } else {
+        minSamples <- min.prop * length(sampleIDs)
+      }
+
       filter_logic <- function(row) {
         sample_values <- row[match(paste0(prefix, sampleIDs), names(row))]
         count_total <- sum(sample_values > cutoff, na.rm = TRUE)
-        total_samples <- length(sampleIDs)
-        count_total >= min.prop * total_samples
+        count_total >= minSamples
       }
       
       filteredData <- data %>%
@@ -6653,9 +6660,9 @@ importPairedGSEA <- function(
   
   # preFilter() function relevant
   isoCount = 10,
-  min.Count.prop = 0.7,
+  min.Count.prop = "smaller_group",
   IFcutoff = 0.1,
-  min.IF.prop = 0.5,
+  min.IF.prop = "smaller_group",
   acceptedGeneBiotype = NULL,
   acceptedIsoformClassCode = NULL,
   removeSingleIsoformGenes = TRUE,

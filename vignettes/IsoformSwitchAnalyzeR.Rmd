@@ -253,10 +253,12 @@ If you are using the:
 -   **Pfam isotypes**: Please cite reference *19*.
 -   **SignalP**: Please cite reference *8*.
 -   **MobiDB-lite**: Please cite reference *20*.
--   **InterProScan**: Please cite reference *21*. If used to obtain Pfam, SignalP or MobiDB-lite results (via *analyzeInterProScan()*) please also cite the corresponding tool above.
+-   **PIRSR**: Please cite reference *23*.
+-   **InterProScan**: Please cite reference *21*. If used to obtain Pfam, SignalP, MobiDB-lite or PIRSR results (via *analyzeInterProScan()*) please also cite the corresponding tool above.
 -   **NetSurf3-P**: Please cite reference *14*.
 -   **IUPred2A**: Please cite reference *15*.
--   **Deeploc2**: Please cite reference *17*.
+-   **DeepLoc 2**: Please cite reference *17*.
+-   **DeepLoc 2.1**: Please cite reference *22*.
 -   **DeepTMHMM**: Please cite reference *18*.
 -   **Prediction of consequences**: Please cite reference *1*.
 -   **Visualizations** (plots) implemented in the IsoformSwitchAnalyzeR package: Please cite reference *1*.
@@ -288,6 +290,8 @@ If you are using the:
 19. *Vitting-Seerup. **Most protein domains exist as variants with distinct functions across cells, tissues and diseases**. NAR Genomics and Bioinformatics (2023)* [link](https://doi.org/10.1093/nargab/lqad084).
 20. *Mehdiabadi et al. **MobiDB-lite 4.0: faster prediction of intrinsic protein disorder and structural compactness**. Bioinformatics (2025)* [link](https://doi.org/10.1093/bioinformatics/btaf297).
 21. *Blum et al. **InterProScan 6: a modern large-scale protein function annotation pipeline**. Bioinformatics Advances (2026)* [link](https://doi.org/10.1093/bioadv/vbag141).
+22. *Ødum et al. **DeepLoc 2.1: multi-label membrane protein type prediction using protein language models**. Nucleic Acids Res (2024)* [link](https://doi.org/10.1093/nar/gkae237).
+23. *Chen et al. **PIRSitePredict for protein functional site prediction using position-specific rules**. Database (2019)* [link](https://doi.org/10.1093/database/baz026).
 
 <br />
 
@@ -339,8 +343,8 @@ The resulting fasta files enables the usage of external sequence analysis tools.
     -   NetSurfP-3: Which as parts of its predicitons also predict IDR. It can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
 -   Tools for localization prediction
     -   DeepTMHMM: Predicts protein toplology (location compared to cell membrane) and can be run from from this [webserver](https://biolib.com/DTU/DeepTMHMM)
-    -   DeepLoc2: Predicts sub-cellular location and can be run from this [webserver](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0).
--   InterProScan: Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **This is the recommended way to obtain these three annotations**, replacing running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - see [Importing External Sequence Analysis] below.
+    -   DeepLoc2: Predicts sub-cellular location and can be run from this [webserver](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0). The newer DeepLoc 2.1 additionally predicts membrane type and can be run from this [webserver](https://services.healthtech.dtu.dk/services/DeepLoc-2.1/). Result files from both versions are supported.
+-   InterProScan: Combined prediction of protein domains (Pfam), signal peptides (SignalP), Intrinsically Disordered Regions (MobiDB-lite) and functional sites such as active sites, binding sites and disulfide bonds (PIRSR) in a single job, which can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **This is the recommended way to obtain the domain, signal peptide and IDR annotations**, replacing running Pfam, SignalP and IUPred2A/NetSurfP-3 separately. It is also the only supported source of PIRSR functional-site annotation - see [Importing External Sequence Analysis] below.
 
 <br />
 
@@ -566,7 +570,7 @@ extractSwitchSummary( exampleSwitchList )
 
 <br />
 
-In a typical workflow, the user would here have to use the produced fasta files to perform the external analysis tools. We recommend running InterProScan, which in a single job predicts protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (IDR, via MobiDB-lite). Alternatively these three types of annotation can be obtained by running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - the main reason to do so is that IUPred2A additionally predicts Intrinsically Disordered Binding Regions (IDBR), which InterProScan/MobiDB-lite does not provide. In addition, CPAT or CPC2 (for prediction of coding potential, only one of them is necessary), DeepLoc2 (sub-cellular location) and DeepTMHMM (isoform topology) can be run. For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
+In a typical workflow, the user would here have to use the produced fasta files to perform the external analysis tools. We recommend running InterProScan, which in a single job predicts protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (IDR, via MobiDB-lite). InterProScan additionally annotates functional sites (PIRSR: e.g. active sites, binding sites, disulfide bonds and modified residues), which cannot be obtained any other way in IsoformSwitchAnalyzeR. Alternatively the first three types of annotation can be obtained by running Pfam, SignalP and IUPred2A/NetSurfP-3 separately - the main reason to do so is that IUPred2A additionally predicts Intrinsically Disordered Binding Regions (IDBR), which InterProScan/MobiDB-lite does not provide. In addition, CPAT or CPC2 (for prediction of coding potential, only one of them is necessary), DeepLoc2 (sub-cellular location; version 2.1 also predicts membrane type) and DeepTMHMM (isoform topology) can be run. For more information on how to run those tools refer to [Advice for Running External Sequence Analysis Tools and Downloading Results]. To illustrate the workflow, we will here use the result of running some of these tools on the example data - these results are also included in the IsoformSwitchAnalyzeR package.
 
 <br />
 
@@ -656,7 +660,7 @@ subset(
 
 Let us take a look at the isoform switch in the ZAK gene (7th most significant gene) using the switchPlot functionality. Note that since the switchAnalyzeRlist contains two different comparison (LUAD and COAD) we need to specify the conditions to plot (this is not necessary if there is only one condition in your data).
 
-```{r, fig.width=12.5, fig.height=7, warning=FALSE}
+```{r, fig.width=13, fig.height=9, warning=FALSE}
 switchPlot(
     exampleSwitchListAnalyzed,
     gene='ZAK',
@@ -666,7 +670,7 @@ switchPlot(
 )
 ```
 
-From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Interestingly the long isoform contains a SAM_1 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Since only the long isoform have a IDR with a predicted binding site this IDR strengthens the new-interaction-partners hypothesis. Lastly we see that both the topological analysis (the small boxes above the transcripts) and the subcellular location analysis (indicated below the isoform name to the left) suggest all transcripts are intracellular.
+From this plot, we first note that no difference in the gene expression of ZAK between normal and cancer samples (bottom left) meaning that a standard gene level analysis would not pick up any changes to ZAK. Next, we see the large highly significant switch in isoform usage across conditions (bottom right). By comparing which isoforms are changing (bottom right) to the isoform structure (top) it can be inferred that in the healthy samples it is primary the two short isoforms that are used. In the COAD patients, there is however a large increase in the use of the long isoform. Furthermore, the shortest isoform has a truncated kinase domain ("Non-ref Isotype" in the legend) and the functional sites predicted by PIRSR (the markers on the transcripts) show that it lacks the ATP-binding residues in the N-terminal part of the domain (red markers are sites not present in all isoforms). Interestingly the long isoform contains a SAM_2 protein domain, a domain which facilitates interaction with both other protein and RNA molecules. This leads to the hypothesis that the long isoform, use more in the tumor samples, results in a protein which could interact with a new/different set of interaction partners in the cancer setting. Since only the long isoform have a long C-terminal IDR, which MobiDB-lite divides into polar and polyampholyte regions (IDR_Polar and IDR_PolyAmph in the legend), this IDR strengthens the new-interaction-partners hypothesis. Lastly we see that both the topological analysis (the small boxes above the transcripts) and the subcellular location analysis (indicated below the isoform name to the left, together with the predicted membrane type) suggest all transcripts are intracellular.
 
 If you want to save this plot as a pdf file via the *pdf* command, you need to specify "onefile = FALSE". The following code chunk will produce a nicely-sized figure:
 
@@ -712,7 +716,7 @@ extractConsequenceSummary(
 
 Note the "consequencesToAnalyze" argument enables analysis of only a subset of features.
 
-From this summary plots above many things can be seen. First of all, the most frequent changes affect protein domains, Intrinsically Disordered Regions (IDR) and length of extracellular domains. The most frequent "switch" (both gain and loss of fatures) is in the sub-cellular locations of isoforms. We also notice some consequences are un-evenly distributed (e.g. many more instances of "domain loss" compared to "domain gains"). Such differences can be systematically analyzed as shown below.
+From this summary plots above many things can be seen. First of all, the most frequent changes affect protein domains, Intrinsically Disordered Regions (IDR) and length of extracellular domains. The most frequent "switch" (both gain and loss of fatures) in COAD is in the sub-cellular locations of isoforms. We also notice some consequences are un-evenly distributed (e.g. many more instances of "domain loss" compared to "domain gains"). Such differences can be systematically analyzed as shown below.
 
 <br />
 
@@ -732,7 +736,7 @@ extractConsequenceEnrichment(
 
 For each pair of opposing consequences (e.g. protein domain loss vs gain) this plot shows the fraction of switches (x-axis) that results in the consequence indicated (e.g. protein domain loss) (y-axis). The fraction is calculated only considering switches affected by either of the opposing consequence indicated on the y-axis. If this fraction is significantly different from 0.5 it indicates there is a systematic bias in the functional consequences of isoform switches.
 
-From the analysis above, it is therefore quite clear, that many of the opposing consequences are significantly unevenly distributed. In other words, many types of consequences seem to be used in a cancer-specific manner. It is specifically noteworthy there is a significant loss of protein domains, IDRs. Interestingly there is also a significant gain of non-reference protein domain isotypes (as the y-axis indicate loss and the fraction is \< 0.5) suggesting domain isotopes are also specifically regulated. Lastly this analysis indicate that in COAD there are significantly more switches resulting in isoforms located in additional sub-cellular places (as y-axis indicate loss but the fraction is \< 0.5). More on these location gains later.
+From the analysis above, it is therefore quite clear, that many of the opposing consequences are significantly unevenly distributed. In other words, many types of consequences seem to be used in a cancer-specific manner. It is specifically noteworthy there is a significant loss of protein domains, IDRs. Interestingly there is also a significant gain of non-reference protein domain isotypes (as the y-axis indicate loss and the fraction is \< 0.5) suggesting domain isotopes are also specifically regulated. Lastly, in contrast to the other consequences, there is no significant bias in the sub-cellular location changes, although they are frequent in COAD (more on these location changes later).
 
 Please note this enrichment analysis does not consider mixed consequences such as sub-cellular location switch, domain switch and IDR switch.
 
@@ -751,7 +755,7 @@ extractConsequenceEnrichmentComparison(
 
 The analysis shows that compared to LUAD, COAD have a significantly higher fraction of switches resulting in protein domain loss, but there is no difference in switches from noncoding to coding transcripts.
 
-As indicated by the analysis done above with *extractConsequenceEnrichment()* and *extractConsequenceSummary()* there seems to be a lot of location changes - especially in COAD. We can further investigate these as follows:
+As indicated by the analysis done above with *extractConsequenceSummary()* there seems to be a lot of location changes - especially in COAD. We can further investigate these as follows:
 
 ```{r, fig.width=9, fig.height=5}
 extractSubCellShifts(
@@ -927,7 +931,7 @@ This corresponds to running the following functions in sequential order (just li
 mySwitchList <- analyzeCPAT( mySwitchList ) # OR
 mySwitchList <- analyzeCPC2( mySwitchList )
 
-mySwitchList <- analyzeInterProScan( mySwitchList ) # recommended: Pfam + SignalP + IDR in one go
+mySwitchList <- analyzeInterProScan( mySwitchList ) # recommended: Pfam + SignalP + IDR (+ PIRSR functional sites) in one go
 # OR, run these separately instead:
 mySwitchList <- analyzePFAM( mySwitchList )
 mySwitchList <- analyzeSignalP( mySwitchList )
@@ -1417,6 +1421,8 @@ Filtering on isoform counts allows removal of non-used isoforms that only appear
 
 The filter on Isoform Fraction allows removal of isoforms that only contribute minimally to the gene expression thereby speeding up and simplifying the rest of the downstream analysis without losing important isoforms.
 
+Both the count and the Isoform Fraction filter require an isoform to pass in a minimum number of samples in each comparison, controlled by the *min.Count.prop* and *min.IF.prop* arguments. By default (`"smaller_group"`) this number is set separately for each comparison to the size of the smaller of the two groups, so isoforms expressed in all samples of the smaller group are retained when the groups have different sizes. Supplying a number instead applies that proportion of the samples as the threshold in all comparisons.
+
 Filtering on unwanted isoform classes is only an option available if using data form Cufflinks/Cuffdiff since the Tuxedo workflow includes classification of transcript types. This allows for removal of, for example, transcripts classified as "Possible polymerase run-on fragment" or "Repeat". See full description of Cufflinks/Cuffdiff transcript classification [here](http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/#transfrag-class-codes)
 
 The *preFilter()* function is used as follows:
@@ -1656,8 +1662,8 @@ The two fasta files that are the output by *extractSequence()* (if writeToFile=T
 -   IUPred2A: Predicts Intrinsically Disordered Regions (IDR) and Intrinsically Disordered Binding Regions (IDBR) -- the parts of a protein protein which does not have a fixed three-dimensional structure (as opposite protein domains). It can be run either locally or via their [webserver](https://iupred2a.elte.hu). IUPred3 is also supported by IsoformSwitchAnalyzeR (as it produces identical result files).
 -   NetSurfP-3 : Prediction of Intrinsically Disordered Regions (IDR) -- regions of a protein which does not have a fixed three-dimensional structure (opposite protein domains). NetSurfP-3 can be run either locally or via their [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/).
 -   DeepTMHMM : Prediction of protein topology -- the proteins location compared to the cell membrane. Can be intracellular, transmembrane (TM) or extracellular.
--   DeepLoc2 : Prediction of sub-cellular localization(s) of protein.
--   InterProScan : Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job. Can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **Recommended** over running Pfam, SignalP, and (partially) IUPred2A/NetSurfP-3 separately.
+-   DeepLoc2 : Prediction of sub-cellular localization(s) of protein. DeepLoc 2.1 additionally predicts the membrane type(s) of the protein. Both DeepLoc 2.0 and 2.1 result files are supported.
+-   InterProScan : Combined prediction of protein domains (Pfam), signal peptides (SignalP), Intrinsically Disordered Regions (MobiDB-lite) and functional sites such as active sites, binding sites and disulfide bonds (PIRSR) in a single job. Can be run either locally or via their [webserver](https://www.ebi.ac.uk/interpro/search/sequence/). **Recommended** over running Pfam, SignalP, and (partially) IUPred2A/NetSurfP-3 separately. It is also the only supported source of PIRSR functional-site annotation.
 
 Please note that:
 
@@ -1675,7 +1681,7 @@ We suggest that the external sequence analysis tools are run as follows:
 -   IUPred2A : 1) Go to the [webserver](https://iupred2a.elte.hu) 2) Upload the amino acoid file (\_AA) created with extractSequence() function. 3) Add your email (you will recieve a notification when the job is done). 4) In the email use the link indicated by "The text file can be found here:" and save the result (right click on a blank space and use "save as" or use the keybord shortcut "ctrl/cmd + s"). 5) Supply a string indicating the path to the downloaded file to the "pathToIUPred2AresultFile" argument. If multiple files are created (multiple web-server runs) just supply the path to all of them as a string.
 -   NetSurfP-3 : 1) Go to [webserver](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/). 2) Upload the amino acid file (\_AA) created with extractSequence() function. 3) Submit your job. 4) Wait till job is finished (if you submit your email you will receive a notification). 5) In the top-right corner of the result site use the "Export All" button to download the results as a CSV file. 6) Supply a string indicating the path to the downloaded csv file directly to the "pathToNetSurfP3resultFile" argument. If you run NetSurfP-3 locally just use the "--csv" argument and provide the resulting csv file to the *pathToNetSurfP3resultFile* argument.
 -   DeepTMHMM : Can be run from from this [website](https://biolib.com/DTU/DeepTMHMM) and afterwards all files can be downloaded as a "gff3 format" file can be used as input to this function.
--   DeepLoc2 : Can be run from this [website](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0) and choose "Short output (no figures)". Once it is done you can download by pressing the "Download prediction results: CSV Summary" at the top of the result section (just above the red "Probability thresholds" button).
+-   DeepLoc2 : Can be run from this [website](https://services.healthtech.dtu.dk/service.php?DeepLoc-2.0) for version 2 or from this [website](https://services.healthtech.dtu.dk/services/DeepLoc-2.1/) for version 2.1. Choose "Short output (no figures)". Once it is done you can download by pressing the "Download prediction results: CSV Summary" at the top of the result section (just above the red "Probability thresholds" button).
 -   InterProScan : 1) Go to the [webserver](https://www.ebi.ac.uk/interpro/search/sequence/) (or run the stand-alone tool locally). 2) Upload the amino acid fasta file (\_AA.fasta) created with extractSequence() - remember only up to 100 sequences can be submitted at a time (the default *maxFastaFileSize* in extractSequence()). 3) Submit your job and wait for it to complete. 4) Download the result in JSON format and supply the path to that file to the "pathToInterProScanResultFile" argument - if you had to split your sequences into multiple batches just supply all the resulting JSON files as a vector of strings. A more detailed walkthrough is found under details in the documentation of the analyzeInterProScan() function (?analyzeInterProScan).
 
 Back to [Table of Content]
@@ -1690,7 +1696,7 @@ After the external sequence analysis with have been performed (please remember t
 analyzeCPAT() # OR
 analyzeCPC2()
 
-# Recommended: import Pfam + SignalP + MobiDB-lite results from a single InterProScan JSON file
+# Recommended: import Pfam + SignalP + MobiDB-lite + PIRSR results from a single InterProScan JSON file
 analyzeInterProScan()
 # OR, run these separately instead:
 analyzePFAM()
@@ -1702,7 +1708,7 @@ analyzeDeepLoc2()
 analyzeDeepTMHMM()
 ```
 
-Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP3. We recommend using analyzeInterProScan() instead of analyzePFAM() and analyzeSignalP() (and, for the IDR portion, instead of analyzeIUPred2A()/analyzeNetSurfP3()), since it obtains all three annotations from a single InterProScan run.
+Please note that CPC2 and CPAT performs the same type of analysis so only one of them is necessary. The same goes for IUPred2A and NetSurfP3. We recommend using analyzeInterProScan() instead of analyzePFAM() and analyzeSignalP() (and, for the IDR portion, instead of analyzeIUPred2A()/analyzeNetSurfP3()), since it obtains the domain, signal peptide and IDR annotations (plus PIRSR functional sites, which are only available this way) from a single InterProScan run.
 
 The functions are used as:
 
@@ -1732,7 +1738,7 @@ exampleSwitchListAnalyzed <- analyzeCPC2(
     removeNoncodinORFs   = TRUE   # because ORF was predicted de novo
 )
 
-### Add InterProScan analysis (recommended: imports Pfam + SignalP + MobiDB-lite results in one call)
+### Add InterProScan analysis (recommended: imports Pfam + SignalP + MobiDB-lite + PIRSR results in one call)
 exampleSwitchListAnalyzed <- analyzeInterProScan(
     switchAnalyzeRlist            = exampleSwitchListAnalyzed,
     pathToInterProScanResultFile  = system.file("extdata/interproscan_results.json.gz", package = "IsoformSwitchAnalyzeR"),
@@ -1919,11 +1925,11 @@ subset(switchingIso, gene_name == 'ZAK')
 
 From which we can see the details of both isoforms (since we supplied "extractGenes = FALSE") involved in the isoforms switch in ZAK. The isoform switch can visually be analyzed using a switch plot which summarizes all the concatenated information about the isoforms. Specifically the switch plot is a composite plot visualizing:
 
-1)  The isoform structures along with the concatenated annotations (including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains as well as annotated signal peptides)
+1)  The isoform structures along with the concatenated annotations (including transcript classification, ORF, Coding Potential, NMD sensitivity, annotated protein domains, signal peptides, IDRs and functional sites (PIRSR) as well as the predicted sub-cellular location and membrane type)
 2)  Gene and isoform expression and any annotated differential expression analysis of these
 3)  Isoform usage including the result of the isoform switch test
 
-```{r, fig.width=12, fig.height=7}
+```{r, fig.width=12, fig.height=9}
 switchPlot(exampleSwitchListAnalyzedSubset, gene = 'ZAK')
 ```
 
@@ -1981,7 +1987,7 @@ switchPlotIsoUsage()   # Visualizes the isoform usage
 
 As illustrated here:
 
-```{r, fig.width=12, fig.height=3}
+```{r, fig.width=12, fig.height=5}
 ### exampleSwitchListAnalyzedSubset is created above
 
 switchPlotTranscript(exampleSwitchListAnalyzedSubset, gene = 'ZAK')
