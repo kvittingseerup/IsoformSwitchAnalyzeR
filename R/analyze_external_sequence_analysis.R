@@ -2489,7 +2489,7 @@ analyzeDeepLoc2 <- function(
         ### Read in and test col names
         if(TRUE) {
             ### Tap separated
-            if(ncol(tmp) == 13 ) {
+            if(ncol(tmp) %in% c(13, 18) ) {
                 deepLocRes <- do.call(rbind, plyr::llply(
                     pathToDeepLoc2resultFile,
                     .fun = function(
@@ -2517,7 +2517,7 @@ analyzeDeepLoc2 <- function(
 
             }
 
-            if(! ncol(tmp) %in% c(1, 13) ) {
+            if(! ncol(tmp) %in% c(1, 13, 18) ) {
                 ### File format not recogniced
                 stop('The file does not appear to be a DeepLoc result file. Double check and try agian...')
             }
@@ -2527,7 +2527,7 @@ analyzeDeepLoc2 <- function(
                 ### remove potential dupliations
                 deepLocRes <- dplyr::distinct(deepLocRes)
 
-                ### Test columns
+                ### Test columns (DeepLoc 2.0 has 13, DeepLoc 2.1 adds membrane types)
                 expectedCols <- c(
                     "Protein_ID",
                     "Localizations",
@@ -2544,7 +2544,19 @@ analyzeDeepLoc2 <- function(
                     "Peroxisome"
                 )
 
-                if( ! all( colnames(deepLocRes) == expectedCols ) ) {
+                expectedColsV21 <- c(
+                    expectedCols[1:3],
+                    "Membrane types",
+                    expectedCols[4:13],
+                    "Peripheral",
+                    "Transmembrane",
+                    "Lipid anchor",
+                    "Soluble"
+                )
+
+                isV21 <- identical(colnames(deepLocRes), expectedColsV21)
+
+                if( ! (isV21 | identical(colnames(deepLocRes), expectedCols)) ) {
                     stop('The file(s) pointed to by \'pathToDeepLoc2resultFile\' appears not to be DeepLoc Result file')
                 }
 
@@ -2595,6 +2607,11 @@ analyzeDeepLoc2 <- function(
         deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations, ' ','_')
         deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations, '/','_')
         deepLocRes$Localizations <- stringr::str_replace_all(deepLocRes$Localizations,'\\|',',')
+
+        if(isV21) {
+            deepLocRes$Membrane_types <- stringr::str_replace_all(deepLocRes$Membrane_types, ' ','_')
+            deepLocRes$Membrane_types <- stringr::str_replace_all(deepLocRes$Membrane_types,'\\|',',')
+        }
     }
 
     ### Filter
@@ -2628,14 +2645,7 @@ analyzeDeepLoc2 <- function(
             )
 
 
-            colOi <- setdiff(
-                colnames(deepLocRes),
-                c('isoform_id','Localizations')
-            )
-
-            probCutoff <- probCutoff[match(
-                colOi, names(probCutoff)
-            )]
+            colOi <- names(probCutoff)
 
             ### Identify locations above the specific cutoffs
             deepLocRes$Localizations <- apply(
@@ -2650,13 +2660,53 @@ analyzeDeepLoc2 <- function(
             deepLocRes$Localizations[which(
                 deepLocRes$Localizations == ''
             )] <- NA
+
+            ### Membrane type specific cutoffs (DeepLoc 2.1 only)
+            if(isV21) {
+                memCutoff <- c(
+                    0.62,
+                    0.56,
+                    0.65,
+                    0.47
+                )
+                names(memCutoff) <- c(
+                    'Peripheral',
+                    'Transmembrane',
+                    'Lipid_anchor',
+                    'Soluble'
+                )
+
+                memOi <- names(memCutoff)
+
+                ### Identify membrane types above the specific cutoffs
+                deepLocRes$Membrane_types <- apply(
+                    deepLocRes[,memOi],
+                    1,
+                    function(x) {
+                        paste(memOi[which(x >= memCutoff)], collapse = ',')
+                    }
+                )
+
+                ### Set those without membrane type to NA
+                deepLocRes$Membrane_types[which(
+                    deepLocRes$Membrane_types == ''
+                )] <- NA
+            }
         }
 
         ### User specific cutoff
         if(!is.null(probabilityCutoff)) {
-            colOi <- setdiff(
-                colnames(deepLocRes),
-                c('isoform_id','Localizations')
+            colOi <- c(
+                'Cytoplasm',
+                'Nucleus',
+                'Extracellular',
+                'Cell_membrane',
+                'Mitochondrion',
+                'Plastid',
+                'Endoplasmic_reticulum',
+                'Lysosome_Vacuole',
+                'Golgi_apparatus',
+                'Peroxisome'
             )
 
             ### Identify locations above the specific cutoffs
@@ -2672,6 +2722,23 @@ analyzeDeepLoc2 <- function(
             deepLocRes$Localizations[which(
                 deepLocRes$Localizations == ''
             )] <- NA
+
+            ### Membrane types (DeepLoc 2.1 only)
+            if(isV21) {
+                memOi <- c('Peripheral', 'Transmembrane', 'Lipid_anchor', 'Soluble')
+
+                deepLocRes$Membrane_types <- apply(
+                    deepLocRes[,memOi],
+                    1,
+                    function(x) {
+                        paste(memOi[which(x >= probabilityCutoff)], collapse = ',')
+                    }
+                )
+
+                deepLocRes$Membrane_types[which(
+                    deepLocRes$Membrane_types == ''
+                )] <- NA
+            }
         }
     }
 
@@ -2685,6 +2752,15 @@ analyzeDeepLoc2 <- function(
         switchAnalyzeRlist$isoformFeatures$sub_cell_location <- deepLocRes$Localizations[match(
             switchAnalyzeRlist$isoformFeatures$isoform_id, deepLocRes$isoform_id
         )]
+
+        # add membrane type to isoformFeatures (DeepLoc 2.1 only)
+        if(isV21) {
+            switchAnalyzeRlist$isoformFeatures$membrane_type <- deepLocRes$Membrane_types[match(
+                switchAnalyzeRlist$isoformFeatures$isoform_id, deepLocRes$isoform_id
+            )]
+        } else {
+            switchAnalyzeRlist$isoformFeatures$membrane_type <- NULL
+        }
     }
 
 
@@ -2701,6 +2777,20 @@ analyzeDeepLoc2 <- function(
             'Added subcellular information to ', nLoc, ' (', pLoc, '%) transcripts',
             sep = ''
         ))
+
+        if(isV21) {
+            nMem <- sum(!is.na(deepLocRes$Membrane_types))
+
+            pMem <-
+                round(nMem / length(unique(
+                    switchAnalyzeRlist$isoformFeatures$isoform_id
+                )) * 100, digits = 2)
+
+            message(paste(
+                'Added membrane type information to ', nMem, ' (', pMem, '%) transcripts',
+                sep = ''
+            ))
+        }
 
     }
     return(switchAnalyzeRlist)
@@ -3044,6 +3134,159 @@ analyzeDeepTMHMM <- function(
     return(do.call(rbind, unlist(rows, recursive = FALSE)))
 }
 
+### PIRSR: one row per annotated residue/span (siteLocation). Only a subset
+### of PIRSR's categories are parsed (see allowedCategories below); all are
+### treated as residue-level annotations, though a few (e.g. some BINDING
+### entries) span a handful of consecutive residues rather than one position.
+### DISULFID's and intrachain CROSSLNK's start/end are the two linked residue
+### positions specifically (with `residue` holding the whole stretch between
+### them), not a contiguous region - downstream plotting should render those
+### as 2 points rather than a span. Interchain CROSSLNK has start == end.
+.parseInterProScanPIRSRRows <- function(pirsrMatchRows) {
+    allowedCategories <- c(
+        'ACT_SITE', 'BINDING', 'CARBOHYD', 'CROSSLNK',
+        'DISULFID', 'LIPID', 'METAL', 'MOD_RES'
+    )
+
+    siteLocationRows <- unlist(lapply(pirsrMatchRows, function(x) {
+        m <- x$match
+        sites <- unlist(lapply(m$locations, function(loc) loc$sites), recursive = FALSE)
+
+        unlist(lapply(sites, function(site) {
+            descParts <- strsplit(site$description, ':', fixed = TRUE)[[1]]
+            category <- trimws(descParts[1])
+            subCategory <- if (length(descParts) > 1) {
+                trimws(paste(descParts[-1], collapse = ':'))
+            } else {
+                NA_character_
+            }
+
+            lapply(site$siteLocations, function(sl) {
+                list(
+                    seqId = x$seqId,
+                    hmmAcc = m$signature$accession,
+                    category = category,
+                    subCategory = subCategory,
+                    start = sl$start,
+                    end = sl$end,
+                    residue = sl$residue
+                )
+            })
+        }), recursive = FALSE)
+    }), recursive = FALSE)
+
+    siteLocationRows <- Filter(
+        function(r) r$category %in% allowedCategories,
+        siteLocationRows
+    )
+
+    rows <- lapply(siteLocationRows, function(r) {
+        data.frame(
+            seq_id = r$seqId,
+            orf_aa_start = r$start,
+            orf_aa_end = r$end,
+            category = r$category,
+            sub_category = r$subCategory,
+            residue = r$residue,
+            hmm_acc = r$hmmAcc,
+            stringsAsFactors = FALSE
+        )
+    })
+
+    return(do.call(rbind, rows))
+}
+
+.finalizePIRSRAnalysis <- function(myPIRSRResult, switchAnalyzeRlist, progressBar, quiet) {
+    ### Convert from AA coordinats to transcript and genomic coordinats
+    if (TRUE) {
+        orfStartDF <- unique(as.data.frame(
+            switchAnalyzeRlist$orfAnalysis[
+                which(!is.na(switchAnalyzeRlist$orfAnalysis$orfTransciptStart)),
+                c('isoform_id', 'orfTransciptStart')
+            ]
+        ))
+
+        myPIRSRResult$transcriptStart <-
+            (myPIRSRResult$orf_aa_start * 3 - 2) +
+            orfStartDF$orfTransciptStart[match(myPIRSRResult$seq_id, orfStartDF$isoform_id)] - 1
+        myPIRSRResult$transcriptEnd <-
+            (myPIRSRResult$orf_aa_end * 3) +
+            orfStartDF$orfTransciptStart[match(myPIRSRResult$seq_id, orfStartDF$isoform_id)] - 1
+
+        myExons <- as.data.frame(switchAnalyzeRlist$exons[which(
+            switchAnalyzeRlist$exons$isoform_id %in% myPIRSRResult$seq_id
+        ), ])
+        myExonsSplit <- split(myExons, f = myExons$isoform_id)
+
+        myPIRSRResult <- plyr::ddply(
+            myPIRSRResult,
+            .progress = progressBar,
+            .variables = 'seq_id',
+            .fun = function(aDF) {
+                localExons <- as.data.frame(myExonsSplit[[aDF$seq_id[1]]])
+
+                localAlignment <- aDF
+                colnames(localAlignment)[match(
+                    c('transcriptStart', 'transcriptEnd'), colnames(localAlignment)
+                )] <- c('start', 'end')
+
+                posList <- lapply(seq_len(nrow(localAlignment)), function(j) {
+                    convertCoordinatsTranscriptToGenomic(
+                        transcriptCoordinats = localAlignment[j, ],
+                        exonStructure = localExons
+                    )
+                })
+
+                return(cbind(aDF, do.call(rbind, posList)))
+            }
+        )
+
+        colnames(myPIRSRResult)[1] <- 'isoform_id'
+        colnames(myPIRSRResult) <- gsub('pfam', 'pirsr', colnames(myPIRSRResult))
+
+        myPIRSRResult <- myPIRSRResult[order(
+            myPIRSRResult$isoform_id,
+            myPIRSRResult$transcriptStart,
+            myPIRSRResult$category
+        ), ]
+    }
+
+    ### Add analysis to switchAnalyzeRlist
+    if (TRUE) {
+        switchAnalyzeRlist$pirsrAnalysis <- myPIRSRResult
+
+        switchAnalyzeRlist$isoformFeatures$pirsr_hit_found <- 'no'
+        switchAnalyzeRlist$isoformFeatures$pirsr_hit_found[which(
+            is.na(switchAnalyzeRlist$isoformFeatures$PTC)
+        )] <- NA # sets NA for those not analyzed
+        switchAnalyzeRlist$isoformFeatures$pirsr_hit_found[which(
+            switchAnalyzeRlist$isoformFeatures$isoform_id %in%
+                myPIRSRResult$isoform_id
+        )] <- 'yes'
+    }
+
+    ### Repport numbers
+    if (TRUE) {
+        n <- length(unique(myPIRSRResult$isoform_id))
+        p <- round(n / length(unique(
+            switchAnalyzeRlist$isoformFeatures$isoform_id
+        )) * 100, digits = 2)
+
+        if (!quiet) {
+            message(paste(
+                'Added PIRSR information to ',
+                n,
+                ' (',
+                p,
+                '%) transcripts',
+                sep = ''
+            ))
+        }
+    }
+
+    return(switchAnalyzeRlist)
+}
+
 .finalizeMobiDBLiteAnalysis <- function(myMobiDBLiteResult, switchAnalyzeRlist, progressBar, quiet) {
     ### Convert from AA coordinats to transcript and genomic coordinats
     if (TRUE) {
@@ -3168,7 +3411,7 @@ analyzeInterProScan <- function(
     }
 
     ### Registry of currently supported analyses - to support more InterProScan
-    ### analyses (e.g. PIRSR, DeepTMHMM) add an entry here, a new .parseInterProScanXRows
+    ### analyses (e.g. DeepTMHMM) add an entry here, a new .parseInterProScanXRows
     ### function and a new .finalizeXAnalysis function;
     ### use .finalizeXAnalysis function in the final for loop in this function
     interProScanRegistry <- list(
@@ -3186,6 +3429,11 @@ analyzeInterProScan <- function(
             source = 'MobiDB-lite',
             parseFun = .parseInterProScanMobiDBLiteRows,
             targetSlot = 'idrAnalysis'
+        ),
+        PIRSR = list(
+            source = 'PIRSR',
+            parseFun = .parseInterProScanPIRSRRows,
+            targetSlot = 'pirsrAnalysis'
         )
     )
 
@@ -3332,6 +3580,13 @@ analyzeInterProScan <- function(
         } else if (toolName == 'MobiDBLite') {
             switchAnalyzeRlist <- .finalizeMobiDBLiteAnalysis(
                 myMobiDBLiteResult = resultDf,
+                switchAnalyzeRlist = switchAnalyzeRlist,
+                progressBar = progressBar,
+                quiet = quiet
+            )
+        } else if (toolName == 'PIRSR') {
+            switchAnalyzeRlist <- .finalizePIRSRAnalysis(
+                myPIRSRResult = resultDf,
                 switchAnalyzeRlist = switchAnalyzeRlist,
                 progressBar = progressBar,
                 quiet = quiet

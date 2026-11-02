@@ -5,7 +5,7 @@
 Import Result of DeepLoc2 Analysis
 }
 \description{
-Allows for easy integration of the result of DeepLoc2 (external sequence analysis of signal peptides) in the IsoformSwitchAnalyzeR workflow. Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeDeepLoc2, analyzeSignalP, analyzeNetSurfP2, analyzePFAM if you have predicted the ORFs with \code{analyzeORF}.
+Allows for easy integration of the result of DeepLoc2 (external sequence analysis of sub-cellular localization) in the IsoformSwitchAnalyzeR workflow. Result files from both DeepLoc 2.0 and DeepLoc 2.1 are supported (the version is detected automatically). DeepLoc 2.1 additionally predicts the membrane type of the protein (see details). Please note that due to the 'removeNoncodinORFs' option in \code{analyzeCPAT} and \code{analyzeCPC2} we recommend using analyzeCPC2/analyzeCPAT before using analyzeDeepLoc2, analyzeSignalP, analyzeNetSurfP2, analyzePFAM if you have predicted the ORFs with \code{analyzeORF}.
 }
 \usage{
 analyzeDeepLoc2(
@@ -25,12 +25,12 @@ analyzeDeepLoc2(
 A \code{switchAnalyzeRlist} object
 }
   \item{pathToDeepLoc2resultFile}{
-A string indicating the full path to the DeepLoc2 result file(s). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings. See \code{details} for suggestion of how to run and obtain the result of the DeepLoc2 tool.
+A string indicating the full path to the DeepLoc2 result file(s) (the CSV file from either DeepLoc 2.0 or DeepLoc 2.1 - the version is detected automatically from the columns in the file). If multiple result files were created (multiple web-server runs) just supply all the paths as a vector of strings (all files must come from the same DeepLoc version). See \code{details} for suggestion of how to run and obtain the result of the DeepLoc2 tool.
 }
 
-    \item{enforceProbabilityCutoff}{ A logic indicating whether the location specific probability cutoff developed for DeepLoc2 should be strictly enforced (see details). This filter works independently from \code{probabilityCutoff}. If FALSE the localization called internally by DeepLoc2 are used. Default is TRUE.}
+    \item{enforceProbabilityCutoff}{ A logic indicating whether the location specific probability cutoff developed for DeepLoc2 should be strictly enforced (see details). For DeepLoc 2.1 result files the membrane type specific cutoffs are enforced in the same way. This filter works independently from \code{probabilityCutoff}. If FALSE the localization (and membrane type) called internally by DeepLoc2 are used. Default is TRUE.}
 
-    \item{probabilityCutoff}{ A numeric between 0 and 1 indicating the minimum probability for calling a sub-cellular localization. This filter works independently from \code{enforceProbabilityCutoff}. If NULL the localization called internally by DeepLoc2 are used. Default is NULL.}
+    \item{probabilityCutoff}{ A numeric between 0 and 1 indicating the minimum probability for calling a sub-cellular localization (and, for DeepLoc 2.1 result files, a membrane type). This filter works independently from \code{enforceProbabilityCutoff}, but if both are used the calls are determined by \code{probabilityCutoff}. If NULL the localization (and membrane type) called internally by DeepLoc2 are used. Default is NULL.}
     
     \item{ignoreAfterBar}{A logic indicating whether to subset the isoform ids by ignoring everything after the first bar ("|"). Useful for analysis of GENCODE data. Default is TRUE.}
     \item{ignoreAfterSpace}{A logic indicating whether to subset the isoform ids by ignoring everything after the first space (" "). Useful for analysis of gffutils generated GTF files. Default is TRUE.}
@@ -43,6 +43,8 @@ A string indicating the full path to the DeepLoc2 result file(s). If multiple re
 \details{
 Subcellular localization are extremely important for biological functions. The performance of DeepLoc2 have been optimized by using subcellular location specific (aka class specific) probability cutoffs. However if no location is above these tresholds the location with the largest probability is assigned. The \code{enforceProbabilityCutoff} argument turns of the assignment of class if the location specific tresholds are not met.
 
+DeepLoc 2.1 additionally predicts the membrane type(s) of the protein. As for the locations, the performance of the membrane type predictions has been optimized by using class specific probability cutoffs, which are also enforced when \code{enforceProbabilityCutoff=TRUE}. The membrane type is only available for DeepLoc 2.1 result files - DeepLoc 2.0 result files are handled as before.
+
 The DeepLoc2 web-server is stringent with regards to the number of sequences in the files uploaded so we suggest using the files containing subsets. See \link{extractSequence} for info on how to split the amino acid fasta files.
 
 Notes for how to run the external tools:
@@ -52,19 +54,21 @@ Please note that the \code{analyzeDeepLoc2()} function will automatically only i
 }
 
 \value{
-A column called 'sub_cell_location' is added to \code{isoformFeatures} containing the predicted subcellular localization. If multiple locations are predicted they are seperated by comma. Furthermore the data.frame 'subCellLocationAnalysis' is added to the \code{switchAnalyzeRlist} containing the details of the sub-cellular location analysis.
+A column called 'sub_cell_location' is added to \code{isoformFeatures} containing the predicted subcellular localization. If multiple locations are predicted they are seperated by comma. If a DeepLoc 2.1 result file is supplied a column called 'membrane_type' is also added to \code{isoformFeatures} containing the predicted membrane type(s) (multiple are separated by comma; NA if none was predicted). Furthermore the data.frame 'subCellLocationAnalysis' is added to the \code{switchAnalyzeRlist} containing the details of the sub-cellular location analysis.
 
-The data.frame added have one row pr isoform and contains 12 columns:
+The data.frame added have one row pr isoform and contains 12 columns (17 for DeepLoc 2.1 result files):
 \itemize{
     \item{\code{isoform_id}: The name of the isoform analyzed. Matches the 'isoform_id' entry in the 'isoformFeatures' entry of the switchAnalyzeRlist}
     \item{\code{Localizations}: A text string indicating the subcellular localization. If multiple locations are predicted they are seperated by comma. This string is derived as described for the \code{probabilityCutoff} argument.}
-    \item{\code{rest}: One column for each sub-cellular location containing the predicted probability of the isoform beining in that location.}
+    \item{\code{Membrane_types}: (DeepLoc 2.1 only) A text string indicating the predicted membrane type(s) (Peripheral, Transmembrane, Lipid_anchor and/or Soluble). If multiple types are predicted they are separated by comma. This string is derived in the same way as \code{Localizations}.}
+    \item{\code{rest}: One column for each sub-cellular location containing the predicted probability of the isoform being in that location. For DeepLoc 2.1 result files four additional columns (Peripheral, Transmembrane, Lipid_anchor and Soluble) contain the predicted probability of each membrane type.}
 }
 }
 
 \references{
 \itemize{
-    \item{\code{DeepLoc} : Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022).}
+    \item{\code{DeepLoc 2.0} : Thumuluri et al. DeepLoc 2.0: multi-label subcellular localization prediction using protein language models. Nucleic Acids Res (2022).}
+    \item{\code{DeepLoc 2.1} : Oedum et al. DeepLoc 2.1: multi-label membrane protein type prediction using protein language models. Nucleic Acids Res (2024).}
     \item{\code{This function} : Han C, Gilis J, Iriondo Delgado E, Clement L, Vitting-Seerup K. IsoformSwitchAnalyzeR v2: analysis of functional isoform changes in long-read and single-cell sequencing data. NAR Genom Bioinform (2026). doi:10.1093/nargab/lqag098.}
 }
 }
