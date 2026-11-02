@@ -96,7 +96,7 @@ The two fasta files outputted by this function (if \code{writeToFile=TRUE}) can 
     \item{\code{CPAT} : The Coding-Potential Assessment Tool, which can be run either locally or via their webserver \url{http://lilab.research.bcm.edu/cpat/} }
     \item{\code{Pfam} : Prediction of protein domains, which can be run locally using the pfam_scan.pl script as described in the readme found \url{https://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/} }
     \item{\code{SignalP} : Prediction of Signal Peptide, which can be run either locally or via their webserver \url{https://services.healthtech.dtu.dk/services/SignalP-6.0/} }
-    \item{\code{InterProScan} : Combined prediction of protein domains (Pfam), signal peptides (SignalP) and Intrinsically Disordered Regions (MobiDB-lite) in a single job, which can be run either locally or via their webserver \url{https://www.ebi.ac.uk/interpro/search/sequence/} }
+    \item{\code{InterProScan} : Combined prediction of protein domains (Pfam), signal peptides (SignalP), Intrinsically Disordered Regions (MobiDB-lite) and functional sites (PIRSR) in a single job, which can be run either locally or via their webserver \url{https://www.ebi.ac.uk/interpro/search/sequence/} }
 }
 See \code{?analyzeCPAT}, \code{?analyzePFAM}, \code{?analyzeSignalP} or \code{?analyzeInterProScan} (under details) for suggested ways of running these tools.
 

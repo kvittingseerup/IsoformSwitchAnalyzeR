@@ -12,9 +12,9 @@ This function removes genes/isoforms from a switchAnalyzeRlist with the aim of a
 preFilter(
     switchAnalyzeRlist,
     isoCount = 10,
-    min.Count.prop = 0.7,
+    min.Count.prop = "smaller_group",
     IFcutoff = 0.1,
-    min.IF.prop = 0.5,
+    min.IF.prop = "smaller_group",
     acceptedGeneBiotype = NULL,
     acceptedIsoformClassCode = NULL,
     removeSingleIsoformGenes = TRUE,
@@ -37,7 +37,7 @@ The cutoff specifies the minimum isoform counts level for a certain proportion o
 }
 
   \item{min.Count.prop}{
-The cutoff specifies the minimum proportion of samples in each comparison that must express isoforms at certain counts. It should be used with isoCount. Setting this to NULL disables the filter (not recommended). The default value is 0.7.
+The minimum proportion of samples in each comparison that must have more than \code{isoCount} counts for an isoform to be kept. Either a number between 0 and 1, which is applied as the threshold in all comparisons, or "smaller_group" (default), where the threshold in each comparison is the number of samples in the smaller of the two groups. This ensures an isoform expressed in all samples of the smaller group is retained. It should be used with isoCount. Setting this to NULL disables the filter (not recommended).
 }
 
   \item{IFcutoff}{
@@ -45,7 +45,7 @@ The cutoff specifies the minimum isoform usage (measured as Isoform Fraction, se
 }
 
   \item{min.IF.prop}{
-The cutoff specifies the minimum proportion of samples in each comparison with more than certain isoform usage. It should be used with IFcutoff. Setting this to NULL disables the filter (not recommended). The default value is 0.5.
+The minimum proportion of samples in each comparison that must have more than \code{IFcutoff} isoform usage for an isoform to be kept. Accepts the same values as \code{min.Count.prop} (a number applied to all comparisons, or the default "smaller_group"). It should be used with IFcutoff. Setting this to NULL disables the filter (not recommended).
 }
 
   \item{acceptedGeneBiotype}{
@@ -89,7 +89,7 @@ The cutoff which the changes in (absolute) isoform usage must be larger than bef
 
 
 \details{
-The filtering process starts by retaining isoforms with at least isoCount reads and IFcutoff usage in a significant proportion of samples within comparisons. This proportion addresses variable and unbalanced (10 vs 3) sample sizes in the comparisons. Next, the data is filtered for isoform classes, and finally, for single-isoform genes.\cr
+The filtering process starts by retaining isoforms with at least isoCount reads and IFcutoff usage in a significant proportion of samples within comparisons. With the default "smaller_group", the number of samples an isoform must pass in is set per comparison to the size of the smaller group, so isoforms specific to a small group are not removed because of a larger group. Next, the data is filtered for isoform classes, and finally, for single-isoform genes.\cr
 
 Please note that for the exon entry as well as any replicate matrix entry (counts, abundances or isoform fractions) all isoforms from genes where at least one isoform passed the filters are kept.
 }
