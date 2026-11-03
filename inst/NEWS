@@ -1,3 +1,7 @@
+Changes in version 2.11.7 (2026-11)
+- Update type: Minor.
+- Fixed a bug in IDR consequences analysis with MobiDBLite.
+
 Changes in version 2.11.6 (2026-10)
 - Update type: Major.
 - Added handling PIRSR results to analyzeInterProScan() function

@@ -1078,6 +1078,13 @@ compareAnnotationOfTwoIsoforms <- function(
                     switchAnalyzeRlist$idrAnalysis$isoform_id %in%
                         isoformsToAnalyze
                 ), ]
+
+            ### MobiDB-lite: only the consensus disorder regions are IDRs, the
+            ### compositional bias regions nested inside them are not
+            if ('compositional_bias' %in% colnames(idrData)) {
+                idrData <- idrData[which(is.na(idrData$compositional_bias)), ]
+            }
+
             idrData$isoform_id <-
                 factor(idrData$isoform_id, levels = isoformsToAnalyze)
             idrCols <- c('idrStartGenomic', 'idrEndGenomic', 'orf_aa_start', 'orf_aa_end')
