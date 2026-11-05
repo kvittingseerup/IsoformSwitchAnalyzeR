@@ -782,7 +782,7 @@ if(TRUE) {
 
         # Check class and GRanges
         #if (!class(transcriptData)[1]=="SpliceRList") stop("transcriptData argument is not of class SpliceRList") # outcommented KVS 2018-03-06
-        if ( class(transcriptData$"transcript_features") != "GRanges" || class(transcriptData$"exon_features") != "GRanges" ) stop("transcriptData must have GRanges objects in slots 'transcript_features' and 'exon_features'")
+        if ( !is(transcriptData$"transcript_features", "GRanges") || !is(transcriptData$"exon_features", "GRanges") ) stop("transcriptData must have GRanges objects in slots 'transcript_features' and 'exon_features'")
 
         # Validate required columns in spliceRList
         t_colNames <- colnames(mcols(transcriptData$"transcript_features"))
@@ -870,13 +870,13 @@ if(TRUE) {
 
         #Convert Granges to dataframe
         tempDF <- GenomicRanges::as.data.frame(transcriptData[["transcript_features"]])
-        tempDF <- data.frame(lapply(tempDF, function(x) {if (class(x)=="factor") as.character(x) else (x)}), stringsAsFactors=FALSE) # remove factors
+        tempDF <- data.frame(lapply(tempDF, function(x) {if (is.factor(x)) as.character(x) else (x)}), stringsAsFactors=FALSE) # remove factors
         colnames(tempDF) <- c(colnames(tempDF)[1:5], substr(colnames(tempDF)[6:ncol(tempDF)],9,nchar(colnames(tempDF)[6:ncol(tempDF)])))
         #remove columns not needed here
         transcriptData[["transcript_features"]] <- tempDF
 
         tempDF <- GenomicRanges::as.data.frame(transcriptData[["exon_features"]])
-        tempDF <- data.frame(lapply(tempDF, function(x) {if (class(x)=="factor") as.character(x) else (x)}), stringsAsFactors=FALSE) # remove factors
+        tempDF <- data.frame(lapply(tempDF, function(x) {if (is.factor(x)) as.character(x) else (x)}), stringsAsFactors=FALSE) # remove factors
         colnames(tempDF) <- c(colnames(tempDF)[1:5], substr(colnames(tempDF)[6:ncol(tempDF)],9,nchar(colnames(tempDF)[6:ncol(tempDF)])))
         tempDF <- tempDF[,c("start", "end", "strand", "isoform_id")]
         transcriptData[["exon_features"]] <- tempDF
@@ -1237,7 +1237,7 @@ analyzeAlternativeSplicing <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -1517,7 +1517,7 @@ extractSplicingSummary <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -1966,7 +1966,7 @@ extractSplicingEnrichment <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -2389,7 +2389,7 @@ extractSplicingEnrichmentComparison <- function(
 ) {
     ### Test
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -2575,7 +2575,7 @@ extractSplicingGenomeWide <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )

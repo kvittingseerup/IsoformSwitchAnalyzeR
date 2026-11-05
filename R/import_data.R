@@ -3396,7 +3396,7 @@ importRdata <- function(
       }
     }
     
-    if( class(isoformExonAnnoation) == 'character' ) {
+    if( is.character(isoformExonAnnoation) ) {
       if( isoformExonAnnoation == '' ) {
         stop(
           paste(
@@ -3523,7 +3523,7 @@ importRdata <- function(
       }
       
       ### Potentially convert from tibble
-      if( class(designMatrix)[1] == 'tbl_df') {
+      if( inherits(designMatrix, 'tbl_df')) {
         designMatrix <- as.data.frame(designMatrix)
       }
       if (!all(c('sampleID', 'condition') %in% colnames(designMatrix))) {
@@ -3777,7 +3777,7 @@ importRdata <- function(
     ### Massage annoation input
     if(TRUE) {
       ### Import GTF is nessesary
-      if( class(isoformExonAnnoation) == 'character' ) {
+      if( is.character(isoformExonAnnoation) ) {
         gtfImported <- TRUE
         
         ### Test input
@@ -3974,7 +3974,7 @@ importRdata <- function(
         }
       }
       
-      if( class(isoformExonAnnoation) != 'character' ) {
+      if( !is.character(isoformExonAnnoation) ) {
         gtfImported <- FALSE
         
         ### Test input
@@ -6286,7 +6286,7 @@ preFilter <- function(
 ) {
   ### Test input
   if (TRUE) {
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+    if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
       stop(paste(
         'The object supplied to \'switchAnalyzeRlist\'',
         'must be a \'switchAnalyzeRlist\''

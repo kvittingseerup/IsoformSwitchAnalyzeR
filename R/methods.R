@@ -345,10 +345,10 @@ createSwitchAnalyzeRlist <- function(
             if(! is.data.frame(isoformFeatures)){
                 stop('The isoformFeatures argument must be a data.frame')
             }
-            if(class(exons) != 'GRanges'){
+            if(!is(exons, 'GRanges')){
                 stop('The exons argument must be a GenomicRanges (GRanges)')
             }
-            if(class(sourceId) != 'character'){
+            if(!is.character(sourceId)){
                 stop('The sourceId argument must be a character')
             }
             if( length(omicDataType) != 1 || ! omicDataType %in% c('transcriptomics','proteomics') ) {

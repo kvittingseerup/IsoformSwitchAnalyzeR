@@ -33,7 +33,7 @@ analyzeSwitchConsequences <- function(
     ### Check input
     if (TRUE) {
         # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )
@@ -608,7 +608,7 @@ compareAnnotationOfTwoIsoforms <- function(
     ### Test and prepare input
     if (testInput) {
         # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )
@@ -2150,10 +2150,13 @@ compareAnnotationOfTwoIsoforms <- function(
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
                 localDomanDataSplit <-
                     lapply(domanDataSplit, function(aDF) {
-                        aDF[
+                        aDF <- aDF[
                             sort.list(aDF$pfamStartGenomic),
                             c('hmm_name','pfamStartGenomic','pfamEndGenomic')
                         ]
+                        ### the row names are those of the full domain analysis
+                        rownames(aDF) <- NULL
+                        aDF
                     })
                 genomicDomainDifferent <-
                     !identical(
@@ -3147,7 +3150,7 @@ extractConsequenceSummary <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -3510,7 +3513,7 @@ extractConsequenceEnrichment <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -3894,7 +3897,7 @@ extractConsequenceEnrichmentComparison <- function(
 ) {
     ### Test
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -4084,7 +4087,7 @@ extractConsequenceGenomeWide <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )

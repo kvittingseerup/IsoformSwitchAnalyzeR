@@ -140,7 +140,7 @@ switchPlotTranscript <- function(
 ) {
     ### Check input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -2289,7 +2289,7 @@ expressionAnalysisPlot <- function(
     ### Check input
     if (TRUE) {
         # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )
@@ -3450,7 +3450,7 @@ switchPlot <- function(
     ### Test Input
     if (TRUE) {
         # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )

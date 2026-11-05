@@ -21,7 +21,7 @@ isoformSwitchAnalysisPart1 <- function(
     nrAnalysis <- 3
 
     ### Identfy input type
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+    if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist'))        {
         stop(
             'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
         )
@@ -39,7 +39,7 @@ isoformSwitchAnalysisPart1 <- function(
                     'consider using the isoformNtFasta argument instead (recomended).',
                     sep=' '
                 ))
-            } else if (class(genomeObject) != 'BSgenome') {
+            } else if (!is(genomeObject, 'BSgenome')) {
                 stop('The genomeObject argument must be a BSgenome')
             }
         } else {
@@ -276,7 +276,7 @@ isoformSwitchAnalysisPart2 <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist'))        {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
