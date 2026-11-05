@@ -1,3 +1,7 @@
+Changes in version 2.11.8 (2026-11)
+- Update type: Minor.
+- Fixed a bug in genomic_domain_position consequence analysis.
+
 Changes in version 2.11.7 (2026-11)
 - Update type: Minor.
 - Fixed a bug in IDR consequences analysis with MobiDBLite.

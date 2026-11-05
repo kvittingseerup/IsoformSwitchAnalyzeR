@@ -2150,10 +2150,13 @@ compareAnnotationOfTwoIsoforms <- function(
             if (sum(!is.na(transcriptData$orfTransciptLength)) > 0) {
                 localDomanDataSplit <-
                     lapply(domanDataSplit, function(aDF) {
-                        aDF[
+                        aDF <- aDF[
                             sort.list(aDF$pfamStartGenomic),
                             c('hmm_name','pfamStartGenomic','pfamEndGenomic')
                         ]
+                        ### the row names are those of the full domain analysis
+                        rownames(aDF) <- NULL
+                        aDF
                     })
                 genomicDomainDifferent <-
                     !identical(
