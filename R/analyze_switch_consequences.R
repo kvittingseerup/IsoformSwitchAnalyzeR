@@ -33,7 +33,7 @@ analyzeSwitchConsequences <- function(
     ### Check input
     if (TRUE) {
         # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )
@@ -608,7 +608,7 @@ compareAnnotationOfTwoIsoforms <- function(
     ### Test and prepare input
     if (testInput) {
         # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )
@@ -3150,7 +3150,7 @@ extractConsequenceSummary <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -3513,7 +3513,7 @@ extractConsequenceEnrichment <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -3897,7 +3897,7 @@ extractConsequenceEnrichmentComparison <- function(
 ) {
     ### Test
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -4087,7 +4087,7 @@ extractConsequenceGenomeWide <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )

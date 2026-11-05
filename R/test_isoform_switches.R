@@ -16,7 +16,7 @@ isoformSwitchTestSatuRn <- function(
 ){
     # preamble
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != "switchAnalyzeRlist") {
+        if (!is(switchAnalyzeRlist, "switchAnalyzeRlist")) {
             stop(paste("The object supplied to 'switchAnalyzeRlist'",
                        "must be a 'switchAnalyzeRlist'"))
         }
@@ -354,7 +354,7 @@ isoformSwitchTestDEXSeq <- function(
     if (TRUE) {
         ### Tjek arguments
         if(TRUE) {
-            if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+            if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist'))        {
                 stop(paste(
                     'The object supplied to \'switchAnalyzeRlist\'',
                     'must be a \'switchAnalyzeRlist\''
@@ -893,7 +893,7 @@ extractSwitchSummary <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(paste(
                 'The object supplied to \'switchAnalyzeRlist\' must',
                 'be a \'switchAnalyzeRlist\''
@@ -1143,7 +1143,7 @@ extractSwitchOverlap <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(paste(
                 'The object supplied to \'switchAnalyzeRlist\' must',
                 'be a \'switchAnalyzeRlist\''
@@ -1423,7 +1423,7 @@ extractTopSwitches <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(paste(
                 'The object supplied to \'switchAnalyzeRlist\'',
                 'must be a \'switchAnalyzeRlist\''

@@ -19,7 +19,7 @@ analyzeCPAT <- function(
 ) {
     ### Check input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -39,7 +39,7 @@ analyzeCPAT <- function(
         }
 
         # file
-        if (class(pathToCPATresultFile) != 'character') {
+        if (!is.character(pathToCPATresultFile)) {
             stop(
                 'The \'pathToCPATresultFile\' argument must be a string pointing to the CPAT result file'
             )
@@ -53,7 +53,7 @@ analyzeCPAT <- function(
             stop('The \'codingCutoff\' argument must be supplied')
         }
         if (length(codingCutoff) != 1 |
-            class(codingCutoff) != 'numeric') {
+            !is.numeric(codingCutoff)) {
             stop('The \'codingCutoff\' argument must be a numeric of length 1 ')
         }
         if (!(codingCutoff >= 0 &
@@ -252,7 +252,7 @@ analyzeCPC2 <- function(
 ) {
     ### Check input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -272,7 +272,7 @@ analyzeCPC2 <- function(
         }
 
         # file
-        if (class(pathToCPC2resultFile) != 'character') {
+        if (!is.character(pathToCPC2resultFile)) {
             stop(
                 'The \'pathToCPC2resultFile\' argument must be a string pointing to the CPC2 result file'
             )
@@ -283,7 +283,7 @@ analyzeCPC2 <- function(
 
         # codingCutoff
         if (length(codingCutoff) != 1 |
-            class(codingCutoff) != 'numeric') {
+            !is.numeric(codingCutoff)) {
             stop('The \'codingCutoff\' argument must be a numeric of length 1 ')
         }
         if (!(codingCutoff >= 0 &
@@ -714,7 +714,7 @@ analyzePFAM <- function(
 ) {
     ### Test input
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -724,7 +724,7 @@ analyzePFAM <- function(
         }
 
         # file
-        if (class(pathToPFAMresultFile) != 'character') {
+        if (!is.character(pathToPFAMresultFile)) {
             stop(
                 'The \'pathToPFAMresultFile\' argument must be a string pointing to the PFAM result file(s)'
             )
@@ -1236,7 +1236,7 @@ analyzeSignalP <- function(
         }
 
         # file
-        if (class(pathToSignalPresultFile) != 'character') {
+        if (!is.character(pathToSignalPresultFile)) {
             stop(
                 'The \'pathToSignalPresultFile\' argument must be a string pointing to the SignalP result file(s)'
             )
@@ -1684,7 +1684,7 @@ analyzeNetSurfP3 <- function(
 ) {
   ### Test input
   if(TRUE) {
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+    if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
       stop(
         'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
       )
@@ -1694,7 +1694,7 @@ analyzeNetSurfP3 <- function(
     }
     
     # file
-    if (class(pathToNetSurfP3resultFile) != 'character') {
+    if (!is.character(pathToNetSurfP3resultFile)) {
       stop(
         'The \'pathToNetSurfP3resultFile\' argument must be a string pointing to the NetSurfP3 result file'
       )
@@ -1966,7 +1966,7 @@ analyzeIUPred2A <- function(
 ) {
     ### Test input
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -1976,7 +1976,7 @@ analyzeIUPred2A <- function(
         }
 
         # file
-        if (class(pathToIUPred2AresultFile) != 'character') {
+        if (!is.character(pathToIUPred2AresultFile)) {
             stop(
                 'The \'pathToIUPred2AresultFile\' argument must be a string pointing to the IUPred2A result file'
             )
@@ -2463,13 +2463,13 @@ analyzeDeepLoc2 <- function(
 ) {
     ### Test input
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
         }
         # file
-        if (class(pathToDeepLoc2resultFile) != 'character') {
+        if (!is.character(pathToDeepLoc2resultFile)) {
             stop(
                 'The \'pathToDeepLoc2resultFile\' argument must be a string pointing to the DeepLoc2 result file(s)'
             )
@@ -2810,7 +2810,7 @@ analyzeDeepTMHMM <- function(
 ) {
     ### Test input
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -2820,7 +2820,7 @@ analyzeDeepTMHMM <- function(
         }
 
         # file
-        if (class(pathToDeepTMHMMresultFile) != 'character') {
+        if (!is.character(pathToDeepTMHMMresultFile)) {
             stop(
                 'The \'pathToDeepTMHMMresultFile\' argument must be a string pointing to the DeepTMHMM result file'
             )
@@ -3386,7 +3386,7 @@ analyzeInterProScan <- function(
 ) {
     ### Test input
     if (TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -3394,7 +3394,7 @@ analyzeInterProScan <- function(
         if (is.null(switchAnalyzeRlist$orfAnalysis)) {
             stop('ORF needs to be analyzed. Please run \'addORFfromGTF()\' (and if nessesary \'analyzeNovelIsoformORF()\') and try again.')
         }
-        if (class(pathToInterProScanResultFile) != 'character') {
+        if (!is.character(pathToInterProScanResultFile)) {
             stop(
                 'The \'pathToInterProScanResultFile\' argument must be a string (or vector of strings) pointing to the InterProScan JSON result file(s)'
             )

@@ -21,7 +21,7 @@ analyzeORF <- function(
     ### check input
     if (TRUE) {
         # Input data
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(paste(
                 'The object supplied to \'switchAnalyzeRlist\'',
                 'must be a \'switchAnalyzeRlist\''
@@ -30,7 +30,7 @@ analyzeORF <- function(
 
         ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
         if( ! ntAlreadyInSwitchList ) {
-            if (class(genomeObject) != 'BSgenome') {
+            if (!is(genomeObject, 'BSgenome')) {
                 stop('The genomeObject argument must be a BSgenome')
             }
         }
@@ -597,13 +597,13 @@ extractSequence <- function(
     ### Check input
     if (TRUE) {
         # Test input data class
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
         }
         if( ! ntAlreadyInSwitchList ) {
-            if (class(genomeObject) != 'BSgenome') {
+            if (!is(genomeObject, 'BSgenome')) {
                 stop('The genomeObject argument must be a BSgenome')
             }
         }
@@ -1342,7 +1342,7 @@ addORFfromGTF <- function(
     ### Test input
     if(TRUE) {
         # Test input data class
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -1529,7 +1529,7 @@ analyzeNovelIsoformORF <- function(
     ### Test input
     if(TRUE) {
         # Test input data class
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
             )
@@ -1565,7 +1565,7 @@ analyzeNovelIsoformORF <- function(
 
         ntAlreadyInSwitchList <- ! is.null(switchAnalyzeRlist$ntSequence)
         if( ! ntAlreadyInSwitchList ) {
-            if (class(genomeObject) != 'BSgenome') {
+            if (!is(genomeObject, 'BSgenome')) {
                 stop('The genomeObject argument must be supplied with a BSgenome object when isoform sequences are not already stored in the switchAnalyzeRlist.')
             }
         }
