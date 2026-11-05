@@ -2230,7 +2230,7 @@ Note that this is only recommended if ORFs were predicted (i.e. not imported fro
 
 Since the ORF information is stored in the 'orfAnalysis' analysis entry of the switchAnalyzeRlist we can remove it (by replacing it with NAs) as follows:
 
-```         
+```{r}
 ### Test data
 data("exampleSwitchListAnalyzed")
 exampleSwitchListAnalyzed
@@ -2298,7 +2298,8 @@ Back to [Table of Content]
 
 The sequences stored in the SwitchAnalyzeRlist are not needed after consequences have been predicted and can thereby be removed, reducing the object size as well as loading/saving times. This has been done for the example dataset 'exampleSwitchListAnalyzed'. This is simply done as follows
 
-```         
+```{r}
+data("exampleSwitchListIntermediary")
 summary(exampleSwitchListIntermediary)
 
 exampleSwitchListIntermediary$ntSequence <- NULL
@@ -2317,21 +2318,21 @@ There has been considerable debate about whether the default parameters for the 
 
 Let's start by looking at the distribution of coding potential values.
 
-```         
+```{r}
 data("exampleSwitchListAnalyzed")
 hist(exampleSwitchListAnalyzed$isoformFeatures$codingPotentialValue)
 ```
 
 These coding potential values are summarized by the cutoff supplied in the 'codingPotential' column -- which is what IsoformSwitchAnalyzeR uses in the downstream analysis.
 
-```         
+```{r}
 ### These are summarized by the cutoff supplied in the 'codingPotential' column -- which is what is used by IsoformSwitchAnalyzeR in the downstream analysis.
 table(exampleSwitchListAnalyzed$isoformFeatures$codingPotential, exclude = NULL)
 ```
 
 By simply setting the mid-range values to NA it will cause IsoformSwitchAnalyzeR to ignore them, thereby removing the isoforms with "unknown" coding potential. This can be done as follows:
 
-```         
+```{r}
 exampleSwitchListAnalyzed$isoformFeatures$codingPotential <- NA
 exampleSwitchListAnalyzed$isoformFeatures$codingPotential[which(exampleSwitchListAnalyzed$isoformFeatures$codingPotentialValue > 0.75)] <- TRUE
 exampleSwitchListAnalyzed$isoformFeatures$codingPotential[which(exampleSwitchListAnalyzed$isoformFeatures$codingPotentialValue < 0.25)] <- FALSE

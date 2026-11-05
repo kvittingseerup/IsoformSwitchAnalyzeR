@@ -78,7 +78,7 @@ makeMinimumSwitchList <- function(
     orgSwitchList,
     isoformsToKeep
 ) {
-    if (class(orgSwitchList) != 'switchAnalyzeRlist')        {
+    if (!is(orgSwitchList, 'switchAnalyzeRlist'))        {
         stop(
             'The object supplied to \'orgSwitchList\' must be a \'switchAnalyzeRlist\''
         )
@@ -673,7 +673,7 @@ extractGeneExpression <- function(
     addGeneNames = TRUE,
     addIdsAsColumns = TRUE
 ) {
-    if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+    if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
         stop(
             'The object supplied to \'switchAnalyzeRlist\' must be a \'switchAnalyzeRlist\''
         )
@@ -1502,7 +1502,7 @@ extractSwitchPairs <- function(
     ### Check input
     if (TRUE) {
         # check switchAnalyzeRlist
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )
@@ -1695,7 +1695,7 @@ estimateDifferentialRange <- function(
 
     ### Tjek Input
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist')        {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist'))        {
             stop(paste(
                 'The object supplied to \'switchAnalyzeRlist\'',
                 'must be a \'switchAnalyzeRlist\''
@@ -2011,7 +2011,7 @@ extractSubCellShifts <- function(
 ) {
     ### Test input
     if(TRUE) {
-        if (class(switchAnalyzeRlist) != 'switchAnalyzeRlist') {
+        if (!is(switchAnalyzeRlist, 'switchAnalyzeRlist')) {
             stop(
                 'The object supplied to \'switchAnalyzeRlist\' is not a \'switchAnalyzeRlist\''
             )
