@@ -2191,6 +2191,7 @@ switchPlotTranscript <- function(
                 statusDf <- data.frame(
                     x = rep(min(myTranscriptPlotData$start), 2),
                     y = rep(idData$idNr[1], 2),
+                    seqnames = rep(idData$seqnames[1], 2), # only draw in the panel of that transcript
                     Status = factor(statusLevels, levels = statusLevels)
                 )
                 myPlot <-

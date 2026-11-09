@@ -101,5 +101,7 @@ salmonDf <- prepareSalmonFileDataFrame(
 salmonDf$condition <- c('wt','wt','ko','ko')
 
 ### Create switchAnalyzeRlist
-aSwitchList <- importSalmonData(salmonDf)
+\dontrun{
+    aSwitchList <- importSalmonData(salmonDf)
+}
 }
