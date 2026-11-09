@@ -1238,29 +1238,13 @@ If the experimental setup have any additional cofactors simply add these these a
 
 Please note the "salmonDf" object also works directly with the *tximeta::tximeta()* function.
 
-```{R, include=FALSE}
-salmonImportOK <- tryCatch({
-    probeFile <- tempfile(fileext = ".fa.gz")
-    probeOK <- download.file(
-        "ftp://ftp.ensembl.org/pub/release-98/fasta/drosophila_melanogaster/ncrna/Drosophila_melanogaster.BDGP6.22.ncrna.fa.gz",
-        probeFile, quiet = TRUE, mode = "wb"
-    ) == 0 && file.size(probeFile) > 0
-    unlink(probeFile)
-    probeOK
-}, error = function(e) FALSE, warning = function(w) FALSE)
-```
-
 **Step 2** Now that we have the path to the files along with the meta data we are ready to create the switchAnalyzeRlist. This is done using the *importSalmonData()* function as follows:
 
-```{R, eval=salmonImportOK}
+```{R, eval=FALSE}
 aSwitchList <- importSalmonData(
     salmonFileDataFrame = salmonDf, # as created above
     showProgress=FALSE              # For nicer printout in vignette
 )
-```
-
-```{R, eval=salmonImportOK}
-summary(aSwitchList)
 ```
 
 The next step in a typical analysis is described in [Part 1] for the high-level analysis and [Filtering] for a detailed workflow.
