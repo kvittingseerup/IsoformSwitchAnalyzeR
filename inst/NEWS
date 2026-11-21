@@ -1,3 +1,9 @@
+Changes in version 2.13.3 (2026-11)
+- Update type: Minor.
+- analyzeIUPred2A() is much faster for large datasets with RleList( scoreList, compress = FALSE).
+- subsetSwitchAnalyzeRlist() now also subsets topologyAnalysis and intronRetentionAnalysis.
+
+
 Changes in version 2.11.8 (2026-11)
 - Update type: Minor.
 - Fixed a bug in genomic_domain_position consequence analysis.
