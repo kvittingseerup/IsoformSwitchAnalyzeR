@@ -1777,7 +1777,7 @@ analyzeNetSurfP3 <- function(
     
     
     disRle <- RleList(
-      split(round(netSurf$disorder, digits = 3), netSurf$id)
+      split(round(netSurf$disorder, digits = 3), netSurf$id), compress = FALSE
     )
     
     ### Apply spliding window
@@ -2154,7 +2154,7 @@ analyzeIUPred2A <- function(
                 minSize,
                 smoothingWindowSize
             ) {
-                scoreRle <- RleList( scoreList )
+                scoreRle <- RleList( scoreList, compress = FALSE)
 
                 ### Apply spliding window
                 scoreRle <- runmean(scoreRle, k=smoothingWindowSize, endrule = 'drop')

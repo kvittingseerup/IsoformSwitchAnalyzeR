@@ -135,9 +135,11 @@ subsetSwitchAnalyzeRlist <- function(switchAnalyzeRlist, subset) {
             'domainAnalysis',
             'signalPeptideAnalysis',
             'AlternativeSplicingAnalysis',
+            'intronRetentionAnalysis',
             'idrAnalysis',
             'pirsrAnalysis',
-            'subCellLocationAnalysis'
+            'subCellLocationAnalysis',
+            'topologyAnalysis'
         ),
         names(switchAnalyzeRlist)
     )
